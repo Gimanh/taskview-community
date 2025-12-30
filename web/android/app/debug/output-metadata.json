@@ -1,0 +1,21 @@
+{
+  "version": 3,
+  "artifactType": {
+    "type": "APK",
+    "kind": "Directory"
+  },
+  "applicationId": "com.handscreamgnl.taskview.app",
+  "variantName": "debug",
+  "elements": [
+    {
+      "type": "SINGLE",
+      "filters": [],
+      "attributes": [],
+      "versionCode": 114,
+      "versionName": "1.14",
+      "outputFile": "TaskView-1.14-debug.apk"
+    }
+  ],
+  "elementType": "File",
+  "minSdkVersionForDexing": 23
+}

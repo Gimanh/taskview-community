@@ -1,0 +1,22 @@
+.tv-clb-dsk {
+    &__body {
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    &__column {
+        overflow-y: auto;
+        width: calc(50% - 8px);
+    }
+    &__column-header {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        width: 100%;
+        background: rgb(var(--v-theme-background)); //rgb(var(--v-theme-surface));
+    }
+
+    .v-card {
+        flex-shrink: 0;
+    }
+}

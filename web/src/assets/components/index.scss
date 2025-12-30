@@ -1,0 +1,26 @@
+:root {
+    --mob-header-height: 64px;
+    --mob-search-height: 40px;
+    --mob-board-height: 106px;
+}
+
+.v-overlay__content.v-autocomplete__content,
+.v-menu>.v-overlay__content,
+.v-overlay__content.v-select__content {
+    border-radius: 10px;
+}
+
+// @import './MainTasks.scss';
+@import './TaskSubtasksSection.scss';
+@import './TaskAssignUser.scss';
+@import './TaskPriority.scss';
+@import './MTaskNote.scss';
+@import './TaskSubtaskItem.scss';
+@import './TaskEditItem.scss';
+@import './TaskDialog.scss';
+@import './TaskHistory.scss';
+@import './TaskItemUi.scss';
+@import './TvNawDrawer.scss';
+@import './DesktopScreen.scss';
+@import './CollaborationDialogDsk.scss';
+@import '../../components/SocialLinks/SocialLinks.scss';

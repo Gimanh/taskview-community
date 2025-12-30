@@ -1,0 +1,24 @@
+.tv-edit-task {
+    input {
+        opacity: 0 !important;
+    }
+
+    .v-field__prepend-inner {
+        padding-top: 6px !important;
+
+        i {
+            width: 72%;
+            height: 72%;
+        }
+    }
+
+    .v-input--center-affix {
+        .v-field__prepend-inner {
+            padding-top: 0px !important;
+        }
+    }
+
+    .v-field {
+        padding-left: 6px;
+    }
+}

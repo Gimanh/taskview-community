@@ -1,0 +1,15 @@
+@tailwind components;
+
+@layer components {
+    .low {
+        @apply text-priority-low opacity-80 !important;
+    }
+
+    .medium {
+        @apply text-priority-medium opacity-80 !important;
+    }
+
+    .high {
+        @apply text-priority-high opacity-80 !important;
+    }
+}

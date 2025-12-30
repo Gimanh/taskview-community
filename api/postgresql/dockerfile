@@ -1,0 +1,17 @@
+FROM node:20-slim
+RUN apt-get update && apt-get install -y postgresql-client && apt-get clean
+
+# ENV DB_HOST=localhost
+# ENV DB_USER=tvdbuser
+# ENV DB_PASSWORD=tvdbpass
+# ENV DB_NAME=taskviewdb
+# ENV DB_PORT=5432
+
+WORKDIR /app-migration
+COPY ./dist-migration/taskview ./taskview
+COPY ./dist-migration/taskview-db-migration.js ./
+COPY entrypoint.sh /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

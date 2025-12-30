@@ -1,0 +1,46 @@
+@tailwind components;
+
+@layer components {
+    .tv-kanban {
+        // @apply flex gap-3 overflow-x-scroll p-3 px-5  h-[calc(100vh-64px)];
+        @apply flex gap-3 overflow-x-auto p-3 px-5  h-[calc(100vh-var(--v-header-height))];
+
+
+        &__col {
+            @apply bg-[#dedede2b] rounded-lg p-1 w-11/12 shrink-0 sm:w-5/12 lg:w-2/12 h-[calc(100vh-var(--v-header-height)-var(--inset-bottom)-24px)] max-w-[340px] min-w-[272px] flex flex-col overflow-x-hidden; 
+        }
+
+        &__col-title{
+            @apply rounded-md p-1 px-4 pr-0  h-kanban-title min-h-kanban-title flex items-center text-lg;
+        }
+        
+        &__col-group{
+            @apply gap-1 p-1 flex flex-col h-[calc(100%-var(--kanban-card-title-height)-var(--inset-bottom)-var(--inset-top))] pt-3 overflow-auto overflow-x-hidden;
+        }
+    }
+}
+
+@layer components{
+    .tv-kanban-title-input{
+        .v-field__field, .v-field__input{
+            @apply h-[var(--kanban-card-title-height)] min-h-[var(--kanban-card-title-height)]
+        }
+    }
+}
+
+.txt-no-select {
+    user-select: none; /* Запрещает выделение */
+    -webkit-user-select: none; /* Для iOS и Safari */
+    -webkit-touch-callout: none; /* Запрещает меню копирования на iOS */
+    -webkit-tap-highlight-color: transparent; /* Убирает подсветку при нажатии */
+}
+
+.sortable-chosen{
+    .task-item{
+        // background: linear-gradient(to right,#ff08a0, #038b37);
+        opacity: .7;
+    }
+    rotate: 1.5deg;
+    // margin-top: 5px;
+    // margin-bottom: 5px;
+}

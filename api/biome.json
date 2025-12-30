@@ -1,0 +1,65 @@
+{
+    "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
+    "vcs": {
+        "enabled": true,
+        "clientKind": "git",
+        "useIgnoreFile": true
+    },
+    "files": {
+        "includes": ["src/**/*.ts", "server.ts"]
+    },
+    "formatter": {
+        "enabled": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 120
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "recommended": true,
+            "complexity": {
+                "noForEach": "off",
+                "noStaticOnlyClass": "off",
+                "noCommaOperator": "off",
+                "useOptionalChain": "off",
+                "useLiteralKeys": "off"
+            },
+            "style": {
+                "noNonNullAssertion": "off",
+                "useConst": "warn",
+                "useNodejsImportProtocol": "off"
+            },
+            "suspicious": {
+                "noExplicitAny": "off",
+                "noImplicitAnyLet": "off",
+                "noGlobalIsNan": "off",
+                "noNonNullAssertedOptionalChain": "off"
+            },
+            "correctness": {
+                "noUnusedImports": "error",
+                "noUnusedFunctionParameters": "warn",
+                "noUnusedVariables": "error",
+                "noUnusedPrivateClassMembers": "error"
+            }
+        }
+    },
+    "overrides": [
+        {
+            "includes": ["src/lic-api/**"],
+            "linter": {
+                "enabled": false
+            },
+            "formatter": {
+                "enabled": false
+            }
+        }
+    ],
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "single",
+            "semicolons": "always",
+            "trailingCommas": "es5"
+        }
+    }
+}

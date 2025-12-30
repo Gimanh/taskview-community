@@ -1,0 +1,19 @@
+@tailwind base;
+
+@tailwind components;
+
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --tv-card-color-bg: #fff;
+    --kanban-card-title-height: 50px;
+    --tip-tap-code-bg: #15151a1d;
+  }
+  
+  .v-theme--dark {
+    --tv-card-color-bg: #212121;
+    --tv-card-active-color: #2b2b2b;
+    --tip-tap-code-bg: #c8cccc1d;
+  }
+}

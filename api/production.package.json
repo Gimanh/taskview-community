@@ -1,0 +1,9 @@
+{
+    "scripts": {
+        "byte": "bytenode --compile ./taskview-server-api.js",
+        "start": "pm2-runtime start ecosystem.config.js --env production"
+    },
+    "dependencies": {
+        "bytenode": "1.5.6"
+    }
+}

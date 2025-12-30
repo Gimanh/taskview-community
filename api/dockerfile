@@ -1,0 +1,22 @@
+FROM node:20-bullseye-slim
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    qemu-user-static \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN npm install pm2 -g
+
+WORKDIR /usr/src/app
+
+COPY ./dist .
+
+RUN npm install
+RUN npm run byte
+RUN rm ./taskview-server-api.js
+RUN rm ./taskview-server-docker.js
+
+EXPOSE 1401
+
+CMD ["npm", "run", "start"]

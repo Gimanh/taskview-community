@@ -1,0 +1,66 @@
+.tabsContainer {
+    @apply w-full bg-tv-main-bg h-full flex flex-col;
+}
+
+.tabsContent {
+    @apply flex-grow;
+    // @apply bg-tv-card-color-bg;
+    // @apply border border-tv-card-color-bg rounded-lg;
+}
+
+.tabsDivider {
+    @apply border-b-2 border-tv-card-color-bg mt-3;
+}
+
+.tabsHeader {
+    @apply flex;
+}
+
+.tabButton {
+    @apply relative px-5 py-3 transition-all duration-200 outline-none text-base font-medium cursor-pointer;
+
+    &:disabled {
+        @apply opacity-50 cursor-not-allowed;
+    }
+}
+
+.tabInactive {
+    @apply border-b-2 border-transparent border-solid;
+
+    &:hover {
+        @apply border-solid border-b-2 border-tv-tabs-active opacity-70;
+    }
+}
+
+.tabActive {
+    @apply border-solid border-b-2 border-tv-tabs-active font-semibold;
+
+    .tabButton {
+        @apply font-semibold;
+    }
+}
+
+.tabIcon {
+    @apply mr-2;
+}
+
+.tabLabel {
+    @apply font-medium;
+}
+
+.tabBadge {
+    @apply ml-2 px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full;
+}
+
+.tabPanel {
+    @apply w-full p-0 h-full;
+}
+
+// Размеры
+.tabButtonSm {
+    @apply px-3 py-1.5 text-xs;
+}
+
+.tabButtonLg {
+    @apply px-6 py-3 text-base;
+}

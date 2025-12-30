@@ -1,0 +1,8 @@
+.tv-nav-drawer {
+    &__item {
+        height: 48px;
+    }
+    &__item.active {
+        background-color: var(--nav-drawer-item-bg);
+    }
+}

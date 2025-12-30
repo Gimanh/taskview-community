@@ -1,0 +1,29 @@
+.tv-task-dialog {
+    .tv-m-task {
+        padding-left: 2px !important;
+        padding-right: 14px !important;
+
+        .v-field__input {
+            padding-top: 0 !important;
+        }
+    }
+
+    &__panels {
+        .v-expansion-panel-text__wrapper {
+            padding: 0;
+        }
+    }
+
+    i {
+        color: var(--nav-item-icon-color);
+        opacity: 1 !important;
+    }
+
+    .v-field,
+    button.elevation-1,
+    .v-card--variant-elevated {
+        box-shadow: 0px 2px 1px -1px var(--v-shadow-key-umbra-opacity, rgba(0, 0, 0, 0.2)),
+            0px 1px 1px 0px var(--v-shadow-key-penumbra-opacity, rgba(0, 0, 0, 0.14)),
+            0px 1px 3px 0px var(--v-shadow-key-ambient-opacity, rgba(0, 0, 0, 0.12)) !important;
+    }
+}

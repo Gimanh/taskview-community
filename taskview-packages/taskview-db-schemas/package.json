@@ -1,0 +1,37 @@
+{
+  "name": "taskview-ce-db-schemas",
+  "version": "1.17.0",
+  "type": "module",
+  "main": "./dist/taskview-db-schemas.umd.js",
+  "module": "./dist/taskview-db-schemas.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/taskview-db-schemas.es.js",
+      "require": "./dist/taskview-db-schemas.cjs.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build-watch": "tsc && vite build --watch",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.4",
+    "vite-plugin-dts": "^4.5.4"
+  },
+  "peerDependencies": {
+    "arktype": "2.1.20",
+    "drizzle-arktype": "^0.1.3"
+  }
+}

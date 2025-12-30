@@ -1,0 +1,19 @@
+.fz16 {
+    font-size: 16px !important;
+}
+
+.w100 {
+    width: 100% !important;
+}
+
+.cursor {
+    cursor: pointer;
+}
+
+@import './all-styles/base-screen.scss';
+@import './all-styles/font.scss';
+@import './all-styles/radius.scss';
+@import './all-styles/height.scss';
+@import './all-styles/margins.scss';
+@import './all-styles/text.scss';
+@import './all-styles/icons.scss';

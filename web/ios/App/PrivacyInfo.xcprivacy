@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+   PrivacyInfo.xcprivacy
+   App
+
+   Created by Nikolai Giman on 22.4.24..
+   Copyright (c) 2024 HandScream.com. All rights reserved.
+-->
+<plist version="1.0">
+<dict>
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+      <!-- Add this dict entry to the array if the PrivacyInfo file already exists -->
+      <dict>
+        <key>NSPrivacyAccessedAPIType</key>
+        <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+        <key>NSPrivacyAccessedAPITypeReasons</key>
+        <array>
+          <string>CA92.1</string>
+        </array>
+      </dict>
+    </array>
+  </dict>
+</plist>

@@ -1,0 +1,28 @@
+{
+    "scripts": [
+        "/0.0.0/app/version.sql",
+        "/0.0.0/auth/auth.sql",
+        "/0.0.0/app/auth/trigger_default_user_group.sql",
+        "/0.0.0/app/auth/app_permissions.sql",
+        "/0.0.0/app/auth/create_tasks_auth.sql",
+        "/0.0.0/app/tasks/schema_tasks.sql",
+        "/0.0.0/app/tasks/history_list.sql",
+        "/0.0.0/app/tasks/goals.sql",
+        "/0.0.0/app/tasks/goal_lists.sql",
+        "/0.0.0/app/tasks/tasks.sql",
+        "/0.0.0/app/auth/user_task_permissions.sql",
+        "/0.0.0/app/auth/app_components_permissions.sql",
+        "/0.0.0/app/auth/trigger_set_component_permissions.sql",
+        "/0.0.0/app/auth/trigger_set_owner_for_component.sql",
+        "/0.0.0/app/auth/trigger_set_owner_for_task.sql",
+        "/0.0.0/app/auth/app_goal_permissions.sql",
+        "/0.0.0/app/auth/trigger_set_goal_permissions.sql",
+        "/0.0.0/app/auth/user_goal_permissions.sql",
+        "/0.0.0/app/auth/user_component_permissions.sql",
+        "/0.0.0/app/auth/trigger_set_task_permissions.sql",
+        "/0.0.0/app/about/create_schema.sql",
+        "/0.0.0/app/about/about_versions.sql",
+        "/0.0.0/app/about/about_version_description.sql",
+        "/0.0.0/app/auth/app_task_permissions.sql"
+    ]
+}

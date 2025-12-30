@@ -1,0 +1,27 @@
+.tv-subtask {
+    transition: padding 0.5s ease-in-out;
+
+    .tv-subtask-input {
+        input {
+            opacity: 0 !important;
+        }
+    }
+    .v-field__prepend-inner {
+        padding-top: 8px !important;
+    }
+    .v-input--center-affix {
+        .v-field__prepend-inner {
+            padding-top: 0px !important;
+        }
+    }
+
+    &__item {
+        i {
+            width: 65%;
+            height: 65%;
+        }
+        .v-field {
+            padding-left: 2px;
+        }
+    }
+}

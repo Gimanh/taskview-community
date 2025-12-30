@@ -1,0 +1,286 @@
+{
+    "0": {
+        "version": "1.0.0",
+        "name": "Primum",
+        "releaseDate": "20220313",
+        "scripts": [],
+        "description": [
+            "Created Goals section",
+            "Add goals",
+            "Edit goals",
+            "Delete goals",
+            "Added permissions for goals",
+            "Components section",
+            "Add component list",
+            "Edit component list"
+        ]
+    },
+    "1": {
+        "version": "1.0.1",
+        "name": "Admin start",
+        "releaseDate": "20220313",
+        "scripts": [],
+        "description": [
+            "Added admin tables"
+        ]
+    },
+    "2": {
+        "version": "1.1.0",
+        "name": "Primus gradus",
+        "releaseDate": "20220424",
+        "scripts": [
+            "/1.1.0/tasks_priority.sql",
+            "/1.1.0/tasks_priority_column.sql",
+            "/1.1.0/tasks_tags.sql",
+            "/1.1.0/tasks_to_tags.sql",
+            "/1.1.0/update-permissions.sql",
+            "/1.1.0/trigger_set_task_permissions.sql"
+        ],
+        "description": [
+            "Dynamic task list loading",
+            "Hide completed tasks",
+            "Toggle completed and incomplete tasks",
+            "Added priority for tasks",
+            "Added tags for tasks",
+            "Added permissions for tags and priorities"
+        ]
+    },
+    "3": {
+        "version": "1.2.0",
+        "name": "Quaerere",
+        "releaseDate": "20220525",
+        "scripts": [],
+        "description": [
+            "Search tasks",
+            "Edit tags",
+            "Bug fixes"
+        ]
+    },
+    "4": {
+        "version": "1.3.0",
+        "name": "Fabula",
+        "releaseDate": "20220615",
+        "scripts": [
+            "/1.3.0/log_changes_tasks_goal-lists.sql",
+            "/1.3.0/log_changes_tasks_goals.sql",
+            "/1.3.0/log_changes_tasks_tasks.sql",
+            "/1.3.0/trigger_set_task_permissions.sql",
+            "/1.3.0/update-permissions.sql"
+        ],
+        "description": [
+            "Added history for tasks",
+            "Added history recovery for tasks",
+            "Added permissions for tasks"
+        ]
+    },
+    "5": {
+        "version": "1.4.0",
+        "name": "Release",
+        "releaseDate": "20240511",
+        "scripts": [
+            "/1.4.0/1.add-field-to-tags.sql"
+        ],
+        "description": [
+            "Added server seelection for login page",
+            "Added option for tag to changing tag scope from 'global' to 'project'"
+        ]
+    },
+    "6": {
+        "version": "1.4.1",
+        "name": "Release 1.4.1",
+        "releaseDate": "20240518",
+        "scripts": [
+            "/1.4.1/1.account-deletion.sql",
+            "/1.4.1/2.update-tags-constraint.sql"
+        ],
+        "description": [
+            "Oportunity delete account"
+        ]
+    },
+    "7": {
+        "version": "1.5.0",
+        "name": "Release 1.5.0",
+        "releaseDate": "20240521",
+        "scripts": [
+            "/1.5.0/1.add-archive-column.sql"
+        ],
+        "description": [
+            "Archive goals and lists",
+            "UX/UI enhancement"
+        ]
+    },
+    "8": {
+        "version": "1.6.0",
+        "name": "Release 1.6.0",
+        "releaseDate": "20240907",
+        "scripts": [
+            "/1.6.0/1.collaboration-schema.sql",
+            "/1.6.0/2.collaboration-roles.sql",
+            "/1.6.0/3.extend-permissions.sql",
+            "/1.6.0/4.collaboration-users-to-roles.sql",
+            "/1.6.0/5.add-permissions.sql",
+            "/1.6.0/6.delete-all-unused-data.sql",
+            "/1.6.0/7.add-task-dedline-columns.sql",
+            "/1.6.0/8.fixes.sql",
+            "/1.6.0/9.relation-table-task-assign.sql",
+            "/1.6.0/10.indexes_for_search.sql",
+            "/1.6.0/11.goal_id_for_task.sql",
+            "/1.6.0/12.add_default_user_data.sql"
+        ],
+        "description": [
+            "Added collaboration funcs"
+        ]
+    },
+    "9": {
+        "version": "1.6.1",
+        "name": "Release 1.6.1",
+        "releaseDate": "20240908",
+        "scripts": [
+            "/1.6.1/1.check-task-dates.sql",
+            "/1.6.1/2.add-jsonb-permission-description.sql",
+            "/1.6.1/3.delete-base-group-for-tv-users.sql",
+            "/1.6.1/4.add-locales-for-permissions.sql",
+            "/1.6.1/5.default-roles-for-project.sql"
+        ],
+        "description": [
+            "Release 1.6.1"
+        ]
+    },
+    "10": {
+        "version": "1.7.0",
+        "name": "Release 1.7.0",
+        "releaseDate": "20240920",
+        "scripts": [
+            "/1.7.0/1.trigger-for-project-owner-in-collaboration.sql",
+            "/1.7.0/2.update-owner-users-in-collaboration.sql",
+            "/1.7.0/3.delete-default-data.sql",
+            "/1.7.0/4.refactor-dates.sql",
+            "/1.7.0/5.control-dates-overlap.sql"
+        ],
+        "description": [
+            "Release 1.7.0"
+        ]
+    },
+    "11": {
+        "version": "1.8.0",
+        "name": "Release 1.8.0",
+        "releaseDate": "20240920",
+        "scripts": [
+            "/1.8.0/0.1.8.0.sql"
+        ],
+        "description": [
+            "Release 1.8.0"
+        ]
+    },
+    "12": {
+        "version": "1.8.1",
+        "name": "Release 1.8.1",
+        "releaseDate": "20240921",
+        "scripts": [
+            "/1.8.1/0.1.8.1.sql"
+        ],
+        "description": [
+            "Release 1.8.1"
+        ]
+    },
+    "13": {
+        "version": "1.9.0",
+        "name": "Release 1.9.0",
+        "releaseDate": "20250225",
+        "scripts": [
+            "/1.9.0/0.1.9.0.sql"
+        ],
+        "description": [
+            "Release 1.9.0"
+        ]
+    },
+    "14": {
+        "version": "1.9.1",
+        "name": "Release 1.9.1",
+        "releaseDate": "20250303",
+        "scripts": [
+            "/1.9.1/0.1.9.1.sql"
+        ],
+        "description": [
+            "Release 1.9.1"
+        ]
+    },
+    "15": {
+        "version": "1.9.2",
+        "name": "Release 1.9.2",
+        "releaseDate": "20250308",
+        "scripts": [
+            "/1.9.2/0.1.9.2.sql"
+        ],
+        "description": [
+            "Release 1.9.2"
+        ]
+    },
+    "16": {
+        "version": "1.9.3",
+        "name": "Release 1.9.3",
+        "releaseDate": "20250309",
+        "scripts": [
+            "/1.9.3/0.1.9.3.sql"
+        ],
+        "description": [
+            "Release 1.9.3"
+        ]
+    },
+    "17": {
+        "version": "1.10.0",
+        "name": "Release 1.10.0",
+        "releaseDate": "20250405",
+        "scripts": [
+            "/1.10.0/0.1.10.0.sql"
+        ],
+        "description": [
+            "Release 1.10.0"
+        ]
+    },
+    "18": {
+        "version": "1.13.0",
+        "name": "Release 1.13.0",
+        "releaseDate": "20250420",
+        "scripts": [
+            "/1.13.0/0.1.13.0.sql"
+        ],
+        "description": [
+            "Release 1.13.0"
+        ]
+    },
+    "19": {
+        "version": "1.14.3",
+        "name": "Release 1.14.3",
+        "releaseDate": "20250916",
+        "scripts": [
+            "/1.14.3/0.1.14.3-triggers.sql"
+        ],
+        "description": [
+            "Release 1.14.3"
+        ]
+    },
+    "20": {
+        "version": "1.15.0",
+        "name": "Release 1.15.0",
+        "releaseDate": "20250916",
+        "scripts": [
+            "/1.15.0/0.1.15.0.sql",
+            "/1.15.0/0.1.15.0-triggers.sql"
+        ],
+        "description": [
+            "Release 1.15.0 Graph"
+        ]
+    },
+    "21": {
+        "version": "1.16.0",
+        "name": "Release 1.16.0",
+        "releaseDate": "20251228",
+        "scripts": [
+            "/1.16.0/0.1.16.0.sql"
+        ],
+        "description": [
+            "Release 1.16.0"
+        ]
+    }
+}

@@ -1,0 +1,56 @@
+:root {
+    --txt-1: rgba(0, 0, 0, 0.9);
+    --txt-2: rgba(0, 0, 0, 0.7);
+    --txt-3: rgba(0, 0, 0, 0.4);
+}
+.v-theme--light {
+    --v-high-emphasis-opacity: 0.87 !important;
+}
+.v-theme--dark {
+    --txt-1: #ffffff;
+    --txt-2: rgb(255, 255, 255, 0.8);
+    --txt-3: rgb(255, 255, 255, 0.5);
+    --v-high-emphasis-opacity: 0.87 !important;
+}
+
+.txt-color {
+    color: rgba(var(--v-theme-on-surface), var(--v-high-emphasis-opacity));
+}
+
+.txt-subtitle-1 {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 24px;
+    letter-spacing: -1px;
+    text-align: left;
+}
+.txt-subtitle-2 {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 20px;
+    letter-spacing: 0.20000000298023224px;
+    text-align: left;
+}
+
+.tv-text-h3 {
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 28px;
+    letter-spacing: -1px;
+}
+
+.txt-center {
+    text-align: center;
+}
+
+.txt-only-two-lines {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.txt-opacity {
+    opacity: 0.8;
+}

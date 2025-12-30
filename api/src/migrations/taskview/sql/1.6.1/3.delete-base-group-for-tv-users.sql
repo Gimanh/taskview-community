@@ -1,0 +1,1 @@
+drop trigger if exists tr_add_user_to_default_group on tv_auth.users;

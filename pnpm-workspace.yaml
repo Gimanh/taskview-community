@@ -1,0 +1,7 @@
+packages:
+  - 'web'
+  - 'api'
+  - 'site/*' 
+  - 'taskview-packages/*' 
+public-hoist-pattern:
+  - arktype

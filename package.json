@@ -1,0 +1,36 @@
+{
+    "name": "taskview-ce-monorepo",
+    "version": "1.18.0",
+    "private": true,
+    "description": "TaskView CE monorepo containing web, API, and packages",
+    "workspaces": [
+        "web",
+        "api",
+        "taskview-packages/*"
+    ],
+    "scripts": {
+        "dev:webapp": "cd web && pnpm dev",
+        "build:webapp": "cd web && pnpm build",
+        "build:webapp:dev": "cd web && pnpm build:dev",
+        "build:packages": "pnpm --filter=taskview-api --filter=taskview-db-schemas run build",
+        "dev:api": "cd api && pnpm dev",
+        "build:api": "cd api && pnpm build",
+        "install:all": "pnpm install",
+        "update:all": "pnpm update -r",
+        "clean": "pnpm store prune && rm -rf node_modules",
+        "lint": "pnpm -r run lint",
+        "test": "pnpm -r run test"
+    },
+    "devDependencies": {
+        "@types/node": "^18.19.119",
+        "typescript": "^5.7.3"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "pnpm": ">=8.0.0"
+    },
+    "dependencies": {
+        "arktype": "2.1.20",
+        "drizzle-arktype": "0.1.3"
+    }
+}

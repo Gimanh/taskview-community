@@ -1,0 +1,28 @@
+require_relative '../../../node_modules/.pnpm/@capacitor+ios@7.4.4_@capacitor+core@7.4.4/node_modules/@capacitor/ios/scripts/pods_helpers'
+
+platform :ios, '14.0'
+use_frameworks!
+
+# workaround to avoid Xcode caching of Pods that requires
+# Product -> Clean Build Folder after new Cordova plugins installed
+# Requires CocoaPods 1.6 or newer
+install! 'cocoapods', :disable_input_output_paths => true
+
+def capacitor_pods
+  pod 'Capacitor', :path => '../../../node_modules/.pnpm/@capacitor+ios@7.4.4_@capacitor+core@7.4.4/node_modules/@capacitor/ios'
+  pod 'CapacitorCordova', :path => '../../../node_modules/.pnpm/@capacitor+ios@7.4.4_@capacitor+core@7.4.4/node_modules/@capacitor/ios'
+  pod 'CapacitorApp', :path => '../../../node_modules/.pnpm/@capacitor+app@7.0.1_@capacitor+core@7.4.4/node_modules/@capacitor/app'
+  pod 'CapacitorDevice', :path => '../../../node_modules/.pnpm/@capacitor+device@7.0.1_@capacitor+core@7.4.4/node_modules/@capacitor/device'
+  pod 'CapacitorPreferences', :path => '../../../node_modules/.pnpm/@capacitor+preferences@7.0.1_@capacitor+core@7.4.4/node_modules/@capacitor/preferences'
+  pod 'CapacitorSplashScreen', :path => '../../../node_modules/.pnpm/@capacitor+splash-screen@7.0.3_@capacitor+core@7.4.4/node_modules/@capacitor/splash-screen'
+  pod 'CapgoCapacitorUpdater', :path => '../../../node_modules/.pnpm/@capgo+capacitor-updater@7.29.0_@capacitor+core@7.4.4/node_modules/@capgo/capacitor-updater'
+end
+
+target 'TaskView' do
+  capacitor_pods
+  # Add your Pods here
+end
+
+post_install do |installer|
+  assertDeploymentTarget(installer)
+end

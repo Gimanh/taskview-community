@@ -1,0 +1,68 @@
+:root {
+    --viewport-height: 100vh;
+    --v-container-paddings: 2px;
+    --v-header-height: 64px;
+    --tv-row-height: calc(var(--viewport-height) - var(--v-header-height) - var(--v-container-paddings) - var(--inset-top) - var(--inset-bottom));
+
+    --text-white: #fff;
+    --avata-text-color: #3e3a3a;
+    --text-color-black: #303030;
+    --text-color-not-active: #5d5d5d;
+    --icon-grey: #acacac;
+    --tv-icon-grey: #acacac;
+    --icon-grey-active: #838383;
+
+    --priority-low: #38d681;
+    --priority-medium: #ffc121;
+    --priority-high: #ff5a5a;
+
+    --border-grey: #d9d9d9;
+
+    --nav-drawer-item-bg: #eef7ff;
+    --main-tasks-bg: #f1f1f1;
+    --nav-item-icon-color: #9f9f9f;
+
+
+    --tv-card-color-bg: #ffffff;
+    --tv-main-bg: #ffffff;
+
+    //tabs
+    --tv-tabs-active-color: #8e71ff;
+
+    --tv-gray-700: #b4b4b4;
+    --tv-text-active: rgb(108, 120, 244);
+    --task-item-bg: var(--v-theme-surface);
+}
+
+.v-theme--dark {
+    --text-color-black: #ebe3e3;
+    --text-color-not-active: #717171;
+    --nav-drawer-item-bg: #777676;
+    --main-tasks-bg: #000000;
+    --user-collab-page-bg: #111010;
+
+    --tv-card-color-bg: #212121;
+    --tv-main-bg: #121212;
+
+    //tabs
+    --tv-tabs-active-color: #8e71ff;
+
+    --task-item-bg: #252525;
+}
+
+/*
+* Меньше lg 64rem (1024px) @media (width >= 64rem) { ... }
+*/
+@media (width < 64rem) {
+    :root {
+        // in this height also included botton navbar
+        --v-header-height: 128px;
+        --tv-row-height: calc(var(--viewport-height) - var(--v-header-height) - var(--v-container-paddings) - var(--inset-top) - var(--inset-bottom));
+    }
+}
+
+
+
+.tv-main-bg {
+    background: rgb(var(--v-theme-background));
+}

@@ -1,0 +1,25 @@
+create or replace function tasks.add_self_to_collaboration()
+returns trigger as $$
+DECLARE
+    owner_email TEXT;
+BEGIN
+
+    select email into owner_email
+    from tv_auth.users
+    where id = NEW.owner;
+
+    if owner_email is not null then
+        insert into collaboration.users (email) values (owner_email) ON CONFLICT (email) DO NOTHING;
+        insert into collaboration.users_to_goals (goal_id, user_id) values (NEW.id, (select id from collaboration.users where email = owner_email));
+    end if;
+
+    return NEW;
+END;
+$$ language plpgsql;
+
+drop trigger if exists add_selt_to_collaboration_trg on tasks.goals;
+
+create trigger add_selt_to_collaboration_trg
+    after insert on tasks.goals
+    for each row
+    execute function tasks.add_self_to_collaboration();

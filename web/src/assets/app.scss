@@ -1,0 +1,134 @@
+@import './variables.scss';
+@import './reusable.scss';
+@import './fonts/Open_Sans/open-sans.css';
+@import './override.scss';
+@import './components/index.scss';
+
+* {
+    font-family: 'Open Sans' !important;
+    letter-spacing: 0.20000000298023224px;
+}
+
+html {
+    overflow: hidden !important;
+}
+
+:root {
+    --inset-top: env(safe-area-inset-top);
+    --inset-bottom: env(safe-area-inset-bottom);
+}
+
+
+.tv-filters-bottom-sheet {
+    .v-bottom-sheet__content.v-overlay__content {
+        bottom: 0px;
+    }
+}
+
+body,
+.v-bottom-sheet>.v-overlay__content>.v-card,
+.v-navigation-drawer,
+.v-dialog--fullscreen>.v-overlay__content>.v-card {
+    padding-top: var(--inset-top) !important;
+    padding-bottom: var(--inset-bottom) !important;
+}
+
+.v-app-bar:not(.v-app-bar--bottom) {
+    padding-top: var(--inset-top) !important;
+}
+
+.v-app-bar--bottom {
+    padding-bottom: var(--inset-bottom) !important;
+}
+
+#app {
+    height: calc(100vh - var(--inset-top) - var(--inset-bottom));
+    overflow: hidden;
+}
+
+//fix for iphone 7
+.v-field__input {
+    padding-left: var(--v-field-padding-start);
+    padding-right: var(--v-field-padding-end);
+}
+
+//fix for iphone 7
+.v-input--plain-underlined {
+    .v-field__input {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
+.v-list-item--two-line .v-list-item__append,
+.v-list-item--three-line .v-list-item__append {
+    align-self: center;
+}
+
+.start-page-height {
+    height: calc(100vh - 75px - var(--inset-top) - var(--inset-bottom));
+}
+
+.tv-row-height {
+    height: var(--tv-row-height);
+    overflow: auto;
+
+    .v-col {
+        height: 100%;
+        overflow: auto;
+    }
+}
+
+.tv-add-list {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.tv-task-container {
+    overflow: auto;
+    overflow-y: scroll;
+
+    .v-pull-to-refresh__pull-down {
+        left: 0;
+    }
+
+    .v-pull-to-refresh__scroll-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+
+.tv-task-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.tv-justify-self-center {
+    justify-self: center;
+}
+
+// @import './Goals.scss';
+
+// ::-webkit-scrollbar {
+//     -webkit-appearance: none;
+//     width: 7px;
+//     height: 3px;
+// }
+
+// ::-webkit-scrollbar-track {
+//     height: 5px !important;
+// }
+
+// ::-webkit-scrollbar-thumb {
+//     border-radius: 4px !important;
+//     height: 3px;
+//     background: #41617D !important;
+//     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5) !important;
+// }
+
+.tv-user-page {
+    height: var(--tv-row-height);
+    overflow: auto;
+}

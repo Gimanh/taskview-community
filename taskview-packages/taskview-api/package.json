@@ -1,0 +1,41 @@
+{
+  "name": "taskview-ce-api",
+  "private": false,
+  "version": "1.17.0",
+  "type": "module",
+  "main": "./dist/taskview-api.umd.js",
+  "module": "./dist/taskview-api.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/taskview-api.es.js",
+      "require": "./dist/taskview-api.cjs.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build-watch": "tsc && vite build --watch",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "^11.7.1",
+    "axios": "^1.2.3",
+    "bun": "^1.3.0",
+    "testcontainers": "^11.7.1",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4",
+    "vitest": "^3.2.4",
+    "pg": "^8.11.3",
+    "@types/pg": "^8.10.9"
+  },
+  "dependencies": {
+    "vite-plugin-dts": "^4.5.4"
+  }
+}

@@ -1,0 +1,15 @@
+.tv-subtask-actions {
+    .v-list-item__spacer {
+        display: none;
+    }
+    .v-list-item__content {
+        padding-left: 10px;
+        padding-right: 16px;
+    }
+}
+
+.tv-add-subtask {
+    i {
+        color: inherit !important;
+    }
+}

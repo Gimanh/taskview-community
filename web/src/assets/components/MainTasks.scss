@@ -1,0 +1,42 @@
+.main-tasks {
+    border-radius: 10px;
+    height: calc(100vh - var(--mob-search-height) - (var(--mob-board-height)) - var(--mob-header-height) - var(--inset-top) - var(--inset-bottom) - 110px);
+
+    &__wrapper {
+        min-height: 56px;
+        height: 100%;
+        overflow: auto;
+        border-radius: 5px;
+        position: relative;
+        overflow-x: hidden;
+    }
+}
+
+/* 1. declare transition */
+.fade-move,
+.fade-enter-active,
+.fade-leave-active {
+    transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+    will-change: transform, opacity;
+}
+
+/* 2. declare enter from and leave to state */
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+    transform: scaleX(1) translate(0, 30px);
+}
+
+/* 3. ensure leaving items are taken out of layout flow so that moving
+      animations can be calculated correctly. */
+.fade-leave-active {
+    position: absolute;
+    width: 100%;
+}
+
+/* Класс для отключения анимации */
+.no-animation.fade-enter-active,
+.no-animation.fade-leave-active {
+    transition: none !important;
+    /* Отключает анимацию */
+}
