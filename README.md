@@ -137,4 +137,8 @@ Make sure the image versions match the version defined in the root package.json.
 
 Note for contributors: contributions are accepted under the CLA (see CONTRIBUTING.md). The Project is distributed under the TaskView Source-Available License.
 
-© TaskView
+---
+
+TaskView is developed and maintained by Nikolai Giman.
+
+Copyright © 2026 Nikolai Giman
