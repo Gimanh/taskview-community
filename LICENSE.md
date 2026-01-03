@@ -1,6 +1,6 @@
 # TaskView Source-Available License
 
-Version 1.0 – Draft (tailored for TaskView)
+Version 1.0
 
 ---
 
@@ -113,9 +113,14 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMA
 
 For commercial licensing inquiries, contact:
 
-**[licensing@taskview.tech](mailto:licensing@taskview.tech)**
+**[support@taskview.tech](mailto:support@taskview.tech)**
 
 ## 10. Termination
 
 - Any violation of Sections 4 or 5 automatically terminates the rights granted under this License.
 - Rights may be reinstated if You cure the violation within 21 days and cease all prohibited use.
+
+--- 
+
+Copyright (c) 2026 Nikolai Giman
+All rights reserved.
