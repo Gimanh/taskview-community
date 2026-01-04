@@ -1,5 +1,5 @@
 {
-  "name": "taskview-ce-api",
+  "name": "taskview-api",
   "private": false,
   "version": "1.17.0",
   "type": "module",

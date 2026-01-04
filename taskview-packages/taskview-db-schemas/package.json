@@ -1,5 +1,5 @@
 {
-  "name": "taskview-ce-db-schemas",
+  "name": "taskview-db-schemas",
   "version": "1.17.0",
   "type": "module",
   "main": "./dist/taskview-db-schemas.umd.js",

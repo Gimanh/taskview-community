@@ -5,14 +5,16 @@
 
 VERSION=$1
 
+if [ -z "$VERSION" ]; then
+    echo "Usage: ./build-docker-api.sh <version>"
+    echo "Example: ./build-docker-api.sh 1.17.0"
+    exit 1
+fi
+
 node -v
 
-# Build the server scripts for the docker container (obfuscated scripts)
-npm run vite-build-docker
-
-# Create the taskview-server.js file for running the server 
-# (taskview-server-api.jsc is bytecode file that will be created by bytenode when docker file is run)
-echo "const bytenode = require('bytenode');  require('./taskview-server-api.jsc');" > ./dist/taskview-server.js
+# Build the server scripts for the docker container
+npm run build:docker
 
 # Copy the production package.json to the dist folder
 cp ./production.package.json ./dist/package.json
@@ -20,14 +22,17 @@ cp ./production.package.json ./dist/package.json
 # Copy the production ecosystem.config.js to the dist folder
 cp ./production.ecosystem.config.js ./dist/ecosystem.config.js
 
-# Build the migration scripts for the docker container (obfuscated scripts)
-npm run vite-build-migration
-mkdir ./dist-migration/taskview
+# Build the migration scripts for the docker container
+npm run build:migration
+mkdir -p ./dist-migration/taskview
 cp -R ./src/migrations/taskview/* ./dist-migration/taskview
 node ./commands/copy-migration-files.js
 
+echo "Building docker image..."
 docker buildx build --platform=linux/amd64,linux/arm64 -t gimanhead/taskview-ce-api-server:$VERSION -t gimanhead/taskview-ce-api-server:latest . --load
 
 cd postgresql
 bash ./build-docker-migrations.sh $VERSION
 cd ..
+
+echo "Build complete! Image: gimanhead/taskview-ce-api-server:$VERSION"
