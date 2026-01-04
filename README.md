@@ -127,7 +127,7 @@ docker-compose up
 Make sure the image versions match the version defined in the root package.json.
 
 ## Roadmap
-- Migrate api-server to BunJS
+
 - Plugin / extension system
 - Migrate to NuxtUI or similar ui library
 - Enterprise SSO and identity integrations

@@ -27,7 +27,7 @@ export default defineConfig({
             ecma: 2015,
             compress: true,
             mangle: {
-                properties: false,//couse error if true after build
+                properties: false,//cause error if true after build
             },
             format: {
                 comments: true,
@@ -37,9 +37,9 @@ export default defineConfig({
             external: ['pg-native'],
             output: {
                 format: 'umd',
-                entryFileNames: 'taskview-server-docker.js',
-                chunkFileNames: 'taskview-server-docker-[hash].js',
-                assetFileNames: 'taskview-server-docker-[name]-[hash].[ext]',
+                entryFileNames: 'taskview-server.js',
+                chunkFileNames: 'taskview-server-[hash].js',
+                assetFileNames: 'taskview-server-[name]-[hash].[ext]',
             },
         },
     },
