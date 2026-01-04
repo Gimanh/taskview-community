@@ -115,6 +115,10 @@ export const useTasksStore = defineStore('tasks', {
                 if (mainTask) {
                     mainTask.subtasks.push(task);
                 }
+
+                if (this.selectedTask?.id === task.parentId) {
+                    this.selectedTask.subtasks.push(task);
+                }
             } else {
                 this.tasks.unshift(task);
             }
