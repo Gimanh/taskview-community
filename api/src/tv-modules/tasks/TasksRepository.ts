@@ -652,7 +652,7 @@ export class TasksRepository {
         }
 
         const result = await callWithCatch(() =>
-            this.db.dbDrizzle.select().from(TasksSchema).where(and(...conditions)).orderBy(asc(TasksSchema.kanbanOrder)).limit(10)
+            this.db.dbDrizzle.select().from(TasksSchema).where(and(...conditions)).orderBy(asc(TasksSchema.kanbanOrder)).limit(20)
         );
         return result ?? [];
     }

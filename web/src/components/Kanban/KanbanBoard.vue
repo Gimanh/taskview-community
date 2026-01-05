@@ -202,7 +202,7 @@ const loadMoreTasks = (columnId: number) => {
     console.log('loadMoreTasks', columnId);
     kanbanStore.fetchTasksForColumn(
         kanbanStore.goalId, 
-        columnId, 
+        columnId === DEFAULT_ID ? null : columnId, 
         kanbanStore.tasksData[columnId]?.tasks[kanbanStore.tasksData[columnId]?.tasks.length - 1]?.kanbanOrder || null
     );
     canShowLoadMore.value[columnId] = false;
