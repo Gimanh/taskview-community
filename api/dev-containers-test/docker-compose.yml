@@ -14,7 +14,7 @@ services:
       timeout: 5s
       retries: 5
   migration:
-    image: gimanhead/taskview-ce-db-migration:1.18.0
+    image: gimanhead/taskview-ce-db-migration:1.18.2
     restart: "no"
     depends_on:
       db:
@@ -23,12 +23,12 @@ services:
       - ./.env.taskview
 
   taskview-ce-webapp:
-    image: gimanhead/taskview-ce-webapp:1.18.0
+    image: gimanhead/taskview-ce-webapp:1.18.2
     restart: "no"
     ports:
       - "8888:80"
   taskview-api-server:
-    image: gimanhead/taskview-ce-api-server:1.18.0
+    image: gimanhead/taskview-ce-api-server:1.18.2
     restart: "no"
     ports:
       - "1725:1401"
