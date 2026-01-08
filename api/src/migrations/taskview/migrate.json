@@ -282,5 +282,17 @@
         "description": [
             "Release 1.16.0"
         ]
+    },
+    "22": {
+        "version": "1.18.2",
+        "name": "Release 1.18.2",
+        "releaseDate": "20260108",
+        "scripts": [
+            "/1.18.2/0.1.18.2.sql",
+            "/1.18.2/all-triggers.sql"
+        ],
+        "description": [
+            "Release 1.18.2"
+        ]
     }
 }
