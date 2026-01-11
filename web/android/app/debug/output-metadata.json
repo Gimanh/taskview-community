@@ -11,9 +11,9 @@
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 114,
-      "versionName": "1.14",
-      "outputFile": "TaskView-1.14-debug.apk"
+      "versionCode": 1150,
+      "versionName": "1.15.0",
+      "outputFile": "TaskView-1.15.0-debug.apk"
     }
   ],
   "elementType": "File",
