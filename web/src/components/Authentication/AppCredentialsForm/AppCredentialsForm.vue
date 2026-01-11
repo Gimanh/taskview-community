@@ -22,6 +22,11 @@
                     key="3"
                     @cancel-recovery="setRecoveryMode(false)"
                 />
+                
+                <div class="flex flex-col gap-2">
+                    <AuthByGoogle />
+                    <AuthByGithub />
+                </div>
             </v-card-text>
             <v-divider />
 
@@ -47,7 +52,7 @@
     </v-card>
 </template>
 
-<script setup lang="ts">
+<script async setup lang="ts">
 import { computed, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
@@ -56,6 +61,8 @@ import PasswordRecovery from '@/components/Authentication/PasswordRecovery';
 import RegistrationForm from '@/components/Authentication/RegistrationForm';
 import ResetPassword from '@/components/Authentication/ResetPassword';
 import LoginByCode from '../LoginByCode/LoginByCode.vue';
+import AuthByGoogle from '@/components/Authentication/AuthByGoogle.vue';
+import AuthByGithub from '@/components/Authentication/AuthByGithub.vue';
 
 const data = reactive({
     recoveryModeActive: false,
