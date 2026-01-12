@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { appUserMiddleware } from './middlewares/app-user-middleware';
 import errorHandler from './middlewares/error-handler';
 import routes from './routes';
+import passport, { initPassportLogin } from './tv-modules/auth/strategies/passport-login';
 
 const VRS = '1.18.0';
 
@@ -18,6 +19,8 @@ export default class App {
         this.initializeMiddlewares();
         this.initializeRoutes();
         this.app.use(errorHandler);
+        this.app.use(passport.initialize());
+        initPassportLogin();
     }
 
     private initializeMiddlewares() {

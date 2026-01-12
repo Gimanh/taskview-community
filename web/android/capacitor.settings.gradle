@@ -5,6 +5,9 @@ project(':capacitor-android').projectDir = new File('../../node_modules/.pnpm/@c
 include ':capacitor-app'
 project(':capacitor-app').projectDir = new File('../../node_modules/.pnpm/@capacitor+app@7.0.1_@capacitor+core@7.4.4/node_modules/@capacitor/app/android')
 
+include ':capacitor-browser'
+project(':capacitor-browser').projectDir = new File('../../node_modules/.pnpm/@capacitor+browser@7.0.3_@capacitor+core@7.4.4/node_modules/@capacitor/browser/android')
+
 include ':capacitor-device'
 project(':capacitor-device').projectDir = new File('../../node_modules/.pnpm/@capacitor+device@7.0.1_@capacitor+core@7.4.4/node_modules/@capacitor/device/android')
 

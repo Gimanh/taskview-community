@@ -42,6 +42,7 @@ export default class AuthModel {
             return !!(data.rowCount && data.rowCount > 0);
         } catch (error: unknown) {
             $logger.error(error, 'Can not update login code');
+            return false;
         }
 
         return true;

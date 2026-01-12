@@ -37,3 +37,5 @@ customer-license
 !build-docker-api.sh
 !build-docker-web.sh
 !entrypoint.sh
+*.private
+*.private*

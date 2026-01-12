@@ -16,6 +16,7 @@ import {
 import { generateString, isEmail, time } from '../../utils/helpers';
 import EnEmailTemplate from './mail/confirm-email-en';
 import RuEmailTemplate from './mail/confirm-email-ru';
+import type { ExternalAuthUser } from './strategies/external-auth.types';
 
 export default class AuthController {
     private readonly jwtAlg: Algorithm = process.env.JWT_ALG as Algorithm;
@@ -91,6 +92,9 @@ export default class AuthController {
         return this.makeidLogin(16);
     }
 
+    generateLoginCode() {
+        return `${this.makeidLogin(12)}:${Date.now()}`.toLocaleLowerCase();
+    }
     /**
      * Register user by email and send login code to the email
      * @param req
@@ -110,7 +114,7 @@ export default class AuthController {
 
         const { email } = data.data;
 
-        const code = `${this.makeidLogin(12)}:${Date.now()}`.toLocaleLowerCase();
+        const code = this.generateLoginCode();
 
         $logger.info(data.data, `[AuthController:sendLoginCode] we got data for send login code`);
 
@@ -175,6 +179,77 @@ export default class AuthController {
         });
     }
 
+    loginByProvider = async (req: Request, res: Response) => {
+        const user = req.user as ExternalAuthUser;
+
+        if (!user) {
+            return res.status(400).send('User not found');
+        }
+
+        let userData = await req.appUser.authManager.repository.getUserByLogin(
+            user.email,
+            isEmail(user.email)
+        );
+
+        if (!userData) {
+            const password = this.makeidLogin(7);
+            const login = this.makeidLogin(7);
+
+            const id = await req.appUser.authManager.repository.registerUserInDb({
+                login,
+                email: user.email,
+                password: hashSync(password, 10),
+                block: 0,
+                confirmEmailCode: '',
+            });
+
+            if (!id) {
+                $logger.error(`Can not register user ${user.email} & login ${login}`);
+                return res.status(500).send(`Can not register user ${user.email} & login ${login}`);
+            }
+
+            userData = await req.appUser.authManager.repository.getUserByLogin(
+                user.email,
+                isEmail(user.email)
+            );
+        }
+
+        if (!userData) {
+            $logger.error(`Can not find user ${user.email} after registration`);
+            return res.status(500).send(`Can not find user ${user.email} after registration`);
+        }
+
+        const code = this.generateLoginCode();
+
+        const result = await req.appUser.authManager.repository.updateLoginCode(code, userData.email);
+
+        if (!result) {
+            $logger.error(`Can not update login code for user ${userData.email}`);
+            return res.status(500).send(`Can not update login code for user`);
+        }
+
+        const authData = {
+            code: code.split(':')[0],
+            email: userData.email,
+        };
+
+        const encodedAuthData = encodeURIComponent(JSON.stringify(authData));
+
+        try {
+            const platformData = JSON.parse(req.query.state as string);
+
+            if (platformData.platform === "mobile") {
+                return res.redirect(
+                    `taskview://login?tokens=${encodedAuthData}`
+                );
+            }
+        } catch (error) {
+            $logger.info(`Can not parse platform data from state: ${req.query.state}`);
+        }
+
+        return res.redirect(`${process.env.APP_URL}/login?tokens=${encodedAuthData}`);
+    }
+
     loginByCode = async (req: Request, res: Response) => {
         const schema = z.object({
             email: z.string().email().toLowerCase(),
@@ -202,7 +277,12 @@ export default class AuthController {
         }
 
         if (tokenFromDb[0] !== data.data.code) {
-            return res.status(400).end();
+            return res.status(400).send({ message: 'Invalid code' });
+        }
+
+        if (tokenFromDb[1] && Date.now() - +tokenFromDb[1] > 60 * 1000) {
+            await req.appUser.authManager.repository.updateLoginCode(null, userData.email);
+            return res.status(400).send({ message: 'Code expired, get new code' });
         }
 
         const tokenRowId = await req.appUser.authManager.jwtStorage.initTokenRecord(userData.id);
@@ -225,11 +305,7 @@ export default class AuthController {
             $logger.error(`Can not update tokens in JWT Storage for user ${userData.id} and rowId ${tokenRowId}`);
         }
 
-        try {
-            await req.appUser.authManager.repository.updateLoginCode(null, userData.email);
-        } catch (_err: unknown) {
-            $logger.error(`Can not update updateLoginCode after login`);
-        }
+        await req.appUser.authManager.repository.updateLoginCode(null, userData.email);
 
         return res.json(tokens);
     };
