@@ -6,8 +6,6 @@ import errorHandler from './middlewares/error-handler';
 import routes from './routes';
 import passport, { initPassportLogin } from './tv-modules/auth/strategies/passport-login';
 
-const VRS = '1.18.0';
-
 export default class App {
     public app: express.Application;
     public port: number;
@@ -16,12 +14,19 @@ export default class App {
         this.app = express();
         this.port = port;
 
+        this.extendApp();
+
         this.initializeMiddlewares();
         this.initializeRoutes();
         this.app.use(errorHandler);
         this.app.use(passport.initialize());
         initPassportLogin();
+
+        this.extendMiddlewares();
     }
+
+    protected extendApp(): void { }
+    protected extendMiddlewares(): void { }
 
     private initializeMiddlewares() {
         //add tvJson method, clien need response format like {response: data}
@@ -48,7 +53,6 @@ export default class App {
     public listen() {
         return this.app.listen(this.port, '0.0.0.0', () => {
             console.log(`Server is running on port ${this.port}`);
-            console.log(`Server version is ${VRS}`);
         });
     }
 }
