@@ -1,6 +1,6 @@
 {
   "name": "taskview-ce-webapp",
-  "version": "1.17.0",
+  "version": "1.19.5",
   "private": true,
   "scripts": {
     "dev": "vite",

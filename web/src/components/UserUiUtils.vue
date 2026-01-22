@@ -79,9 +79,11 @@ onMounted(async () => {
 });
 
 async function logoutFromApp() {
-    await logout();
-    await router.push('/');
-    router.go(0);
+    const result = await logout();
+    if (result) {
+        await router.push('/');
+        router.go(0);
+    }
 }
 
 async function checkForUpdates() {

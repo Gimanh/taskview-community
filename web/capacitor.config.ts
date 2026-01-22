@@ -12,18 +12,19 @@ const config: CapacitorConfig = {
         zoomEnabled: false,
     },
     server: {
-        hostname: 'taskview.handscream.com',
-        //androidScheme: 'https://',
+        hostname: 'app.taskview.tech',
     },
     plugins: {
-        "CapacitorUpdater": {
-            "autoUpdate": false,
-        }
+        CapacitorUpdater: {
+            autoUpdate: false,
+        },
+        CapacitorCookies: {
+            enabled: true,
+        },
+        CapacitorHttp: {
+            enabled: true,
+        },
     },
-    // server: {
-    //     url: 'http://192.168.0.2:3000',
-    //     cleartext: true,
-    // },
 };
 
 export default config;

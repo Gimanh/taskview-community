@@ -23,6 +23,8 @@ export default class AuthController {
     private readonly jwtExp: string = process.env.ACCESS_LIFE_TIME!;
     private readonly jwtRefreshExp: string = process.env.REFRESH_LIFE_TIME!;
 
+    private readonly refreshTokenCookieName: string = 'taskview-refresh';
+
     comparePasswords(pwd: string, hash: string): Promise<boolean> {
         return new Promise((resolve) => {
             //Prev version was written in PHP need to replace
@@ -250,6 +252,15 @@ export default class AuthController {
         return res.redirect(`${process.env.APP_URL}/login?tokens=${encodedAuthData}`);
     }
 
+    setRefreshToken = async (res: Response, refreshToken: string) => {
+        res.cookie(this.refreshTokenCookieName, refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+            maxAge: 1000 * 60 * 60 * 24 * 30,
+        });
+    }
+
     loginByCode = async (req: Request, res: Response) => {
         const schema = z.object({
             email: z.string().email().toLowerCase(),
@@ -307,6 +318,8 @@ export default class AuthController {
 
         await req.appUser.authManager.repository.updateLoginCode(null, userData.email);
 
+        await this.setRefreshToken(res, tokens.refresh);
+
         return res.json(tokens);
     };
 
@@ -351,6 +364,8 @@ export default class AuthController {
             if (!updateResult) {
                 $logger.error(`Can not update tokens in JWT Storage for user ${userData.id} and rowId ${tokenRowId}`);
             }
+
+            await this.setRefreshToken(res, tokens.refresh);
 
             return res.json(tokens);
         }
@@ -549,37 +564,46 @@ export default class AuthController {
     };
 
     logout = async (req: Request, res: Response) => {
-        if (!req.headers['authorization']) {
-            return res.status(400).end();
-        }
+        this.setRefreshToken(res, '');
 
-        const result = req.headers['authorization'].match(/Bearer\s(\S+)/);
+        const result = req.headers['authorization']?.match(/Bearer\s(\S+)/);
 
         if (!result) {
-            return res.status(400).end();
+            return res.status(401).send({ message: 'Unauthorized' });
         }
 
-        const payload = decode(result['1']) as UserJwtPayload;
-        if (!payload) {
-            return res.status(400).end();
+        const tokenId = req.appUser.getTokenId();
+
+        if (!tokenId) {
+            return res.status(401).send({ message: 'Unauthorized' });
         }
 
-        const deleteResult = await req.appUser.authManager.jwtStorage.deleteTokens(payload.userData.id, result['1']);
+        const deleteResult = await req.appUser.authManager.jwtStorage.deleteTokens(tokenId, result['1']);
 
         if (!deleteResult) {
-            return res.status(500).end();
+            return res.status(500).send({ message: 'Failed to revoke token' });
         }
 
-        return res.send();
+        return res.status(204).end();
     };
 
     refreshTokens = async (req: Request, res: Response) => {
-        const refreshData = RefreshTokenSchema.safeParse(req.body);
-        if (!refreshData.success) {
-            return res.status(400).end();
+        let refreshToken = req.cookies[this.refreshTokenCookieName];
+
+        if (!refreshToken) {
+            const refreshData = RefreshTokenSchema.safeParse(req.body);
+
+            if (!refreshData.success) {
+                return res.status(400).send({ message: 'Invalid refresh token' });
+            }
+
+            refreshToken = refreshData.data.refreshToken;
+            $logger.info(`Refresh token found in body`);
+        } else {
+            $logger.info(`Refresh token found in cookies`);
         }
 
-        const payload = await AuthController.validateTokens(refreshData.data.refreshToken);
+        const payload = await AuthController.validateTokens(refreshToken);
 
         if (!payload) {
             return res.status(400).end();
@@ -597,6 +621,8 @@ export default class AuthController {
             $logger.error(`Can not refresh tokens for ${payload}`);
             return res.status(500).end();
         }
+
+        await this.setRefreshToken(res, newTokens.refresh);
 
         return res.json(newTokens);
     };

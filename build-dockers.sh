@@ -11,7 +11,7 @@ VERSION=$1
 
 # If version not provided, read from package.json
 if [ -z "$VERSION" ]; then
-    VERSION=$(node -p "require('./package.json').version")
+VERSION=$(node -p "require('./package.json').version")
 fi
 
 echo "Building TaskView CE version: $VERSION"

@@ -1,77 +1,77 @@
 PODS:
   - Alamofire (5.10.2)
   - BigInt (5.2.0)
-  - Capacitor (7.4.4):
+  - Capacitor (7.4.5):
     - CapacitorCordova
   - CapacitorApp (7.0.1):
     - Capacitor
   - CapacitorBrowser (7.0.3):
     - Capacitor
-  - CapacitorCordova (7.4.4)
+  - CapacitorCordova (7.4.5)
   - CapacitorDevice (7.0.1):
     - Capacitor
   - CapacitorPreferences (7.0.1):
     - Capacitor
-  - CapacitorSplashScreen (7.0.3):
+  - CapacitorSplashScreen (7.0.4):
     - Capacitor
-  - CapgoCapacitorUpdater (7.29.0):
+  - CapgoCapacitorUpdater (7.41.1):
     - Alamofire (= 5.10.2)
     - BigInt (= 5.2.0)
     - Capacitor
-    - SSZipArchive (= 2.4.3)
     - Version (= 0.8.0)
-  - SSZipArchive (2.4.3)
+    - ZIPFoundation (~> 0.9)
   - Version (0.8.0)
+  - ZIPFoundation (0.9.20)
 
 DEPENDENCIES:
-  - "Capacitor (from `../../../node_modules/.pnpm/@capacitor+ios@7.4.4_@capacitor+core@7.4.4/node_modules/@capacitor/ios`)"
-  - "CapacitorApp (from `../../../node_modules/.pnpm/@capacitor+app@7.0.1_@capacitor+core@7.4.4/node_modules/@capacitor/app`)"
-  - "CapacitorBrowser (from `../../../node_modules/.pnpm/@capacitor+browser@7.0.3_@capacitor+core@7.4.4/node_modules/@capacitor/browser`)"
-  - "CapacitorCordova (from `../../../node_modules/.pnpm/@capacitor+ios@7.4.4_@capacitor+core@7.4.4/node_modules/@capacitor/ios`)"
-  - "CapacitorDevice (from `../../../node_modules/.pnpm/@capacitor+device@7.0.1_@capacitor+core@7.4.4/node_modules/@capacitor/device`)"
-  - "CapacitorPreferences (from `../../../node_modules/.pnpm/@capacitor+preferences@7.0.1_@capacitor+core@7.4.4/node_modules/@capacitor/preferences`)"
-  - "CapacitorSplashScreen (from `../../../node_modules/.pnpm/@capacitor+splash-screen@7.0.3_@capacitor+core@7.4.4/node_modules/@capacitor/splash-screen`)"
-  - "CapgoCapacitorUpdater (from `../../../node_modules/.pnpm/@capgo+capacitor-updater@7.29.0_@capacitor+core@7.4.4/node_modules/@capgo/capacitor-updater`)"
+  - "Capacitor (from `../../../../node_modules/.pnpm/@capacitor+ios@7.4.5_@capacitor+core@7.4.5/node_modules/@capacitor/ios`)"
+  - "CapacitorApp (from `../../../../node_modules/.pnpm/@capacitor+app@7.0.1_@capacitor+core@7.4.5/node_modules/@capacitor/app`)"
+  - "CapacitorBrowser (from `../../../../node_modules/.pnpm/@capacitor+browser@7.0.3_@capacitor+core@7.4.5/node_modules/@capacitor/browser`)"
+  - "CapacitorCordova (from `../../../../node_modules/.pnpm/@capacitor+ios@7.4.5_@capacitor+core@7.4.5/node_modules/@capacitor/ios`)"
+  - "CapacitorDevice (from `../../../../node_modules/.pnpm/@capacitor+device@7.0.1_@capacitor+core@7.4.5/node_modules/@capacitor/device`)"
+  - "CapacitorPreferences (from `../../../../node_modules/.pnpm/@capacitor+preferences@7.0.1_@capacitor+core@7.4.5/node_modules/@capacitor/preferences`)"
+  - "CapacitorSplashScreen (from `../../../../node_modules/.pnpm/@capacitor+splash-screen@7.0.4_@capacitor+core@7.4.5/node_modules/@capacitor/splash-screen`)"
+  - "CapgoCapacitorUpdater (from `../../../../node_modules/.pnpm/@capgo+capacitor-updater@7.41.1_@capacitor+core@7.4.5/node_modules/@capgo/capacitor-updater`)"
 
 SPEC REPOS:
   trunk:
     - Alamofire
     - BigInt
-    - SSZipArchive
     - Version
+    - ZIPFoundation
 
 EXTERNAL SOURCES:
   Capacitor:
-    :path: "../../../node_modules/.pnpm/@capacitor+ios@7.4.4_@capacitor+core@7.4.4/node_modules/@capacitor/ios"
+    :path: "../../../../node_modules/.pnpm/@capacitor+ios@7.4.5_@capacitor+core@7.4.5/node_modules/@capacitor/ios"
   CapacitorApp:
-    :path: "../../../node_modules/.pnpm/@capacitor+app@7.0.1_@capacitor+core@7.4.4/node_modules/@capacitor/app"
+    :path: "../../../../node_modules/.pnpm/@capacitor+app@7.0.1_@capacitor+core@7.4.5/node_modules/@capacitor/app"
   CapacitorBrowser:
-    :path: "../../../node_modules/.pnpm/@capacitor+browser@7.0.3_@capacitor+core@7.4.4/node_modules/@capacitor/browser"
+    :path: "../../../../node_modules/.pnpm/@capacitor+browser@7.0.3_@capacitor+core@7.4.5/node_modules/@capacitor/browser"
   CapacitorCordova:
-    :path: "../../../node_modules/.pnpm/@capacitor+ios@7.4.4_@capacitor+core@7.4.4/node_modules/@capacitor/ios"
+    :path: "../../../../node_modules/.pnpm/@capacitor+ios@7.4.5_@capacitor+core@7.4.5/node_modules/@capacitor/ios"
   CapacitorDevice:
-    :path: "../../../node_modules/.pnpm/@capacitor+device@7.0.1_@capacitor+core@7.4.4/node_modules/@capacitor/device"
+    :path: "../../../../node_modules/.pnpm/@capacitor+device@7.0.1_@capacitor+core@7.4.5/node_modules/@capacitor/device"
   CapacitorPreferences:
-    :path: "../../../node_modules/.pnpm/@capacitor+preferences@7.0.1_@capacitor+core@7.4.4/node_modules/@capacitor/preferences"
+    :path: "../../../../node_modules/.pnpm/@capacitor+preferences@7.0.1_@capacitor+core@7.4.5/node_modules/@capacitor/preferences"
   CapacitorSplashScreen:
-    :path: "../../../node_modules/.pnpm/@capacitor+splash-screen@7.0.3_@capacitor+core@7.4.4/node_modules/@capacitor/splash-screen"
+    :path: "../../../../node_modules/.pnpm/@capacitor+splash-screen@7.0.4_@capacitor+core@7.4.5/node_modules/@capacitor/splash-screen"
   CapgoCapacitorUpdater:
-    :path: "../../../node_modules/.pnpm/@capgo+capacitor-updater@7.29.0_@capacitor+core@7.4.4/node_modules/@capgo/capacitor-updater"
+    :path: "../../../../node_modules/.pnpm/@capgo+capacitor-updater@7.41.1_@capacitor+core@7.4.5/node_modules/@capgo/capacitor-updater"
 
 SPEC CHECKSUMS:
   Alamofire: 7193b3b92c74a07f85569e1a6c4f4237291e7496
   BigInt: f668a80089607f521586bbe29513d708491ef2f7
-  Capacitor: 09d9ff8e9618e8c4b3cab2bbee34a17215dd2fef
+  Capacitor: a5bf59e09f9dd82694fdcca4d107b4d215ac470f
   CapacitorApp: d63334c052278caf5d81585d80b21905c6f93f39
   CapacitorBrowser: 66aa8ff09cdca2a327ce464b113b470e6f667753
-  CapacitorCordova: bf648a636f3c153f652d312ae145fb508b6ffced
+  CapacitorCordova: 31bbe4466000c6b86d9b7f1181ee286cff0205aa
   CapacitorDevice: fe3f190e1d718f4607bdc6b73993433d1c84f409
   CapacitorPreferences: cbf154e5e5519b7f5ab33817a334dda1e98387f9
-  CapacitorSplashScreen: d06ae8804808e9f649a08e7bb7f283c77b688084
-  CapgoCapacitorUpdater: b3a419b281c01eb9efc8969fe5183ea0da636d25
-  SSZipArchive: fe6a26b2a54d5a0890f2567b5cc6de5caa600aef
+  CapacitorSplashScreen: 03d04ffe57d5b619cfc162efc7415a965c92cc3f
+  CapgoCapacitorUpdater: 4bc3381d413a3e36ecfee9a548b19cc3f4b2a9c8
   Version: de5907f2c5d0f3cf21708db7801d1d5401139486
+  ZIPFoundation: dfd3d681c4053ff7e2f7350bc4e53b5dba3f5351
 
-PODFILE CHECKSUM: 9772ce7df102002849c361cc64e98fb0b609688d
+PODFILE CHECKSUM: d0ad3405654a881e2cb6b93743d30c0ace507415
 
 COCOAPODS: 1.16.2
