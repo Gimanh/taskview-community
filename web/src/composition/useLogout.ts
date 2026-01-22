@@ -3,8 +3,14 @@ import $api from '@/helpers/axios';
 import { $ls } from '@/plugins/axios';
 
 export async function logout() {
-    await $api.post<LogoutResponse>('/module/auth/logout').catch((err) => {
+    const result = await $api.post<LogoutResponse>('/module/auth/logout').catch((err) => {
         console.log(err, $api);
     });
-    await $ls.invalidateTokens();
+
+    if (result) {
+        await $ls.invalidateTokens();
+        return true;
+    }
+
+    return false;
 }

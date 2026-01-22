@@ -20,11 +20,11 @@ export default class JwtStorage {
             }
             return false;
         } catch (error: any) {
-            $logger.error('Can not complete initTokenRecord', {
+            $logger.error({
                 userId,
                 errorMessage: error.message,
                 errorStack: error.stack,
-            });
+            }, 'Can not complete initTokenRecord');
             return false;
         }
     }
@@ -40,7 +40,7 @@ export default class JwtStorage {
             const res = await this.db.query(query, [accessToken, refreshToken, rowId]);
             return !!(res.rowCount && res.rowCount > 0);
         } catch (error: any) {
-            $logger.error('Error updating tokens:', { errorMessage: error.message, errorStack: error.stack });
+            $logger.error({ errorMessage: error.message, errorStack: error.stack }, 'Error updating tokens:');
             return false;
         }
     }
@@ -55,11 +55,11 @@ export default class JwtStorage {
 
             return false;
         } catch (error: any) {
-            $logger.error('Error fetching tokens', {
+            $logger.error({
                 rowId,
                 errorMessage: error.message,
                 errorStack: error.stack,
-            });
+            }, 'Error fetching tokens');
             return false;
         }
     }
@@ -67,8 +67,8 @@ export default class JwtStorage {
     async deleteTokens(userId: number, accessToken: string): Promise<boolean> {
         try {
             const query = 'DELETE FROM tv_auth.user_tokens WHERE user_id = $1 AND access_token = $2;';
-            const deleteResul = await this.db.query(query, [userId, accessToken]);
-            return !!(deleteResul.rowCount && deleteResul.rowCount > 0);
+            await this.db.query(query, [userId, accessToken]);
+            return true;
         } catch (_error: any) {
             return false;
         }
