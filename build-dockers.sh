@@ -14,6 +14,11 @@ if [ -z "$VERSION" ]; then
 VERSION=$(node -p "require('./package.json').version")
 fi
 
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+nvm use 24
+node -v
+
 echo "Building TaskView CE version: $VERSION"
 
 # Build CE API
