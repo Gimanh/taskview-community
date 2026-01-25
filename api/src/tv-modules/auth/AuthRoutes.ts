@@ -48,5 +48,13 @@ export default class AuthRoutes implements Routable {
             })(req, res, next),
             this.authController.loginByProvider
         );
+
+        this.router.post(
+            '/provider/:providerName/callback',
+            (req: Request, res: Response, next: NextFunction) => passport.authenticate(req.params.providerName, {
+                scope: ExternalProviderScope[req.params.providerName], session: false
+            })(req, res, next),
+            this.authController.loginByProvider
+        );
     }
 }

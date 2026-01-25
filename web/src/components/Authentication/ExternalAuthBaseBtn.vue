@@ -21,7 +21,7 @@ import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 
 const props = defineProps<{
-    provider: 'google' | 'github';
+    provider: 'google' | 'github' | 'apple';
 }>();
 
 const { mainServer } = await useAdditionalServer();
