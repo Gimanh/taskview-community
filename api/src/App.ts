@@ -14,7 +14,9 @@ const allow = new Set([
         "https://taskview.handscream.com",
         "capacitor://taskview.handscream.com",
         "capacitor://app.taskview.tech",
+        "https://appleid.apple.com"
     ]),
+    ...(process.env.CORS_ALLOWED_ORIGINS?.split(',') || []),
 ]);
 
 export default class App {

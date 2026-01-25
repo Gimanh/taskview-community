@@ -26,6 +26,7 @@
                 <div class="flex flex-col gap-2">
                     <AuthByGoogle />
                     <AuthByGithub />
+                    <AuthByApple />
                 </div>
             </v-card-text>
             <v-divider />
@@ -63,6 +64,7 @@ import ResetPassword from '@/components/Authentication/ResetPassword';
 import LoginByCode from '../LoginByCode/LoginByCode.vue';
 import AuthByGoogle from '@/components/Authentication/AuthByGoogle.vue';
 import AuthByGithub from '@/components/Authentication/AuthByGithub.vue';
+import AuthByApple from '@/components/Authentication/AuthByApple.vue';
 
 const data = reactive({
     recoveryModeActive: false,
