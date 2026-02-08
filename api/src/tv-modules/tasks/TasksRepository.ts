@@ -274,7 +274,7 @@ export class TasksRepository {
 
     async fetchSubtasks(taskId: number): Promise<TasksSchemaTypeForSelect[]> {
         const result = await callWithCatch(() =>
-            this.db.dbDrizzle.select().from(TasksSchema).where(eq(TasksSchema.parentId, taskId))
+            this.db.dbDrizzle.select().from(TasksSchema).where(eq(TasksSchema.parentId, taskId)).orderBy(asc(TasksSchema.id))
         );
 
         return result ?? [];
@@ -560,8 +560,10 @@ export class TasksRepository {
         }
 
         // complete
-        if (data.showCompleted === 0) conditions.push(eq(TasksSchema.complete, false));
-        else if (data.showCompleted === 1) conditions.push(eq(TasksSchema.complete, true));
+        if (!data.ignoreCompleted) {
+            if (data.showCompleted === 0) conditions.push(eq(TasksSchema.complete, false));
+            else if (data.showCompleted === 1) conditions.push(eq(TasksSchema.complete, true));
+        }
 
         // assignee filter — через EXISTS
         if (data.filters?.selectedUser) {

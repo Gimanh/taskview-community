@@ -77,6 +77,7 @@ export type TaskArgFetch = {
     searchText?: string;
     filters?: TaskFilters;
     unlimited?: boolean;
+    ignoreCompleted?: boolean;
 };
 
 export type TaskResponseFetch = Task[];
