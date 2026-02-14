@@ -12,7 +12,7 @@ export const TaskArkTypeUpdate = type({
     'parentId?': 'number|null',
     'description?': 'string',
     'complete?': 'boolean',
-    'goalListId?': 'number',
+    'goalListId?': 'number|null',
     // 'creatorId?': 'number',
     'note?': 'string',
     'priorityId?': '1|2|3|null',
@@ -23,7 +23,7 @@ export const TaskArkTypeUpdate = type({
     'statusId?': 'number|null',
     'taskOrder?': 'number',
     'kanbanOrder?': 'number',
-    'amount?': 'number|null',
+    'amount?': 'string|null',
     'transactionType?': '1|0|null',
     'nodeGraphPosition?': 'object|null',
 });
@@ -64,6 +64,7 @@ export const TaskArkTypeFetchTasksNew = type({
         })
         .pipe(TaskArkTypeFetchTasksNewFilters),
     'unlimited?': type('string').pipe((v) => v === 'true'),
+    'ignoreCompleted?': type('string').pipe((v) => v === 'true'),
 });
 
 export type TaskArgFetchTasksNew = typeof TaskArkTypeFetchTasksNew.infer;

@@ -1,4 +1,4 @@
-import { integer, pgSchema, varchar, boolean, date, time, jsonb } from "drizzle-orm/pg-core";
+import { integer, numeric, pgSchema, varchar, boolean, date, time, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from 'drizzle-arktype';
 import { UsersSchema } from "./users.schema";
 
@@ -20,7 +20,7 @@ export const TasksSchema = pgSchema('tasks').table('tasks', {
     statusId: integer('status_id'), //kanban column id
     taskOrder: integer('task_order'),
     kanbanOrder: integer('kanban_order'),
-    amount: integer(),
+    amount: numeric({ precision: 10, scale: 2 }),
     transactionType: integer('transaction_type').$type<1 | 0 | null>(),
     nodeGraphPosition: jsonb('node_graph_position'),
 });
