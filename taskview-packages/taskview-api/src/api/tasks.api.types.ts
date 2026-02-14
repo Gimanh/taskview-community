@@ -2,7 +2,6 @@ export const TaskIncomeType = 1;
 export const TaskExpenseType = 0;
 export type TaskTransactionTypes = typeof TaskIncomeType | typeof TaskExpenseType | null;
 
-//TODO add optional type for fields that can be not allowed by permissions (subtasks, note)
 export interface TaskBase {
     id: number;
     description: string;
@@ -26,8 +25,8 @@ export interface TaskBase {
     statusId: number | null;
     taskOrder: number | null;
     kanbanOrder: number | null;
-    //we add amount as number but got as string from API
-    amount: number | string | null; //string bec JS not working with numbers like 3.43
+
+    amount: number | string | null;
     transactionType: TaskTransactionTypes;
     nodeGraphPosition: Record<'x' | 'y', number> | null;
     creatorId: number | null;
@@ -36,7 +35,7 @@ export interface TaskBase {
 export interface Task extends TaskBase {
     tags: number[];
     historyId: null | number;
-    assignedUsers: number[]; //TODO how we update assigned users? maybe we need to do it in different module
+    assignedUsers: number[];
 };
 
 // we can not update defined fields
@@ -47,8 +46,7 @@ export type TaskResponseUpdate = Task | null;
 
 export type TaskArgAdd = Pick<Task, 'goalId' | 'description'>
     & Partial<Omit<Task, NotAllowedToUpdate | 'subtasks' | 'tags' | 'assignedUsers' | 'creatorId' | 'amount'>>
-    //we add amount as number but got as string from API
-    & { amount?: number | null };
+    & { amount?: number | string | null };
 
 export type TaskResponseAdd = Task | null;
 
