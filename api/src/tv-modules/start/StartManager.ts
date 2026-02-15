@@ -12,7 +12,7 @@ export class StartManager {
 
     constructor(user: AppUser) {
         this.user = user;
-        this.repository = new StartRepository();
+        this.repository = new StartRepository(this.user);
     }
 
     async fetchAllLists() {
