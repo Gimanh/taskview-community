@@ -1,0 +1,51 @@
+# E2E test stack: PostgreSQL + migration + API
+# Run from repo root: bash build-dockers.sh (builds images first)
+# Then: docker compose -f se/web-nuxt-ui/e2e/docker-compose.yml up -d
+#
+# API is exposed on 1401 so web-nuxt-ui (useTaskViewMainUrl) can connect.
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    env_file:
+      - ../../dockers-check/.env.postgresql
+    volumes:
+      - ./e2e_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tvdbuser -d taskviewdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migration:
+    image: gimanhead/taskview-se-db-migration:latest
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ../../dockers-check/.env.taskview
+
+  api:
+    image: gimanhead/taskview-se-api-server:latest
+    restart: "no"
+    ports:
+      - "1401:1401"
+    depends_on:
+      db:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+    env_file:
+      - ../../dockers-check/.env.taskview
+    volumes:
+      - ./e2e_logs:/usr/src/app/logs
+      - ./e2e_updates:/usr/src/app/updates
+
+volumes:
+  e2e_pgdata:
+  e2e_logs:
+  e2e_updates:
