@@ -125,6 +125,7 @@ export default {
     no: 'No',
     loading: 'Loading...',
     close: 'Close',
+    add: 'Add',
   },
   kanban: {
     title: 'Kanban',

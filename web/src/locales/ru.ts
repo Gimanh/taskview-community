@@ -125,6 +125,7 @@ export default {
     no: 'Нет',
     loading: 'Загрузка...',
     close: 'Закрыть',
+    add: 'Добавить',
   },
   kanban: {
     title: 'Канбан',

@@ -99,8 +99,8 @@ type LoginResponse = {
 }
 
 const state = reactive<LoginState>({
-  login: 'user',
-  password: 'user1!#Q',
+  login: '',
+  password: '',
 })
 
 async function onSubmit() {
