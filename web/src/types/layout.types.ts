@@ -1,5 +1,5 @@
-import type { Component } from 'vue';
-import type { RouteLocationNamedRaw } from 'vue-router';
+import type { Component } from 'vue'
+import type { RouteLocationNamedRaw } from 'vue-router'
 
 export type TvNavItemT = {
     title: string;

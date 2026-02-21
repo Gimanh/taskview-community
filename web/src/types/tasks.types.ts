@@ -1,4 +1,4 @@
-import type { GoalItem, GoalListItem, Task, TaskFilters } from 'taskview-api';
+import type { GoalItem, GoalListItem, Task, TaskFilters } from 'taskview-api'
 
 export type TaskItem = Task;
 
@@ -25,9 +25,10 @@ export type TasksStoreState = {
 };
 
 export const PRIORITY_COLORS = {
-    '1': { color: '#38D681', t: 'priority.low' },
-    '2': { color: '#FF9100', t: 'priority.medium' },
-    '3': { color: '#FF1744', t: 'priority.high' },
-};
+  '1': { color: '#38D681', t: 'priority.low' },
+  '2': { color: '#FF9100', t: 'priority.medium' },
+  '3': { color: '#FF1744', t: 'priority.high' },
+}
 
-export const ALL_TASKS_LIST_ID = -1401;
+/**@deprecated use ALL_TASKS_LIST_ID from taskview-api */
+export const ALL_TASKS_LIST_ID = -1401

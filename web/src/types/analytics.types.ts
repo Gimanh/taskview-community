@@ -1,7 +1,7 @@
-import type { GoalItem } from 'taskview-api';
-import type { CollaborationUsers } from './collaboration.types';
-import type { AppResponse } from './global-app.types';
-import type { TaskItem } from './tasks.types';
+import type { GoalItem } from 'taskview-api'
+import type { CollaborationUsers } from './collaboration.types'
+import type { AppResponse } from './global-app.types'
+import type { TaskItem } from './tasks.types'
 
 export type AnalyticsStoreState = {
     loading: boolean;

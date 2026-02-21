@@ -1,7 +1,6 @@
-import { mdiAccountBoxMultipleOutline, mdiClipboardEditOutline, mdiLightbulbOn10 } from '@mdi/js';
-import type { TagItem } from './tags.types';
-import type { Task } from 'taskview-api';
-import type { TaskItem } from './tasks.types';
+import type { TagItem } from './tags.types'
+import type { Task } from 'taskview-api'
+import type { TaskItem } from './tasks.types'
 
 type RespTasks = TaskItem[];
 type RespUsers = { id: number; name: string; users: { id: number; email: string }[] }[];
@@ -56,20 +55,20 @@ export type FiltersTasks = {
 };
 
 export const FILTER_DEFAULT: FiltersTasks = {
-    projects: [],
-    priorities: [],
-    tags: [],
-    assignees: [],
-};
+  projects: [],
+  priorities: [],
+  tags: [],
+  assignees: [],
+}
 // export type SortTasks = {
 //     byId: typeof SORT_ASC | typeof SORT_DESC | typeof SORT_DEFAULT;
 //     byName: typeof SORT_ASC | typeof SORT_DESC | typeof SORT_DEFAULT;
 // };
 
-export const ICON_PROJECT = { icon: mdiLightbulbOn10, color: '#FFB800' };
-export const ICON_TASKS = { icon: mdiClipboardEditOutline, color: '#38D681' };
-export const ICON_USERS = { icon: mdiAccountBoxMultipleOutline, color: '#BE8CFF' };
-export const DIALOG_WIDTH = 600;
-export const DIALOG_DESKTOP_HEIGHT = '50%';
+export const ICON_PROJECT = { icon: 'i-lucide-lightbulb', color: '#FFB800' }
+export const ICON_TASKS = { icon: 'i-lucide-clipboard-edit', color: '#38D681' }
+export const ICON_USERS = { icon: 'i-lucide-users', color: '#BE8CFF' }
+export const DIALOG_WIDTH = 600
+export const DIALOG_DESKTOP_HEIGHT = '50%'
 
 export type BaseScreenSearchResponse = TaskItem[];

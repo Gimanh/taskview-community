@@ -1,18 +1,18 @@
-import type { GoalItem } from 'taskview-api';
-import { TvPermissions } from 'taskview-api';
+import type { GoalItem } from 'taskview-api'
+import { TvPermissions } from 'taskview-api'
 
 export const DEFAULT_GOAL_ITEM: GoalItem = {
-    id: -1,
-    name: '',
-    description: '',
-    color: '',
-    owner: -1,
-    permissions: {},
-    archive: 0,
-    dateCreation: null,
-};
+  id: -1,
+  name: '',
+  description: '',
+  color: '',
+  owner: -1,
+  permissions: {},
+  archive: 0,
+  dateCreation: null,
+}
 
-export const AllGoalPermissions = TvPermissions;
+export const AllGoalPermissions = TvPermissions
 
 export type GoalsStoreState = {
     loading: boolean;

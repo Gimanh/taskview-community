@@ -1,10 +1,9 @@
-import { $ls } from '@/plugins/axios';
+import { $ls } from '@/plugins/axios'
 
 export default async function authenticated() {
-    await $ls.updateUserStoreByToken();
-    if (!(await $ls.getToken())) {
-        console.warn('authenticated');
-        return { name: 'login' };
-    }
-    return true;
+  await $ls.updateUserStoreByToken()
+  if (!(await $ls.getToken())) {
+    return { name: 'login' }
+  }
+  return true
 }

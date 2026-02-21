@@ -1,35 +1,3 @@
-export type RestaurantContacts = {
-    email: string;
-    phone: string;
-    address: string;
-    workStart: string;
-    workEnd: string;
-};
-
-export type RestaurantItem = {
-    id: number;
-    name: string;
-    owner: number;
-    date: string;
-    currency: string;
-    contacts: RestaurantContacts;
-    restaurantLogin: string;
-};
-export type RestaurantItems = RestaurantItem[];
-
-export type UpdateRestaurantInfoResponse = {
-    restaurant: RestaurantItem;
-    update: boolean;
-    updateContacts: boolean;
-};
-export type AppConfigResponse = {
-    response: {
-        namespace: string;
-        updateBlockedInterval: number;
-    };
-    rid: string | null;
-};
-
 export type JWTPayload = {
     exp: number;
     id: number;
@@ -53,23 +21,6 @@ export type RefreshTokenResponse = {
     refresh: string;
 };
 
-export interface VuetifyForm {
-    validate(): boolean;
-}
-
-// export type AppResponse<S> = {
-//     response: S
-//     rid: string
-// };
-
-export type FormFieldRules = ((v: string) => true | string)[];
-
-export type RegistrationResult = {
-    registration: boolean;
-    confirmEmail: boolean;
-};
-
-export type AppCredentialsFormTabs = { title: string; component: string; recovery: boolean }[];
 
 export type RecoveryRequestResponse = { sent: boolean };
 
@@ -83,4 +34,4 @@ export type VuetifyHeaderItem = { text: string; value: string; sortable?: boolea
 
 export type VuetifyHeaderItems = VuetifyHeaderItem[];
 
-export const IMAGE_HEIGHT = 290;
+export const IMAGE_HEIGHT = 290

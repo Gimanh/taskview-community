@@ -1,4 +1,4 @@
-import type { CollaborationPermission } from 'taskview-api';
+import type { CollaborationPermission } from 'taskview-api'
 
 export type CollaborationRole = {
     id: number;

@@ -1,4 +1,4 @@
-import type { CollaborationResponseFetchAllUsers } from 'taskview-api';
+import type { CollaborationResponseFetchAllUsers } from 'taskview-api'
 
 export type CollaborationUsers = CollaborationResponseFetchAllUsers[];
 

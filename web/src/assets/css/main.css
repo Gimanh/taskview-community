@@ -1,0 +1,83 @@
+@import "tailwindcss" theme(static);
+
+@import "@nuxt/ui";
+
+@theme static {
+  --font-sans: 'Public Sans', sans-serif;
+}
+
+@theme {
+  --tv-ui-bg-elevated: #fff;
+  --color-tv-ui-bg-elevated: var(--tv-ui-bg-elevated);
+}
+
+/* Safe area utilities */
+@utility pt-safe {
+  padding-top: var(--tv-safe-area-inset-top);
+}
+
+@utility pb-safe {
+  padding-bottom: var(--tv-safe-area-inset-bottom);
+}
+
+@utility pl-safe {
+  padding-left: var(--tv-safe-area-inset-left);
+}
+
+@utility pr-safe {
+  padding-right: var(--tv-safe-area-inset-right);
+}
+
+@utility px-safe {
+  padding-left: var(--tv-safe-area-inset-left);
+  padding-right: var(--tv-safe-area-inset-right);
+}
+
+@utility py-safe {
+  padding-top: var(--tv-safe-area-inset-top);
+  padding-bottom: var(--tv-safe-area-inset-bottom);
+}
+
+@utility p-safe {
+  padding-top: var(--tv-safe-area-inset-top);
+  padding-right: var(--tv-safe-area-inset-right);
+  padding-bottom: var(--tv-safe-area-inset-bottom);
+  padding-left: var(--tv-safe-area-inset-left);
+}
+
+@utility mt-safe {
+  margin-top: var(--tv-safe-area-inset-top);
+}
+
+@utility mb-safe {
+  margin-bottom: var(--tv-safe-area-inset-bottom);
+}
+
+@utility ml-safe {
+  margin-left: var(--tv-safe-area-inset-left);
+}
+
+@utility mr-safe {
+  margin-right: var(--tv-safe-area-inset-right);
+}
+
+@layer base {
+  html {
+    touch-action: manipulation;
+  }
+  
+  :root {
+    --tv-safe-area-inset-top: env(safe-area-inset-top, 0px);
+    --tv-safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+    --tv-safe-area-inset-left: env(safe-area-inset-left, 0px);
+    --tv-safe-area-inset-right: env(safe-area-inset-right, 0px);
+    /* --tv-safe-area-inset-top: 30px;
+    --tv-safe-area-inset-bottom: 30px;
+    --tv-safe-area-inset-left: 30px;
+    --tv-safe-area-inset-right: 30px; */
+  }
+  
+  .dark {
+    --tv-ui-bg-elevated: var(--color-neutral-800);
+  }
+}
