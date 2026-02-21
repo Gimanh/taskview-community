@@ -1,6 +1,6 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import type { TagsSchemaTypeForSelect } from 'taskview-db-schemas';
-import { GoalsSchema, TagsSchema, TasksToTagsSchema } from 'taskview-db-schemas';
+import { GoalsSchema, TagsSchema, TasksSchema, TasksToTagsSchema } from 'taskview-db-schemas';
 import type { AppUser } from '../../core/AppUser';
 import { Database } from '../../modules/db';
 import { GoalPermissions } from '../../types/auth.types';
@@ -171,6 +171,19 @@ export class TagsRepository {
     }
 
     async toggleTagNew(tagId: number, taskId: number): Promise<'delete' | 'add' | null> {
+        const [tag, task] = await Promise.all([
+            callWithCatch(() =>
+                this.db.dbDrizzle.select({ goalId: TagsSchema.goalId }).from(TagsSchema).where(eq(TagsSchema.id, tagId))
+            ),
+            callWithCatch(() =>
+                this.db.dbDrizzle.select({ goalId: TasksSchema.goalId }).from(TasksSchema).where(eq(TasksSchema.id, taskId))
+            ),
+        ])
+
+        if (!tag?.[0] || !task?.[0] || tag[0].goalId === null || tag[0].goalId !== task[0].goalId) {
+            return null
+        }
+
         const tagExists = await this.tagExists(tagId, taskId);
 
         if (tagExists) {
