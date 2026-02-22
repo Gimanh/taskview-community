@@ -30,6 +30,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'login',
+      alias: '/login',
       component: LoginPage,
     },
     {
