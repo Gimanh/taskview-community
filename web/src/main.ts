@@ -8,7 +8,7 @@ import type { Plugin } from 'vue'
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import ui from '@nuxt/ui/vue-plugin'
-import { i18n } from './plugins/i18n'
+import { i18n, restoreSavedLocale } from './plugins/i18n'
 
 addCollection(lucide)
 addCollection(mdi)
@@ -82,3 +82,4 @@ app.use(router)
 app.use(ui as unknown as Plugin)
 
 app.mount('#app')
+restoreSavedLocale()

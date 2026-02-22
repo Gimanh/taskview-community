@@ -42,6 +42,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app.store'
 import { useLogout } from '@/composables/useLogout'
+import { saveLocale } from '@/plugins/i18n'
 import { useUpdater } from '@/composables/useUpdater'
 import { useUserStore } from '@/stores/user.store'
 import { $ls } from '@/plugins/axios'
@@ -176,7 +177,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
           checked: locale.value === 'en',
           onSelect(e: Event) {
             e.preventDefault()
-            locale.value = 'en'
+            saveLocale('en')
           },
         },
         {
@@ -185,7 +186,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
           checked: locale.value === 'ru',
           onSelect(e: Event) {
             e.preventDefault()
-            locale.value = 'ru'
+            saveLocale('ru')
           },
         },
       ],
