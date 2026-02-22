@@ -2,7 +2,7 @@
   "name": "web-nuxt-ui",
   "private": true,
   "type": "module",
-  "version": "1.20.2",
+  "version": "1.20.3",
   "scripts": {
     "dev": "vite",
     "build": "pnpm run typecheck && vite build",
