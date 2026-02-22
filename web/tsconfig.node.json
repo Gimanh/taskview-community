@@ -26,12 +26,13 @@
         "./node_modules/vite"
       ]
     },
+    "types": ["node"],
     "typeRoots": [
-      "./node_modules/@types",
-      "./node_modules"
+      "./node_modules/@types"
     ]
   },
   "include": [
-    "vite.config.ts"
+    "vite.config.ts",
+    "eslint.config.ts"
   ]
 }

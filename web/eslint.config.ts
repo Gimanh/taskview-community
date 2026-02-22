@@ -8,6 +8,14 @@ export default ts.config(
   ...ts.configs.recommended,
   ...eslintPluginVue.configs['flat/recommended'],
   {
+    files: ['**/*.ts', '**/*.js'],
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: fileURLToPath(new URL('.', import.meta.url)),
+      },
+    },
+  },
+  {
     files: ['*.vue', '**/*.vue'],
     languageOptions: {
       parserOptions: {

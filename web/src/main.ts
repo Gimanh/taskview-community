@@ -4,10 +4,11 @@ import lucide from '@iconify-json/lucide/icons.json'
 import mdi from '@iconify-json/mdi/icons.json'
 import carbon from '@iconify-json/carbon/icons.json'
 import { createPinia } from 'pinia'
+import type { Plugin } from 'vue'
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import ui from '@nuxt/ui/vue-plugin'
-import { i18n } from './plugins/i18n'
+import { i18n, restoreSavedLocale } from './plugins/i18n'
 
 addCollection(lucide)
 addCollection(mdi)
@@ -23,7 +24,7 @@ const app = createApp(App)
 
 app.use(createPinia())
 app.use(api)
-app.use(i18n)
+app.use(i18n as unknown as Plugin)
 
 const router = createRouter({
   routes: [
@@ -78,6 +79,7 @@ const router = createRouter({
 router.beforeEach(syncSelectedProject)
 
 app.use(router)
-app.use(ui)
+app.use(ui as unknown as Plugin)
 
 app.mount('#app')
+restoreSavedLocale()

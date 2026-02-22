@@ -5,7 +5,7 @@
   >
     <UAlert
       color="info"
-      :title="$t('msg.addFirstProject')"
+      :title="t('msg.addFirstProject')"
       variant="subtle"
       icon="i-lucide-terminal"
       class="mb-4"
@@ -17,9 +17,11 @@
 import { computed } from 'vue'
 import ProjectAddInput from '@/components/features/projects/parts/ProjectAddInput.vue'
 import { useGoalsStore } from '@/stores/goals.store'
+import { useI18n } from 'vue-i18n'
 
 const goalsStore = useGoalsStore()
 
+const { t } = useI18n()
 const noGoals = computed(() => goalsStore.goals.filter((g) => !g.archive).length === 0)
 
 async function addProject(name: string) {
