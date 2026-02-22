@@ -7,7 +7,6 @@ import TvGoalListApi from "./api/goals-list";
 import TvTagsApi from "./api/tags";
 import TvKanban from "./api/kanban";
 
-// const TASKVIEW_URL = 'https://apitaskview.handscream.com/';
 export class TvApi {
 
     protected $axios: AxiosInstance;

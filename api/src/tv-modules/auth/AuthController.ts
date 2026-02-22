@@ -416,7 +416,7 @@ export default class AuthController {
             emailTemplate = EnEmailTemplate;
         }
 
-        const confirmUrl = `https://apitaskview.handscream.com/module/auth/confirm/email/${confirmEmailCode}/login/${login}`;
+        const confirmUrl = `https://${process.env.APP_URL}/module/auth/confirm/email/${confirmEmailCode}/login/${login}`;
 
         if (emailTemplate) {
             confirmEmailBody = emailTemplate.replace('{link}', confirmUrl);

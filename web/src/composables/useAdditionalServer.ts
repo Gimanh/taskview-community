@@ -21,11 +21,11 @@ export const useAdditionalServer = async () => {
   allServers.value = serversFromLocalStorage.value ? [...JSON.parse(serversFromLocalStorage.value)] : []
 
   mainServer.value =
-        mainServerFromLocalStorage ||
-        (process.env.NODE_ENV !== 'production' ? 'http://localhost:1401' : 'https://apitaskview.handscream.com')
+    mainServerFromLocalStorage ||
+    (process.env.NODE_ENV !== 'production' ? 'http://localhost:1401' : 'https://api.taskview.tech')
 
   systemServer.value =
-        process.env.NODE_ENV !== 'production' ? 'http://localhost:1401' : 'https://apitaskview.handscream.com'
+    process.env.NODE_ENV !== 'production' ? 'http://localhost:1401' : 'https://api.taskview.tech'
 
   const setMainServer = (server: string) => {
     mainServer.value = server
