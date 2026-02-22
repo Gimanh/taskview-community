@@ -71,6 +71,7 @@
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.1.0",
     "@playwright/test": "^1.49.0",
+    "@types/node": "^22.19.7",
     "@vitejs/plugin-vue": "^6.0.3",
     "eslint": "^9.39.2",
     "eslint-plugin-vue": "^10.7.0",
