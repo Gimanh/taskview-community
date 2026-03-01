@@ -1,7 +1,7 @@
 {
   "name": "taskview-api",
   "private": false,
-  "version": "1.17.0",
+  "version": "1.17.2",
   "type": "module",
   "main": "./dist/taskview-api.umd.js",
   "module": "./dist/taskview-api.es.js",
