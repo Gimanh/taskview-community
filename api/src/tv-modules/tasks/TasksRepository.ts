@@ -648,6 +648,7 @@ export class TasksRepository {
             eq(TasksSchema.goalId, goalId),
             columnId === null ? isNull(TasksSchema.statusId) : eq(TasksSchema.statusId, columnId),
             isNotNull(TasksSchema.kanbanOrder),
+            isNull(TasksSchema.parentId),
         ];
         if (cursor !== null) {
             conditions.push(gt(TasksSchema.kanbanOrder, cursor));

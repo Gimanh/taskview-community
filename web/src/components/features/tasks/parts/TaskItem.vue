@@ -1,6 +1,7 @@
 <template>
   <div
     class="flex flex-col gap-3 p-3 rounded-lg border border-default hover:bg-elevated transition-colors cursor-pointer"
+    :data-testid="`task-item-${task.id}`"
     @click="handleOpenTask"
   >
     <div class="flex items-center gap-3">

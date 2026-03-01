@@ -1,5 +1,8 @@
 <template>
-  <div class="flex items-center gap-2 group ">
+  <div
+    class="flex items-center gap-2 group"
+    :data-testid="`subtask-item-${subtask.id}`"
+  >
     <UTextarea
       ref="inputRef"
       v-model="localDescription"

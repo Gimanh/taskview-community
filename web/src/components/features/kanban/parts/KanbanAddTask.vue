@@ -3,6 +3,7 @@
     v-model="taskName"
     :loading="loading"
     :placeholder="t('kanban.addTask')"
+    data-testid="kanban-add-task-input"
     :trailing-icon="inputIcon"
     icon="i-lucide-plus"
     size="xl"
