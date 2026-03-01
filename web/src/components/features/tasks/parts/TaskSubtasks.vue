@@ -6,6 +6,7 @@
     <div
       v-if="subtasks.length > 0 && canViewTaskSubtasks"
       class="space-y-2 mb-2"
+      data-testid="subtasks-list"
     >
       <TaskSubtaskItem
         v-for="subtask in subtasks"
@@ -25,6 +26,7 @@
       color="neutral"
       variant="ghost"
       class="w-full justify-start rounded-lg shadow-sm dark:bg-tv-ui-bg-elevated"
+      data-testid="add-subtask-button"
       :loading="isAdding"
       @click="addSubtask"
     >

@@ -3,7 +3,7 @@ import { $ls } from '@/plugins/axios'
 
 export async function useLogout() {
   const result = await $api.post<{ logout: boolean }>('/module/auth/logout').catch((err) => {
-    console.log(err, $api)
+    console.error(err, $api)
   })
 
   if (result) {

@@ -113,12 +113,11 @@ export const useTasksStore = defineStore('tasks', {
           throw new Error('Main task not found for adding subtask')
         }
 
-        if (mainTask) {
-          mainTask.subtasks.push(task)
-        }
+        mainTask.subtasks.push(task)
 
-        if (this.selectedTask?.id === task.parentId) {
-          this.selectedTask.subtasks.push(task)
+        // Sync selectedTask if it's a separate object for the same parent
+        if (this.selectedTask && this.selectedTask !== mainTask && this.selectedTask.id === task.parentId) {
+          this.selectedTask.subtasks = mainTask.subtasks
         }
       } else {
         this.tasks.unshift(task)

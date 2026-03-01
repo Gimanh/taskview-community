@@ -25,6 +25,7 @@
           color="error"
           class="min-w-12"
           :ui="{base: 'justify-center'}"
+          data-testid="confirm-delete-button"
           @click="confirm"
         />
       </div>

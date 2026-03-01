@@ -36,3 +36,4 @@ e2e_logs
 e2e_pgdata
 e2e_updates
 playwright-report
+test-results

@@ -7,6 +7,7 @@
         :loading="loading"
         variant="soft"
         class="w-full"
+        data-testid="task-search-add-input"
         :ui="{
           base: 'bg-tv-ui-bg-elevated',
         }"
