@@ -68,6 +68,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGoalListsStore } from '@/stores/goal-lists.store'
 import { useTasksStore } from '@/stores/tasks.store'
+import { useProjectContext } from '@/composables/useProjectContext'
 import { ALL_TASKS_LIST_ID } from 'taskview-api'
 import { useColor } from '@/composables/useColotMode'
 
@@ -79,8 +80,9 @@ const props = defineProps<{
 const { t } = useI18n()
 const goalListsStore = useGoalListsStore()
 const tasksStore = useTasksStore()
+const projectContext = useProjectContext()
 const { isDark } = useColor()
-const lists = computed(() => goalListsStore.lists)
+const lists = computed(() => projectContext?.lists.value ?? goalListsStore.lists)
 
 const listItems = computed(() => [
   { label: t('tasks.noList'), value: ALL_TASKS_LIST_ID },
