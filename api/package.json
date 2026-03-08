@@ -1,11 +1,12 @@
 {
   "name": "taskview-ce-api-server",
-  "version": "1.20.7",
+  "version": "1.24.0",
   "scripts": {
     "dev": "bun run --watch ./server.ts",
     "start": "NODE_ENV=production node ./dist/taskview-server.js",
     "build": "vite build",
-    "build:docker": "vite build --config ./vite.config.docker.mts",
+    "build:packages": "pnpm --filter taskview-db-schemas build && pnpm --filter taskview-api build",
+    "build:docker": "pnpm run build:packages && vite build --config ./vite.config.docker.mts",
     "build:migration": "vite build --config ./vite.config-migration.mts",
     "build:all": "pnpm run build:docker && pnpm run build:migration",
     "test": "vitest",
