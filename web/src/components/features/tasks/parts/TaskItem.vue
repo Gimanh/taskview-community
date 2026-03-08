@@ -123,7 +123,7 @@ import { useGoalListsStore } from '@/stores/goal-lists.store'
 import { useCollaborationStore } from '@/stores/collaboration.store'
 import { useTagsStore } from '@/stores/tag.store'
 import { formatDate } from '@vueuse/core'
-import { useGoalPermissions } from '@/composables/useGoalPermissions'
+import { AllGoalPermissions } from '@/types/goals.types'
 import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
 
 const TOGGLE_DELAY = 200
@@ -138,7 +138,11 @@ const emit = defineEmits<{
   click: [taskId: number]
   toggle: [task: Task]
 }>()
-const { canEditTaskStatus } = useGoalPermissions()
+const goalsStore = useGoalsStore()
+const canEditTaskStatus = computed(() => {
+  const goal = goalsStore.goalMap.get(props.task.goalId)
+  return !!goal?.permissions[AllGoalPermissions.TASK_CAN_EDIT_STATUS]
+})
 const { openTask } = useTaskDetailPanel()
 const localComplete = ref(!!props.task.complete)
 
@@ -157,7 +161,6 @@ function handleOpenTask() {
   openTask(props.task.id)
 }
 
-const goalsStore = useGoalsStore()
 const goalListsStore = useGoalListsStore()
 const collaborationStore = useCollaborationStore()
 const tagsStore = useTagsStore()
