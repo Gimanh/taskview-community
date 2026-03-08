@@ -3,6 +3,7 @@ import CollaborationRoutes from '../tv-modules/collaboration/CollaborationRoutes
 import CollaborationRolesRoutes from '../tv-modules/collaboration-roles/CollaborationRolesRoutes';
 import GoalsRoutes from '../tv-modules/goals/GoalsRoutes';
 import GraphRoutes from '../tv-modules/graph/GraphRoutes';
+import IntegrationsRoutes from '../tv-modules/integrations/IntegrationsRoutes';
 import KanbanRoutes from '../tv-modules/kanban/KanbanRoutes';
 import GoalListRoutes from '../tv-modules/lists/GoalListRoutes';
 import StartRoutes from '../tv-modules/start/StartRoutes';
@@ -23,6 +24,7 @@ const routes: Record<string, RoutableConstructor> = {
     '/module/about': StartRoutes,
     '/module/kanban': KanbanRoutes,
     '/module/graph': GraphRoutes,
+    '/module/integrations': IntegrationsRoutes,
 };
 
 export default routes;

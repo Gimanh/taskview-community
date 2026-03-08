@@ -60,6 +60,11 @@ const router = createRouter({
           component: () => import('./pages/user/collaboration.vue'),
         },
         {
+          path: ':projectId/integrations',
+          name: 'integrations',
+          component: () => import('./pages/user/integrations.vue'),
+        },
+        {
           path: 'account',
           name: 'account',
           component: () => import('./pages/user/account.vue'),

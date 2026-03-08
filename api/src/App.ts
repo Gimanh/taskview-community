@@ -63,7 +63,14 @@ export default class App {
         }));
 
         this.app.use(helmet());
-        this.app.use(express.json());
+        this.app.use(express.json({
+            verify: (req: any, _res, buf) => {
+                // Store raw body for webhook signature verification github and gitlab integrations
+                if (req.url?.includes('/webhook/')) {
+                    req.rawBody = buf;
+                }
+            },
+        }));
         this.app.use(express.urlencoded({ extended: true }));
     }
 

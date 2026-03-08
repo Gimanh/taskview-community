@@ -24,6 +24,8 @@ export function useGoalPermissionsFor(goalRef: Ref<GoalItem | null>) {
     canManageUsers: can('GOAL_CAN_MANAGE_USERS'),
     canViewKanban: computed(() => hasPermission(goalRef.value, 'KANBAN_CAN_VIEW') || hasPermission(goalRef.value, 'KANBAN_CAN_MANAGE')),
     canViewGraph: computed(() => hasPermission(goalRef.value, 'GRAPH_CAN_VIEW') || hasPermission(goalRef.value, 'GRAPH_CAN_MANAGE')),
+    canViewIntegrations: computed(() => hasPermission(goalRef.value, 'INTEGRATIONS_CAN_VIEW') || hasPermission(goalRef.value, 'INTEGRATIONS_CAN_MANAGE')),
+    canManageIntegrations: computed(() => hasPermission(goalRef.value, 'INTEGRATIONS_CAN_MANAGE')),
   }
 }
 
@@ -75,6 +77,8 @@ export const useGoalPermissions = () => {
   const canManageKanban = computed(() => permissions.KANBAN_CAN_MANAGE)
   const canViewGraph = computed(() => permissions.GRAPH_CAN_VIEW || permissions.GRAPH_CAN_MANAGE)
   const canManageGraph = computed(() => permissions.GRAPH_CAN_MANAGE)
+  const canViewIntegrations = computed(() => permissions.INTEGRATIONS_CAN_VIEW || permissions.INTEGRATIONS_CAN_MANAGE)
+  const canManageIntegrations = computed(() => permissions.INTEGRATIONS_CAN_MANAGE)
 
   return {
     permissions,
@@ -108,5 +112,7 @@ export const useGoalPermissions = () => {
     canManageKanban,
     canViewGraph,
     canManageGraph,
+    canViewIntegrations,
+    canManageIntegrations,
   }
 }

@@ -156,6 +156,9 @@ export class TasksManager {
 
         if (!task) return false;
 
+        // Sync task completion state to linked GitHub/GitLab issue
+        this.user.integrationsManager.onTaskCompleteChanged(arg.taskId, arg.complete).catch(() => {});
+
         return new TaskItemForClient(task);
     }
 
@@ -259,13 +262,22 @@ export class TasksManager {
         return await this.repository.updateTransactionType(data);
     }
 
-    async updateTask(data: TaskArgUpdate): Promise<TaskForClientNew | null> {
+    async updateTask(data: TaskArgUpdate): Promise<{ task: TaskForClientNew; syncFailed?: boolean } | null> {
         const task = await this.repository.updateTask(data);
         if (!task) {
             return null;
         }
+
+        let syncFailed = false;
+        if (data.complete !== undefined) {
+            const synced = await this.user.integrationsManager.onTaskCompleteChanged(data.id, data.complete).catch(() => false);
+            if (!synced) syncFailed = true;
+        }
+
         const tasks = await this.extendTasksWithTagsAndAssignees([task]);
-        return tasks[0] ?? null;
+        const result = tasks[0] ?? null;
+        if (!result) return null;
+        return { task: result, syncFailed: syncFailed || undefined };
     }
 
     async fetchTasksNew(data: TaskArgFetchTasksNew) {
@@ -372,9 +384,7 @@ export class TasksManager {
         let newData = { ...data };
 
         if (data.kanbanOrder === null || data.kanbanOrder === undefined) {
-            const minKanbanOrder = await this.repository.fetchTaskWithMinKanbanOrder(data.goalId, data.statusId ?? null);
-            const GAP = 16384;
-            newData.kanbanOrder = (minKanbanOrder ?? 0) - GAP;
+            newData.kanbanOrder = await this.repository.getNextKanbanOrder(data.goalId, data.statusId ?? null);
         }
 
         const task = await this.repository.addTaskNew(newData);

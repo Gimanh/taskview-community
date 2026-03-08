@@ -42,7 +42,7 @@ export interface Task extends TaskBase {
 type NotAllowedToUpdate = 'id' | 'goalId' | 'owner' | 'dateCreation' | 'dateComplete' | 'historyId';
 
 export type TaskArgUpdate = Pick<Task, 'id'> & Partial<Omit<Task, NotAllowedToUpdate>>;
-export type TaskResponseUpdate = Task | null;
+export type TaskResponseUpdate = (Task & { syncFailed?: boolean }) | null;
 
 export type TaskArgAdd = Pick<Task, 'goalId' | 'description'>
     & Partial<Omit<Task, NotAllowedToUpdate | 'subtasks' | 'tags' | 'assignedUsers' | 'creatorId' | 'amount'>>

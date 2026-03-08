@@ -131,6 +131,9 @@ export const GoalPermissions = {
     TASKS_CAN_RECOVERY_HISTORY: 'task_can_recovery_history',
     TASKS_CAN_ASSIGN_USERS: 'task_can_assign_users',
     TASKS_CAN_WATCH_ASSIGNED_USERS: 'task_can_watch_assigned_users',
+
+    INTEGRATIONS_CAN_MANAGE: 'integrations_can_manage',
+    INTEGRATIONS_CAN_VIEW: 'integrations_can_view',
 } as const;
 
 export type PermissionsEntityType =

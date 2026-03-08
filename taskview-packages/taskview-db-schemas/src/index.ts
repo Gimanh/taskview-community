@@ -8,3 +8,4 @@ export * from './schemas/tasks-assignee.schema';
 export * from './schemas/goals.schema';
 export * from './schemas/goals-list.schema';
 export * from './schemas/tasks-statuses.schema';
+export * from './schemas/integrations.schema';
