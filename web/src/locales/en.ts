@@ -183,6 +183,8 @@ export default {
     today: 'Today',
     tomorrow: 'Tomorrow',
     yesterday: 'Yesterday',
+    thisWeek: 'This week',
+    thisMonth: 'This month',
   },
   graph: {
     title: 'Graph',

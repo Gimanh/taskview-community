@@ -3,7 +3,7 @@
     <!-- First row: Start and End date buttons -->
     <div class="flex gap-2">
       <!-- Start Date -->
-      <UPopover>
+      <UPopover v-model:open="startPopoverOpen">
         <UButton
           :disabled="!canEditTaskDeadline"
           icon="i-lucide-calendar"
@@ -11,7 +11,7 @@
           color="neutral"
           :variant="isDark ? 'subtle' : 'outline'"
           class="flex-1 justify-start"
-          :loading="loadingStart"
+          :loading="deferredLoadingStart"
           size="xl"
           :ui="activatorStyle"
         />
@@ -42,7 +42,7 @@
               color="error"
               variant="outline"
               size="sm"
-              :loading="loadingStart"
+              :loading="deferredLoadingStart"
               @click="clearStartDate"
             />
           </div>
@@ -50,7 +50,7 @@
       </UPopover>
 
       <!-- End Date -->
-      <UPopover>
+      <UPopover v-model:open="endPopoverOpen">
         <UButton
           :disabled="!canEditTaskDeadline"
           icon="i-lucide-calendar-check"
@@ -58,7 +58,7 @@
           color="neutral"
           :variant="isDark ? 'subtle' : 'outline'"
           class="flex-1 justify-start"
-          :loading="loadingEnd"
+          :loading="deferredLoadingEnd"
           size="xl"
           :ui="activatorStyle"
         />
@@ -89,7 +89,7 @@
               color="error"
               variant="outline"
               size="sm"
-              :loading="loadingEnd"
+              :loading="deferredLoadingEnd"
               @click="clearEndDate"
             />
           </div>
@@ -98,14 +98,14 @@
     </div>
 
     <!-- Second row: Quick date buttons + reset -->
-    <div class="flex gap-2">
+    <div class="flex flex-wrap gap-2">
       <UButton
         :disabled="!canEditTaskDeadline"
         :label="t('deadline.today')"
         color="neutral"
         :variant="isDark ? 'subtle' : 'soft'"
         size="md"
-        :loading="loadingQuick"
+        :loading="deferredQuickAction === 'today'"
         @click="setQuickDate('today')"
       />
       <UButton
@@ -114,7 +114,7 @@
         color="neutral"
         :variant="isDark ? 'subtle' : 'soft'"
         size="md"
-        :loading="loadingQuick"
+        :loading="deferredQuickAction === 'tomorrow'"
         @click="setQuickDate('tomorrow')"
       />
       <UButton
@@ -123,8 +123,26 @@
         color="neutral"
         :variant="isDark ? 'subtle' : 'soft'"
         size="md"
-        :loading="loadingQuick"
+        :loading="deferredQuickAction === 'yesterday'"
         @click="setQuickDate('yesterday')"
+      />
+      <UButton
+        :disabled="!canEditTaskDeadline"
+        :label="t('deadline.thisWeek')"
+        color="neutral"
+        :variant="isDark ? 'subtle' : 'soft'"
+        size="md"
+        :loading="deferredQuickAction === 'week'"
+        @click="setQuickRange('week')"
+      />
+      <UButton
+        :disabled="!canEditTaskDeadline"
+        :label="t('deadline.thisMonth')"
+        color="neutral"
+        :variant="isDark ? 'subtle' : 'soft'"
+        size="md"
+        :loading="deferredQuickAction === 'month'"
+        @click="setQuickRange('month')"
       />
       <UButton
         v-if="hasStartDate || hasEndDate"
@@ -134,7 +152,7 @@
         variant="ghost"
         size="md"
         class="ml-auto"
-        :loading="loadingQuick"
+        :loading="deferredQuickAction === 'clear'"
         @click="clearAllDates"
       />
     </div>
@@ -151,6 +169,8 @@ import { useTasksStore } from '@/stores/tasks.store'
 import { useColor } from '@/composables/useColotMode'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 
+type QuickAction = 'today' | 'tomorrow' | 'yesterday' | 'week' | 'month' | 'clear' | null
+
 const props = defineProps<{
   task: Task
 }>()
@@ -158,12 +178,45 @@ const props = defineProps<{
 const { t } = useI18n()
 const tasksStore = useTasksStore()
 const { isDark } = useColor()
+const LOADING_DELAY = 500
 const loadingStart = ref(false)
 const loadingEnd = ref(false)
-const loadingQuick = ref(false)
+const deferredLoadingStart = ref(false)
+const deferredLoadingEnd = ref(false)
+const activeQuickAction = ref<QuickAction>(null)
+const deferredQuickAction = ref<QuickAction>(null)
+
+let quickTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(activeQuickAction, (val) => {
+  if (val) {
+    quickTimer = setTimeout(() => { deferredQuickAction.value = val }, LOADING_DELAY)
+  } else {
+    if (quickTimer) clearTimeout(quickTimer)
+    quickTimer = null
+    deferredQuickAction.value = null
+  }
+})
+
+useDeferredLoading(loadingStart, deferredLoadingStart)
+useDeferredLoading(loadingEnd, deferredLoadingEnd)
+
 const { canEditTaskDeadline } = useGoalPermissions()
 const activatorStyle = {
   leadingIcon: 'size-4.5',
+}
+
+function useDeferredLoading(source: typeof loadingStart, deferred: typeof deferredLoadingStart) {
+  let timer: ReturnType<typeof setTimeout> | null = null
+  watch(source, (val) => {
+    if (val) {
+      timer = setTimeout(() => { deferred.value = true }, LOADING_DELAY)
+    } else {
+      if (timer) clearTimeout(timer)
+      timer = null
+      deferred.value = false
+    }
+  })
 }
 
 // Parse date string (YYYY-MM-DD) to CalendarDate
@@ -190,11 +243,14 @@ const startTimeModel = shallowRef<Time | undefined>(parseTimeString(props.task.s
 const endTimeModel = shallowRef<Time | undefined>(parseTimeString(props.task.endTime))
 const showStartTime = ref(!!props.task.startTime)
 const showEndTime = ref(!!props.task.endTime)
+const startPopoverOpen = ref(false)
+const endPopoverOpen = ref(false)
 
-// Flag to skip auto-save during external sync
+// we set this flag when models are changed programmatically (quick buttons, external sync etc)
+// so the watchers below don't fire extra save requests
 let syncing = false
 
-// Clear time when checkbox is unchecked
+// user unchecked "select time" — reset the time value
 watch(showStartTime, (val) => {
   if (!val) startTimeModel.value = undefined
 })
@@ -202,16 +258,26 @@ watch(showEndTime, (val) => {
   if (!val) endTimeModel.value = undefined
 })
 
-// Auto-save start date/time on change
-watch([startDateModel, startTimeModel], () => {
+// these two watchers exist because UCalendar updates the model via v-model
+// when user picks a date in the popover — without them the selection won't be saved to server
+watch([startDateModel, startTimeModel], (_, [oldDate]) => {
   if (syncing || !startDateModel.value) return
   saveStartDateTime()
+  // close popover only when date changes — time input needs multiple clicks
+  // so we let the user close it manually
+  const dateChanged = startDateModel.value !== oldDate
+  if (dateChanged && (!showStartTime.value || startTimeModel.value)) {
+    startPopoverOpen.value = false
+  }
 })
 
-// Auto-save end date/time on change
-watch([endDateModel, endTimeModel], () => {
+watch([endDateModel, endTimeModel], (_, [oldDate]) => {
   if (syncing || !endDateModel.value) return
   saveEndDateTime()
+  const dateChanged = endDateModel.value !== oldDate
+  if (dateChanged && (!showEndTime.value || endTimeModel.value)) {
+    endPopoverOpen.value = false
+  }
 })
 
 // Computed flags for reactivity in template
@@ -352,24 +418,21 @@ async function clearEndDate() {
 // FIXME need to be replaced with a single 
 // HTTP request when the API is updated
 async function clearAllDates() {
-  loadingQuick.value = true
+  activeQuickAction.value = 'clear'
+  syncing = true
   startDateModel.value = undefined
   endDateModel.value = undefined
   startTimeModel.value = undefined
   endTimeModel.value = undefined
-  await Promise.all([
-    tasksStore.saveDateForTask({
-      id: props.task.id,
-      startDate: null,
-      startTime: null,
-    }),
-    tasksStore.saveDateForTask({
-      id: props.task.id,
-      endDate: null,
-      endTime: null,
-    }),
-  ])
-  loadingQuick.value = false
+  nextTick(() => { syncing = false })
+  await tasksStore.saveDateForTask({
+    id: props.task.id,
+    startDate: null,
+    startTime: null,
+    endDate: null,
+    endTime: null,
+  })
+  activeQuickAction.value = null
 }
 
 // Quick date functions
@@ -390,22 +453,56 @@ function getQuickDate(type: 'today' | 'tomorrow' | 'yesterday'): string {
 async function setQuickDate(type: 'today' | 'tomorrow' | 'yesterday') {
   const date = getQuickDate(type)
 
-  loadingQuick.value = true
+  activeQuickAction.value = type
 
-  await Promise.all([
-    tasksStore.saveDateForTask({
-      id: props.task.id,
-      startDate: date,
-    }),
-    tasksStore.saveDateForTask({
-      id: props.task.id,
-      endDate: date,
-    }),
-  ])
+  await tasksStore.saveDateForTask({
+    id: props.task.id,
+    startDate: date,
+    endDate: date,
+  })
 
+  syncing = true
   startDateModel.value = parseDateString(date)
   endDateModel.value = parseDateString(date)
+  nextTick(() => { syncing = false })
 
-  loadingQuick.value = false
+  activeQuickAction.value = null
+}
+
+async function setQuickRange(type: 'week' | 'month') {
+  const now = new Date()
+  let start: string
+  let end: string
+
+  if (type === 'week') {
+    const day = now.getDay()
+    const diffToMonday = day === 0 ? -6 : 1 - day
+    const monday = new Date(now)
+    monday.setDate(now.getDate() + diffToMonday)
+    const sunday = new Date(monday)
+    sunday.setDate(monday.getDate() + 6)
+    start = useDateFormat(monday, 'YYYY-MM-DD').value
+    end = useDateFormat(sunday, 'YYYY-MM-DD').value
+  } else {
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    start = useDateFormat(firstDay, 'YYYY-MM-DD').value
+    end = useDateFormat(lastDay, 'YYYY-MM-DD').value
+  }
+
+  activeQuickAction.value = type
+
+  await tasksStore.saveDateForTask({
+    id: props.task.id,
+    startDate: start,
+    endDate: end,
+  })
+
+  syncing = true
+  startDateModel.value = parseDateString(start)
+  endDateModel.value = parseDateString(end)
+  nextTick(() => { syncing = false })
+
+  activeQuickAction.value = null
 }
 </script>
