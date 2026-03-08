@@ -2,6 +2,9 @@ import { Router } from 'express';
 import type { Routable } from '../../types/routable.type';
 import { IsLoggedIn } from '../auth/middlewares/is-logged-in';
 import { GraphController } from './GraphControler';
+import { CanManageGraph } from './middlewares/CanManageGraph';
+import { CanViewGraph } from './middlewares/CanViewGraph';
+
 export default class GraphRoutes implements Routable {
     private readonly router: ReturnType<typeof Router>;
     private readonly graphController: GraphController;
@@ -17,8 +20,8 @@ export default class GraphRoutes implements Routable {
     }
 
     initRoutes() {
-        this.router.post('', [IsLoggedIn], this.graphController.addEdge);
-        this.router.get('/:goalId', [IsLoggedIn], this.graphController.fetchAllEdges);
-        this.router.delete('/:id', [IsLoggedIn], this.graphController.deleteEdge);
+        this.router.post('', [IsLoggedIn, CanManageGraph], this.graphController.addEdge);
+        this.router.get('/:goalId', [IsLoggedIn, CanViewGraph], this.graphController.fetchAllEdges);
+        this.router.delete('/:id', [IsLoggedIn, CanManageGraph], this.graphController.deleteEdge);
     }
 }
