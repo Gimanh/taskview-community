@@ -122,6 +122,9 @@ export const TvPermissions: Record<Uppercase<keyof GoalPermissions>, keyof GoalP
 
     GRAPH_CAN_MANAGE: 'graph_can_manage',
     GRAPH_CAN_VIEW: 'graph_can_view',
+
+    INTEGRATIONS_CAN_MANAGE: 'integrations_can_manage',
+    INTEGRATIONS_CAN_VIEW: 'integrations_can_view',
 } as const;
 
 export type GoalPermissions = {
@@ -161,4 +164,7 @@ export type GoalPermissions = {
 
     graph_can_manage?: true;
     graph_can_view?: true;
+
+    integrations_can_manage?: true;
+    integrations_can_view?: true;
 };

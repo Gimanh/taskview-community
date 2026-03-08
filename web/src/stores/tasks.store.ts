@@ -188,7 +188,7 @@ export const useTasksStore = defineStore('tasks', {
     async updateTaskCompleteStatus(
       data: TaskArgUpdate,
       deleteCompleted: boolean = true,
-    ): Promise<boolean | undefined> {
+    ): Promise<{ complete: boolean; syncFailed?: boolean } | undefined> {
       this.loading = true
 
       const taskResult = await $tvApi.tasks
@@ -239,7 +239,7 @@ export const useTasksStore = defineStore('tasks', {
 
       this.updateSelectedTask(parentTask)
 
-      return taskResult.complete
+      return { complete: taskResult.complete, syncFailed: taskResult.syncFailed }
     },
 
     async updateTaskDescription(data: TaskArgUpdate): Promise<boolean> {

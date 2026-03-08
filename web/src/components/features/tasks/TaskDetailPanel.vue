@@ -136,6 +136,7 @@ import type { TaskBase } from 'taskview-api'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 
 const { t } = useI18n()
+const toast = useToast()
 const tasksStore = useTasksStore()
 const {
   canEditTaskStatus,
@@ -145,10 +146,17 @@ const projectId = computed(() => task.value?.goalId ?? 0)
 
 async function toggleComplete() {
   if (!task.value) return
-  await tasksStore.updateTaskCompleteStatus({
+  const result = await tasksStore.updateTaskCompleteStatus({
     id: task.value.id,
     complete: !task.value.complete,
   })
+  if (result?.syncFailed) {
+    toast.add({
+      title: t('integrations.syncFailed'),
+      description: t('integrations.syncFailedDescription'),
+      color: 'warning',
+    })
+  }
 }
 
 async function updateTaskTitle(event: Event) {

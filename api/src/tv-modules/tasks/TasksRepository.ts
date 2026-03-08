@@ -670,4 +670,11 @@ export class TasksRepository {
         }).from(TasksSchema).where(and(...conditions)));
         return result?.[0]?.minKanbanOrder ?? null;
     }
+
+    static readonly KANBAN_ORDER_GAP = 16384;
+
+    async getNextKanbanOrder(goalId: number, statusId: number | null = null): Promise<number> {
+        const min = await this.fetchTaskWithMinKanbanOrder(goalId, statusId);
+        return (min ?? 0) - TasksRepository.KANBAN_ORDER_GAP;
+    }
 }

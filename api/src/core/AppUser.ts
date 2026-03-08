@@ -7,6 +7,7 @@ import { KanbanManager } from '../tv-modules/kanban/KanbanManager';
 import { GoalListManager } from '../tv-modules/lists/GoalListManager';
 import { StartManager } from '../tv-modules/start/StartManager';
 import { TagsManager } from '../tv-modules/tags/TagsManager';
+import { IntegrationsManager } from '../tv-modules/integrations/IntegrationsManager';
 import { TasksManager } from '../tv-modules/tasks/TasksManager';
 import type { UserDbRecord, UserJwtPayload } from '../types/auth.types';
 import { GoalPermissionsFetcher } from './GoalPermissionsFetcher';
@@ -26,6 +27,7 @@ export class AppUser {
     public readonly startManager: StartManager;
     public readonly kanbanManager: KanbanManager;
     public readonly graphManager: GraphManager;
+    public readonly integrationsManager: IntegrationsManager;
 
     constructor(userData?: UserJwtPayload) {
         this.userData = userData;
@@ -40,6 +42,7 @@ export class AppUser {
         this.startManager = new StartManager(this);
         this.kanbanManager = new KanbanManager(this);
         this.graphManager = new GraphManager(this);
+        this.integrationsManager = new IntegrationsManager(this);
     }
 
     getTokenId(): number | undefined {

@@ -343,9 +343,10 @@ export class TasksController {
             return res.status(400).send(args.summary);
         }
 
-        const task = await req.appUser.tasksManager.updateTask(args);
+        const result = await req.appUser.tasksManager.updateTask(args);
+        if (!result) return res.tvJson(null);
 
-        return res.tvJson(task);
+        return res.tvJson({ ...result.task, syncFailed: result.syncFailed });
     };
 
     fetchTasksNew = async (req: Request, res: Response) => {

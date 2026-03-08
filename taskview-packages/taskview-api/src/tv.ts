@@ -5,6 +5,7 @@ import TvGoalApi from "./api/goals";
 import { TvCollaborationApi } from "./api/collaboration";
 import TvGoalListApi from "./api/goals-list";
 import TvTagsApi from "./api/tags";
+import TvIntegrationsApi from "./api/integrations";
 import TvKanban from "./api/kanban";
 
 export class TvApi {
@@ -25,6 +26,8 @@ export class TvApi {
 
     public kanban: TvKanban;
 
+    public integrations: TvIntegrationsApi;
+
     constructor($axios: AxiosInstance) {
         this.$axios = $axios;
 
@@ -41,6 +44,8 @@ export class TvApi {
         this.tags = new TvTagsApi(this.$axios);
 
         this.kanban = new TvKanban(this.$axios);
+
+        this.integrations = new TvIntegrationsApi(this.$axios);
     }
 
     public setBaseUrl(baseUrl: string) {

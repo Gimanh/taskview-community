@@ -85,6 +85,17 @@
         :to="{ name: 'collaboration', params: { projectId: selectedProject?.id } }"
         @click="contextMenu?.close()"
       />
+      <!-- Integrations -->
+      <UButton
+        v-if="canViewIntegrations"
+        :label="t('contextMenu.integrations')"
+        icon="i-lucide-plug"
+        variant="ghost"
+        color="neutral"
+        class="w-full justify-start"
+        :to="{ name: 'integrations', params: { projectId: selectedProject?.id } }"
+        @click="contextMenu?.close()"
+      />
 
       <USeparator class="my-1" />
 
@@ -199,6 +210,7 @@ const selectedProject = ref<Project | null>(null)
 const {
   canViewKanban,
   canViewGraph,
+  canViewIntegrations,
   canManageUsers,
   canEditGoal,
   canDeleteGoal,

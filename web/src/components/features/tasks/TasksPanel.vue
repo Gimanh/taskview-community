@@ -84,6 +84,7 @@ import { useGoalPermissions } from '@/composables/useGoalPermissions'
 
 const { t } = useI18n()
 const route = useRoute()
+const toast = useToast()
 const { canViewTasks } = useGoalPermissions()
 const tasksStore = useTasksStore()
 const { tasks, loading, fetchRules } = storeToRefs(tasksStore)
@@ -142,10 +143,17 @@ async function loadMoreTasks() {
 }
 
 async function toggleTask(task: Task) {
-  await tasksStore.updateTaskCompleteStatus({
+  const result = await tasksStore.updateTaskCompleteStatus({
     id: task.id,
     complete: !task.complete,
   })
+  if (result?.syncFailed) {
+    toast.add({
+      title: t('integrations.syncFailed'),
+      description: t('integrations.syncFailedDescription'),
+      color: 'warning',
+    })
+  }
 }
 
 async function addTask(description: string) {

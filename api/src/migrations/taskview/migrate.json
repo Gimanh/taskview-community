@@ -305,5 +305,28 @@
         "description": [
             "Validate tag and task belong to the same project on insert into tasks_to_tags"
         ]
+    },
+    "24": {
+        "version": "1.21.0",
+        "name": "Release 1.21.0",
+        "releaseDate": "20260302",
+        "scripts": [
+            "/1.21.0/0.1.21.0.sql"
+        ],
+        "description": [
+            "Added integrations table for GitHub/GitLab integration",
+            "Added integration_task_map table for issue-task mapping"
+        ]
+    },
+    "25": {
+        "version": "1.22.0",
+        "name": "Release 1.22.0",
+        "releaseDate": "20260304",
+        "scripts": [
+            "/1.22.0/0.1.22.0.sql"
+        ],
+        "description": [
+            "Added last_synced_at column to integrations for incremental sync"
+        ]
     }
 }
