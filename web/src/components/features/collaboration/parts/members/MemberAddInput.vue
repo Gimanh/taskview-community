@@ -15,10 +15,10 @@
       <UButton
         v-if="isValid"
         icon="i-lucide-corner-down-left"
+        :label="t('collaboration.members.add')"
         color="primary"
         variant="ghost"
         size="xs"
-        :aria-label="t('collaboration.members.add')"
         @click="addMember"
       />
       <UIcon

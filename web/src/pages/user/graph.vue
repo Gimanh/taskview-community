@@ -3,7 +3,7 @@
     id="graph"
   >
     <template #header>
-      <UDashboardNavbar :title="t('graph.title')">
+      <UDashboardNavbar :title="`${projectName} - ${t('graph.title')}`">
         <template #leading>
           <TvCollapseSidebarDesktop />
         </template>
@@ -18,15 +18,19 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ProjectGraph from '@/components/features/graph/ProjectGraph.vue'
 import TvCollapseSidebarDesktop from '@/components/features/base/TvCollapseSidebarDesktop.vue'
 import TvTaskDetailOverlay from '@/components/features/tasks/TvTaskDetailOverlay.vue'
 import { useAppRouteInfo } from '@/composables/useAppRouteInfo'
+import { useGoalsStore } from '@/stores/goals.store'
 import { useProjectDataLoader } from '@/composables/useProjectDataLoader'
 
 const { t } = useI18n()
 const { projectId } = useAppRouteInfo()
+const goalsStore = useGoalsStore()
+const projectName = computed(() => goalsStore.goalMap.get(projectId.value)?.name ?? '')
 
 useProjectDataLoader(projectId)
 </script>

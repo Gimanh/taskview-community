@@ -13,7 +13,7 @@
       :key="status.id"
       class="h-full max-w-[340px] min-w-[272px] shadow-lg gap-2 flex flex-col w-[91.666667%] rounded-lg"
     >
-      <div class="bg-elevated rounded-lg p-2 px-3 flex items-center text-base h-10">
+      <div class="bg-elevated rounded-lg p-2 px-3 flex items-center text-base h-10 rounded-b-none">
         <span class="grow truncate">
           {{ t(status.name) }}
         </span>
@@ -27,6 +27,7 @@
         v-if="canAddTask"
         :goal-id="kanbanStore.goalId"
         :status-id="status.id"
+        class="mx-1"
       />
 
       <draggable

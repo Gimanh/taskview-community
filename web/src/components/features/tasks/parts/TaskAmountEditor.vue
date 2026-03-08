@@ -15,6 +15,8 @@
           class="flex-1"
           :variant="isDark ? 'subtle' : 'soft'"
           @update:model-value="handleAmountInput"
+          @focus="editing = true"
+          @blur="handleBlur"
         >
           <template #leading>
             <UIcon
@@ -73,17 +75,23 @@ const tasksStore = useTasksStore()
 const { isDark } = useColor()
 const { canDeleteTask } = useGoalPermissions()
 
-const localAmount = ref<string>(props.amount?.toString() ?? '')
+const localAmount = ref<string>(formatDisplay(props.amount))
 const tabResetKey = ref(0)
+// don't overwrite what user is typing with server response like "2.00"
+let editing:boolean = false
 
-// Watch for external changes, skip if numeric value is the same
+function formatDisplay(value: number | string | null): string {
+  if (value === null || value === '') return ''
+  const num = parseFloat(value.toString())
+  if (isNaN(num)) return ''
+  // drop trailing zeros: 2.00 -> 2, 2.50 -> 2.5
+  return String(num)
+}
+
+// only sync from server when user is not editing
 watch(() => props.amount, (newAmount) => {
-  const incoming = newAmount === null ? null : parseFloat(newAmount.toString())
-  const current = localAmount.value === '' ? null : parseFloat(localAmount.value)
-
-  if (incoming !== current) {
-    localAmount.value = newAmount?.toString() ?? ''
-  }
+  if (editing) return
+  localAmount.value = formatDisplay(newAmount)
 })
 
 const tabItems = computed(() => [
@@ -133,6 +141,12 @@ function handleAmountInput(value: string | number) {
 
   const amount = sanitized === '' ? null : sanitized
   debouncedUpdateAmount(amount)
+}
+
+function handleBlur() {
+  editing = false
+  // clean up display: "2." -> "2", "02" -> "2"
+  localAmount.value = formatDisplay(localAmount.value || null)
 }
 
 async function clearAmount() {

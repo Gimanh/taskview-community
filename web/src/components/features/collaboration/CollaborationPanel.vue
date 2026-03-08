@@ -12,9 +12,6 @@
     </div>
 
     <template v-else>
-      <h2 class="text-lg font-semibold mb-4">
-        {{ projectName }}
-      </h2>
       <UTabs
         v-model="activeTab"
         :items="tabs"
@@ -60,16 +57,9 @@ import { useCollaborationPermissionsStore } from '@/stores/collaboration-permiss
 import MembersList from './parts/members/MembersList.vue'
 import RolesList from './parts/roles/RolesList.vue'
 import { useAppRouteInfo } from '@/composables/useAppRouteInfo'
-import { useGoalsStore } from '@/stores/goals.store'
-
 const { t } = useI18n()
 const { projectId } = useAppRouteInfo()
-const goalsStore = useGoalsStore()
 
-const projectName = computed(() => {
-  const goal = goalsStore.goalMap.get(projectId.value)
-  return goal?.name ?? ''
-})
 const collaborationStore = useCollaborationStore()
 const rolesStore = useCollaborationRolesStore()
 const permissionsStore = useCollaborationPermissionsStore()

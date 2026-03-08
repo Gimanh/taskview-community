@@ -56,7 +56,7 @@
         <TaskDetailPanel />
       </template>
       <template #footer>
-        <div class="flex justify-end gap-2 w-full">
+        <div class="flex justify-between gap-2 w-full">
           <UButton
             :label="t('common.delete')"
             color="error"

@@ -17,7 +17,7 @@
     </TvGoalLikeItem>
 
     <template #content>
-      <UPageList class="w-full gap-2 flex flex-col">
+      <UPageList class="w-full gap-2 flex flex-col p-1">
         <ProjectAddInput
           v-if="!isArchive"
           @add="handleAdd"
