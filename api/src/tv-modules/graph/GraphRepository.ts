@@ -18,6 +18,13 @@ export class GraphRepository {
         return result ?? [];
     }
 
+    public async fetchById(id: number): Promise<GraphReturnRelationsType | null> {
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle.select().from(GraphRelationsSchema).where(eq(GraphRelationsSchema.id, id))
+        );
+        return result?.[0] ?? null;
+    }
+
     public async fetchAllEdges(goalId: number): Promise<GraphReturnRelationsType[]> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.select().from(GraphRelationsSchema).where(eq(GraphRelationsSchema.goalId, goalId))
