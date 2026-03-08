@@ -183,6 +183,8 @@ export default {
     today: 'Сегодня',
     tomorrow: 'Завтра',
     yesterday: 'Вчера',
+    thisWeek: 'Эта неделя',
+    thisMonth: 'Этот месяц',
   },
   graph: {
     title: 'Граф',
