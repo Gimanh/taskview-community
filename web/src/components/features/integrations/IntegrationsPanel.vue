@@ -134,7 +134,7 @@ const { projectId } = useAppRouteInfo()
 const goalsStore = useGoalsStore()
 const integrationsStore = useIntegrationsStore()
 
-const { canViewIntegrations, canManageIntegrations } = useGoalPermissions()
+const { canManageIntegrations } = useGoalPermissions()
 const { integrations, repos, reposLoading } = storeToRefs(integrationsStore)
 const loading = ref(false)
 const isAddModalOpen = ref(false)
