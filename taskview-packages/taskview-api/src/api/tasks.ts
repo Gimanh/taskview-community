@@ -6,10 +6,12 @@ export default class TvTaskApi extends TvApiBase {
     protected moduleUrl = '/module/tasks';
 
     public async fetch(data: TaskArgFetch) {
-        //TODO: add type for response
+        const params = data.filters
+            ? { ...data, filters: JSON.stringify(data.filters) }
+            : data;
         return this.request(
             this.$axios.get<AppResponse<TaskResponseFetch>>(
-                `${this.moduleUrl}`, { params: data }
+                `${this.moduleUrl}`, { params }
             )
         );
     }
