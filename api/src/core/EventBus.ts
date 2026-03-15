@@ -5,6 +5,7 @@ import { $logger } from '../modules/logget';
 export interface AppEvents {
     'task.created': { task: TasksSchemaTypeForSelect; userId: number };
     'task.updated': { task: TasksSchemaTypeForSelect; changes: Record<string, unknown>; userId: number };
+    'task.assigneesChanged': { taskId: number; userIds: number[] };
     'task.deleted': { taskId: number; goalId: number };
 }
 

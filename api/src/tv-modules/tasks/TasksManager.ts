@@ -413,7 +413,12 @@ export class TasksManager {
     }
 
     async toggleTaskUsers(data: TasksArgToggleTaskUsers) {
-        return await this.repository.toggleTaskUsers(data);
+        const result = await this.repository.toggleTaskUsers(data);
+        eventBus.emit('task.assigneesChanged', {
+            taskId: data.taskId,
+            userIds: data.userIds,
+        });
+        return result;
     }
 
     async fetchTasksForKanbanColumn(data: KanbanArgFetchTasksForColumn): Promise<{ tasks: TaskForClientNew[], nextCursor: string | number | null }> {

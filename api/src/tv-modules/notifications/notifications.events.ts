@@ -4,7 +4,9 @@ import { NotificationsRepository } from './NotificationsRepository';
 import { getCentrifugoClient } from '../../core/CentrifugoClient';
 import { $logger } from '../../modules/logget';
 import { Database } from '../../modules/db';
-import { sql } from 'drizzle-orm';
+import { eq, and, or, isNull } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
+import { TasksSchema, TasksAssigneeSchema, GoalsSchema, CollaborationUsersSchema, UsersSchema } from 'taskview-db-schemas';
 
 const DEADLINE_JOB = 'deadline-notification';
 const CLEANUP_JOB = 'notifications-cleanup';
@@ -53,6 +55,7 @@ export function registerNotificationEventHandlers() {
 
     // New task created with deadline
     eventBus.on('task.created', async (data) => {
+        $logger.info({ taskId: data.task.id, endDate: data.task.endDate }, '[Notifications] task.created event');
         if (data.task.endDate) {
             await scheduleDeadlineJob(data.task);
         }
@@ -60,16 +63,33 @@ export function registerNotificationEventHandlers() {
 
     // Deadline changed on existing task
     eventBus.on('task.updated', async (data) => {
+        $logger.info({ taskId: data.task.id, changes: data.changes }, '[Notifications] task.updated event');
         const hasDeadlineChange =
             data.changes.endDate !== undefined ||
             data.changes.startDate !== undefined ||
             data.changes.endTime !== undefined ||
             data.changes.startTime !== undefined;
 
-        if (!hasDeadlineChange) return;
+        if (!hasDeadlineChange) {
+            $logger.info({ taskId: data.task.id }, '[Notifications] No deadline change, skipping');
+            return;
+        }
 
         repo.deleteDeadlineNotifications(data.task.id);
         await scheduleDeadlineJob(data.task);
+    });
+
+    // Assignees changed — reschedule deadline job so new users get notified
+    eventBus.on('task.assigneesChanged', async (data) => {
+        const db = Database.getInstance();
+        const task = await db.dbDrizzle
+            .select()
+            .from(TasksSchema)
+            .where(eq(TasksSchema.id, data.taskId));
+
+        if (task[0]?.endDate) {
+            await scheduleDeadlineJob(task[0]);
+        }
     });
 }
 
@@ -83,34 +103,72 @@ export async function registerNotificationWorkers() {
 
     // Worker: process deadline notifications
     await boss.work<DeadlineJobData>(DEADLINE_JOB, async ([job]) => {
-        const { taskId, description, goalId, goalListId, owner, endDate, endTime } = job.data;
+        $logger.info({ jobData: job.data }, '[Notifications] Deadline worker received job');
+        const { taskId, description, goalId, goalListId, endDate, endTime } = job.data;
 
         // Check if task is still active (not completed or deleted)
-        const check = await db.dbDrizzle.execute<{ complete: boolean;[key: string]: unknown }>(
-            sql`SELECT complete FROM tasks.tasks WHERE id = ${taskId} AND complete = false`
-        );
-        if (check.rows.length === 0) return;
+        const task = await db.dbDrizzle
+            .select({ owner: TasksSchema.owner })
+            .from(TasksSchema)
+            .where(and(eq(TasksSchema.id, taskId), or(eq(TasksSchema.complete, false), isNull(TasksSchema.complete))));
+
+        $logger.info({ taskId, taskResult: task }, '[Notifications] Task lookup result');
+        if (task.length === 0) return;
+
+        const taskOwner = task[0].owner;
+
+        // Collect all recipients: task owner + assignees (resolved to auth user id) + goal owner
+        let assigneesResult: { userId: number }[] = [];
+        let goalResult: { owner: number }[] = [];
+        const authUsers = alias(UsersSchema, 'auth_users');
+        try {
+        [assigneesResult, goalResult] = await Promise.all([
+            db.dbDrizzle
+                .select({ userId: authUsers.id })
+                .from(TasksAssigneeSchema)
+                .innerJoin(CollaborationUsersSchema, eq(TasksAssigneeSchema.collabUserId, CollaborationUsersSchema.id))
+                .innerJoin(authUsers, eq(CollaborationUsersSchema.email, authUsers.email))
+                .where(eq(TasksAssigneeSchema.taskId, taskId)),
+            db.dbDrizzle
+                .select({ owner: GoalsSchema.owner })
+                .from(GoalsSchema)
+                .where(eq(GoalsSchema.id, goalId)),
+        ]);
+        } catch (err) {
+            $logger.error(err, '[Notifications] Failed to resolve recipients');
+        }
+
+        const recipientIds = new Set<number>();
+        if (taskOwner) recipientIds.add(taskOwner);
+        assigneesResult.forEach((r) => recipientIds.add(r.userId));
+        if (goalResult[0]) {
+            recipientIds.add(goalResult[0].owner);
+        }
+
+        $logger.info({ taskId, recipientIds: [...recipientIds], assignees: assigneesResult, goalOwner: goalResult[0]?.owner }, '[Notifications] Recipients resolved');
 
         const title = `Deadline: ${description || 'Task'}`;
         const timeStr = endTime ? `${endDate} ${endTime}` : endDate;
         const body = `Deadline approaching: ${timeStr}`;
 
-        const notification = await repo.create({
-            userId: owner,
-            taskId,
-            title,
-            body,
-        });
-
-        if (notification) {
-            await getCentrifugoClient().publishToUser(owner, 'notification', {
-                notification,
-                goalId,
-                goalListId,
+        for (const userId of recipientIds) {
+            const notification = await repo.create({
+                userId,
+                taskId,
+                title,
+                body,
             });
+
+            if (notification) {
+                await getCentrifugoClient().publishToUser(userId, 'notification', {
+                    notification,
+                    goalId,
+                    goalListId,
+                });
+            }
         }
 
-        $logger.info({ taskId, userId: owner }, '[Notifications] Deadline notification sent');
+        $logger.info({ taskId, recipients: [...recipientIds] }, '[Notifications] Deadline notifications sent');
     });
 
     // Schedule periodic cleanup of old notifications
