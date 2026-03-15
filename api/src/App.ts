@@ -6,6 +6,7 @@ import errorHandler from './middlewares/error-handler';
 import routes from './routes';
 import passport, { initPassportLogin } from './tv-modules/auth/strategies/passport-login';
 import cookieParser from 'cookie-parser';
+import { registerAllEventHandlers, startAllWorkers } from './core/all-events';
 
 const allow = new Set([
     ...(process.env.CORS_REMOVE_DEFAULT_ALLOWED_ORIGINS === 'true' ? [] : [
@@ -30,6 +31,7 @@ export default class App {
         this.extendApp();
 
         this.initializeMiddlewares();
+        registerAllEventHandlers();
         this.initializeRoutes();
         this.app.use(errorHandler);
         this.app.use(passport.initialize());
@@ -81,8 +83,9 @@ export default class App {
     }
 
     public listen() {
-        return this.app.listen(this.port, '0.0.0.0', () => {
+        return this.app.listen(this.port, '0.0.0.0', async () => {
             console.log(`Server is running on port ${this.port}`);
+            await startAllWorkers();
         });
     }
 }

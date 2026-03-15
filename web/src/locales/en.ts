@@ -417,6 +417,12 @@ export default {
     deleted: 'Account deleted',
     codeSendError: 'Unable to send the code. Please contact support to delete your account.',
   },
+  notifications: {
+    title: 'Notifications',
+    empty: 'No notifications',
+    markAllRead: 'Mark all read',
+    loadMore: 'Load more',
+  },
   server: {
     selectServer: 'Server',
     addServer: 'Add server',

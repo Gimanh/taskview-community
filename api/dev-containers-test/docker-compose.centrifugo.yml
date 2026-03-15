@@ -1,0 +1,15 @@
+services:
+  centrifugo:
+    image: centrifugo/centrifugo:v5
+    restart: unless-stopped
+    command: centrifugo -c config.json
+    env_file:
+      - ./.env.centrifugo
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./centrifugo/config.json:/centrifugo/config.json
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535

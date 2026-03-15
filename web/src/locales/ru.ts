@@ -417,6 +417,12 @@ export default {
     deleted: 'Аккаунт удалён',
     codeSendError: 'Не удалось отправить код. Обратитесь в поддержку для удаления аккаунта.',
   },
+  notifications: {
+    title: 'Уведомления',
+    empty: 'Нет уведомлений',
+    markAllRead: 'Прочитать все',
+    loadMore: 'Загрузить ещё',
+  },
   server: {
     selectServer: 'Сервер',
     addServer: 'Добавить сервер',

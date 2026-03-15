@@ -12,12 +12,16 @@
       :class="isSidebarCollapsed ? 'overflow-hidden min-w-0 w-0 transition-[width] duration-200 linear' : 'transition-[width] duration-200 linear'"
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
-      <TvGoalLikeItem
-        to="/user"
-        variant="taskview"
-      >
-        {{ t('main') }}
-      </TvGoalLikeItem>
+      <div class="flex items-center justify-between px-1 gap-2">
+        <TvGoalLikeItem
+          to="/user"
+          variant="taskview"
+          class="flex-1"
+        >
+          {{ t('main') }}
+        </TvGoalLikeItem>
+        <NotificationBell />
+      </div>
 
       <ProjectsSidebar />
 
@@ -41,8 +45,11 @@ import { useUpdater } from '@/composables/useUpdater'
 import { useAppStore } from '@/stores/app.store'
 import { useI18n } from 'vue-i18n'
 import ProjectsSidebar from '@/components/features/projects/ProjectsSidebar.vue'
+import NotificationBell from '@/components/NotificationBell.vue'
+import { useCentrifugo } from '@/composables/useCentrifugo'
 
 const { isSidebarOpen, isSidebarCollapsed } = useDashboard()
+const { connect: connectCentrifugo } = useCentrifugo()
 const { t } = useI18n()
 const appStore = useAppStore()
 
@@ -69,6 +76,7 @@ App.addListener('appStateChange', async ({ isActive }) => {
 
 onMounted(async () => {
   appStore.initTaskDetailDisplayMode()
+  connectCentrifugo()
 
   await CapacitorUpdater.notifyAppReady()
   console.log('notifyAppReady', APP_VERSION)

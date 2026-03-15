@@ -1,6 +1,7 @@
 import type { TasksSchemaTypeForSelect } from 'taskview-db-schemas';
 import type { AppUser } from '../../core/AppUser';
 import { $logger } from '../../modules/logget';
+import { eventBus } from '../../core/EventBus';
 import { GoalPermissions } from '../../types/auth.types';
 import type {
     AddTaskArg,
@@ -80,7 +81,7 @@ export class TasksManager {
 
         const tagsMap: Record<number, number[]> = {};
         const ids = tasks.map((t) => t.id);
-        
+
         const tags = await this.repository.fetchTagsForTasks(ids);
 
         if (tags) {
@@ -115,7 +116,7 @@ export class TasksManager {
 
         const tagsMap: Record<number, number[]> = {};
         const ids = tasks.map((t) => t.id);
-        
+
         const tags = await this.repository.fetchTagsForTasks(ids);
 
         if (tags) {
@@ -157,7 +158,7 @@ export class TasksManager {
         if (!task) return false;
 
         // Sync task completion state to linked GitHub/GitLab issue
-        this.user.integrationsManager.onTaskCompleteChanged(arg.taskId, arg.complete).catch(() => {});
+        this.user.integrationsManager.onTaskCompleteChanged(arg.taskId, arg.complete).catch(() => { });
 
         return new TaskItemForClient(task);
     }
@@ -274,6 +275,13 @@ export class TasksManager {
             if (!synced) syncFailed = true;
         }
 
+        const { id, ...changes } = data;
+        eventBus.emit('task.updated', {
+            task,
+            changes,
+            userId: this.user.getUserData()?.id as number,
+        });
+
         const tasks = await this.extendTasksWithTagsAndAssignees([task]);
         const result = tasks[0] ?? null;
         if (!result) return null;
@@ -388,7 +396,16 @@ export class TasksManager {
         }
 
         const task = await this.repository.addTaskNew(newData);
-        return await this.extendTasksWithTagsAndAssignees(task, true);
+        const result = await this.extendTasksWithTagsAndAssignees(task, true);
+
+        if (task[0]) {
+            eventBus.emit('task.created', {
+                task: task[0],
+                userId: this.user.getUserData()?.id as number,
+            });
+        }
+
+        return result;
     }
 
     async deleteTaskNew(data: TaskArgDelete) {
