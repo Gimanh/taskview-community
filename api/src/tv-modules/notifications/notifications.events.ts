@@ -20,9 +20,10 @@ interface DeadlineJobData {
     owner: number;
     endDate: string;
     endTime: string | null;
+    initiatorId: number | null;
 }
 
-async function scheduleDeadlineJob(task: { id: number; description: string | null; goalId: number; goalListId: number | null; owner: number | null; endDate: string | null; endTime: string | null }) {
+async function scheduleDeadlineJob(task: { id: number; description: string | null; goalId: number; goalListId: number | null; owner: number | null; endDate: string | null; endTime: string | null }, initiatorId?: number) {
     if (!task.endDate) return;
 
     const boss = getJobQueue();
@@ -43,6 +44,7 @@ async function scheduleDeadlineJob(task: { id: number; description: string | nul
         owner: task.owner,
         endDate: task.endDate,
         endTime: task.endTime,
+        initiatorId: initiatorId ?? null,
     }, {
         startAfter: startAfter >= now ? startAfter : undefined,
         singletonKey: jobKey,
@@ -55,28 +57,23 @@ export function registerNotificationEventHandlers() {
 
     // New task created with deadline
     eventBus.on('task.created', async (data) => {
-        $logger.info({ taskId: data.task.id, endDate: data.task.endDate }, '[Notifications] task.created event');
         if (data.task.endDate) {
-            await scheduleDeadlineJob(data.task);
+            await scheduleDeadlineJob(data.task, data.userId);
         }
     });
 
     // Deadline changed on existing task
     eventBus.on('task.updated', async (data) => {
-        $logger.info({ taskId: data.task.id, changes: data.changes }, '[Notifications] task.updated event');
         const hasDeadlineChange =
             data.changes.endDate !== undefined ||
             data.changes.startDate !== undefined ||
             data.changes.endTime !== undefined ||
             data.changes.startTime !== undefined;
 
-        if (!hasDeadlineChange) {
-            $logger.info({ taskId: data.task.id }, '[Notifications] No deadline change, skipping');
-            return;
-        }
+        if (!hasDeadlineChange) return;
 
         repo.deleteDeadlineNotifications(data.task.id);
-        await scheduleDeadlineJob(data.task);
+        await scheduleDeadlineJob(data.task, data.userId);
     });
 
     // Assignees changed — reschedule deadline job so new users get notified
@@ -104,7 +101,7 @@ export async function registerNotificationWorkers() {
     // Worker: process deadline notifications
     await boss.work<DeadlineJobData>(DEADLINE_JOB, async ([job]) => {
         $logger.info({ jobData: job.data }, '[Notifications] Deadline worker received job');
-        const { taskId, description, goalId, goalListId, endDate, endTime } = job.data;
+        const { taskId, description, goalId, goalListId, endDate, endTime, initiatorId } = job.data;
 
         // Check if task is still active (not completed or deleted)
         const task = await db.dbDrizzle
@@ -144,6 +141,9 @@ export async function registerNotificationWorkers() {
         if (goalResult[0]) {
             recipientIds.add(goalResult[0].owner);
         }
+
+        // Don't notify the person who made the change
+        if (initiatorId) recipientIds.delete(initiatorId);
 
         $logger.info({ taskId, recipientIds: [...recipientIds], assignees: assigneesResult, goalOwner: goalResult[0]?.owner }, '[Notifications] Recipients resolved');
 
