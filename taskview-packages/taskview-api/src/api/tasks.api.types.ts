@@ -30,6 +30,7 @@ export interface TaskBase {
     transactionType: TaskTransactionTypes;
     nodeGraphPosition: Record<'x' | 'y', number> | null;
     creatorId: number | null;
+    sourceUrl: string | null;
 }
 
 export interface Task extends TaskBase {

@@ -10,8 +10,8 @@ import { TasksRepository } from '../tasks/TasksRepository';
 import type { IntegrationsSchemaTypeForSelect } from 'taskview-db-schemas';
 import type { IntegrationsArgAdd, IntegrationsArgDelete, IntegrationsArgFetch, IntegrationsArgSelectRepo, IntegrationsArgToggle, OAuthStatePayload, RepoItemForClient } from './types';
 import { randomBytes } from 'crypto';
-import { getGitHubOAuthUrl, exchangeGitHubCode, fetchGitHubRepos, fetchGitHubIssues, createGitHubWebhook, updateGitHubIssueState } from './providers/github.provider';
-import { getGitLabOAuthUrl, exchangeGitLabCode, fetchGitLabRepos, fetchGitLabIssues, createGitLabWebhook, updateGitLabIssueState, refreshGitLabToken } from './providers/gitlab.provider';
+import { getGitHubOAuthUrl, exchangeGitHubCode, fetchGitHubRepos, fetchGitHubIssues, createGitHubWebhook, updateGitHubIssueState, GITHUB_BASE_URL } from './providers/github.provider';
+import { getGitLabOAuthUrl, exchangeGitLabCode, fetchGitLabRepos, fetchGitLabIssues, createGitLabWebhook, updateGitLabIssueState, refreshGitLabToken, GITLAB_BASE_URL } from './providers/gitlab.provider';
 
 export class IntegrationsManager {
     public readonly repository: IntegrationsRepository;
@@ -197,7 +197,15 @@ export class IntegrationsManager {
         const existingMappings = await this.repository.fetchMappingsByIntegrationId(integrationId);
         const mappingsByIssueNumber = new Map(existingMappings.map((m) => [m.issueNumber, m]));
 
-        type NewIssueItem = { goalId: number; description: string; integrationId: number; issueNumber: number; issueState: string; note: string | null; complete: boolean; kanbanOrder: number };
+        // Backfill sourceUrl for existing tasks that don't have it yet
+        if (existingMappings.length > 0) {
+            const baseUrl = integration.provider === 'github' ? GITHUB_BASE_URL : GITLAB_BASE_URL;
+            const issuePath = integration.provider === 'gitlab' ? '/-/issues/' : '/issues/';
+            const prefix = `${baseUrl}/${integration.repoFullName}${issuePath}`;
+            await this.repository.backfillSourceUrls(integrationId, prefix).catch(logError);
+        }
+
+        type NewIssueItem = { goalId: number; description: string; integrationId: number; issueNumber: number; issueState: string; note: string | null; complete: boolean; kanbanOrder: number; sourceUrl: string | null };
         const newItems: NewIssueItem[] = [];
 
         if (integration.provider === 'github') {
@@ -212,6 +220,7 @@ export class IntegrationsManager {
                         await this.repository.updateMappingState(existing.id, targetState).catch(logError);
                     }
                     await this.repository.updateTaskTitleAndNote(existing.taskId, issue.title, issue.body ?? null).catch(logError);
+                    await this.repository.updateTaskSourceUrl(existing.taskId, `${GITHUB_BASE_URL}/${integration.repoFullName}/issues/${issue.number}`).catch(logError);
                     continue;
                 }
                 newItems.push({
@@ -223,6 +232,7 @@ export class IntegrationsManager {
                     note: issue.body ?? null,
                     complete: issue.state === 'closed',
                     kanbanOrder: 0,
+                    sourceUrl: `${GITHUB_BASE_URL}/${integration.repoFullName}/issues/${issue.number}`,
                 });
             }
         } else if (integration.provider === 'gitlab' && integration.repoExternalId) {
@@ -237,6 +247,7 @@ export class IntegrationsManager {
                         await this.repository.updateMappingState(existing.id, targetState).catch(logError);
                     }
                     await this.repository.updateTaskTitleAndNote(existing.taskId, issue.title, issue.description ?? null).catch(logError);
+                    await this.repository.updateTaskSourceUrl(existing.taskId, `${GITLAB_BASE_URL}/${integration.repoFullName}/-/issues/${issue.iid}`).catch(logError);
                     continue;
                 }
                 const isClosed = issue.state === 'closed';
@@ -249,6 +260,7 @@ export class IntegrationsManager {
                     note: issue.description ?? null,
                     complete: isClosed,
                     kanbanOrder: 0,
+                    sourceUrl: `${GITLAB_BASE_URL}/${integration.repoFullName}/-/issues/${issue.iid}`,
                 });
             }
         }

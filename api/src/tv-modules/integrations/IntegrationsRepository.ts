@@ -1,4 +1,4 @@
-import { and, eq, ne } from 'drizzle-orm';
+import { and, eq, ne, isNull, sql } from 'drizzle-orm';
 import { IntegrationsSchema, IntegrationTaskMapSchema, TasksSchema, UsersSchema, type IntegrationsSchemaTypeForSelect, type IntegrationTaskMapSchemaTypeForSelect } from 'taskview-db-schemas';
 import { Database } from '../../modules/db';
 import { callWithCatch } from '../../utils/helpers';
@@ -117,6 +117,7 @@ export class IntegrationsRepository {
         issueState: string,
         note?: string | null,
         complete?: boolean,
+        sourceUrl?: string | null,
     ): Promise<IntegrationTaskMapSchemaTypeForSelect | false> {
         const tasksRepo = new TasksRepository();
         const kanbanOrder = await tasksRepo.getNextKanbanOrder(goalId);
@@ -128,6 +129,7 @@ export class IntegrationsRepository {
                 complete: complete ?? false,
                 note: note || null,
                 kanbanOrder,
+                sourceUrl: sourceUrl || null,
             }).returning();
             const [mapping] = await this.db.dbDrizzle.insert(IntegrationTaskMapSchema).values({
                 integrationId,
@@ -241,6 +243,29 @@ export class IntegrationsRepository {
         return !!result;
     }
 
+    async updateTaskSourceUrl(taskId: number, sourceUrl: string): Promise<boolean> {
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle.update(TasksSchema)
+                .set({ sourceUrl })
+                .where(eq(TasksSchema.id, taskId))
+        );
+        return !!result;
+    }
+
+    async backfillSourceUrls(integrationId: number, urlPrefix: string): Promise<boolean> {
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle.execute(sql`
+                UPDATE tasks.tasks t
+                SET source_url = ${urlPrefix} || m.issue_number
+                FROM tasks.integration_task_map m
+                WHERE m.task_id = t.id
+                  AND m.integration_id = ${integrationId}
+                  AND t.source_url IS NULL
+            `)
+        );
+        return !!result;
+    }
+
     async updateMappingState(mappingId: number, issueState: string): Promise<boolean> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.update(IntegrationTaskMapSchema)
@@ -251,7 +276,7 @@ export class IntegrationsRepository {
     }
 
     async createTasksAndMappingsBatch(
-        items: Array<{ goalId: number; description: string; integrationId: number; issueNumber: number; issueState: string; note: string | null; complete: boolean; kanbanOrder: number }>,
+        items: Array<{ goalId: number; description: string; integrationId: number; issueNumber: number; issueState: string; note: string | null; complete: boolean; kanbanOrder: number; sourceUrl: string | null }>,
     ): Promise<number> {
         if (items.length === 0) return 0;
         let created = 0;
@@ -267,6 +292,7 @@ export class IntegrationsRepository {
                         complete: item.complete,
                         note: item.note,
                         kanbanOrder: item.kanbanOrder,
+                        sourceUrl: item.sourceUrl,
                     })),
                 ).returning({ id: TasksSchema.id });
 

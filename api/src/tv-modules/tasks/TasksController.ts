@@ -350,7 +350,6 @@ export class TasksController {
     };
 
     fetchTasksNew = async (req: Request, res: Response) => {
-        // debugger;
         const out = TaskArkTypeFetchTasksNew(req.query);
 
         if (out instanceof type.errors) {

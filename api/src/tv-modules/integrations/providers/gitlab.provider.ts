@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const GITLAB_BASE_URL = process.env.GITLAB_BASE_URL || 'https://gitlab.com';
+export const GITLAB_BASE_URL = process.env.GITLAB_BASE_URL || 'https://gitlab.com';
 const GITLAB_API_URL = process.env.GITLAB_API_URL || `${GITLAB_BASE_URL}/api/v4`;
 const GITLAB_OAUTH_URL = `${GITLAB_BASE_URL}/oauth/authorize`;
 const GITLAB_TOKEN_URL = `${GITLAB_BASE_URL}/oauth/token`;

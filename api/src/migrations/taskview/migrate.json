@@ -328,5 +328,16 @@
         "description": [
             "Added last_synced_at column to integrations for incremental sync"
         ]
+    },
+    "26": {
+        "version": "1.23.0",
+        "name": "Release 1.23.0",
+        "releaseDate": "20260314",
+        "scripts": [
+            "/1.23.0/0.1.23.0.sql"
+        ],
+        "description": [
+            "Added source_url column to tasks for external issue links"
+        ]
     }
 }

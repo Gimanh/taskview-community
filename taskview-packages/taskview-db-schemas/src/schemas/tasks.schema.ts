@@ -23,6 +23,7 @@ export const TasksSchema = pgSchema('tasks').table('tasks', {
     amount: numeric({ precision: 10, scale: 2 }),
     transactionType: integer('transaction_type').$type<1 | 0 | null>(),
     nodeGraphPosition: jsonb('node_graph_position'),
+    sourceUrl: varchar('source_url', { length: 500 }),
 });
 
 export type TasksSchemaTypeForSelect = typeof TasksSchema.$inferSelect;
