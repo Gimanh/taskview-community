@@ -4,8 +4,8 @@ import { logError } from '../../utils/api';
 import { decrypt } from '../../utils/crypto';
 import AuthController from '../auth/AuthController';
 import { IntegrationsRepository } from './IntegrationsRepository';
-import { verifyGitHubWebhookSignature } from './providers/github.provider';
-import { verifyGitLabWebhookToken } from './providers/gitlab.provider';
+import { verifyGitHubWebhookSignature, GITHUB_BASE_URL } from './providers/github.provider';
+import { verifyGitLabWebhookToken, GITLAB_BASE_URL } from './providers/gitlab.provider';
 import { IntegrationsArkTypeAdd, IntegrationsArkTypeDelete, IntegrationsArkTypeFetch, IntegrationsArkTypeSelectRepo, IntegrationsArkTypeToggle } from './types';
 
 export default class IntegrationsController {
@@ -174,6 +174,7 @@ export default class IntegrationsController {
 
                 if (action === 'opened') {
                     if (!mapping) {
+                        const repoFullName = req.body?.repository?.full_name;
                         await repo.createTaskAndMapping(
                             integration.projectId,
                             issueTitle,
@@ -181,6 +182,8 @@ export default class IntegrationsController {
                             issueNumber,
                             'open',
                             issueBody,
+                            false,
+                            `${GITHUB_BASE_URL}/${repoFullName}/issues/${issueNumber}`,
                         );
                     }
                 } else if (action === 'edited') {
@@ -255,6 +258,7 @@ export default class IntegrationsController {
 
                 if (action === 'open') {
                     if (!mapping) {
+                        const repoPath = req.body?.project?.path_with_namespace;
                         await repo.createTaskAndMapping(
                             integration.projectId,
                             issueTitle,
@@ -262,6 +266,8 @@ export default class IntegrationsController {
                             issueIid,
                             'open',
                             issueDescription,
+                            false,
+                            `${GITLAB_BASE_URL}/${repoPath}/-/issues/${issueIid}`,
                         );
                     }
                 } else if (action === 'update') {

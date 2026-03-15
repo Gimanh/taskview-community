@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { createHmac, timingSafeEqual } from 'crypto';
 
-const GITHUB_BASE_URL = process.env.GITHUB_BASE_URL || 'https://github.com';
+export const GITHUB_BASE_URL = process.env.GITHUB_BASE_URL || 'https://github.com';
 const GITHUB_API_URL = process.env.GITHUB_API_URL || 'https://api.github.com';
 const GITHUB_OAUTH_URL = `${GITHUB_BASE_URL}/login/oauth/authorize`;
 const GITHUB_TOKEN_URL = `${GITHUB_BASE_URL}/login/oauth/access_token`;

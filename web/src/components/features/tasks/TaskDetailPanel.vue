@@ -26,6 +26,20 @@
           </UTextarea>
         </div>
       </div>
+      <!-- Source link (GitHub/GitLab issue) -->
+      <a
+        v-if="task.sourceUrl"
+        :href="task.sourceUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 mb-2 text-sm text-muted hover:text-default transition-colors"
+      >
+        <UIcon
+          :name="task.sourceUrl.includes('github') ? 'i-lucide-github' : task.sourceUrl.includes('gitlab') ? 'i-lucide-gitlab' : 'i-lucide-external-link'"
+          class="size-4 shrink-0"
+        />
+        <span class="truncate underline underline-offset-2">{{ task.sourceUrl }}</span>
+      </a>
 
       <!-- Subtasks -->
       <TaskSubtasks

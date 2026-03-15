@@ -1,0 +1,2 @@
+ALTER TABLE tasks.tasks
+    ADD COLUMN IF NOT EXISTS source_url VARCHAR(500);
