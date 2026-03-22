@@ -48,7 +48,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { WEBHOOK_EVENTS } from 'taskview-api'
+import { WEBHOOK_EVENTS, type WebhookEvent } from 'taskview-api'
 import type { WebhookItem } from 'taskview-api'
 import { useWebhooksStore } from '@/stores/webhooks.store'
 import { useTaskView } from '@/composables/useTaskView'
@@ -68,7 +68,7 @@ const { isMobile } = useTaskView()
 const webhooksStore = useWebhooksStore()
 
 const url = ref('')
-const selectedEvents = ref<string[]>([])
+const selectedEvents = ref<WebhookEvent[]>([])
 const saving = ref(false)
 
 const eventOptions = WEBHOOK_EVENTS.map((e) => ({
@@ -79,7 +79,7 @@ const eventOptions = WEBHOOK_EVENTS.map((e) => ({
 watch(isOpen, (open) => {
   if (open && props.webhook) {
     url.value = props.webhook.url
-    selectedEvents.value = [...props.webhook.events]
+    selectedEvents.value = [...props.webhook.events] as WebhookEvent[]
   }
 })
 

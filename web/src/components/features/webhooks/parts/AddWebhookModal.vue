@@ -81,7 +81,7 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useClipboard } from '@vueuse/core'
-import { WEBHOOK_EVENTS } from 'taskview-api'
+import { WEBHOOK_EVENTS, type WebhookEvent } from 'taskview-api'
 import { useWebhooksStore } from '@/stores/webhooks.store'
 import { useTaskView } from '@/composables/useTaskView'
 
@@ -101,7 +101,7 @@ const webhooksStore = useWebhooksStore()
 const { copy } = useClipboard()
 
 const url = ref('')
-const selectedEvents = ref<string[]>([])
+const selectedEvents = ref<WebhookEvent[]>([])
 const saving = ref(false)
 const showSecret = ref(false)
 const createdSecret = ref('')
