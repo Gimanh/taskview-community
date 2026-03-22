@@ -30,6 +30,9 @@ export default defineConfig({
     vue(),
     ui({
       ui: {
+        inputTime: {
+          slots: { base: 'text-base!' }
+        },
         drawer: {
           slots: {
             container: 'pb-[calc(var(--tv-safe-area-inset-bottom)+16px)]'
@@ -153,4 +156,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    port: 5174
+  }
 })

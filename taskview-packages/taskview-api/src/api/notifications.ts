@@ -1,6 +1,6 @@
 import TvApiBase from "./base";
 import type { AppResponse } from "./base.types";
-import type { NotificationResponseFetch, NotificationResponseMarkRead, NotificationResponseConnectionToken } from "./notifications.api.types";
+import type { NotificationResponseFetch, NotificationResponseMarkRead, NotificationResponseConnectionToken, NotificationResponsePreferences, NotificationPreferencesSettings } from "./notifications.api.types";
 
 export default class TvNotificationsApi extends TvApiBase {
     protected moduleUrl = '/module/notifications';
@@ -33,6 +33,38 @@ export default class TvNotificationsApi extends TvApiBase {
         return this.request(
             this.$axios.get<AppResponse<NotificationResponseConnectionToken>>(
                 `${this.moduleUrl}/connection-token`
+            )
+        );
+    }
+
+    public async registerDevice(token: string, platform: 'android' | 'ios', timezone: string) {
+        return this.request(
+            this.$axios.post<AppResponse<boolean>>(
+                `${this.moduleUrl}/device/register`, { token, platform, timezone }
+            )
+        );
+    }
+
+    public async unregisterDevice(token: string) {
+        return this.request(
+            this.$axios.post<AppResponse<boolean>>(
+                `${this.moduleUrl}/device/unregister`, { token }
+            )
+        );
+    }
+
+    public async getPreferences() {
+        return this.request(
+            this.$axios.get<AppResponse<NotificationResponsePreferences>>(
+                `${this.moduleUrl}/preferences`
+            )
+        );
+    }
+
+    public async savePreferences(settings: NotificationPreferencesSettings) {
+        return this.request(
+            this.$axios.put<AppResponse<boolean>>(
+                `${this.moduleUrl}/preferences`, { settings }
             )
         );
     }

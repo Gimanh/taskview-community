@@ -1,0 +1,2 @@
+ALTER TABLE tasks.device_tokens
+  ADD COLUMN IF NOT EXISTS timezone VARCHAR(50) NOT NULL DEFAULT 'UTC';

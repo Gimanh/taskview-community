@@ -1,17 +1,20 @@
 import { startJobQueue } from './JobQueue';
-import { registerNotificationEventHandlers, registerNotificationWorkers } from '../tv-modules/notifications/notifications.events';
+import type { Dispatcher } from './Dispatcher';
+import { NotificationDispatcher } from '../tv-modules/notifications/NotificationDispatcher';
+import { WebhooksDispatcher } from '../tv-modules/webhooks/WebhooksDispatcher';
 
-/**
- * Register all event handlers (called on app init, before JobQueue starts)
- */
+const dispatchers: Dispatcher[] = [
+    new NotificationDispatcher(),
+    new WebhooksDispatcher(),
+];
+
 export function registerAllEventHandlers() {
-    registerNotificationEventHandlers();
+    dispatchers.forEach((d) => d.register());
 }
 
-/**
- * Start JobQueue and register all job workers
- */
 export async function startAllWorkers() {
     await startJobQueue();
-    await registerNotificationWorkers();
+    for (const d of dispatchers) {
+        await d.registerWorkers();
+    }
 }

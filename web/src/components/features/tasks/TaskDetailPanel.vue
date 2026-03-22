@@ -53,6 +53,7 @@
       <NoteEditor
         :key="task.id"
         :content="task.note || ''"
+        :content-type="task.sourceUrl ? 'markdown' : 'html'"
         :placeholder="t('tasks.addNote')"
         @save="updateNote"
       />

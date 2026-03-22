@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import {
     KanbanArkTypeFetchTasksForColumn,
+    KanbanArkTypeFilters,
     KanbanArkTypeGetTasksOrderForColumnAndCursor,
     KanbanArkTypeUpdateTasksOrder,
     KanbanSchemaAddStatus,
@@ -53,7 +54,12 @@ export class KanbanController {
             return res.status(400).send(data.summary);
         }
 
-        return res.tvJson(await req.appUser.kanbanManager.fetchTasksForColumn(data));
+        const filters = KanbanArkTypeFilters(req.query);
+        if (filters instanceof ArkErrors) {
+            return res.status(400).send(filters.summary);
+        }
+
+        return res.tvJson(await req.appUser.kanbanManager.fetchTasksForColumn({ ...data, filters }));
     };
 
 

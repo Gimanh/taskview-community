@@ -1,78 +1,86 @@
 <template>
-  <UPopover
-    v-model:open="isOpen"
-    :content="{ align: 'end', side: 'right', sideOffset: 8 }"
+  <UButton
+    icon="i-lucide-bell"
+    color="neutral"
+    variant="ghost"
+    size="xl"
+    class="relative"
+    :aria-label="t('notifications.title')"
+    @click="isOpen = true"
   >
-    <UButton
-      icon="i-lucide-bell"
-      color="neutral"
-      variant="ghost"
-      size="xl"
-      class="relative"
-      :aria-label="t('notifications.title')"
-    >
-      <template v-if="notificationsStore.unreadCount > 0" #trailing>
-        <UBadge
-          :label="notificationsStore.unreadCount > 99 ? '99+' : String(notificationsStore.unreadCount)"
-          color="error"
-          size="xs"
-          class="absolute -top-1 -right-1 min-w-5 justify-center"
-        />
-      </template>
-    </UButton>
+    <template v-if="notificationsStore.unreadCount > 0" #trailing>
+      <UBadge
+        :label="notificationsStore.unreadCount > 99 ? '99+' : String(notificationsStore.unreadCount)"
+        color="error"
+        size="xs"
+        class="absolute -top-1 -right-1 min-w-5 justify-center"
+      />
+    </template>
+  </UButton>
 
-    <template #content>
-      <div class="w-80 max-h-96 flex flex-col">
-        <div class="flex items-center justify-between p-3 border-b border-default">
-          <span class="text-sm font-medium">{{ t('notifications.title') }}</span>
-          <UButton
-            v-if="notificationsStore.unreadCount > 0"
-            :label="t('notifications.markAllRead')"
-            variant="link"
-            size="xs"
-            @click="handleMarkAllRead"
-          />
+  <UModal
+    v-model:open="isOpen"
+    :fullscreen="isMobile"
+    :ui="{
+      overlay: 'sm:items-center sm:justify-center',
+      content: 'sm:max-w-lg sm:max-h-[80vh] sm:rounded-lg sm:m-auto w-full',
+      body: 'p-0!',
+      footer: 'p-4!',
+    }"
+  >
+    <template #header>
+      <div class="flex items-center justify-between w-full">
+        <h3 class="font-semibold">{{ t('notifications.title') }}</h3>
+        <UButton
+          v-if="notificationsStore.unreadCount > 0"
+          :label="t('notifications.markAllRead')"
+          variant="link"
+          size="xs"
+          @click="handleMarkAllRead"
+        />
+      </div>
+    </template>
+
+    <template #body>
+      <div class="overflow-y-auto flex-1">
+        <div
+          v-if="notificationsStore.notifications.length === 0"
+          class="p-6 text-center text-sm text-dimmed"
+        >
+          {{ t('notifications.empty') }}
         </div>
 
-        <div class="overflow-y-auto flex-1">
-          <div
-            v-if="notificationsStore.notifications.length === 0"
-            class="p-6 text-center text-sm text-dimmed"
-          >
-            {{ t('notifications.empty') }}
-          </div>
-
-          <div
-            v-for="notification in notificationsStore.notifications"
-            :key="notification.id"
-            class="p-3 border-b border-default last:border-b-0 cursor-pointer hover:bg-elevated/50 transition-colors"
-            :class="{ 'bg-elevated/25': !notification.read }"
-            @click="handleNotificationClick(notification)"
-          >
-            <div class="flex items-start gap-2">
-              <span
-                v-if="!notification.read"
-                class="mt-1.5 size-2 rounded-full bg-primary shrink-0"
-              />
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium truncate">{{ notification.title }}</p>
-                <p
-                  v-if="notification.body"
-                  class="text-xs text-dimmed mt-0.5 line-clamp-2"
-                >
-                  {{ notification.body }}
-                </p>
-                <p class="text-xs text-dimmed mt-1">
-                  {{ formatDate(notification.createdAt) }}
-                </p>
-              </div>
+        <div
+          v-for="notification in notificationsStore.notifications"
+          :key="notification.id"
+          class="p-3 border-b border-default last:border-b-0 cursor-pointer hover:bg-elevated/50 transition-colors"
+          :class="{ 'bg-elevated/25': !notification.read }"
+          @click="handleNotificationClick(notification)"
+        >
+          <div class="flex items-start gap-2">
+            <UIcon
+              :name="notificationIcon(notification.type)"
+              class="mt-0.5 size-4 shrink-0"
+              :class="notification.read ? 'text-dimmed' : 'text-primary'"
+            />
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium truncate">{{ notification.title }}</p>
+              <p
+                v-if="notification.body"
+                class="text-xs text-dimmed mt-0.5 line-clamp-2"
+              >
+                {{ notification.body }}
+              </p>
+              <p class="text-xs text-dimmed mt-1">
+                {{ formatDate(notification.createdAt) }}
+              </p>
             </div>
           </div>
         </div>
 
         <div
           v-if="notificationsStore.hasMore && notificationsStore.notifications.length > 0"
-          class="p-2 border-t border-default"
+          class="p-2"
         >
           <UButton
             :label="t('notifications.loadMore')"
@@ -86,7 +94,18 @@
         </div>
       </div>
     </template>
-  </UPopover>
+
+    <template #footer>
+      <div class="flex justify-end w-full">
+        <UButton
+          :label="t('common.close')"
+          color="neutral"
+          variant="outline"
+          @click="isOpen = false"
+        />
+      </div>
+    </template>
+  </UModal>
 </template>
 
 <script setup lang="ts">
@@ -94,8 +113,10 @@ import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import type { Notification } from 'taskview-api'
+import { NotificationType } from 'taskview-api'
 import { useNotificationsStore } from '@/stores/notifications.store'
 import { useUserStore } from '@/stores/user.store'
+import { useTaskView } from '@/composables/useTaskView'
 import { ALL_TASKS_LIST_ID } from 'taskview-api'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -103,7 +124,20 @@ const { t } = useI18n()
 const router = useRouter()
 const notificationsStore = useNotificationsStore()
 const userStore = useUserStore()
+const { isMobile } = useTaskView()
 const isOpen = ref(false)
+
+const notificationIconMap: Partial<Record<NotificationType, string>> = {
+  [NotificationType.DEADLINE]: 'i-lucide-clock',
+  [NotificationType.ASSIGN]: 'i-lucide-user-plus',
+  [NotificationType.MENTION]: 'i-lucide-at-sign',
+  [NotificationType.COMMENT]: 'i-lucide-message-circle',
+  [NotificationType.STATUS_CHANGE]: 'i-lucide-arrow-right-left',
+}
+
+function notificationIcon(type: NotificationType) {
+  return notificationIconMap[type] || 'i-lucide-bell'
+}
 
 function formatDate(dateStr: string) {
   try {

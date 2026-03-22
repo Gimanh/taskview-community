@@ -54,13 +54,27 @@ export const KanbanArkTypeStatusToClient = type({
 
 export type KanbanStatusClient = typeof KanbanArkTypeStatusToClient.infer;
 
+const NullableNumberFromString = type('string|number|null').pipe((v) => (v === 'null' || v === null || v === undefined) ? null : Number(v));
+
 export const KanbanArkTypeFetchTasksForColumn = type({
     goalId: NumberFromString,
-    columnId: type('string|number|null').pipe((v) => (v === 'null' || v === null) ? null : Number(v)),
-    cursor: type('string|number|null').pipe((v) => (v === 'null' || v === null) ? null : Number(v)),
+    columnId: NullableNumberFromString,
+    cursor: NullableNumberFromString,
 });
 
 export type KanbanArgFetchTasksForColumn = typeof KanbanArkTypeFetchTasksForColumn.infer;
+
+const NumberArrayFromCommaSeparatedString = type('string|undefined').pipe((v) => {
+    if (!v) return [];
+    return v.split(',').map(Number).filter((n) => !isNaN(n));
+});
+
+export const KanbanArkTypeFilters = type({
+    'listIds?': NumberArrayFromCommaSeparatedString,
+    'assigneeIds?': NumberArrayFromCommaSeparatedString,
+});
+
+export type KanbanArgFilters = typeof KanbanArkTypeFilters.infer;
 
 export const KanbanArkTypeGetTasksOrderForColumnAndCursor = type({
     goalId: NumberFromString,

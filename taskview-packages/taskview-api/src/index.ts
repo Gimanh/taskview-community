@@ -11,3 +11,4 @@ export * from '@/api/goals-list.types';
 export * from '@/api/kanban.types';
 export * from '@/api/integrations.types';
 export * from '@/api/notifications.api.types';
+export * from '@/api/webhooks.types';

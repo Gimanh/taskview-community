@@ -3,10 +3,10 @@ import type { TasksSchemaTypeForSelect } from 'taskview-db-schemas';
 import { $logger } from '../modules/logget';
 
 export interface AppEvents {
-    'task.created': { task: TasksSchemaTypeForSelect; userId: number };
-    'task.updated': { task: TasksSchemaTypeForSelect; changes: Record<string, unknown>; userId: number };
-    'task.assigneesChanged': { taskId: number; userIds: number[] };
-    'task.deleted': { taskId: number; goalId: number };
+    'task.created': { task: TasksSchemaTypeForSelect; initiatorId: number };
+    'task.updated': { task: TasksSchemaTypeForSelect; changes: Record<string, unknown>; initiatorId: number };
+    'task.assigneesChanged': { taskId: number; userIds: number[]; initiatorId: number };
+    'task.deleted': { taskId: number; goalId: number; initiatorId: number };
 }
 
 type EventName = keyof AppEvents;

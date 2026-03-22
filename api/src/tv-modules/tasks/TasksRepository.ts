@@ -30,6 +30,7 @@ import type {
     TaskArgUpdate,
     TasksArgToggleTaskUsers,
 } from './tasks.server.types';
+import type { KanbanArgFilters } from '../kanban/types';
 
 export class TasksRepository {
     private readonly db: Database;
@@ -643,7 +644,7 @@ export class TasksRepository {
         return !!result?.rowCount;
     }
 
-    async fetchTasksForKanbanColumn(goalId: number, columnId: number | null, cursor: number | null): Promise<TasksSchemaTypeForSelect[]> {
+    async fetchTasksForKanbanColumn(goalId: number, columnId: number | null, cursor: number | null, filters?: KanbanArgFilters): Promise<TasksSchemaTypeForSelect[]> {
         const conditions = [
             eq(TasksSchema.goalId, goalId),
             columnId === null ? isNull(TasksSchema.statusId) : eq(TasksSchema.statusId, columnId),
@@ -653,6 +654,24 @@ export class TasksRepository {
         if (cursor !== null) {
             conditions.push(gt(TasksSchema.kanbanOrder, cursor));
         }
+        if (filters?.listIds && filters.listIds.length > 0) {
+            conditions.push(inArray(TasksSchema.goalListId, filters.listIds));
+        }
+        if (filters?.assigneeIds && filters.assigneeIds.length > 0) {
+            conditions.push(
+                exists(
+                    this.db.dbDrizzle
+                        .select({ one: sql`1` })
+                        .from(TasksAssigneeSchema)
+                        .where(
+                            and(
+                                eq(TasksAssigneeSchema.taskId, TasksSchema.id),
+                                inArray(TasksAssigneeSchema.collabUserId, filters.assigneeIds)
+                            )
+                        )
+                )
+            );
+        }
 
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.select().from(TasksSchema).where(and(...conditions)).orderBy(asc(TasksSchema.kanbanOrder)).limit(20)
@@ -660,11 +679,13 @@ export class TasksRepository {
         return result ?? [];
     }
 
-    async fetchTaskWithMinKanbanOrder(goalId: number, columnId: number | null): Promise<number | null> {
+    async fetchTaskWithMinKanbanOrder(goalId: number, columnId?: number | null): Promise<number | null> {
         const conditions = [
             eq(TasksSchema.goalId, goalId),
-            columnId === null ? isNull(TasksSchema.statusId) : eq(TasksSchema.statusId, columnId),
         ];
+        if (columnId !== undefined) {
+            conditions.push(columnId === null ? isNull(TasksSchema.statusId) : eq(TasksSchema.statusId, columnId));
+        }
         const result = await callWithCatch(() => this.db.dbDrizzle.select({
             minKanbanOrder: sql<number>`MIN(kanban_order)`
         }).from(TasksSchema).where(and(...conditions)));
@@ -673,8 +694,8 @@ export class TasksRepository {
 
     static readonly KANBAN_ORDER_GAP = 16384;
 
-    async getNextKanbanOrder(goalId: number, statusId: number | null = null): Promise<number> {
-        const min = await this.fetchTaskWithMinKanbanOrder(goalId, statusId);
+    async getNextKanbanOrder(goalId: number, columnId?: number | null): Promise<number> {
+        const min = await this.fetchTaskWithMinKanbanOrder(goalId, columnId);
         return (min ?? 0) - TasksRepository.KANBAN_ORDER_GAP;
     }
 }

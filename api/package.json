@@ -55,6 +55,7 @@
     "drizzle-orm": "^0.44.4",
     "emailjs": "^4.0.3",
     "express": "4.21.0",
+    "firebase-admin": "^12.7.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "passport": "^0.7.0",

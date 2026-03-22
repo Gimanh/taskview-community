@@ -220,7 +220,7 @@ export const useTasksStore = defineStore('tasks', {
       if (taskResult.parentId) {
         const subTask = parentTask.subtasks.find((sub) => sub.id === +taskResult.id)
         if (subTask) {
-          subTask.complete = taskResult.complete
+          Object.assign(subTask, taskResult)
         }
       } else {
         //we updating main task
@@ -255,6 +255,13 @@ export const useTasksStore = defineStore('tasks', {
       const localTask = this.tasks.find(({ id }) => id === task.id)
       if (localTask) {
         Object.assign(localTask, task)
+      } else if (task.parentId) {
+        const parent = this.tasks.find(({ id }) => id === task.parentId)
+          ?? (this.selectedTask?.id === task.parentId ? this.selectedTask : null)
+        const subtask = parent?.subtasks.find((s) => s.id === task.id)
+        if (subtask) {
+          Object.assign(subtask, task)
+        }
       }
       this.updateSelectedTask(task)
       return true

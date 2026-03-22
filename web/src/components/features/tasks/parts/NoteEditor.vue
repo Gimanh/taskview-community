@@ -4,6 +4,7 @@
       v-if="canViewTaskNote"
       #default="{ editor }"
       v-model="initialContent"
+      :content-type="contentType"
       :placeholder="placeholder"
       :extensions="extensions"
       :editable="canEditTaskNote"
@@ -39,6 +40,7 @@ const extensions = [
 
 const props = defineProps<{
   content: string
+  contentType?: 'html' | 'markdown'
   placeholder?: string
   debounce?: number
 }>()

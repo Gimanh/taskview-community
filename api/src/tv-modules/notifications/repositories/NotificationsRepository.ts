@@ -1,7 +1,7 @@
-import { and, eq, desc, lt, like, sql } from 'drizzle-orm';
+import { and, eq, desc, lt, sql } from 'drizzle-orm';
 import { NotificationsSchema, TasksSchema, type NotificationsSchemaTypeForSelect } from 'taskview-db-schemas';
-import { Database } from '../../modules/db';
-import { callWithCatch } from '../../utils/helpers';
+import { Database } from '../../../modules/db';
+import { callWithCatch } from '../../../utils/helpers';
 
 export class NotificationsRepository {
     private readonly db: Database;
@@ -10,11 +10,12 @@ export class NotificationsRepository {
         this.db = Database.getInstance();
     }
 
-    async create(data: { userId: number; taskId: number | null; title: string; body: string | null }): Promise<NotificationsSchemaTypeForSelect | false> {
+    async create(data: { userId: number; taskId: number | null; type: string; title: string; body: string | null }): Promise<NotificationsSchemaTypeForSelect | false> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.insert(NotificationsSchema).values({
                 userId: data.userId,
                 taskId: data.taskId,
+                type: data.type,
                 title: data.title,
                 body: data.body,
             }).returning()
@@ -34,6 +35,7 @@ export class NotificationsRepository {
                 id: NotificationsSchema.id,
                 userId: NotificationsSchema.userId,
                 taskId: NotificationsSchema.taskId,
+                type: NotificationsSchema.type,
                 title: NotificationsSchema.title,
                 body: NotificationsSchema.body,
                 read: NotificationsSchema.read,
@@ -62,12 +64,12 @@ export class NotificationsRepository {
         return !!result;
     }
 
-    async deleteDeadlineNotifications(taskId: number): Promise<boolean> {
+    async deleteByTaskAndType(taskId: number, type: string): Promise<boolean> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.delete(NotificationsSchema)
                 .where(and(
                     eq(NotificationsSchema.taskId, taskId),
-                    like(NotificationsSchema.title, 'Deadline:%'),
+                    eq(NotificationsSchema.type, type),
                 ))
         );
         return !!result;

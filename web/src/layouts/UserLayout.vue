@@ -47,9 +47,11 @@ import { useI18n } from 'vue-i18n'
 import ProjectsSidebar from '@/components/features/projects/ProjectsSidebar.vue'
 import NotificationBell from '@/components/NotificationBell.vue'
 import { useCentrifugo } from '@/composables/useCentrifugo'
+import { usePushNotifications } from '@/composables/usePushNotifications'
 
 const { isSidebarOpen, isSidebarCollapsed } = useDashboard()
 const { connect: connectCentrifugo } = useCentrifugo()
+const { init: initPush } = usePushNotifications()
 const { t } = useI18n()
 const appStore = useAppStore()
 
@@ -75,8 +77,10 @@ App.addListener('appStateChange', async ({ isActive }) => {
 })
 
 onMounted(async () => {
+  console.log('-------------------------------- onMounted push notifications --------------------------------')
   appStore.initTaskDetailDisplayMode()
   connectCentrifugo()
+  initPush()
 
   await CapacitorUpdater.notifyAppReady()
   console.log('notifyAppReady', APP_VERSION)

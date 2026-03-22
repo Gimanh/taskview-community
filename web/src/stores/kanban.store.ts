@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { GoalItem, KanbanArgDeleteColumn, KanbanArgUpdateColumn, KanbanArgUpdateTasksOrder, KanbanColumnItem, TaskArgAdd, KanbanArgAddColumn } from 'taskview-api'
+import type { GoalItem, KanbanArgDeleteColumn, KanbanArgUpdateColumn, KanbanArgUpdateTasksOrder, KanbanColumnItem, KanbanFilters, TaskArgAdd, KanbanArgAddColumn } from 'taskview-api'
 import { DEFAULT_ID } from '@/types/app.types'
 import type { KanbanStoreState } from '@/types/kanban.types'
 import { $tvApi } from '@/plugins/axios'
@@ -11,11 +11,12 @@ export const useKanbanStore = defineStore('kanban', {
       tasksData: {},
       statuses: [],
       goalId: DEFAULT_ID,
+      filters: {},
     }
   },
   actions: {
     async fetchTasksForColumn(goalId: GoalItem['id'], columnId: KanbanColumnItem['id'] | null, cursor: string | number | null) {
-      const result = await $tvApi.kanban.fetchTasksForColumn(goalId, columnId, cursor).catch(console.error)
+      const result = await $tvApi.kanban.fetchTasksForColumn(goalId, columnId, cursor, this.filters).catch(console.error)
 
       if (!result) {
         if (!this.tasksData[columnId ?? DEFAULT_ID]) {
@@ -134,14 +135,24 @@ export const useKanbanStore = defineStore('kanban', {
     },
 
     syncTask(task: TaskItem) {
+      const targetColumnId = task.statusId ?? DEFAULT_ID
+
       for (const columnId of Object.keys(this.tasksData)) {
         const column = this.tasksData[Number(columnId)]
         if (!column) continue
-        const localTask = column.tasks.find((t) => t.id === task.id)
-        if (localTask) {
-          Object.assign(localTask, task)
-          return
+        const index = column.tasks.findIndex((t) => t.id === task.id)
+        if (index === -1) continue
+
+        if (Number(columnId) === targetColumnId) {
+          Object.assign(column.tasks[index], task)
+        } else {
+          column.tasks.splice(index, 1)
+          const targetColumn = this.tasksData[targetColumnId]
+          if (targetColumn) {
+            targetColumn.tasks.unshift(task)
+          }
         }
+        return
       }
     },
 
@@ -154,6 +165,14 @@ export const useKanbanStore = defineStore('kanban', {
           column.tasks.splice(index, 1)
           return
         }
+      }
+    },
+
+    async setFilters(filters: KanbanFilters) {
+      this.filters = filters
+      this.tasksData = {}
+      for (const status of this.statuses) {
+        await this.fetchTasksForColumn(this.goalId, status.id === DEFAULT_ID ? null : status.id, null)
       }
     },
 

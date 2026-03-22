@@ -21,6 +21,10 @@ export default class NotificationsRoutes implements Routable {
         this.router.get('/', [IsLoggedIn], this.controller.fetch);
         this.router.patch('/read', [IsLoggedIn], this.controller.markRead);
         this.router.patch('/read-all', [IsLoggedIn], this.controller.markAllRead);
+        this.router.get('/preferences', [IsLoggedIn], this.controller.getPreferences);
+        this.router.put('/preferences', [IsLoggedIn], this.controller.savePreferences);
         this.router.get('/connection-token', [IsLoggedIn], this.controller.connectionToken);
+        this.router.post('/device/register', [IsLoggedIn], this.controller.registerDevice);
+        this.router.post('/device/unregister', [IsLoggedIn], this.controller.unregisterDevice);
     }
 }

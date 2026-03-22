@@ -96,6 +96,17 @@
         :to="{ name: 'integrations', params: { projectId: selectedProject?.id } }"
         @click="contextMenu?.close()"
       />
+      <!-- Webhooks -->
+      <UButton
+        v-if="canViewIntegrations"
+        :label="t('contextMenu.webhooks')"
+        icon="i-lucide-webhook"
+        variant="ghost"
+        color="neutral"
+        class="w-full justify-start"
+        :to="{ name: 'webhooks', params: { projectId: selectedProject?.id } }"
+        @click="contextMenu?.close()"
+      />
 
       <USeparator class="my-1" />
 

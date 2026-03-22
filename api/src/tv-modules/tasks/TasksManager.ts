@@ -39,7 +39,7 @@ import {
     type TaskForClientNew,
     type TasksArgToggleTaskUsers,
 } from './tasks.server.types';
-import type { KanbanArgFetchTasksForColumn } from '../kanban/types';
+import type { KanbanArgFetchTasksForColumn, KanbanArgFilters } from '../kanban/types';
 
 type TaskFieldPermissionKey = keyof typeof TaskFieldPermissionsForEditOrCreation & keyof TasksSchemaTypeForSelect;
 
@@ -264,6 +264,13 @@ export class TasksManager {
     }
 
     async updateTask(data: TaskArgUpdate): Promise<{ task: TaskForClientNew; syncFailed?: boolean } | null> {
+        if (data.statusId !== undefined) {
+            const currentTask = await this.repository.fetchTaskByIdNew(data.id);
+            if (currentTask && currentTask.statusId !== data.statusId) {
+                data.kanbanOrder = await this.repository.getNextKanbanOrder(currentTask.goalId);
+            }
+        }
+
         const task = await this.repository.updateTask(data);
         if (!task) {
             return null;
@@ -279,7 +286,7 @@ export class TasksManager {
         eventBus.emit('task.updated', {
             task,
             changes,
-            userId: this.user.getUserData()?.id as number,
+            initiatorId: this.user.getUserData()?.id as number,
         });
 
         const tasks = await this.extendTasksWithTagsAndAssignees([task]);
@@ -401,7 +408,7 @@ export class TasksManager {
         if (task[0]) {
             eventBus.emit('task.created', {
                 task: task[0],
-                userId: this.user.getUserData()?.id as number,
+                initiatorId: this.user.getUserData()?.id as number,
             });
         }
 
@@ -409,7 +416,12 @@ export class TasksManager {
     }
 
     async deleteTaskNew(data: TaskArgDelete) {
-        return await this.repository.deleteTaskNew(data);
+        const task = await this.repository.fetchTaskByIdNew(data.taskId);
+        const result = await this.repository.deleteTaskNew(data);
+        if (result) {
+            eventBus.emit('task.deleted', { taskId: data.taskId, goalId: task?.goalId ?? 0, initiatorId: this.user.getUserData()?.id as number });
+        }
+        return result;
     }
 
     async toggleTaskUsers(data: TasksArgToggleTaskUsers) {
@@ -417,12 +429,13 @@ export class TasksManager {
         eventBus.emit('task.assigneesChanged', {
             taskId: data.taskId,
             userIds: data.userIds,
+            initiatorId: this.user.getUserData()?.id as number,
         });
         return result;
     }
 
-    async fetchTasksForKanbanColumn(data: KanbanArgFetchTasksForColumn): Promise<{ tasks: TaskForClientNew[], nextCursor: string | number | null }> {
-        const tasks = await this.repository.fetchTasksForKanbanColumn(data.goalId, data.columnId, data.cursor);
+    async fetchTasksForKanbanColumn(data: KanbanArgFetchTasksForColumn & { filters?: KanbanArgFilters }): Promise<{ tasks: TaskForClientNew[], nextCursor: string | number | null }> {
+        const tasks = await this.repository.fetchTasksForKanbanColumn(data.goalId, data.columnId, data.cursor, data.filters);
         if (!tasks || tasks.length === 0) return { tasks: [], nextCursor: null };
         return { tasks: await this.extendTasksWithTagsAndAssignees(tasks), nextCursor: tasks[tasks.length - 1].kanbanOrder };
     }

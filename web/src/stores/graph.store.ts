@@ -12,6 +12,8 @@ export const useGraphStore = defineStore('use-graph-store', {
     return {
       nodes: [],
       edges: [],
+      allNodes: [],
+      allEdges: [],
     }
   },
   actions: {
@@ -30,24 +32,28 @@ export const useGraphStore = defineStore('use-graph-store', {
         tasksStore.fetchAllTasks(goalId, 1, 1, true),
       ])
 
-      this.nodes = tasksStore.tasks.map((task) => ({
+      const nodes = tasksStore.tasks.map((task) => ({
         id: task.id.toString(),
         data: { task, label: `${task.description} == ${task.id}` },
         position: task.nodeGraphPosition ?? { x: 0, y: 0 },
         type: 'task',
-        style: { resize: 'none' },
+        style: { resize: 'none' as const },
       }))
+      this.allNodes = nodes
+      this.nodes = [...nodes]
       await this.fetchAllEdges(goalId)
     },
 
     async addNode(task: TaskItem) {
-      this.nodes.push({
+      const node = {
         id: task.id.toString(),
         data: { task, label: `${task.description} == ${task.id}` },
         position: task.nodeGraphPosition ?? { x: 0, y: 0 },
         type: 'task',
-        style: { resize: 'none' },
-      })
+        style: { resize: 'none' as const },
+      }
+      this.allNodes.push({ ...node })
+      this.nodes.push(node)
       return task.id.toString()
     },
 
@@ -63,6 +69,7 @@ export const useGraphStore = defineStore('use-graph-store', {
         target: edge.toTaskId.toString(),
       }
 
+      this.allEdges.push({ ...newEdge })
       this.edges.push(newEdge)
 
       return newEdge
@@ -71,29 +78,29 @@ export const useGraphStore = defineStore('use-graph-store', {
     async fetchAllEdges(goalId: number) {
       const result = await $tvApi.graph.fetchAllEdges(goalId).catch((err: unknown) => logError(err))
       if (!result) return
-      this.edges = result.map((edge) => ({
+      const edges = result.map((edge) => ({
         id: edge.id.toString(),
         source: edge.fromTaskId.toString(),
         target: edge.toTaskId.toString(),
       }))
+      this.allEdges = edges
+      this.edges = [...edges]
     },
 
     removeTask(taskId: number) {
       const nodeId = taskId.toString()
-      const nodeIndex = this.nodes.findIndex((n) => n.id === nodeId)
-      if (nodeIndex !== -1) {
-        this.nodes.splice(nodeIndex, 1)
-      }
+      this.allNodes = this.allNodes.filter((n) => n.id !== nodeId)
+      this.allEdges = this.allEdges.filter((e) => e.source !== nodeId && e.target !== nodeId)
+      this.nodes = this.nodes.filter((n) => n.id !== nodeId)
       this.edges = this.edges.filter((e) => e.source !== nodeId && e.target !== nodeId)
     },
 
     async deleteEdge(id: number) {
       const result = await $tvApi.graph.deleteEdge(id).catch((err: unknown) => logError(err))
       if (!result) return
-      const index = this.edges.findIndex((edge) => edge.id === id.toString())
-      if (index !== -1) {
-        this.edges.splice(index, 1)
-      }
+      const idStr = id.toString()
+      this.allEdges = this.allEdges.filter((e) => e.id !== idStr)
+      this.edges = this.edges.filter((e) => e.id !== idStr)
     },
 
     syncTask(task: { id: number; description?: string }) {

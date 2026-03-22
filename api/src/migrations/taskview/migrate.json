@@ -350,5 +350,27 @@
         "description": [
             "Added reminders, notifications, and push_subscriptions tables"
         ]
+    },
+    "28": {
+        "version": "1.25.0",
+        "name": "Release 1.25.0",
+        "releaseDate": "20260317",
+        "scripts": [
+            "/1.25.0/0.1.25.0.sql"
+        ],
+        "description": [
+            "Added type column to notifications table"
+        ]
+    },
+    "29": {
+        "version": "1.26.0",
+        "name": "Release 1.26.0",
+        "releaseDate": "20260320",
+        "scripts": [
+            "/1.26.0/0.1.26.0.sql"
+        ],
+        "description": [
+            "Added notification_preferences table with JSONB settings"
+        ]
     }
 }

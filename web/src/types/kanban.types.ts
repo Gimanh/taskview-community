@@ -1,4 +1,4 @@
-import type { GoalItem, KanbanColumnItem, KanbanResponseTasksForColumn } from 'taskview-api'
+import type { GoalItem, KanbanColumnItem, KanbanFilters, KanbanResponseTasksForColumn } from 'taskview-api'
 
 export type KanbanStoreState = {
     tasksData: {
@@ -7,4 +7,5 @@ export type KanbanStoreState = {
     // TODO: rename to columns
     statuses: KanbanColumnItem[];
     goalId: GoalItem['id'];
+    filters: KanbanFilters;
 };

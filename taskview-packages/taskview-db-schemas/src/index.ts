@@ -10,3 +10,6 @@ export * from './schemas/goals-list.schema';
 export * from './schemas/tasks-statuses.schema';
 export * from './schemas/integrations.schema';
 export * from './schemas/notifications.schema';
+export * from './schemas/device-tokens.schema';
+export * from './schemas/notification-preferences.schema';
+export * from './schemas/webhooks.schema';

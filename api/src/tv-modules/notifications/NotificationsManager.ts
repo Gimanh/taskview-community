@@ -1,5 +1,5 @@
 import type { AppUser } from '../../core/AppUser';
-import { NotificationsRepository } from './NotificationsRepository';
+import { NotificationsRepository } from './repositories/NotificationsRepository';
 
 export class NotificationsManager {
     private readonly user: AppUser;
