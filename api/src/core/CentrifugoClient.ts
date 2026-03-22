@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import { $logger } from '../modules/logget';
 
 interface CentrifugoPublishPayload {
@@ -57,8 +58,7 @@ export class CentrifugoClient {
     }
 
     static generateConnectionToken(userId: number): string {
-        const jwt = require('jsonwebtoken');
-        const secret = process.env.CENTRIFUGO_TOKEN_SECRET || process.env.JWT_SIGN;
+        const secret = process.env.CENTRIFUGO_TOKEN_SECRET || process.env.JWT_SIGN || '';
         return jwt.sign(
             { sub: String(userId) },
             secret,

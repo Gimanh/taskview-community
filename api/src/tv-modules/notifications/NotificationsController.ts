@@ -89,15 +89,12 @@ export class NotificationsController {
             return res.status(401).send('Unauthorized');
         }
 
-        const publicPort = process.env.CENTRIFUGO_PUBLIC_PORT;
-        if (!publicPort) {
+        const publicUrl = process.env.CENTRIFUGO_PUBLIC_URL;
+        if (!publicUrl) {
             return res.tvJson({ token: null, url: null });
         }
 
-        const appUrl = process.env.APP_URL || 'http://localhost:3000';
-        const parsed = new URL(appUrl);
-        const protocol = parsed.protocol === 'http:' ? 'ws' : 'wss';
-        const url = `${protocol}://${parsed.hostname}:${publicPort}/connection/websocket`;
+        const url = publicUrl;
 
         const token = CentrifugoClient.generateConnectionToken(userId);
         return res.tvJson({ token, url });
