@@ -98,6 +98,28 @@ import AddNewTaskToGraph from './AddNewTaskToGraph.vue'
 import { useLayout } from './composables/useLayout'
 import TaskNode from './TaskNode.vue'
 
+const listIds = defineModel<number[]>('listIds', { default: () => [] })
+const assigneeIds = defineModel<number[]>('assigneeIds', { default: () => [] })
+
+const applyFilters = () => {
+  let filtered = [...store.allNodes]
+  if (listIds.value.length > 0) {
+    filtered = filtered.filter((n) => listIds.value.includes(n.data.task.goalListId))
+  }
+  if (assigneeIds.value.length > 0) {
+    filtered = filtered.filter((n) =>
+      n.data.task.assignedUsers?.some((id: number) => assigneeIds.value.includes(id))
+    )
+  }
+  const nodeIds = new Set(filtered.map((n) => n.id))
+  store.nodes = filtered
+  store.edges = store.allEdges.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target))
+  setTimeout(() => layoutGraph(layoutDirection.value), 50)
+}
+
+watch(listIds, applyFilters, { deep: true })
+watch(assigneeIds, applyFilters, { deep: true })
+
 const {
   fitView,
   onConnect,

@@ -41,7 +41,7 @@ const deleteOpen = ref(false)
 const ui = {
   itemLeadingIcon: 'size-4',
   item: 'items-center',
-}
+} as DropdownMenuItem['ui']
 const menuItems = computed<DropdownMenuItem[][]>(() => [
   [
     {

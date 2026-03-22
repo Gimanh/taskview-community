@@ -65,6 +65,11 @@ const router = createRouter({
           component: () => import('./pages/user/integrations.vue'),
         },
         {
+          path: ':projectId/webhooks',
+          name: 'webhooks',
+          component: () => import('./pages/user/webhooks.vue'),
+        },
+        {
           path: 'account',
           name: 'account',
           component: () => import('./pages/user/account.vue'),

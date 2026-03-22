@@ -3,6 +3,7 @@ import { TvApi } from 'taskview-api'
 import type { App } from 'vue'
 import $api from '@/helpers/axios'
 import LocalStorage from '@/helpers/LocalStorage'
+import { LS_KEY_MAIN_SERVER } from '@/composables/useAdditionalServer'
 
 let $ls: LocalStorage
 const $tvApi: TvApi = new TvApi($api)
@@ -18,10 +19,13 @@ const api = {
 
     $ls = app.config.globalProperties.$ls
 
-    // const apiToken = await $ls.getToken();
-    // if (apiToken) {
-    //     $tvApi = new TvApi($api);
-    // }
+    const savedServer = await $ls.getValue(LS_KEY_MAIN_SERVER)
+    console.log('savedServer', savedServer, LS_KEY_MAIN_SERVER)
+    if (savedServer) {
+      $api.defaults.baseURL = savedServer
+      $api.defaults.headers.common['ngrok-skip-browser-warning'] = "1"
+      $tvApi.setBaseUrl(savedServer)
+    }
 
     console.debug('Install axios')
     await $ls.checkTokenAndSetForAxios()
@@ -72,12 +76,12 @@ const api = {
             return new Promise((resolve, reject) => {
               $axios
                 .post<{
-                                    access: string;
-                                    refresh: string;
-                                }>(
-                                  '/module/auth/refresh/token',
-                                  qs.stringify({ refreshToken }),
-                                )
+                  access: string;
+                  refresh: string;
+                }>(
+                  '/module/auth/refresh/token',
+                  qs.stringify({ refreshToken }),
+                )
                 .then((data) => {
                   console.log('We got refresh data tokens', data)
                   $ls.setToken(data.data.access)

@@ -1,5 +1,10 @@
 import type { Task } from "./tasks.api.types";
 
+export type KanbanFilters = {
+    listIds?: number[];
+    assigneeIds?: number[];
+};
+
 export type KanbanColumnItem = {
     id: number;
     name: string;

@@ -32,7 +32,7 @@
             <UInputTime
               v-if="showStartTime"
               v-model="startTimeModel"
-              hour-format="24"
+              :hour-cycle="24"
             />
             <UButton
               v-if="hasStartDate"
@@ -79,7 +79,7 @@
             <UInputTime
               v-if="showEndTime"
               v-model="endTimeModel"
-              hour-format="24"
+              :hour-cycle="24"
             />
             <UButton
               v-if="hasEndDate"
@@ -219,28 +219,32 @@ function useDeferredLoading(source: typeof loadingStart, deferred: typeof deferr
   })
 }
 
-// Parse date string (YYYY-MM-DD) to CalendarDate
-function parseDateString(dateStr: string | null | undefined): CalendarDate | undefined {
-  if (!dateStr) return undefined
-  const [year, month, day] = dateStr.split('-').map(Number)
-  return new CalendarDate(year, month, day)
-}
+// Parse UTC date + optional time from server into local CalendarDate + Time
+function parseFromServer(dateStr: string | null | undefined, timeStr: string | null | undefined): { date: CalendarDate | undefined; time: Time | undefined } {
+  if (!dateStr) return { date: undefined, time: undefined }
 
-// Parse time string (HH:mm:ss+TZ) to Time
-function parseTimeString(timeStr: string | null | undefined): Time | undefined {
-  if (!timeStr) return undefined
-  const match = timeStr.match(/^(\d{2}):(\d{2})/)
-  if (match) {
-    return new Time(parseInt(match[1], 10), parseInt(match[2], 10))
+  if (timeStr) {
+    const match = timeStr.match(/^(\d{2}):(\d{2})/)
+    if (match) {
+      const utc = new Date(`${dateStr}T${match[1]}:${match[2]}:00Z`)
+      return {
+        date: new CalendarDate(utc.getFullYear(), utc.getMonth() + 1, utc.getDate()),
+        time: new Time(utc.getHours(), utc.getMinutes()),
+      }
+    }
   }
-  return undefined
+
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return { date: new CalendarDate(year, month, day), time: undefined }
 }
 
 // Use shallowRef to avoid Vue stripping private fields from class instances
-const startDateModel = shallowRef<CalendarDate | undefined>(parseDateString(props.task.startDate))
-const endDateModel = shallowRef<CalendarDate | undefined>(parseDateString(props.task.endDate))
-const startTimeModel = shallowRef<Time | undefined>(parseTimeString(props.task.startTime))
-const endTimeModel = shallowRef<Time | undefined>(parseTimeString(props.task.endTime))
+const initStart = parseFromServer(props.task.startDate, props.task.startTime)
+const initEnd = parseFromServer(props.task.endDate, props.task.endTime)
+const startDateModel = shallowRef<CalendarDate | undefined>(initStart.date)
+const endDateModel = shallowRef<CalendarDate | undefined>(initEnd.date)
+const startTimeModel = shallowRef<Time | undefined>(initStart.time)
+const endTimeModel = shallowRef<Time | undefined>(initEnd.time)
 const showStartTime = ref(!!props.task.startTime)
 const showEndTime = ref(!!props.task.endTime)
 const startPopoverOpen = ref(false)
@@ -250,12 +254,30 @@ const endPopoverOpen = ref(false)
 // so the watchers below don't fire extra save requests
 let syncing = false
 
-// user unchecked "select time" — reset the time value
+// user toggled "select time" checkbox
 watch(showStartTime, (val) => {
-  if (!val) startTimeModel.value = undefined
+  if (!val) {
+    startTimeModel.value = undefined
+  } else if (!startDateModel.value) {
+    syncing = true
+    const now = getTodayCalendarDate()
+    startDateModel.value = endDateModel.value && endDateModel.value.compare(now) < 0
+      ? endDateModel.value
+      : now
+    nextTick(() => { syncing = false })
+  }
 })
 watch(showEndTime, (val) => {
-  if (!val) endTimeModel.value = undefined
+  if (!val) {
+    endTimeModel.value = undefined
+  } else if (!endDateModel.value) {
+    syncing = true
+    const now = getTodayCalendarDate()
+    endDateModel.value = startDateModel.value && startDateModel.value.compare(now) > 0
+      ? startDateModel.value
+      : now
+    nextTick(() => { syncing = false })
+  }
 })
 
 // these two watchers exist because UCalendar updates the model via v-model
@@ -305,10 +327,12 @@ watch(
   () => props.task,
   (task) => {
     syncing = true
-    startDateModel.value = parseDateString(task.startDate)
-    endDateModel.value = parseDateString(task.endDate)
-    startTimeModel.value = parseTimeString(task.startTime)
-    endTimeModel.value = parseTimeString(task.endTime)
+    const start = parseFromServer(task.startDate, task.startTime)
+    const end = parseFromServer(task.endDate, task.endTime)
+    startDateModel.value = start.date
+    endDateModel.value = end.date
+    startTimeModel.value = start.time
+    endTimeModel.value = end.time
     showStartTime.value = !!task.startTime
     showEndTime.value = !!task.endTime
     nextTick(() => { syncing = false })
@@ -346,47 +370,33 @@ function formatTimeForDisplay(time: Time): string {
   return `${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`
 }
 
-function getTimeZone(): string {
-  const date = new Date()
-  const timezoneOffsetInMinutes = date.getTimezoneOffset()
-  const offsetHours = Math.floor(Math.abs(timezoneOffsetInMinutes) / 60)
-  const offsetMinutes = Math.abs(timezoneOffsetInMinutes) % 60
-  const offsetSign = timezoneOffsetInMinutes <= 0 ? '+' : '-'
-  return `${offsetSign}${String(offsetHours).padStart(2, '0')}:${String(offsetMinutes).padStart(2, '0')}`
-}
-
-function formatDateForApi(calendarDate: CalendarDate): string {
-  return calendarDate.toString() // Returns YYYY-MM-DD
-}
-
-function formatTimeForApi(time: Time): string {
-  const timeZone = getTimeZone()
-  const timeStr = `${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}:00`
-  return `${timeStr}${timeZone}`
+// Convert local date+time to UTC for API, returns { date, time } strings
+// When time is null, date is sent as-is (calendar date, no timezone shift)
+function toApiDateTime(date: CalendarDate, time?: Time): { date: string; time: string | null } {
+  if (!time) return { date: date.toString(), time: null }
+  const local = new Date(date.year, date.month - 1, date.day, time.hour, time.minute, 0)
+  const y = local.getUTCFullYear()
+  const m = String(local.getUTCMonth() + 1).padStart(2, '0')
+  const d = String(local.getUTCDate()).padStart(2, '0')
+  const h = String(local.getUTCHours()).padStart(2, '0')
+  const min = String(local.getUTCMinutes()).padStart(2, '0')
+  return { date: `${y}-${m}-${d}`, time: `${h}:${min}:00` }
 }
 
 // Save functions
 async function saveStartDateTime() {
   if (!startDateModel.value) return
-
   loadingStart.value = true
-  await tasksStore.saveDateForTask({
-    id: props.task.id,
-    startDate: formatDateForApi(startDateModel.value as CalendarDate),
-    startTime: startTimeModel.value ? formatTimeForApi(startTimeModel.value as Time) : null,
-  })
+  const { date, time } = toApiDateTime(startDateModel.value, startTimeModel.value)
+  await tasksStore.saveDateForTask({ id: props.task.id, startDate: date, startTime: time })
   loadingStart.value = false
 }
 
 async function saveEndDateTime() {
   if (!endDateModel.value) return
-
   loadingEnd.value = true
-  await tasksStore.saveDateForTask({
-    id: props.task.id,
-    endDate: formatDateForApi(endDateModel.value as CalendarDate),
-    endTime: endTimeModel.value ? formatTimeForApi(endTimeModel.value as Time) : null,
-  })
+  const { date, time } = toApiDateTime(endDateModel.value, endTimeModel.value)
+  await tasksStore.saveDateForTask({ id: props.task.id, endDate: date, endTime: time })
   loadingEnd.value = false
 }
 
@@ -462,8 +472,8 @@ async function setQuickDate(type: 'today' | 'tomorrow' | 'yesterday') {
   })
 
   syncing = true
-  startDateModel.value = parseDateString(date)
-  endDateModel.value = parseDateString(date)
+  startDateModel.value = parseFromServer(date, null).date
+  endDateModel.value = parseFromServer(date, null).date
   nextTick(() => { syncing = false })
 
   activeQuickAction.value = null
@@ -499,8 +509,8 @@ async function setQuickRange(type: 'week' | 'month') {
   })
 
   syncing = true
-  startDateModel.value = parseDateString(start)
-  endDateModel.value = parseDateString(end)
+  startDateModel.value = parseFromServer(start, null).date
+  endDateModel.value = parseFromServer(end, null).date
   nextTick(() => { syncing = false })
 
   activeQuickAction.value = null

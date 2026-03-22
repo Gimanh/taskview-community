@@ -1,6 +1,7 @@
 import type { TasksSchemaTypeForSelect } from 'taskview-db-schemas';
 import type { AppUser } from '../../core/AppUser';
 import { $logger } from '../../modules/logget';
+import { eventBus } from '../../core/EventBus';
 import { GoalPermissions } from '../../types/auth.types';
 import type {
     AddTaskArg,
@@ -38,7 +39,7 @@ import {
     type TaskForClientNew,
     type TasksArgToggleTaskUsers,
 } from './tasks.server.types';
-import type { KanbanArgFetchTasksForColumn } from '../kanban/types';
+import type { KanbanArgFetchTasksForColumn, KanbanArgFilters } from '../kanban/types';
 
 type TaskFieldPermissionKey = keyof typeof TaskFieldPermissionsForEditOrCreation & keyof TasksSchemaTypeForSelect;
 
@@ -80,7 +81,7 @@ export class TasksManager {
 
         const tagsMap: Record<number, number[]> = {};
         const ids = tasks.map((t) => t.id);
-        
+
         const tags = await this.repository.fetchTagsForTasks(ids);
 
         if (tags) {
@@ -115,7 +116,7 @@ export class TasksManager {
 
         const tagsMap: Record<number, number[]> = {};
         const ids = tasks.map((t) => t.id);
-        
+
         const tags = await this.repository.fetchTagsForTasks(ids);
 
         if (tags) {
@@ -157,7 +158,7 @@ export class TasksManager {
         if (!task) return false;
 
         // Sync task completion state to linked GitHub/GitLab issue
-        this.user.integrationsManager.onTaskCompleteChanged(arg.taskId, arg.complete).catch(() => {});
+        this.user.integrationsManager.onTaskCompleteChanged(arg.taskId, arg.complete).catch(() => { });
 
         return new TaskItemForClient(task);
     }
@@ -263,6 +264,13 @@ export class TasksManager {
     }
 
     async updateTask(data: TaskArgUpdate): Promise<{ task: TaskForClientNew; syncFailed?: boolean } | null> {
+        if (data.statusId !== undefined) {
+            const currentTask = await this.repository.fetchTaskByIdNew(data.id);
+            if (currentTask && currentTask.statusId !== data.statusId) {
+                data.kanbanOrder = await this.repository.getNextKanbanOrder(currentTask.goalId);
+            }
+        }
+
         const task = await this.repository.updateTask(data);
         if (!task) {
             return null;
@@ -273,6 +281,13 @@ export class TasksManager {
             const synced = await this.user.integrationsManager.onTaskCompleteChanged(data.id, data.complete).catch(() => false);
             if (!synced) syncFailed = true;
         }
+
+        const { id, ...changes } = data;
+        eventBus.emit('task.updated', {
+            task,
+            changes,
+            initiatorId: this.user.getUserData()?.id as number,
+        });
 
         const tasks = await this.extendTasksWithTagsAndAssignees([task]);
         const result = tasks[0] ?? null;
@@ -388,19 +403,39 @@ export class TasksManager {
         }
 
         const task = await this.repository.addTaskNew(newData);
-        return await this.extendTasksWithTagsAndAssignees(task, true);
+        const result = await this.extendTasksWithTagsAndAssignees(task, true);
+
+        if (task[0]) {
+            eventBus.emit('task.created', {
+                task: task[0],
+                initiatorId: this.user.getUserData()?.id as number,
+            });
+        }
+
+        return result;
     }
 
     async deleteTaskNew(data: TaskArgDelete) {
-        return await this.repository.deleteTaskNew(data);
+        const task = await this.repository.fetchTaskByIdNew(data.taskId);
+        const result = await this.repository.deleteTaskNew(data);
+        if (result) {
+            eventBus.emit('task.deleted', { taskId: data.taskId, goalId: task?.goalId ?? 0, initiatorId: this.user.getUserData()?.id as number });
+        }
+        return result;
     }
 
     async toggleTaskUsers(data: TasksArgToggleTaskUsers) {
-        return await this.repository.toggleTaskUsers(data);
+        const result = await this.repository.toggleTaskUsers(data);
+        eventBus.emit('task.assigneesChanged', {
+            taskId: data.taskId,
+            userIds: data.userIds,
+            initiatorId: this.user.getUserData()?.id as number,
+        });
+        return result;
     }
 
-    async fetchTasksForKanbanColumn(data: KanbanArgFetchTasksForColumn): Promise<{ tasks: TaskForClientNew[], nextCursor: string | number | null }> {
-        const tasks = await this.repository.fetchTasksForKanbanColumn(data.goalId, data.columnId, data.cursor);
+    async fetchTasksForKanbanColumn(data: KanbanArgFetchTasksForColumn & { filters?: KanbanArgFilters }): Promise<{ tasks: TaskForClientNew[], nextCursor: string | number | null }> {
+        const tasks = await this.repository.fetchTasksForKanbanColumn(data.goalId, data.columnId, data.cursor, data.filters);
         if (!tasks || tasks.length === 0) return { tasks: [], nextCursor: null };
         return { tasks: await this.extendTasksWithTagsAndAssignees(tasks), nextCursor: tasks[tasks.length - 1].kanbanOrder };
     }

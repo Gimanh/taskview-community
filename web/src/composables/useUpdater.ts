@@ -1,3 +1,4 @@
+// @-ts-nocheck
 import { Preferences } from '@capacitor/preferences'
 import { SplashScreen } from '@capacitor/splash-screen'
 import { type BundleInfo, CapacitorUpdater } from '@capgo/capacitor-updater'
@@ -21,6 +22,8 @@ function isNewerVersion(server: string, current: string): boolean {
 }
 
 export async function useUpdater(canUpdate: boolean = false) {
+  // console.log(canUpdate);
+  // return;
   try {
     const BRANCH_MODE: 'prod' | 'dev' = (await $ls.getValue('update_loading')) === 'dev' ? 'dev' : 'prod'
 

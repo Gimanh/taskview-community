@@ -1,0 +1,15 @@
+{
+  "allow_subscribe_for_client": true,
+  "user_personal_channel_namespace": "personal",
+  "namespaces": [
+    {
+      "name": "personal",
+      "presence": false,
+      "join_leave": false,
+      "history_size": 10,
+      "history_ttl": "300s",
+      "force_recovery": true,
+      "allow_subscribe_for_client": true
+    }
+  ]
+}

@@ -38,56 +38,62 @@
       @click="showAddDialog = true"
     />
 
-    <UModal v-model:open="showAddDialog">
-      <template #content>
-        <UCard>
-          <template #header>
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold">
-                {{ t('server.addNewServer') }}
-              </h3>
-              <UButton
-                icon="i-lucide-x"
-                color="neutral"
-                variant="ghost"
-                @click="showAddDialog = false"
-              />
-            </div>
-          </template>
+    <UModal
+      v-model:open="showAddDialog"
+      :fullscreen="isMobile"
+      :ui="{
+        content: 'sm:max-w-md sm:rounded-lg sm:m-auto w-full',
+        footer: 'p-4!',
+      }"
+    >
+      <template #header>
+        <div class="flex items-center justify-between w-full">
+          <h3 class="text-lg font-semibold">
+            {{ t('server.addNewServer') }}
+          </h3>
+          <UButton
+            icon="i-lucide-x"
+            color="neutral"
+            variant="ghost"
+            @click="showAddDialog = false"
+          />
+        </div>
+      </template>
 
-          <div class="space-y-4">
-            <UFormField :label="t('server.serverUrl')">
-              <UInput
-                v-model="newServerUrl"
-                placeholder="https://api.example.com"
-                class="w-full"
-                @keyup.enter="handleAddServer"
-              />
-            </UFormField>
-            <p class="text-xs text-muted">
-              {{ t('server.serverUrlHint') }}
-            </p>
-          </div>
+      <template #body>
+        <div class="space-y-4">
+          <UFormField :label="t('server.serverUrl')">
+            <UInput
+              v-model="newServerUrl"
+              placeholder="https://api.example.com"
+              class="w-full"
+              autofocus
+              @keyup.enter="handleAddServer"
+            />
+          </UFormField>
+          <p class="text-xs text-muted">
+            {{ t('server.serverUrlHint') }}
+          </p>
+        </div>
+      </template>
 
-          <template #footer>
-            <div class="flex justify-end gap-2">
-              <UButton
-                color="neutral"
-                variant="outline"
-                @click="showAddDialog = false"
-              >
-                {{ t('common.cancel') }}
-              </UButton>
-              <UButton
-                :disabled="!isValidUrl"
-                variant="outline"
-                @click="handleAddServer"
-              >
-                {{ t('common.add') }}
-              </UButton>
-            </div>
-          </template>
-        </UCard>
+      <template #footer>
+        <div class="flex justify-end gap-2 w-full">
+          <UButton
+            color="neutral"
+            variant="outline"
+            @click="showAddDialog = false"
+          >
+            {{ t('common.cancel') }}
+          </UButton>
+          <UButton
+            :disabled="!isValidUrl"
+            variant="outline"
+            @click="handleAddServer"
+          >
+            {{ t('common.add') }}
+          </UButton>
+        </div>
       </template>
     </UModal>
   </div>
@@ -96,9 +102,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useBreakpoints, breakpointsTailwind } from '@vueuse/core'
 import { useAdditionalServer } from '@/composables/useAdditionalServer'
 
 const { t } = useI18n()
+const bp = useBreakpoints(breakpointsTailwind)
+const isMobile = bp.smaller('lg')
 
 const mainServer = ref('')
 const allServers = ref<string[]>([])

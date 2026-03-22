@@ -4,7 +4,7 @@
     <USelectMenu
       v-if="canViewKanban"
       :search-input="false"
-      :disabled="!canManageKanban || true"
+      :disabled="!canManageKanban"
       :model-value="selectedItem"
       :items="statusItems"
       :placeholder="t('tasks.selectStatus')"

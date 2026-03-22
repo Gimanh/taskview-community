@@ -190,15 +190,29 @@ const listName = computed(() => {
 
 const formattedDate = computed(() => {
   if (!props.task.endDate) return ''
-  return formatDate(new Date(props.task.endDate), 'DD.MMM.YYYY')
+  if (props.task.endTime) {
+    const match = props.task.endTime.match(/^(\d{2}):(\d{2})/)
+    if (match) {
+      const utc = new Date(`${props.task.endDate}T${match[1]}:${match[2]}:00Z`)
+      return formatDate(utc, 'DD.MMM.YYYY HH:mm')
+    }
+  }
+  const [y, m, d] = props.task.endDate.split('-').map(Number)
+  return formatDate(new Date(y, m - 1, d), 'DD.MMM.YYYY')
 })
 
 const isOverdue = computed(() => {
   if (!props.task.endDate || localComplete.value) return false
-  const end = new Date(props.task.endDate)
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  return end < now
+  if (props.task.endTime) {
+    const match = props.task.endTime.match(/^(\d{2}):(\d{2})/)
+    if (match) {
+      const utc = new Date(`${props.task.endDate}T${match[1]}:${match[2]}:00Z`)
+      return utc < new Date()
+    }
+  }
+  const [y, m, d] = props.task.endDate.split('-').map(Number)
+  const end = new Date(y, m - 1, d, 23, 59, 59)
+  return end < new Date()
 })
 
 const assigneeEmails = computed(() => {

@@ -4,6 +4,8 @@
       {{ t('account.title') }}
     </h1>
 
+    <NotificationSettings />
+
     <UPageCard class="w-full">
       <div class="flex flex-col gap-4">
         <h2 class="text-lg font-semibold">
@@ -33,6 +35,7 @@ import { useI18n } from 'vue-i18n'
 import { useUserStore } from '@/stores/user.store'
 import DeleteAccountButton from './parts/DeleteAccountButton.vue'
 import DeleteAccountCodeModal from './parts/DeleteAccountCodeModal.vue'
+import NotificationSettings from './parts/NotificationSettings.vue'
 
 const { t } = useI18n()
 const userStore = useUserStore()

@@ -6,6 +6,7 @@ import {
     type DeleteKanbanStatus,
     type KanbanAddStatus,
     type KanbanArgFetchTasksForColumn,
+    type KanbanArgFilters,
     type KanbanArgGetTasksOrderForColumnAndCursor,
     type KanbanArgUpdateTasksOrder,
     type KanbanStatusForClient,
@@ -44,7 +45,7 @@ export class KanbanManager {
         return KanbanStatusToClientSchema.parse(status);
     }
 
-    async fetchTasksForColumn(data: KanbanArgFetchTasksForColumn): Promise<{ tasks: TaskForClientNew[], nextCursor: string | number | null, columnVersion: number | null }> {
+    async fetchTasksForColumn(data: KanbanArgFetchTasksForColumn & { filters?: KanbanArgFilters }): Promise<{ tasks: TaskForClientNew[], nextCursor: string | number | null, columnVersion: number | null }> {
         const [tasks, columnVersion] = await Promise.all([
             this.user.tasksManager.fetchTasksForKanbanColumn(data),
             this.repository.getColumnVersion(data.goalId, data.columnId)
@@ -176,8 +177,7 @@ export class KanbanManager {
                 }
             }
         } else {
-            // первая задача в колонке
-            newOrder = KANBAN_GAP;
+            newOrder = await this.user.tasksManager.repository.getNextKanbanOrder(data.goalId);
         }
 
         if (newOrder !== null) {

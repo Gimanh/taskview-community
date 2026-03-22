@@ -186,9 +186,9 @@ export class TasksController {
             return res.status(400).end();
         }
 
-        const subtasks = await req.appUser.tasksManager.fetchSubtasks(args.data);
+        // const subtasks = await req.appUser.tasksManager.fetchSubtasks(args.data);
 
-        return res.tvJson(subtasks);
+        return res.tvJson([]);
     };
 
     /** @deprecated */
