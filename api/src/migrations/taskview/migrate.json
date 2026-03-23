@@ -372,5 +372,27 @@
         "description": [
             "Added notification_preferences table with JSONB settings"
         ]
+    },
+    "30": {
+        "version": "1.27.0",
+        "name": "Release 1.27.0",
+        "releaseDate": "20260322",
+        "scripts": [
+            "/1.27.0/0.1.27.0.sql"
+        ],
+        "description": [
+            "Added webhooks and webhook_deliveries tables"
+        ]
+    },
+    "31": {
+        "version": "1.28.0",
+        "name": "Fix missing 1.25.0 migrations",
+        "releaseDate": "20260323",
+        "scripts": [
+            "/1.28.0/0.fix-missing-1.25.0-migrations.sql"
+        ],
+        "description": [
+            "Fix: apply missing migrations from 1.25.0 - convert TIMETZ to TIME and add timezone column to device_tokens"
+        ]
     }
 }
