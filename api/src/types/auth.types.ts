@@ -34,14 +34,6 @@ export type UserJwtPayload = z.infer<typeof UserJwtPayloadSchema>; //{ id: numbe
 
 export type RegisterUserInDb = z.infer<typeof RegisterUserInDbSchema>;
 
-export type TokensFromDb = {
-    id: number;
-    user_id: number;
-    access_token: string;
-    refresh_token: string;
-    user_ip: string;
-    time_creation: string;
-};
 
 export const ConfirmEmailReqDataSchema = z.object({
     login: z.string(),

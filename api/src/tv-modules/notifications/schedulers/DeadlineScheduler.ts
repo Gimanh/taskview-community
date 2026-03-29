@@ -8,9 +8,10 @@ import { getNotificationService } from '../NotificationService';
 import { NotificationMessages } from '../NotificationMessages';
 import { DeviceTokensRepository } from '../repositories/DeviceTokensRepository';
 import { NotificationType, type DeadlineJobData, type TaskWithDeadline } from '../types';
-import { parseUtcTime } from '../utils';
+import { parseUtcTime, localHourToUtc } from '../utils';
 
 const DEADLINE_JOB = 'deadline-notification';
+const DEFAULT_MORNING_HOUR = 9;
 
 export class DeadlineScheduler {
     private readonly deviceTokensRepo = new DeviceTokensRepository();
@@ -25,7 +26,10 @@ export class DeadlineScheduler {
             if (!deadline) return;
             startAfter = deadline > new Date() ? deadline : undefined;
         } else {
-            const deadlineDay = new Date(`${task.endDate}T00:00:00Z`);
+            const tz = task.owner ? await this.deviceTokensRepo.getTimezoneByUserId(task.owner) : null;
+            const deadlineDay = tz
+                ? localHourToUtc(task.endDate, DEFAULT_MORNING_HOUR, tz)
+                : new Date(`${task.endDate}T00:00:00Z`);
             startAfter = deadlineDay > new Date() ? deadlineDay : undefined;
         }
 

@@ -120,6 +120,7 @@ import { computed, ref, watch } from 'vue'
 import { type Task } from 'taskview-api'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useGoalListsStore } from '@/stores/goal-lists.store'
+import { useBaseScreenStore } from '@/stores/base-screen.store'
 import { useCollaborationStore } from '@/stores/collaboration.store'
 import { useTagsStore } from '@/stores/tag.store'
 import { formatDate } from '@vueuse/core'
@@ -162,6 +163,7 @@ function handleOpenTask() {
 }
 
 const goalListsStore = useGoalListsStore()
+const baseScreenStore = useBaseScreenStore()
 const collaborationStore = useCollaborationStore()
 const tagsStore = useTagsStore()
 
@@ -183,9 +185,10 @@ const projectName = computed(() => {
 })
 
 const listName = computed(() => {
-  return props.task.goalListId
-    ? goalListsStore.listMap.get(props.task.goalListId)?.name || ''
-    : ''
+  if (!props.task.goalListId) return ''
+  return goalListsStore.listMap.get(props.task.goalListId)?.name
+    || baseScreenStore.listMap.get(props.task.goalListId)?.name
+    || ''
 })
 
 const formattedDate = computed(() => {

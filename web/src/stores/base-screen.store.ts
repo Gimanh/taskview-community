@@ -15,6 +15,11 @@ import type { AppResponse } from '@/types/global-app.types'
 import type { TaskItem } from '@/types/tasks.types'
 
 export const useBaseScreenStore = defineStore('base-screen-store', {
+  getters: {
+    listMap: (state) => {
+      return new Map(state.lists.map((item) => [item.listId, { name: item.listName, goalId: item.goalId }]))
+    },
+  },
   state(): BaseScreenState {
     return {
       activeWidgetInMobile: 'today',

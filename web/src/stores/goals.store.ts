@@ -6,6 +6,7 @@ import { useUserStore } from './user.store'
 
 export const useGoalsStore = defineStore('goals', {
   state: (): GoalsStoreState => ({
+    initialized: false,
     loading: false,
     selectedItemId: -1,
     goals: [],
@@ -41,6 +42,7 @@ export const useGoalsStore = defineStore('goals', {
       }
       this.goals = result || []
       this.loading = false
+      this.initialized = true
     },
 
     async addGoal(goal: GoalArgItemAdd): Promise<GoalItem | null> {

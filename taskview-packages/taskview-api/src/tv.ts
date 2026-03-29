@@ -9,6 +9,8 @@ import TvIntegrationsApi from "./api/integrations";
 import TvKanban from "./api/kanban";
 import TvNotificationsApi from "./api/notifications";
 import TvWebhooks from "./api/webhooks";
+import TvApiTokens from "./api/api-tokens";
+import TvSessions from "./api/sessions";
 
 export class TvApi {
 
@@ -34,6 +36,10 @@ export class TvApi {
 
     public webhooks: TvWebhooks;
 
+    public apiTokens: TvApiTokens;
+
+    public sessions: TvSessions;
+
     constructor($axios: AxiosInstance) {
         this.$axios = $axios;
 
@@ -56,6 +62,10 @@ export class TvApi {
         this.notifications = new TvNotificationsApi(this.$axios);
 
         this.webhooks = new TvWebhooks(this.$axios);
+
+        this.apiTokens = new TvApiTokens(this.$axios);
+
+        this.sessions = new TvSessions(this.$axios);
     }
 
     public setBaseUrl(baseUrl: string) {

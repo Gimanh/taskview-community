@@ -7,6 +7,9 @@ export interface AppEvents {
     'task.updated': { task: TasksSchemaTypeForSelect; changes: Record<string, unknown>; initiatorId: number };
     'task.assigneesChanged': { taskId: number; userIds: number[]; initiatorId: number };
     'task.deleted': { taskId: number; goalId: number; initiatorId: number };
+    'collaboration.userAdded': { goalId: number; email: string; initiatorId: number };
+    'collaboration.userRemoved': { goalId: number; collaborationUserId: number; initiatorId: number };
+    'collaboration.rolesChanged': { goalId: number; collaborationUserId: number; initiatorId: number };
 }
 
 type EventName = keyof AppEvents;

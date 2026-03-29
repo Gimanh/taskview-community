@@ -42,6 +42,26 @@ export async function callWithCatch<T>(func: () => Promise<T>): Promise<T | null
 }
 
 
+export function parseDeviceName(userAgent: string | undefined): string {
+    if (!userAgent) return 'Unknown'
+    // ua-parser-js v2 exports a function, not a class
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const UAParser: (ua: string) => { browser: { name?: string; version?: string }; os: { name?: string }; device: { model?: string } } = require('ua-parser-js')
+    const result = UAParser(userAgent)
+
+    const parts: string[] = []
+    if (result.browser.name) {
+        parts.push(result.browser.version ? `${result.browser.name} ${result.browser.version.split('.')[0]}` : result.browser.name)
+    }
+    if (result.device.model && result.device.model !== 'undefined') {
+        parts.push(result.device.model)
+    } else if (result.os.name) {
+        parts.push(result.os.name)
+    }
+
+    return parts.length > 0 ? parts.join(', ') : 'Unknown'
+}
+
 export const chunk = <T>(array: T[], size: number): T[][] => {
     if (!Array.isArray(array)) {
         throw new TypeError('Expected array');

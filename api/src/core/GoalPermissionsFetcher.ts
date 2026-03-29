@@ -39,14 +39,25 @@ export class GoalPermissionsFetcher {
 
         if (!goalId) { return new GoalPermissionsChecker([]); }
 
+        //Token authentication check
+        const allowedGoalIds = this.user.getAllowedGoalIds();
+        if (allowedGoalIds && allowedGoalIds.length > 0 && !allowedGoalIds.includes(goalId)) {
+            return new GoalPermissionsChecker([]);
+        }
+
         if (this.isCacheValid(goalId)) {
             return this.checkerCache[goalId].checker;
         }
 
+        let permissions = await this.goalPermissionsRepository.fetchPermissionsForGoal(goalId, this.user);
+
+        const tokenPerms = this.user.getTokenPermissions();
+        if (tokenPerms && tokenPerms.length > 0) {
+            permissions = permissions.filter(p => tokenPerms.includes(p.permissionName));
+        }
+
         this.checkerCache[goalId] = {
-            checker: new GoalPermissionsChecker(
-                await this.goalPermissionsRepository.fetchPermissionsForGoal(goalId, this.user)
-            ),
+            checker: new GoalPermissionsChecker(permissions),
             timestamp: performance.now(),
         };
 

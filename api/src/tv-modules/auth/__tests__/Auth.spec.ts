@@ -7,7 +7,7 @@ import { Database } from '../../../modules/db';
 import type { UserJwtPayload } from '../../../types/auth.types';
 import { delay } from '../../../utils/helpers';
 import AuthModel from '../AuthModel';
-import JwtStorage from '../JwtStorage';
+import JwtStorage from '../SessionStorage';
 
 const port = 1809;
 const url = `http://localhost:${port}`;
@@ -69,13 +69,9 @@ describe('Login API', () => {
         expect((payloadRefresh as any).userData).toHaveProperty('login');
         expect((payloadRefresh as any).userData).toHaveProperty('email');
 
-        const jwtStorage = new JwtStorage();
-        const result = await jwtStorage.fetchTokens(payloadRefresh.id);
-
-        if (!result) {
-            throw new Error('Can not fetch tokens');
-        }
-        expect(result.access_token).toBeTruthy();
+        const sessionStorage = new JwtStorage();
+        const isActive = await sessionStorage.isSessionActive(payloadRefresh.id);
+        expect(isActive).toBe(true);
     });
 
     it('Registration', async () => {

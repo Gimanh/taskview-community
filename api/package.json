@@ -28,6 +28,7 @@
     "@types/passport-apple": "^2.0.3",
     "@types/pg": "^8.15.5",
     "@types/semver": "^7.5.8",
+    "@types/ua-parser-js": "^0.7.39",
     "aws-sdk": "^2.1691.0",
     "mock-aws-s3": "^4.0.2",
     "nock": "^13.5.5",
@@ -69,6 +70,7 @@
     "semver": "^7.6.3",
     "taskview-db-schemas": "workspace:^",
     "terser": "^5.36.0",
+    "ua-parser-js": "^2.0.9",
     "zod": "^3.23.8"
   },
   "engines": {

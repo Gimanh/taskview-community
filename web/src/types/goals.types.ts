@@ -15,6 +15,7 @@ export const DEFAULT_GOAL_ITEM: GoalItem = {
 export const AllGoalPermissions = TvPermissions
 
 export type GoalsStoreState = {
+    initialized: boolean;
     loading: boolean;
     selectedItemId: GoalItem['id'];
     goals: GoalItem[];

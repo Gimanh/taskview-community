@@ -394,5 +394,40 @@
         "description": [
             "Fix: apply missing migrations from 1.25.0 - convert TIMETZ to TIME and add timezone column to device_tokens"
         ]
+    },
+    "32": {
+        "version": "1.29.0",
+        "name": "Release 1.29.0",
+        "releaseDate": "20260328",
+        "scripts": [
+            "/1.29.0/0.1.29.0.sql"
+        ],
+        "description": [
+            "Added api_tokens table for personal access tokens"
+        ]
+    },
+    "33": {
+        "version": "1.30.0",
+        "name": "Release 1.30.0",
+        "releaseDate": "20260328",
+        "scripts": [
+            "/1.30.0/0.1.30.0.sql"
+        ],
+        "description": [
+            "Added allowed_goal_ids column to api_tokens for project-scoped tokens"
+        ]
+    },
+    "34": {
+        "version": "1.31.0",
+        "name": "Release 1.31.0",
+        "releaseDate": "20260328",
+        "scripts": [
+            "/1.31.0/0.1.31.0.sql",
+            "/1.31.0/all-triggers.sql"
+        ],
+        "description": [
+            "Remove JWT storage from user_tokens, add session metadata (device_name, user_agent, last_used_at)",
+            "Add trigger to remove user from task assignees when removed from project collaboration"
+        ]
     }
 }

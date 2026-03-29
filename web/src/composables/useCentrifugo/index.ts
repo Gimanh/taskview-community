@@ -1,10 +1,11 @@
 import { ref } from 'vue'
 import { Centrifuge } from 'centrifuge'
-import type { Subscription } from 'centrifuge'
+import type { PublicationContext, Subscription } from 'centrifuge'
 import { $tvApi } from '@/plugins/axios'
-import { useNotificationsStore } from '@/stores/notifications.store'
 import { useUserStore } from '@/stores/user.store'
 import { parseJwt } from '@/helpers/Helper'
+import type { RealtimeEvent, RealtimeHandler } from './types'
+import { eventHandlers } from './handlers'
 
 let centrifuge: Centrifuge | null = null
 let subscription: Subscription | null = null
@@ -44,14 +45,14 @@ export function useCentrifugo() {
       })
 
       subscription = centrifuge.newSubscription(`personal:#${userId}`)
-      subscription.on('publication', (ctx) => {
-        const notificationsStore = useNotificationsStore()
-        if (ctx.data?.event === 'notification' && ctx.data?.notification) {
-          notificationsStore.addRealtimeNotification({
-            ...ctx.data.notification,
-            goalId: ctx.data.goalId ?? null,
-            goalListId: ctx.data.goalListId ?? null,
-          })
+      subscription.on('publication', (ctx: PublicationContext) => {
+        const data = ctx.data as RealtimeEvent
+        if (!data?.event) return
+
+        const handler = eventHandlers[data.event]
+        if (handler) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (handler as RealtimeHandler<any>)(data)
         }
       })
 

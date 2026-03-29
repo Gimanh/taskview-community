@@ -37,7 +37,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { App } from '@capacitor/app'
 import { CapacitorUpdater } from '@capgo/capacitor-updater'
 import { useDashboard } from '@/composables/useDashboard'
@@ -48,12 +49,29 @@ import ProjectsSidebar from '@/components/features/projects/ProjectsSidebar.vue'
 import NotificationBell from '@/components/NotificationBell.vue'
 import { useCentrifugo } from '@/composables/useCentrifugo'
 import { usePushNotifications } from '@/composables/usePushNotifications'
+import { useGoalsStore } from '@/stores/goals.store'
+import { useUserStore } from '@/stores/user.store'
 
 const { isSidebarOpen, isSidebarCollapsed } = useDashboard()
 const { connect: connectCentrifugo } = useCentrifugo()
 const { init: initPush } = usePushNotifications()
 const { t } = useI18n()
 const appStore = useAppStore()
+const goalsStore = useGoalsStore()
+const userStore = useUserStore()
+const route = useRoute()
+const router = useRouter()
+
+watch(
+  () => [goalsStore.initialized, goalsStore.goals, route.params.projectId] as const,
+  ([initialized, goals, projectId]) => {
+    if (!initialized || !projectId) return
+    const exists = goals.some((g) => g.id === Number(projectId))
+    if (!exists) {
+      router.replace(`/${userStore.login}`)
+    }
+  },
+)
 
 let updateInProgress = false
 

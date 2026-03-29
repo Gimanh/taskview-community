@@ -5,13 +5,12 @@
       <div class="flex items-start gap-3 shadow-sm rounded-lg dark:bg-tv-ui-bg-elevated">
         <div class="flex-1">
           <UTextarea
-            :value="task.description"
+            v-model="titleValue"
             type="text"
             variant="ghost"
             :autoresize="true"
             class="w-full"
             :class="{ 'text-muted': task.complete }"
-            @blur="updateTaskTitle($event)"
           >
             <template #leading>
               <div class="h-full">
@@ -134,7 +133,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch, onBeforeUnmount } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { useTasksStore } from '@/stores/tasks.store'
 import NoteEditor from '@/components/features/tasks/parts/NoteEditor.vue'
@@ -158,6 +158,34 @@ const {
 } = useGoalPermissions()
 const task = computed(() => tasksStore.selectedTask ?? null)
 const projectId = computed(() => task.value?.goalId ?? 0)
+const titleValue = ref(task.value?.description ?? '')
+let lastTaskId: number | null = task.value?.id ?? null
+let savedDescription: string = task.value?.description ?? ''
+
+watch(task, (newTask) => {
+  titleValue.value = newTask?.description ?? ''
+  lastTaskId = newTask?.id ?? null
+  savedDescription = newTask?.description ?? ''
+})
+
+function saveDescription() {
+  if (!lastTaskId || titleValue.value === savedDescription) return
+  savedDescription = titleValue.value
+  tasksStore.updateTaskDescription({
+    id: lastTaskId,
+    description: titleValue.value,
+  })
+}
+
+const debouncedSave = useDebounceFn(saveDescription, 500)
+
+watch(titleValue, () => {
+  debouncedSave()
+})
+
+onBeforeUnmount(() => {
+  saveDescription()
+})
 
 async function toggleComplete() {
   if (!task.value) return
@@ -174,16 +202,6 @@ async function toggleComplete() {
   }
 }
 
-async function updateTaskTitle(event: Event) {
-  if (!task.value) return
-  const input = event.target as HTMLInputElement
-  if (input.value !== task.value.description) {
-    await tasksStore.updateTaskDescription({
-      id: task.value.id,
-      description: input.value,
-    })
-  }
-}
 
 async function updateNote(note: string) {
   if (!task.value) return
