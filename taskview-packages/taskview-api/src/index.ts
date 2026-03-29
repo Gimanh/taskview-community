@@ -12,3 +12,5 @@ export * from '@/api/kanban.types';
 export * from '@/api/integrations.types';
 export * from '@/api/notifications.api.types';
 export * from '@/api/webhooks.types';
+export * from '@/api/api-tokens.types';
+export * from '@/api/sessions.types';

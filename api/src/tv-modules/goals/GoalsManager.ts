@@ -142,20 +142,30 @@ export default class GoalsManager {
         const sharedGoals = await this.goalsRepository.fetchSharedGoalsForUser(this.user!);
         const ownGoals = await this.goalsRepository.fetchGoalsNew(this.user.getUserData()?.id!);
 
+        const allowedGoalIds = this.user.getAllowedGoalIds();
+        const filterByAllowed = allowedGoalIds && allowedGoalIds.length > 0;
+
+        const filteredOwnGoals = filterByAllowed
+            ? ownGoals.filter((g) => allowedGoalIds.includes(g.id))
+            : ownGoals;
+        const filteredSharedGoals = filterByAllowed
+            ? sharedGoals.filter((g) => allowedGoalIds.includes(g.id))
+            : sharedGoals;
+
         let ownGoalsWithPermissions: GoalsItemForClientWithPermissions[] = [];
         let sharedGoalsWithPermissions: GoalsItemForClientWithPermissions[] = [];
 
-        if (ownGoals.length > 0) {
+        if (filteredOwnGoals.length > 0) {
             const permChecker = await this.user.permissionsFetcher.getPermissionsForType(
-                ownGoals[0].id,
+                filteredOwnGoals[0].id,
                 GoalPermissionsFetcher.PERMISSION_TYPE_FOR_GOAL
             );
-            ownGoalsWithPermissions = ownGoals.map((g) => ({ ...g, permissions: permChecker.getAllPermissions() }));
+            ownGoalsWithPermissions = filteredOwnGoals.map((g) => ({ ...g, permissions: permChecker.getAllPermissions() }));
         }
 
-        if (sharedGoals.length > 0) {
+        if (filteredSharedGoals.length > 0) {
             sharedGoalsWithPermissions = await Promise.all(
-                sharedGoals.map(async (g) => {
+                filteredSharedGoals.map(async (g) => {
                     return {
                         ...g,
                         permissions: (

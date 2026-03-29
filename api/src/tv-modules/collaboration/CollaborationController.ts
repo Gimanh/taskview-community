@@ -1,5 +1,6 @@
 import { type } from 'arktype';
 import type { Request, Response } from 'express';
+import { eventBus } from '../../core/EventBus';
 import { $logger } from '../../modules/logget';
 import {
     CollaborationArkTypeAddUser,
@@ -83,6 +84,14 @@ export class CollaborationController {
 
         const user = await req.appUser.collaborationManager.addUserNew(output);
 
+        if (user) {
+            eventBus.emit('collaboration.userAdded', {
+                goalId: output.goalId,
+                email: output.email.toLowerCase(),
+                initiatorId: req.appUser.getUserData()!.id,
+            });
+        }
+
         return res.tvJson(user ?? null);
     };
 
@@ -93,7 +102,17 @@ export class CollaborationController {
             return res.status(400).send(output.summary);
         }
 
-        return res.tvJson(await req.appUser.collaborationManager.deleteUserNew(output));
+        const result = await req.appUser.collaborationManager.deleteUserNew(output);
+
+        if (result) {
+            eventBus.emit('collaboration.userRemoved', {
+                goalId: output.goalId,
+                collaborationUserId: output.id,
+                initiatorId: req.appUser.getUserData()!.id,
+            });
+        }
+
+        return res.tvJson(result);
     };
 
     toggleUserRolesNew = async (req: Request, res: Response) => {
@@ -103,7 +122,15 @@ export class CollaborationController {
             return res.status(400).send(output.summary);
         }
 
-        return res.tvJson(await req.appUser.collaborationManager.toggleUserRolesNew(output));
+        const result = await req.appUser.collaborationManager.toggleUserRolesNew(output);
+
+        eventBus.emit('collaboration.rolesChanged', {
+            goalId: output.goalId,
+            collaborationUserId: output.userId,
+            initiatorId: req.appUser.getUserData()!.id,
+        });
+
+        return res.tvJson(result);
     };
 
     fetchAllUsersNew = async (req: Request, res: Response) => {

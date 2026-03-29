@@ -2,17 +2,17 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { Database } from '../../../modules/db';
 import type { RegisterUserInDb } from '../../../types/auth.types';
 import AuthModel from '../AuthModel';
-import JwtStorage from '../JwtStorage';
+import SessionStorage from '../SessionStorage';
 
-describe('AuthModel Integration Tests', () => {
-    let jwtStorage: JwtStorage;
+describe('SessionStorage Integration Tests', () => {
+    let sessionStorage: SessionStorage;
     let authModel: AuthModel;
     let emailNum: number;
     let userId: number;
-    let rowId: number;
+    let sessionId: number;
 
     beforeEach(async () => {
-        jwtStorage = new JwtStorage();
+        sessionStorage = new SessionStorage();
         authModel = new AuthModel();
         emailNum = Date.now();
 
@@ -24,7 +24,7 @@ describe('AuthModel Integration Tests', () => {
             block: 0,
         };
         userId = (await authModel.registerUserInDb(userData)) as number;
-        rowId = (await jwtStorage.initTokenRecord(userId)) as number;
+        sessionId = (await sessionStorage.createSession(userId, '127.0.0.1', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120')) as number;
     });
 
     afterAll(async () => {
@@ -32,40 +32,34 @@ describe('AuthModel Integration Tests', () => {
         await db.query("delete from tv_auth.users where login not in ('user', 'user1', 'user3')");
     });
 
-    it('initTokenRecord', async () => {
-        expect(rowId).toBeTruthy();
+    it('createSession', async () => {
+        expect(sessionId).toBeTruthy();
         const deleteAllSession = await authModel.clearAllSessionTokensForUser(userId);
         expect(deleteAllSession).toBe(true);
     });
 
-    it('updateTokens', async () => {
-        const updateResult = await jwtStorage.updateTokens('access-1', 'refresh-1', rowId);
-        expect(updateResult).toBe(true);
+    it('isSessionActive', async () => {
+        const isActive = await sessionStorage.isSessionActive(sessionId);
+        expect(isActive).toBe(true);
+
+        const isInactive = await sessionStorage.isSessionActive(999999);
+        expect(isInactive).toBe(false);
     });
 
-    it('fetchTokens', async () => {
-        let fetchResult = await jwtStorage.fetchTokens(rowId);
-        expect(fetchResult).toBeTruthy();
-        expect(fetchResult).toHaveProperty('id');
-        expect(fetchResult).toHaveProperty('user_id');
-        expect(fetchResult).toHaveProperty('access_token');
-        expect(fetchResult).toHaveProperty('refresh_token');
-        expect(fetchResult).toHaveProperty('user_ip');
-        expect(fetchResult).toHaveProperty('time_creation');
-
-        const updateResult = await jwtStorage.updateTokens('access-1', 'refresh-1', rowId);
-        expect(updateResult).toBe(true);
-
-        fetchResult = await jwtStorage.fetchTokens(rowId);
-        expect(fetchResult).toBeTruthy();
-        if (fetchResult) {
-            expect(fetchResult.access_token).toBe('access-1');
-            expect(fetchResult.refresh_token).toBe('refresh-1');
-        }
+    it('fetchUserSessions', async () => {
+        const sessions = await sessionStorage.fetchUserSessions(userId);
+        expect(sessions.length).toBeGreaterThan(0);
+        expect(sessions[0]).toHaveProperty('id');
+        expect(sessions[0]).toHaveProperty('userId');
+        expect(sessions[0]).toHaveProperty('deviceName');
+        expect(sessions[0]).toHaveProperty('userIp');
     });
 
-    it('deleteTokens', async () => {
-        const result = await jwtStorage.deleteTokens(userId, 'access-1');
+    it('deleteSession', async () => {
+        const result = await sessionStorage.deleteSession(sessionId, userId);
         expect(result).toBe(true);
+
+        const isActive = await sessionStorage.isSessionActive(sessionId);
+        expect(isActive).toBe(false);
     });
 });

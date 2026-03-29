@@ -97,11 +97,12 @@ function isListSelected(listId: number): boolean {
 }
 
 async function selectList(listId: number | null) {
-  if (listId === props.currentListId) return
+  const normalizedId = listId === ALL_TASKS_LIST_ID ? null : listId
+  if (normalizedId === props.currentListId) return
 
   await tasksStore.moveTaskToAnotherList({
     id: props.taskId,
-    goalListId: listId,
+    goalListId: normalizedId,
   })
 }
 </script>

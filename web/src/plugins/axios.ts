@@ -51,6 +51,13 @@ const api = {
       (response) => response,
       async (error) => {
         const originalRequest = error.config
+        const isRefreshRequest = originalRequest.url?.includes('/auth/refresh/token')
+        if (isRefreshRequest) {
+          $ls.invalidateTokens()
+          app.config.globalProperties.$router.push('/')
+          return Promise.reject(error)
+        }
+
         if (error.response.status === 401 && !originalRequest._retry) {
           console.debug('We have 401')
 

@@ -252,12 +252,35 @@ export default class AuthController {
         return res.redirect(`${process.env.APP_URL}/login?tokens=${encodedAuthData}`);
     }
 
+    private parseLifetimeToMs(lifetime: string): number {
+        const match = lifetime.match(/^(\d+)([smhdw])$/)
+        if (!match) return 1000 * 60 * 60 * 24 * 30
+        const value = parseInt(match[1])
+        const unit = match[2]
+        const multipliers: Record<string, number> = {
+            s: 1_000,
+            m: 60_000,
+            h: 3_600_000,
+            d: 86_400_000,
+            w: 604_800_000,
+        }
+        return value * (multipliers[unit] || 86_400_000)
+    }
+
     setRefreshToken = async (res: Response, refreshToken: string) => {
         res.cookie(this.refreshTokenCookieName, refreshToken, {
             httpOnly: true,
             secure: true,
             sameSite: "none",
-            maxAge: 1000 * 60 * 60 * 24 * 30,
+            maxAge: this.parseLifetimeToMs(this.jwtRefreshExp),
+        });
+    }
+
+    clearRefreshToken = (res: Response) => {
+        res.clearCookie(this.refreshTokenCookieName, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
         });
     }
 
@@ -296,25 +319,19 @@ export default class AuthController {
             return res.status(400).send({ message: 'Code expired, get new code' });
         }
 
-        const tokenRowId = await req.appUser.authManager.jwtStorage.initTokenRecord(userData.id);
-        if (!tokenRowId) {
+        const sessionId = await req.appUser.authManager.sessionStorage.createSession(
+            userData.id,
+            req.ip,
+            req.headers['user-agent']
+        );
+        if (!sessionId) {
             return res.status(500).end();
         }
 
         const tokens = this.getTokens({
-            id: tokenRowId,
+            id: sessionId,
             userData,
         } as const);
-
-        const updateResult = await req.appUser.authManager.jwtStorage.updateTokens(
-            tokens.access,
-            tokens.refresh,
-            tokenRowId
-        );
-
-        if (!updateResult) {
-            $logger.error(`Can not update tokens in JWT Storage for user ${userData.id} and rowId ${tokenRowId}`);
-        }
 
         await req.appUser.authManager.repository.updateLoginCode(null, userData.email);
 
@@ -345,25 +362,19 @@ export default class AuthController {
 
         const valid = await this.comparePasswords(password, userData.password);
         if (valid) {
-            const tokenRowId = await req.appUser.authManager.jwtStorage.initTokenRecord(userData.id);
-            if (!tokenRowId) {
+            const sessionId = await req.appUser.authManager.sessionStorage.createSession(
+                userData.id,
+                req.ip,
+                req.headers['user-agent']
+            );
+            if (!sessionId) {
                 return res.status(500).end();
             }
 
             const tokens = this.getTokens({
-                id: tokenRowId,
+                id: sessionId,
                 userData,
             } as const);
-
-            const updateResult = await req.appUser.authManager.jwtStorage.updateTokens(
-                tokens.access,
-                tokens.refresh,
-                tokenRowId
-            );
-
-            if (!updateResult) {
-                $logger.error(`Can not update tokens in JWT Storage for user ${userData.id} and rowId ${tokenRowId}`);
-            }
 
             await this.setRefreshToken(res, tokens.refresh);
 
@@ -564,24 +575,19 @@ export default class AuthController {
     };
 
     logout = async (req: Request, res: Response) => {
-        this.setRefreshToken(res, '');
+        this.clearRefreshToken(res);
 
-        const result = req.headers['authorization']?.match(/Bearer\s(\S+)/);
+        const sessionId = req.appUser.getTokenId();
+        const userId = req.appUser.getUserData()?.id;
 
-        if (!result) {
+        if (!sessionId || !userId) {
             return res.status(401).send({ message: 'Unauthorized' });
         }
 
-        const tokenId = req.appUser.getTokenId();
-
-        if (!tokenId) {
-            return res.status(401).send({ message: 'Unauthorized' });
-        }
-
-        const deleteResult = await req.appUser.authManager.jwtStorage.deleteTokens(tokenId, result['1']);
+        const deleteResult = await req.appUser.authManager.sessionStorage.deleteSession(sessionId, userId);
 
         if (!deleteResult) {
-            return res.status(500).send({ message: 'Failed to revoke token' });
+            return res.status(500).send({ message: 'Failed to delete session' });
         }
 
         return res.status(204).end();
@@ -606,21 +612,21 @@ export default class AuthController {
         const payload = await AuthController.validateTokens(refreshToken);
 
         if (!payload) {
+            $logger.info('Refresh token validation failed');
+            this.clearRefreshToken(res);
             return res.status(400).end();
+        }
+
+        const isActive = await req.appUser.authManager.sessionStorage.isSessionActive(payload.id);
+        if (!isActive) {
+            $logger.info({ sessionId: payload.id }, 'Session not active during refresh');
+            this.clearRefreshToken(res);
+            return res.status(401).end();
         }
 
         const newTokens = this.getTokens(payload);
 
-        const update = await req.appUser.authManager.jwtStorage.updateTokens(
-            newTokens.access,
-            newTokens.refresh,
-            payload.id
-        );
-
-        if (!update) {
-            $logger.error(`Can not refresh tokens for ${payload}`);
-            return res.status(500).end();
-        }
+        await req.appUser.authManager.sessionStorage.updateLastUsed(payload.id);
 
         await this.setRefreshToken(res, newTokens.refresh);
 

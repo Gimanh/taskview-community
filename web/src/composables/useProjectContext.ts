@@ -11,7 +11,7 @@ import { useKanbanStore } from '@/stores/kanban.store'
 
 export type ProjectContext = {
   tags: ComputedRef<TagItem[]>
-  users: Ref<CollaborationResponseFetchAllUsers[]>
+  users: ComputedRef<CollaborationResponseFetchAllUsers[]>
   statuses: Ref<KanbanColumnItem[]>
   lists: Ref<GoalListItem[]>
 }
@@ -21,6 +21,7 @@ const PROJECT_CONTEXT_KEY: InjectionKey<ProjectContext> = Symbol('projectContext
 export function provideProjectContext(goalId: Ref<number>) {
   const tagsStore = useTagsStore()
   const goalsStore = useGoalsStore()
+  const collaborationStore = useCollaborationStore()
 
   const tags = computed(() => {
     const id = goalId.value
@@ -30,14 +31,19 @@ export function provideProjectContext(goalId: Ref<number>) {
     )
   })
 
-  const users = ref<CollaborationResponseFetchAllUsers[]>([])
+  const isCurrentProject = ref(false)
+  const fetchedUsers = ref<CollaborationResponseFetchAllUsers[]>([])
+  const users = computed(() =>
+    isCurrentProject.value ? collaborationStore.users : fetchedUsers.value,
+  )
   const statuses = ref<KanbanColumnItem[]>([])
   const lists = ref<GoalListItem[]>([])
   let requestId = 0
 
   watch(goalId, async (id) => {
     if (id <= 0) {
-      users.value = []
+      fetchedUsers.value = []
+      isCurrentProject.value = false
       statuses.value = []
       lists.value = []
       return
@@ -49,14 +55,14 @@ export function provideProjectContext(goalId: Ref<number>) {
 
     // If we're inside this project already, reuse data from global stores
     if (goalsStore.selectedItemId === id) {
-      const collaborationStore = useCollaborationStore()
       const kanbanStore = useKanbanStore()
       const goalListsStore = useGoalListsStore()
-      users.value = collaborationStore.users
+      isCurrentProject.value = true
       statuses.value = kanbanStore.statuses
       lists.value = goalListsStore.lists
       return
     }
+    isCurrentProject.value = false
 
     // Otherwise fetch project data without touching global stores
     const currentRequestId = ++requestId
@@ -67,10 +73,9 @@ export function provideProjectContext(goalId: Ref<number>) {
       $tvApi.goalLists.fetchLists({ goalId: id }).catch(() => null),
     ])
 
-    // Stale check — goalId could have changed while requests were in flight
     if (currentRequestId !== requestId) return
 
-    if (usersResult) users.value = usersResult
+    if (usersResult) fetchedUsers.value = usersResult
     if (columnsResult) {
       statuses.value = [
         { id: DEFAULT_ID, name: 'msg.allTasks', goalId: id, viewOrder: 0 },

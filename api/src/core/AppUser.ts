@@ -24,6 +24,9 @@ export class AppUser {
     public readonly tagsManager: TagsManager;
     public readonly authManager: AuthManager;
     private hasActiveToken: boolean = false;
+    private apiTokenAuth: boolean = false;
+    private tokenPermissions?: string[];
+    private allowedGoalIds?: number[];
     private userDataFromDb?: UserDbRecord;
     public readonly startManager: StartManager;
     public readonly kanbanManager: KanbanManager;
@@ -74,5 +77,27 @@ export class AppUser {
 
     isBlocked(): boolean {
         return this.userDataFromDb?.block !== 0;
+    }
+
+    /**
+     * Use it for API token authentication.
+     * @param permissions Permissions that the API token has
+     */
+    setApiTokenAuth(permissions: string[], goalIds: number[]) {
+        this.apiTokenAuth = true;
+        this.tokenPermissions = permissions;
+        this.allowedGoalIds = goalIds;
+    }
+
+    isApiTokenAuth(): boolean {
+        return this.apiTokenAuth;
+    }
+
+    getAllowedGoalIds(): number[] | undefined {
+        return this.allowedGoalIds;
+    }
+
+    getTokenPermissions(): string[] | undefined {
+        return this.tokenPermissions;
     }
 }

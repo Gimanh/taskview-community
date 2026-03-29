@@ -108,7 +108,7 @@ export class CollaborationManager {
     }
 
     async addUser(args: AddUserArg): Promise<CollaborationUserInDb | false> {
-        const userId = await this.repository.addUserForCollaboration(args.goalId, args.email);
+        const userId = await this.repository.addUserForCollaboration(args.goalId, args.email.toLowerCase());
         if (!userId) {
             return false;
         }
@@ -121,7 +121,10 @@ export class CollaborationManager {
     }
 
     async addUserNew(args: CollaborationArgAddUser): Promise<CollaborationUserWithRoles | null> {
-        const user = await this.repository.addUserForCollaborationNew(args);
+        const user = await this.repository.addUserForCollaborationNew({
+            ...args,
+            email: args.email.toLowerCase(),
+        });
         if (!user) return null;
 
         return {

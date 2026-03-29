@@ -13,3 +13,5 @@ export * from './schemas/notifications.schema';
 export * from './schemas/device-tokens.schema';
 export * from './schemas/notification-preferences.schema';
 export * from './schemas/webhooks.schema';
+export * from './schemas/api-tokens.schema';
+export * from './schemas/user-tokens.schema';

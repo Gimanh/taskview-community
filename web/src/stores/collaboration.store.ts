@@ -12,12 +12,13 @@ export const useCollaborationStore = defineStore('collaboration', {
   state(): CollaborationStore {
     return {
       users: [],
+      allUsers: [],
     }
   },
 
   getters: {
     userMap: (state) => {
-      return new Map(state.users.map((user) => [user.id, user]))
+      return new Map(state.allUsers.map((user) => [user.id, user]))
     },
   },
 
@@ -30,10 +31,10 @@ export const useCollaborationStore = defineStore('collaboration', {
     async fetchAllCollaborationUsers(): Promise<void> {
       const users = await $tvApi.collaboration.fetchAllUsers()
       if (!users) return
-      this.users = users
+      this.allUsers = users
     },
-
-    /**
+    
+/**
          * Fetch users for a specific goal for collaboration section
          */
     async fetchCollaborationUsersForGoal(goalId: GoalItem['id']): Promise<void> {
@@ -46,16 +47,15 @@ export const useCollaborationStore = defineStore('collaboration', {
       const result = await $tvApi.collaboration.inviteUserToGoal(data)
       if (!result) return false
       this.users.push(result)
+      this.allUsers.push(result)
       return true
     },
 
     async deleteUserFromCollaboration(data: CollaborationArgDeleteUser): Promise<void> {
       const result = await $tvApi.collaboration.deleteUserFromGoal(data)
       if (!result) return
-      const index = this.users.findIndex((usr) => usr.id === data.id)
-      if (index !== -1) {
-        this.users.splice(index, 1)
-      }
+      this.users = this.users.filter((usr) => usr.id !== data.id)
+      this.allUsers = this.allUsers.filter((usr) => !(usr.id === data.id && usr.goalId === data.goalId))
     },
 
     async toggleUserRole(data: CollaborationArgToggleUserRoles) {

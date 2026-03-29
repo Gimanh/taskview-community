@@ -1,10 +1,14 @@
 <template>
   <div class="flex flex-col gap-6 p-4 lg:p-6 w-full max-w-full lg:max-w-2xl m-0 lg:mx-auto">
-    <h1 class="text-2xl font-bold">
-      {{ t('account.title') }}
-    </h1>
-
     <NotificationSettings />
+
+    <UPageCard class="w-full">
+      <SessionsPanel />
+    </UPageCard>
+
+    <UPageCard class="w-full">
+      <ApiTokensPanel />
+    </UPageCard>
 
     <UPageCard class="w-full">
       <div class="flex flex-col gap-4">
@@ -36,6 +40,8 @@ import { useUserStore } from '@/stores/user.store'
 import DeleteAccountButton from './parts/DeleteAccountButton.vue'
 import DeleteAccountCodeModal from './parts/DeleteAccountCodeModal.vue'
 import NotificationSettings from './parts/NotificationSettings.vue'
+import SessionsPanel from '@/components/features/sessions/SessionsPanel.vue'
+import ApiTokensPanel from '@/components/features/api-tokens/ApiTokensPanel.vue'
 
 const { t } = useI18n()
 const userStore = useUserStore()
