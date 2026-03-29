@@ -22,7 +22,7 @@ export const useApiTokensStore = defineStore('apiTokens', {
       this.loading = false
     },
 
-    async createToken(data: { name: string; allowedPermissions?: string[]; expiresAt?: string | null }): Promise<{ token: string; item: ApiTokenItem } | null> {
+    async createToken(data: { name: string; allowedPermissions?: string[]; allowedGoalIds?: number[]; expiresAt?: string | null }): Promise<{ token: string; item: ApiTokenItem } | null> {
       const result = await $tvApi.apiTokens.create(data)
       if (!result) return null
       this.tokens.push(result.item)

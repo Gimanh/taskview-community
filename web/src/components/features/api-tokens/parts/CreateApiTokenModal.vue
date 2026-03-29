@@ -23,6 +23,20 @@
             class="w-full"
           />
         </UFormField>
+        <UFormField :label="t('apiTokens.projects')">
+          <p class="text-xs text-muted mb-2">
+            {{ t('apiTokens.projectsHint') }}
+          </p>
+          <USelectMenu
+            v-model="selectedGoalIds"
+            :items="goalOptions"
+            multiple
+            value-key="value"
+            :search-input="false"
+            class="w-full"
+            :placeholder="t('apiTokens.allProjects')"
+          />
+        </UFormField>
         <UFormField :label="t('apiTokens.permissions')">
           <p class="text-xs text-muted mb-2">
             <a
@@ -113,6 +127,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useClipboard } from '@vueuse/core'
 import { useApiTokensStore } from '@/stores/api-tokens.store'
+import { useGoalsStore } from '@/stores/goals.store'
 import { useTaskView } from '@/composables/useTaskView'
 
 const isOpen = defineModel<boolean>('open', { default: false })
@@ -125,10 +140,12 @@ const { t } = useI18n()
 const { isMobile } = useTaskView()
 const { copy } = useClipboard()
 const store = useApiTokensStore()
+const goalsStore = useGoalsStore()
 
 const name = ref('')
 const expiration = ref('none')
 const selectedPermissions = ref<string[]>([])
+const selectedGoalIds = ref<number[]>([])
 const saving = ref(false)
 const showToken = ref(false)
 const createdToken = ref('')
@@ -140,6 +157,12 @@ const expirationOptions = [
   { label: t('apiTokens.days90'), value: '90' },
   { label: t('apiTokens.year1'), value: '365' },
 ]
+
+const goalOptions = computed(() =>
+  goalsStore.goals
+    .filter((g) => g.archive === 0)
+    .map((g) => ({ label: g.name, value: g.id }))
+)
 
 const permissionGroupNames: Record<number, string> = {
   1: 'Application level',
@@ -183,6 +206,7 @@ async function handleCreate() {
     const result = await store.createToken({
       name: name.value,
       allowedPermissions: selectedPermissions.value.length > 0 ? selectedPermissions.value : undefined,
+      allowedGoalIds: selectedGoalIds.value.length > 0 ? selectedGoalIds.value : undefined,
       expiresAt: getExpiresAt(),
     })
 
@@ -192,6 +216,7 @@ async function handleCreate() {
       showToken.value = true
       name.value = ''
       selectedPermissions.value = []
+      selectedGoalIds.value = []
       expiration.value = 'none'
       emit('created')
     }
