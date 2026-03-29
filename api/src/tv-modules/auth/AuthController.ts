@@ -118,7 +118,6 @@ export default class AuthController {
 
         const code = this.generateLoginCode();
 
-        $logger.info(data.data, `[AuthController:sendLoginCode] we got data for send login code`);
 
         let userData = await req.appUser.authManager.repository.getUserByLogin(email, isEmail(email));
 
@@ -129,8 +128,6 @@ export default class AuthController {
         }
 
         if (!userData) {
-            $logger.info(`[AuthController:sendLoginCode] trying to register user ${email}`);
-
             const password = this.makeidLogin(7),
                 login = this.makeidLogin(7);
 
@@ -142,17 +139,17 @@ export default class AuthController {
                 confirmEmailCode: '',
             });
             if (!id) {
-                $logger.error(`Can not register user ${email}`);
+                $logger.error(`Can not register user`);
                 return res.status(500).end();
             }
 
-            $logger.info(`[AuthController:sendLoginCode] user registered ${email}`);
+            $logger.info(`[AuthController:sendLoginCode] user registered`);
         }
 
         userData = await req.appUser.authManager.repository.getUserByLogin(email, isEmail(email));
 
         if (!userData) {
-            $logger.error(`Can not fetch user after registration by code ${email}`);
+            $logger.error(`Can not fetch user after registration by code`);
             return res.status(500).end();
         }
 
@@ -160,11 +157,11 @@ export default class AuthController {
         const now = Date.now();
 
         if (!lastUpdate || (lastUpdate && now - +lastUpdate > 60 * 1000)) {
-            $logger.info(`[AuthController:sendLoginCode] updating login code for user ${email}`);
+            $logger.info(`[AuthController:sendLoginCode] updating login code for user`);
 
             await req.appUser.authManager.repository.updateLoginCode(code, email);
 
-            $logger.info(`[AuthController:sendLoginCode] sending code by email to ${email}`);
+            $logger.info(`[AuthController:sendLoginCode] sending code by email to`);
 
             await this.sendCodeByEmail(code.split(':')[0], email);
         }
@@ -206,8 +203,8 @@ export default class AuthController {
             });
 
             if (!id) {
-                $logger.error(`Can not register user ${user.email} & login ${login}`);
-                return res.status(500).send(`Can not register user ${user.email} & login ${login}`);
+                $logger.error(`Can not register user`);
+                return res.status(500).send(`Can not register user`);
             }
 
             userData = await req.appUser.authManager.repository.getUserByLogin(
@@ -217,7 +214,7 @@ export default class AuthController {
         }
 
         if (!userData) {
-            $logger.error(`Can not find user ${user.email} after registration`);
+            $logger.error(`Can not find user after registration`);
             return res.status(500).send(`Can not find user ${user.email} after registration`);
         }
 
@@ -226,7 +223,7 @@ export default class AuthController {
         const result = await req.appUser.authManager.repository.updateLoginCode(code, userData.email);
 
         if (!result) {
-            $logger.error(`Can not update login code for user ${userData.email}`);
+            $logger.error(`Can not update login code for user`);
             return res.status(500).send(`Can not update login code for user`);
         }
 
@@ -352,7 +349,6 @@ export default class AuthController {
         const userData = await req.appUser.authManager.repository.getUserByLogin(login, isEmail(login));
 
         if (!userData) {
-            $logger.info(`Can not find user with login ${login}`);
             return res.status(400).end();
         }
 
@@ -512,7 +508,7 @@ export default class AuthController {
         const result = await req.appUser.authManager.repository.setReminderCodeAndTime(userData.email, code, seconds);
 
         if (!result) {
-            $logger.error(`Can not set remind_code and time for user ${userData.email}`);
+            $logger.error(`Can not set remind_code and time for user`);
             return res.status(500).send();
         }
 
@@ -561,8 +557,6 @@ export default class AuthController {
         }
 
         const passwordHash = hashSync(parsedData.data.password, 10);
-
-        $logger.debug(`Update ${passwordHash} for ${userData.id}`);
 
         const result = await req.appUser.authManager.repository.updateUserPassword(passwordHash, userData.id);
 
@@ -619,7 +613,6 @@ export default class AuthController {
 
         const isActive = await req.appUser.authManager.sessionStorage.isSessionActive(payload.id);
         if (!isActive) {
-            $logger.info({ sessionId: payload.id }, 'Session not active during refresh');
             this.clearRefreshToken(res);
             return res.status(401).end();
         }
@@ -650,12 +643,12 @@ export default class AuthController {
         });
 
         if (!sendResult) {
-            $logger.error(`Can not send account deletion code for user ${userId}`);
+            $logger.error(`Can not send account deletion code for user`);
         }
         const insertCode = await req.appUser.authManager.repository.addDeleteAccountCode(code, userId);
 
         if (!insertCode) {
-            $logger.error(`Can not insert account deletion code for user ${userId}`);
+            $logger.error(`Can not insert account deletion code for user`);
             return res.status(500).end();
         }
         return res.status(200).end();

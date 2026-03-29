@@ -20,32 +20,30 @@ export const useBaseScreenStore = defineStore('base-screen-store', {
       return new Map(state.lists.map((item) => [item.listId, { name: item.listName, goalId: item.goalId }]))
     },
   },
-  state(): BaseScreenState {
-    return {
-      activeWidgetInMobile: 'today',
-      wasCalled: false,
-      tasks: [], //all tasks in the app
-      tasksToday: [],
-      tasksUpcoming: [],
-      tasksLastCompleted: [],
-      //todo rename "users" to "usersByProject"
-      users: [], //show users by project
-      searchTask: '',
-      // addTaskDialog: false,//shoud we offer add goals
-      lists: [],
-      // listToGoal: {},
-      loading: false,
-      //todo rename "assignees" to "assigneesByTask"
-      assignees: [],
-      filterAndSorting: {
-        sort: 'new',
-        filters: {
-          ...FILTER_DEFAULT,
-        },
+  state: (): BaseScreenState => ({
+    activeWidgetInMobile: 'today',
+    wasCalled: false,
+    tasks: [], //all tasks in the app
+    tasksToday: [],
+    tasksUpcoming: [],
+    tasksLastCompleted: [],
+    //todo rename "users" to "usersByProject"
+    users: [], //show users by project
+    searchTask: '',
+    // addTaskDialog: false,//shoud we offer add goals
+    lists: [],
+    // listToGoal: {},
+    loading: false,
+    //todo rename "assignees" to "assigneesByTask"
+    assignees: [],
+    filterAndSorting: {
+      sort: 'new',
+      filters: {
+        ...FILTER_DEFAULT,
       },
-      taskIdToUser: {},
-    }
-  },
+    },
+    taskIdToUser: {},
+  }),
   actions: {
     async fetchAllState() {
       this.taskIdToUser = {}
@@ -106,18 +104,18 @@ export const useBaseScreenStore = defineStore('base-screen-store', {
         localTask.complete = task.complete
 
         switch (prop) {
-        case 'tasks':
-          this.processLastAdded(task)
-          break
-        case 'tasksToday':
-          this.processToday(task)
-          break
-        case 'tasksUpcoming':
-          this.processUpcoming(task)
-          break
-        case 'tasksLastCompleted':
-          this.processLastCompleted(task)
-          break
+          case 'tasks':
+            this.processLastAdded(task)
+            break
+          case 'tasksToday':
+            this.processToday(task)
+            break
+          case 'tasksUpcoming':
+            this.processUpcoming(task)
+            break
+          case 'tasksLastCompleted':
+            this.processLastCompleted(task)
+            break
         }
       }
     },

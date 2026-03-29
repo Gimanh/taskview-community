@@ -1,3 +1,4 @@
+import { UAParser } from 'ua-parser-js';
 import { $logger } from '../modules/logget';
 
 export function isEmail(email: string): boolean {
@@ -44,10 +45,8 @@ export async function callWithCatch<T>(func: () => Promise<T>): Promise<T | null
 
 export function parseDeviceName(userAgent: string | undefined): string {
     if (!userAgent) return 'Unknown'
-    // ua-parser-js v2 exports a function, not a class
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const UAParser: (ua: string) => { browser: { name?: string; version?: string }; os: { name?: string }; device: { model?: string } } = require('ua-parser-js')
-    const result = UAParser(userAgent)
+    const parser = new UAParser(userAgent)
+    const result = parser.getResult()
 
     const parts: string[] = []
     if (result.browser.name) {
