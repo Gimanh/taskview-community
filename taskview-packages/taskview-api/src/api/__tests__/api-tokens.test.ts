@@ -748,7 +748,7 @@ describe('API Tokens', () => {
 
             const user2Token = await $tvApiForSecondUser.apiTokens.create({ name: 'User2 token' });
 
-            const result = await $api.apiTokens.delete(user2Token!.item.id);
+            await $api.apiTokens.delete(user2Token!.item.id);
             // should return false or not delete it
             const user2Tokens = await $tvApiForSecondUser.apiTokens.fetch();
             const stillExists = user2Tokens!.find(t => t.id === user2Token!.item.id);
@@ -827,7 +827,7 @@ describe('API Tokens', () => {
                 headers: { Authorization: `Bearer ${created!.token}` },
             }));
 
-            const result = await tokenApi.collaboration.inviteUserToGoal({
+            await tokenApi.collaboration.inviteUserToGoal({
                 goalId,
                 email: `token-invite-${Date.now()}@test.com`,
             }).catch((err) => err.status);

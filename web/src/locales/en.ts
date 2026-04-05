@@ -465,6 +465,8 @@ export default {
     delete: 'Delete organization',
     deleteConfirm: 'Are you sure you want to delete this organization and all its projects?',
     empty: 'No organizations yet',
+    currentOrg: 'Current organization',
+    active: 'Active',
     settings: 'Settings',
     general: 'General',
     save: 'Save',

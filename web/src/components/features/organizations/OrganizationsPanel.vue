@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between">
       <h2 class="text-lg font-semibold">{{ t('organizations.title') }}</h2>
       <UButton
-        :label="t('organizations.create')"
+        :label="isMobile ? undefined : t('organizations.create')"
         icon="i-lucide-plus"
         @click="showCreateModal = true"
       />
@@ -46,10 +46,12 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useOrganizationStore } from '@/stores/organization.store'
+import { useTaskView } from '@/composables/useTaskView'
 import OrgCreateModal from './parts/OrgCreateModal.vue'
 import OrgDetailModal from './parts/OrgDetailModal.vue'
 
 const { t } = useI18n()
+const { isMobile } = useTaskView()
 const orgStore = useOrganizationStore()
 
 const showCreateModal = ref(false)

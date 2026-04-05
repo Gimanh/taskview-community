@@ -2,7 +2,7 @@
   <UDropdownMenu
     :items="items"
     :content="{ align: 'center', collisionPadding: 12 }"
-    :ui="{ content: collapsed ? 'w-48' : 'w-(--reka-dropdown-menu-trigger-width)' }"
+    :ui="{ content: collapsed ? 'w-48' : 'w-(--reka-dropdown-menu-trigger-width)', group: 'max-h-screen' }"
   >
     <UButton
       v-bind="{
@@ -129,17 +129,18 @@ const items = computed<DropdownMenuItem[][]>(() => [
   ],
   orgStore.organizations.length > 1 ? [
     {
-      type: 'label' as const,
-      label: t('userMenu.switchOrganization'),
+      label: orgStore.currentOrg?.name || t('userMenu.switchOrganization'),
+      icon: 'i-lucide-building-2',
+      
+      children: orgStore.organizations.map(org => ({
+        label: org.name,
+        icon: org.id === orgStore.currentOrg?.id ? 'i-lucide-check' : undefined,
+        onSelect(e: Event) {
+          e.preventDefault()
+          orgStore.setCurrentOrg(org)
+        },
+      })),
     },
-    ...orgStore.organizations.map(org => ({
-      label: org.name,
-      icon: org.id === orgStore.currentOrg?.id ? 'i-lucide-check' : 'i-lucide-building-2',
-      onSelect(e: Event) {
-        e.preventDefault()
-        orgStore.setCurrentOrg(org)
-      },
-    })),
   ] : [],
   [
     {

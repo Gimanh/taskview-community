@@ -318,7 +318,7 @@ describe('Collaboration', () => {
             throw new Error('Failed to add user to goal');
         }
 
-        const addResult2 = await $api.collaboration.inviteUserToGoal({
+        await $api.collaboration.inviteUserToGoal({
             goalId: collaborationGoal?.id!,
             email: email,
         }).catch(console.error);

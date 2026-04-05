@@ -7,7 +7,7 @@ import {
   afterAll,
 } from 'vitest'
 import { initApi } from './init-api'
-import { createServer, type Server, type IncomingMessage, type ServerResponse } from 'http'
+import { createServer, type IncomingMessage, type ServerResponse } from 'http'
 import { networkInterfaces } from 'os'
 
 function getLocalIp(): string {
