@@ -618,6 +618,25 @@ describe('Slug uniqueness', () => {
     expect(org2).toBeFalsy()
   })
 
+  it('should lowercase slug on create', async () => {
+    const org = await user1Api.organizations.create({ name: 'Upper Slug', slug: `MY-ORG-${Date.now()}` })
+    expect(org).toBeTruthy()
+    expect(org.slug).toBe(org.slug.toLowerCase())
+    expect(org.slug).not.toMatch(/[A-Z]/)
+  })
+
+  it('should lowercase slug on update', async () => {
+    const org = await user1Api.organizations.create({ name: 'Update Slug Case' })
+    const newSlug = `UPDATED-SLUG-${Date.now()}`
+    const updated = await user1Api.organizations.update({
+      organizationId: org.id,
+      slug: newSlug,
+    })
+    expect(updated).toBeTruthy()
+    expect(updated.slug).toBe(newSlug.toLowerCase())
+    expect(updated.slug).not.toMatch(/[A-Z]/)
+  })
+
   it('should not allow updating slug to an existing one', async () => {
     const slug1 = `slug-a-${Date.now()}`
     const slug2 = `slug-b-${Date.now()}`

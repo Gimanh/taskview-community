@@ -26,7 +26,7 @@ export class OrganizationManager {
     const email = this.getUserEmail()
     if (!userId || !email) return false
 
-    const slug = data.slug ?? this.generateSlug()
+    const slug = (data.slug ?? this.generateSlug()).toLowerCase()
 
     const existing = await this.repository.findBySlug(slug)
     if (existing) return false
@@ -40,6 +40,7 @@ export class OrganizationManager {
 
   async update(data: OrganizationArgUpdate) {
     if (data.slug) {
+      data = { ...data, slug: data.slug.toLowerCase() }
       const existing = await this.repository.findBySlug(data.slug)
       if (existing && existing.id !== data.organizationId) return false
     }
