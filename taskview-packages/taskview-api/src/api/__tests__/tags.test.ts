@@ -121,6 +121,34 @@ describe('TvApi tags tests', () => {
             expect(updateTagResponse.goalId).toBe(goalId);
 
         });
+
+        it('should update tag color', async () => {
+            const name = `test tag-${Date.now()}`;
+            const addTagResponse = await $api.tags.createTag({
+                name: name,
+                color: 'original color',
+                goalId: goalId,
+            }).catch(console.error);
+
+            if (!addTagResponse) {
+                throw new Error('Failed to add tag');
+            }
+
+            const updateTagResponse = await $api.tags.updateTag({
+                id: addTagResponse.id,
+                name: addTagResponse.name,
+                color: '#00ff00',
+                goalId: goalId,
+            }).catch(console.error);
+
+            if (!updateTagResponse) {
+                throw new Error('Failed to update tag');
+            }
+
+            expect(updateTagResponse.id).toBe(addTagResponse.id);
+            expect(updateTagResponse.color).toBe('#00ff00');
+            expect(updateTagResponse.name).toBe(name);
+        });
     });
 
     describe('Tags fetch all', () => {
@@ -147,10 +175,65 @@ describe('TvApi tags tests', () => {
             expect(tag?.goalId).toBe(goalId);
             expect(tag?.owner).toBe(1);
         });
+
+        it('should fetch tags filtered by goalId', async () => {
+            const name = `test tag filtered-${Date.now()}`;
+            const addTagResponse = await $api.tags.createTag({
+                name: name,
+                color: 'filter color',
+                goalId: goalId,
+            }).catch(console.error);
+
+            if (!addTagResponse) {
+                throw new Error('Failed to add tag');
+            }
+
+            const fetchAllTagsResponse = await $api.tags.fetchAllTagsForUser().catch(console.error);
+            if (!fetchAllTagsResponse) {
+                throw new Error('Failed to fetch all tags');
+            }
+
+            const tagsForGoal = fetchAllTagsResponse.filter((tag) => tag.goalId === goalId);
+            expect(tagsForGoal.length).toBeGreaterThan(0);
+            tagsForGoal.forEach((tag) => {
+                expect(tag.goalId).toBe(goalId);
+            });
+        });
     });
 
     describe('Tags toggle', () => {
-        //TODO add test for toggle tag when tasks module will be implemented
+        it('should toggle tag on a task', async () => {
+            const tag = await $api.tags.createTag({
+                name: `toggle tag-${Date.now()}`,
+                color: '#ff0000',
+                goalId: goalId,
+            }).catch(console.error);
+
+            if (!tag) {
+                throw new Error('Failed to add tag');
+            }
+
+            const task = await $api.tasks.createTask({
+                goalId: goalId,
+                description: 'toggle test',
+            }).catch(console.error);
+
+            if (!task) {
+                throw new Error('Failed to create task');
+            }
+
+            const toggleResult = await $api.tags.toggleTag({
+                taskId: task.id,
+                tagId: tag.id,
+            }).catch(console.error);
+
+            if (!toggleResult) {
+                throw new Error('Failed to toggle tag');
+            }
+
+            expect(toggleResult).toBeDefined();
+        });
+
         it('should fail to toggle tag', async () => {
             const toggleTagResponse = await $api.tags.toggleTag({
                 tagId: -400,

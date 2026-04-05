@@ -17,6 +17,7 @@ import { generateString, isEmail, time } from '../../utils/helpers';
 import EnEmailTemplate from './mail/confirm-email-en';
 import RuEmailTemplate from './mail/confirm-email-ru';
 import type { ExternalAuthUser } from './strategies/external-auth.types';
+import { OrganizationRepository } from '../organizations/OrganizationRepository';
 
 export default class AuthController {
     private readonly jwtAlg: Algorithm = process.env.JWT_ALG as Algorithm;
@@ -24,6 +25,15 @@ export default class AuthController {
     private readonly jwtRefreshExp: string = process.env.REFRESH_LIFE_TIME!;
 
     private readonly refreshTokenCookieName: string = 'taskview-refresh';
+    private readonly orgRepository: OrganizationRepository = new OrganizationRepository();
+
+    private async createPersonalWorkspace(userId: number, email: string, login: string) {
+        const slug = `org-${crypto.randomUUID().slice(0, 8)}`
+        const org = await this.orgRepository.create({ name: `${login}'s workspace`, slug }, userId, true)
+        if (org) {
+            await this.orgRepository.addMember(org.id, email, 'owner')
+        }
+    }
 
     comparePasswords(pwd: string, hash: string): Promise<boolean> {
         return new Promise((resolve) => {
@@ -143,6 +153,7 @@ export default class AuthController {
                 return res.status(500).end();
             }
 
+            await this.createPersonalWorkspace(id, email, login)
             $logger.info(`[AuthController:sendLoginCode] user registered`);
         }
 
@@ -206,6 +217,8 @@ export default class AuthController {
                 $logger.error(`Can not register user`);
                 return res.status(500).send(`Can not register user`);
             }
+
+            await this.createPersonalWorkspace(id, user.email, login)
 
             userData = await req.appUser.authManager.repository.getUserByLogin(
                 user.email,
@@ -410,6 +423,8 @@ export default class AuthController {
         if (!id) {
             return res.status(500).end();
         }
+
+        await this.createPersonalWorkspace(id, email, login)
 
         let emailTemplate: string = '';
         let confirmEmailBody: string = '';

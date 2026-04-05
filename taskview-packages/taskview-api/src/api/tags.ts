@@ -29,10 +29,10 @@ export default class TvTagsApi extends TvApiBase {
         );
     }
 
-    public async fetchAllTagsForUser() {
+    public async fetchAllTagsForUser(organizationId?: number) {
         return this.request(
             this.$axios.get<AppResponse<TagItemResponseFetch>>(
-                `${this.moduleUrl}`
+                `${this.moduleUrl}`, organizationId ? { params: { organizationId } } : undefined
             )
         );
     }

@@ -1,8 +1,11 @@
+import { and, eq, inArray, isNotNull, or } from 'drizzle-orm';
+import { GoalsSchema, GoalsListSchema } from 'taskview-db-schemas';
 import type { AppUser } from '../../core/AppUser';
 import { Database } from '../../modules/db';
 import { $logger } from '../../modules/logget';
 import type { TaskItemInDb } from '../../types/tasks.types';
 import { logError } from '../../utils/api';
+import { callWithCatch } from '../../utils/helpers';
 import type { TagToTaskInDb } from '../tags/tags.types';
 import { TaskItemForClient } from '../tasks/TaskItemForClient';
 import type { AssigneesForTaskFromDb, FetchAllListsResult, UsersByProjectsFromDb } from './start.types';
@@ -17,95 +20,87 @@ export class StartRepository {
         this.user = user;
     }
 
-    async fetchAllLists(user: AppUser): Promise<FetchAllListsResult[] | false> {
-        const sharedGoals = await user.goalsManager.fetchSharedGoals();
-        const sharedGoalsIds = sharedGoals.map((g) => g.id);
-        const archive = 0;
+    async fetchAllLists(user: AppUser, organizationId?: number): Promise<FetchAllListsResult[] | false> {
+        const userId = user.getUserData()?.id
+        if (!userId) return false
 
-        if (!user.getUserData()?.id) {
-            return false;
+        const sharedGoals = await user.goalsManager.fetchSharedGoals(organizationId)
+        const sharedGoalIds = sharedGoals.map((g) => g.id)
+
+        const ownConditions = [eq(GoalsSchema.owner, userId)]
+        if (organizationId) {
+            ownConditions.push(eq(GoalsSchema.organizationId, organizationId))
         }
 
-        let args: any[] = [archive, user.getUserData()?.id];
+        const goalConditions = sharedGoalIds.length > 0
+            ? or(and(...ownConditions), inArray(GoalsSchema.id, sharedGoalIds))
+            : and(...ownConditions)
 
-        let query = `select g.name as "goalName", g.id as "goalId", gl.name as "listName", gl.id as "listId"
-                        from tasks.goals g
-                                left join tasks.goal_lists gl on gl.goal_id = g.id
-                        where gl.archive = $1
-                        and g.owner = $2
-                        and gl.id is not null `;
-        const placeholders = sharedGoalsIds.map((_item, index) => `$${index + 3}`);
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({
+                    goalName: GoalsSchema.name,
+                    goalId: GoalsSchema.id,
+                    listName: GoalsListSchema.name,
+                    listId: GoalsListSchema.id,
+                })
+                .from(GoalsSchema)
+                .leftJoin(GoalsListSchema, eq(GoalsListSchema.goalId, GoalsSchema.id))
+                .where(
+                    and(
+                        eq(GoalsListSchema.archive, 0),
+                        isNotNull(GoalsListSchema.id),
+                        goalConditions,
+                    )
+                )
+        )
 
-        if (sharedGoalsIds.length > 0) {
-            args = [...args, ...sharedGoalsIds];
-            query += ` or g.id in (${placeholders.join(',')})`;
-        }
-
-        const result = await this.db.query<FetchAllListsResult>(query, args).catch(logError);
-        return result?.rows || [];
+        return result ?? []
     }
 
-    async fetchUsersByProjects(owner: number, sharedGoalsIds: number[] = []) {
-        let additionalRules = '';
-        const args: number[] = [owner];
+    async fetchUsersByProjects(goalIds: number[]) {
+        if (goalIds.length === 0) return []
 
-        if (sharedGoalsIds.length > 0) {
-            const placeholders = sharedGoalsIds.map((id, index) => {
-                args.push(id);
-                return `$${index + 2}`;
-            });
-            additionalRules = ` or g.id in (${placeholders.join(',')}) `;
-        }
+        const args = goalIds
+        const placeholders = goalIds.map((_, i) => `$${i + 1}`).join(',')
 
-        const query = `SELECT 
+        const query = `SELECT
                         g.id, g.name,
                         COALESCE(json_agg(json_build_object('id', u.id, 'email', u.email)) FILTER (WHERE u.id IS NOT NULL), '[]') AS users
-                    FROM 
+                    FROM
                         tasks.goals g
-                    left join collaboration.users_to_goals utg on utg.goal_id = g.id
-                    LEFT JOIN 
-                        collaboration.users u ON u.id = utg.user_id
-                    WHERE 
-                        g.owner = $1 ${additionalRules}
-                    GROUP BY 
-                        g.id, g.name;`;
+                    LEFT JOIN collaboration.users_to_goals utg ON utg.goal_id = g.id
+                    LEFT JOIN collaboration.users u ON u.id = utg.user_id
+                    WHERE g.id IN (${placeholders})
+                    GROUP BY g.id, g.name;`
 
-        const result = await this.db.query<UsersByProjectsFromDb>(query, args);
+        const result = await this.db.query<UsersByProjectsFromDb>(query, args)
 
         if (!result) {
-            $logger.error(`Can not fetch user by projects`);
-            return [];
+            $logger.error(`Can not fetch user by projects`)
+            return []
         }
 
-        return result.rows;
+        return result.rows
     }
 
-    async fetchAssigneesForTasks(owner: number, goalsIds: number[] = []) {
-        let assigneeQuery = `select cu.email, ta.task_id as "taskId", ta.collab_user_id as "collabUserId"
-                        from tasks.tasks tt
-                            inner join tasks_auth.task_assignee ta on ta.task_id = tt.id
-                            inner join collaboration.users cu on cu.id = ta.collab_user_id
-                        where ta.collab_user_id is not null`;
+    async fetchAssigneesForTasks(goalIds: number[]) {
+        if (goalIds.length === 0) return []
 
-        const args: number[] = [owner];
+        const placeholders = goalIds.map((_, i) => `$${i + 1}`).join(',')
 
-        if (goalsIds.length > 0) {
-            const placeholders = goalsIds.map((id, index) => {
-                args.push(id);
-                return `$${index + 2}`;
-            });
-            assigneeQuery += ` and (tt.owner = $1 or tt.goal_id in (${placeholders.join(',')})) `;
-        } else {
-            assigneeQuery += ` and (tt.owner = $1)`;
-        }
+        const query = `SELECT cu.email, ta.task_id AS "taskId", ta.collab_user_id AS "collabUserId"
+                    FROM tasks.tasks tt
+                        INNER JOIN tasks_auth.task_assignee ta ON ta.task_id = tt.id
+                        INNER JOIN collaboration.users cu ON cu.id = ta.collab_user_id
+                    WHERE ta.collab_user_id IS NOT NULL
+                        AND tt.goal_id IN (${placeholders})`
 
-        const result = await this.db.query<AssigneesForTaskFromDb>(assigneeQuery, args);
+        const result = await this.db.query<AssigneesForTaskFromDb>(query, goalIds)
 
-        if (!result) {
-            return [];
-        }
+        if (!result) return []
 
-        return result.rows;
+        return result.rows
     }
 
     async fetchAllActiveTasksForGoals(

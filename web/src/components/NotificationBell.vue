@@ -119,11 +119,13 @@ import { useUserStore } from '@/stores/user.store'
 import { useTaskView } from '@/composables/useTaskView'
 import { ALL_TASKS_LIST_ID } from 'taskview-api'
 import { formatDistanceToNow } from 'date-fns'
+import { useOrganizationStore } from '@/stores/organization.store'
 
 const { t } = useI18n()
 const router = useRouter()
 const notificationsStore = useNotificationsStore()
 const userStore = useUserStore()
+const orgStore = useOrganizationStore()
 const { isMobile } = useTaskView()
 const isOpen = ref(false)
 
@@ -178,5 +180,9 @@ onMounted(() => {
   if (userStore.isLoggedIn) {
     notificationsStore.fetchNotifications(true)
   }
+})
+
+watch(() => orgStore.currentOrg, () => {
+  notificationsStore.fetchNotifications(true)
 })
 </script>

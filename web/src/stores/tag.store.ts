@@ -3,6 +3,7 @@ import type { TagItemArgAdd, TagItemArgToggle, TagItemArgUpdate, TagItemResponse
 import { $tvApi } from '@/plugins/axios'
 import type { TagItem, TagsState } from '@/types/tags.types'
 import { useGoalsStore } from './goals.store'
+import { useOrganizationStore } from './organization.store'
 
 export const useTagsStore = defineStore('tags', {
   state(): TagsState {
@@ -25,9 +26,10 @@ export const useTagsStore = defineStore('tags', {
   actions: {
     async fetchAllTags(): Promise<void> {
       this.loading = true
+      const orgStore = useOrganizationStore()
 
       const tags = await $tvApi.tags
-        .fetchAllTagsForUser()
+        .fetchAllTagsForUser(orgStore.currentOrg?.id)
         .catch((err) => console.log(err))
         .finally(() => {
           this.loading = false

@@ -43,11 +43,9 @@ const getTestTask = (goalId: number): TaskArgAdd => {
     const priorityId: 1 | 2 | 3 = 1; //Math.floor(Math.random() * 3) + 1 as 1 | 2 | 3;
     const startDate = `2025-01-14`;
     const endDate = `2025-01-15`;
-    const startTime = `00:14:00+02`;
-    const endTime = `00:15:00+02`;
+    const startTime = `00:14:00`;
+    const endTime = `00:15:00`;
     const statusId = null;
-    const taskOrder = 1;
-    const kanbanOrder = 1;
     const complete = false;
 
     return {
@@ -60,8 +58,6 @@ const getTestTask = (goalId: number): TaskArgAdd => {
         startTime: startTime,
         endTime: endTime,
         statusId: statusId,
-        taskOrder: taskOrder,
-        kanbanOrder: kanbanOrder,
         amount: amount,
         transactionType: transactionType,
         nodeGraphPosition: nodeGraphPosition,
@@ -736,8 +732,8 @@ describe('TvApi tags tests', () => {
         it('endDate startDate endTime startTime are null', async () => {
             let endDate: string | null = '2025-01-15';
             let startDate: string | null = '2025-01-14';
-            let endTime: string | null = '00:15:00+02';
-            let startTime: string | null = '00:14:00+02';
+            let endTime: string | null = '00:15:00';
+            let startTime: string | null = '00:14:00';
 
             let taskResponse = await $api.tasks.updateTask({
                 id: taskForUpdate?.id!,
@@ -765,7 +761,7 @@ describe('TvApi tags tests', () => {
         });
 
         it('startTime', async () => {
-            const startTime = `00:14:00+02`;
+            const startTime = `00:14:00`;
             const taskResponse = await $api.tasks.updateTask({
                 id: taskForUpdate?.id!,
                 startTime
@@ -775,7 +771,7 @@ describe('TvApi tags tests', () => {
         });
 
         it('endTime', async () => {
-            const endTime = `00:15:00+02`;
+            const endTime = `00:15:00`;
             const taskResponse = await $api.tasks.updateTask({
                 id: taskForUpdate?.id!,
                 endTime
@@ -815,13 +811,13 @@ describe('TvApi tags tests', () => {
         });
 
         it('amount', async () => {
-            const amount = 100;
+            const amount = '100';
             const taskResponse = await $api.tasks.updateTask({
                 id: taskForUpdate?.id!,
                 amount
             }).catch(console.error);
             expect(taskResponse).toBeDefined();
-            expect(taskResponse).toMatchObject({ ...taskForUpdate, amount });
+            expect(taskResponse!.amount).toBe('100.00');
         });
 
         it('transactionType', async () => {
@@ -916,18 +912,21 @@ describe('TvApi tags tests', () => {
             if (!addTaskResponse) {
                 throw new Error('Failed to add task');
             }
-            expect(addTaskResponse).toMatchObject({ ...task, parentId: parentTaskResponse.id });
+            const { amount: _a, ...taskWithoutAmount } = { ...task, parentId: parentTaskResponse.id };
+            expect(addTaskResponse).toMatchObject(taskWithoutAmount);
+            expect(addTaskResponse.amount).toBe('100.00');
         });
         it('should add task with all fields', async () => {
             const task = getTestTask(goalId);
 
             const addTaskResponse = await $api.tasks.createTask(task).catch(console.error);
-            console.log(addTaskResponse)
             if (!addTaskResponse) {
                 throw new Error('Failed to add task');
             }
 
-            expect(addTaskResponse).toMatchObject(task);
+            const { amount: _a, ...taskWithoutAmount } = task;
+            expect(addTaskResponse).toMatchObject(taskWithoutAmount);
+            expect(addTaskResponse.amount).toBe('100.00');
         });
 
         it('should add task with name', async () => {

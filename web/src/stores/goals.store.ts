@@ -3,6 +3,7 @@ import type { GoalArgItemAdd, GoalArgItemUpdate, GoalItem } from 'taskview-api'
 import { $tvApi } from '@/plugins/axios'
 import type { GoalsStoreState } from '@/types/goals.types'
 import { useUserStore } from './user.store'
+import { useOrganizationStore } from './organization.store'
 
 export const useGoalsStore = defineStore('goals', {
   state: (): GoalsStoreState => ({
@@ -35,7 +36,8 @@ export const useGoalsStore = defineStore('goals', {
     async fetchGoals(): Promise<void> {
       if (this.loading) return
       this.loading = true
-      const result = await $tvApi.goals.fetchGoals()
+      const orgStore = useOrganizationStore()
+      const result = await $tvApi.goals.fetchGoals(orgStore.currentOrg?.id)
       if (!result) {
         this.loading = false
         return

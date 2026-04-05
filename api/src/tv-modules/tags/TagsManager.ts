@@ -51,13 +51,13 @@ export class TagsManager {
         return tags.map((item) => new TagItemForClient(item));
     }
 
-    async fetchAllTagsForUser() {
+    async fetchAllTagsForUser(organizationId?: number) {
         const userId = this.user.getUserData()?.id;
         if (!userId) {
             $logger.error(`Can not fetch tags for undefined user`);
             return [];
         }
-        const tags = await this.repository.fetchAllTagsForUser(userId);
+        const tags = await this.repository.fetchAllTagsForUser(userId, organizationId);
         return tags;
     }
 

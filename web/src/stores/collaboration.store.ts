@@ -7,6 +7,7 @@ import type {
 } from 'taskview-api'
 import { $tvApi } from '@/plugins/axios'
 import type { CollaborationStore } from '@/types/collaboration.types'
+import { useOrganizationStore } from './organization.store'
 
 export const useCollaborationStore = defineStore('collaboration', {
   state(): CollaborationStore {
@@ -29,7 +30,8 @@ export const useCollaborationStore = defineStore('collaboration', {
          * in the assignees section for tasks
          */
     async fetchAllCollaborationUsers(): Promise<void> {
-      const users = await $tvApi.collaboration.fetchAllUsers()
+      const orgStore = useOrganizationStore()
+      const users = await $tvApi.collaboration.fetchAllUsers(orgStore.currentOrg?.id)
       if (!users) return
       this.allUsers = users
     },

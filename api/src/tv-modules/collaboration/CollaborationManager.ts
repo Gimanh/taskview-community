@@ -121,9 +121,19 @@ export class CollaborationManager {
     }
 
     async addUserNew(args: CollaborationArgAddUser): Promise<CollaborationUserWithRoles | null> {
+        const email = args.email.toLowerCase();
+
+        const goal = await this.user.goalsManager.goalsRepository.findGoalById(args.goalId);
+        if (goal && goal.organizationId) {
+            const member = await this.user.organizationManager.repository.getMemberByEmail(goal.organizationId, email);
+            if (!member) {
+                await this.user.organizationManager.repository.addMember(goal.organizationId, email, 'member');
+            }
+        }
+
         const user = await this.repository.addUserForCollaborationNew({
             ...args,
-            email: args.email.toLowerCase(),
+            email,
         });
         if (!user) return null;
 
@@ -145,15 +155,15 @@ export class CollaborationManager {
         return await this.repository.toggleUserRolesNew(args);
     }
 
-    async fetchAllUsersNew(): Promise<CollaborationUserWithRoles[]> {
-        
-        const sharedGoals = await this.user.goalsManager.fetchSharedGoals();
+    async fetchAllUsersNew(organizationId?: number): Promise<CollaborationUserWithRoles[]> {
+
+        const sharedGoals = await this.user.goalsManager.fetchSharedGoals(organizationId);
 
         const goalIds = sharedGoals
             .filter((g) => g.hasPermissions(GoalPermissions.TASKS_CAN_WATCH_ASSIGNED_USERS))
             .map((g) => g.id);
 
-        const ownGoals = await this.user.goalsManager.fetchAllOwnGoalsIds();
+        const ownGoals = await this.user.goalsManager.fetchAllOwnGoalsIds(organizationId);
 
         goalIds.push(...ownGoals);
 

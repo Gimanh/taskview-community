@@ -1,0 +1,31 @@
+{
+  "name": "taskview-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "bin": {
+    "taskview-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "tsc --watch",
+    "test": "vitest run --exclude 'src/__tests__/integration/**'",
+    "test:integration": "sh -c '. ./.env.test && vitest run src/__tests__/integration/'",
+    "test:all": "sh -c '. ./.env.test && vitest run'"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.28.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "axios": "1.13.5",
+    "taskview-api": "workspace:*",
+    "typescript": "~5.8.3",
+    "vite": "^8.0.3",
+    "vitest": "^4.1.2",
+    "zod": "^3.23.8"
+  }
+}

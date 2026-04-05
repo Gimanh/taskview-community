@@ -78,6 +78,15 @@ describe('TvApi', () => {
                 });
             expect(addGoalResponse).toEqual(400);
         });
+
+        it('should fail to create goal without name', async () => {
+            //@ts-expect-error - we are testing the error case
+            const response = await $api.goals.createGoal({})
+                .catch((error: AxiosError) => {
+                    return error.status
+                });
+            expect(response).toEqual(400);
+        });
     });
 
     describe('Goals update', () => {
@@ -132,6 +141,37 @@ describe('TvApi', () => {
             expect(updateGoalResponse?.description).toEqual('test description updated');
             expect(updateGoalResponse?.color).toEqual('test color updated');
         });
+
+        it('should update goal color', async () => {
+            const addGoalResponse = await $api.goals.createGoal({
+                name: 'test goal for color update',
+            }).catch(console.error);
+
+            if (!addGoalResponse) {
+                throw new Error('Failed to add goal');
+            }
+
+            const updateGoalResponse = await $api.goals.updateGoal({
+                id: addGoalResponse?.id!,
+                color: '#ff0000',
+            }).catch(console.error);
+
+            if (!updateGoalResponse) {
+                throw new Error('Failed to update goal');
+            }
+
+            expect(updateGoalResponse?.id).toEqual(addGoalResponse?.id);
+            expect(updateGoalResponse?.color).toEqual('#ff0000');
+        });
+
+        it('should fail to update non-existent goal', async () => {
+            const response = await $api.goals.updateGoal({
+                id: 999999,
+                name: 'should not work',
+            }).catch((err: AxiosError) => err.status);
+
+            expect(response).toBeGreaterThanOrEqual(400);
+        });
     });
 
     describe('Goals delete', () => {
@@ -150,6 +190,11 @@ describe('TvApi', () => {
 
             const deleteGoalResponseStatus = await $api.goals.deleteGoal(-400).catch((err: AxiosError) => err.status);
             expect(deleteGoalResponseStatus).toEqual(403);
+        });
+
+        it('should fail to delete non-existent goal', async () => {
+            const response = await $api.goals.deleteGoal(999999).catch((err: AxiosError) => err.status);
+            expect(response).toEqual(403);
         });
     });
 
@@ -175,6 +220,61 @@ describe('TvApi', () => {
             expect(goal?.description).toEqual(null);
             expect(goal?.color).toEqual(null);
             expect(goal?.permissions).toBeDefined();
+        });
+    });
+
+    describe('Goals archive', () => {
+        it('should archive a goal', async () => {
+            const addGoalResponse = await $api.goals.createGoal({
+                name: 'test goal for archive',
+            }).catch(console.error);
+
+            if (!addGoalResponse) {
+                throw new Error('Failed to add goal');
+            }
+
+            await $api.goals.updateGoal({
+                id: addGoalResponse?.id!,
+                archive: 1,
+            }).catch(console.error);
+
+            const fetchGoalsResponse = await $api.goals.fetchGoals().catch(console.error);
+
+            if (!fetchGoalsResponse) {
+                throw new Error('Failed to fetch goals');
+            }
+
+            const archivedGoal = fetchGoalsResponse?.find((goal) => goal.id === addGoalResponse?.id);
+            expect(archivedGoal?.archive).toEqual(1);
+        });
+
+        it('should unarchive a goal', async () => {
+            const addGoalResponse = await $api.goals.createGoal({
+                name: 'test goal for unarchive',
+            }).catch(console.error);
+
+            if (!addGoalResponse) {
+                throw new Error('Failed to add goal');
+            }
+
+            await $api.goals.updateGoal({
+                id: addGoalResponse?.id!,
+                archive: 1,
+            }).catch(console.error);
+
+            await $api.goals.updateGoal({
+                id: addGoalResponse?.id!,
+                archive: 0,
+            }).catch(console.error);
+
+            const fetchGoalsResponse = await $api.goals.fetchGoals().catch(console.error);
+
+            if (!fetchGoalsResponse) {
+                throw new Error('Failed to fetch goals');
+            }
+
+            const unarchivedGoal = fetchGoalsResponse?.find((goal) => goal.id === addGoalResponse?.id);
+            expect(unarchivedGoal?.archive).toEqual(0);
         });
     });
 

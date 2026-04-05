@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import type { Routable } from '../../types/routable.type';
 import { IsLoggedIn } from '../auth/middlewares/is-logged-in';
+import { IsOrgMemberIfProvided } from '../../middlewares/is-org-member';
 import { NotificationsController } from './NotificationsController';
 
 export default class NotificationsRoutes implements Routable {
@@ -18,9 +19,9 @@ export default class NotificationsRoutes implements Routable {
     }
 
     initRoutes() {
-        this.router.get('/', [IsLoggedIn], this.controller.fetch);
+        this.router.get('/', [IsLoggedIn, IsOrgMemberIfProvided], this.controller.fetch);
         this.router.patch('/read', [IsLoggedIn], this.controller.markRead);
-        this.router.patch('/read-all', [IsLoggedIn], this.controller.markAllRead);
+        this.router.patch('/read-all', [IsLoggedIn, IsOrgMemberIfProvided], this.controller.markAllRead);
         this.router.get('/preferences', [IsLoggedIn], this.controller.getPreferences);
         this.router.put('/preferences', [IsLoggedIn], this.controller.savePreferences);
         this.router.get('/connection-token', [IsLoggedIn], this.controller.connectionToken);

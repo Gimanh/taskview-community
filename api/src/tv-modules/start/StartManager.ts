@@ -15,14 +15,14 @@ export class StartManager {
         this.repository = new StartRepository(this.user);
     }
 
-    async fetchAllLists() {
-        return await this.repository.fetchAllLists(this.user);
+    async fetchAllLists(organizationId?: number) {
+        return await this.repository.fetchAllLists(this.user, organizationId);
     }
 
-    async fetchAllState(tz: string) {
-        await this.fetchSharedGoals();
-        const goalIds = await this.getAllGoalsIds();
-        const usersAndProjects = await this.fetchProjectsAndUsers();
+    async fetchAllState(tz: string, organizationId?: number) {
+        await this.fetchSharedGoals(organizationId);
+        const goalIds = await this.getAllGoalsIds(organizationId);
+        const usersAndProjects = await this.fetchProjectsAndUsers(organizationId);
         const tasks = await this.repository.fetchAllActiveTasksForGoals(goalIds, usersAndProjects.assignees);
         const tasksToday = await this.repository.fetchAllTodayTasksForGoals(goalIds, tz, usersAndProjects.assignees);
         const tasksUpcoming = await this.repository.fetchUpcomingTasksForGoals(goalIds, tz, usersAndProjects.assignees);
@@ -40,70 +40,54 @@ export class StartManager {
         };
     }
 
-    async fetchSharedGoals() {
-        this.sharedGoals = await this.user.goalsManager.fetchSharedGoals();
+    async fetchSharedGoals(organizationId?: number) {
+        this.sharedGoals = await this.user.goalsManager.fetchSharedGoals(organizationId);
     }
 
-    async getAllGoalsIds() {
-        const ownGoals = await this.repository.db
-            .query<{ id: number }>('select id from tasks.goals where owner = $1 and archive = $2', [
-                this.user.getUserData()?.id,
-                0,
-            ])
-            .catch(logError);
+    async getAllGoalsIds(organizationId?: number) {
+        const ownGoalIds = await this.user.goalsManager.fetchAllOwnGoalsIds(organizationId);
 
-        if (!ownGoals) {
-            $logger.error(`Can not fetch own goals for all state`);
-        }
-
-        const ids: number[] = [];
-
+        const sharedGoalIds: number[] = [];
         this.sharedGoals.forEach((g) => {
             if (g.hasPermissions(GoalPermissions.GOAL_CAN_WATCH_CONTENT)) {
-                ids.push(g.id);
+                sharedGoalIds.push(g.id);
             }
         });
 
-        if (ownGoals) {
-            ownGoals.rows.forEach((g) => {
-                ids.push(g.id);
-            });
-        }
-
-        return ids;
+        const ids = new Set([...ownGoalIds, ...sharedGoalIds]);
+        return [...ids];
     }
 
-    async fetchProjectsAndUsers() {
-        const goalsIdsForUsers: number[] = [];
-        const goalsIdsForAssignee: number[] = [];
+    async fetchProjectsAndUsers(organizationId?: number) {
+        const ownGoalIds = await this.user.goalsManager.fetchAllOwnGoalsIds(organizationId)
+
+        const goalsIdsForUsers: number[] = [...ownGoalIds]
+        const goalsIdsForAssignee: number[] = [...ownGoalIds]
 
         this.sharedGoals.forEach((goal) => {
             if (goal.hasPermissions(GoalPermissions.GOAL_CAN_MANAGE_USERS)) {
-                goalsIdsForUsers.push(goal.id);
+                goalsIdsForUsers.push(goal.id)
             }
 
             if (goal.hasPermissions(GoalPermissions.TASKS_CAN_WATCH_ASSIGNED_USERS)) {
-                goalsIdsForAssignee.push(goal.id);
+                goalsIdsForAssignee.push(goal.id)
             }
-        }, []);
+        })
 
-        const users = await this.repository.fetchUsersByProjects(this.user.getUserData()?.id!, goalsIdsForUsers);
-        const assignees = await this.repository.fetchAssigneesForTasks(
-            this.user.getUserData()?.id!,
-            goalsIdsForAssignee
-        );
+        const users = await this.repository.fetchUsersByProjects(goalsIdsForUsers)
+        const assignees = await this.repository.fetchAssigneesForTasks(goalsIdsForAssignee)
 
         return {
             users,
             assignees,
-        };
+        }
     }
 
-    async searchTaskInAllProjects(description?: string) {
+    async searchTaskInAllProjects(description?: string, organizationId?: number) {
         if (!description) return [];
 
-        await this.fetchSharedGoals();
-        const goalIds = await this.getAllGoalsIds();
+        await this.fetchSharedGoals(organizationId);
+        const goalIds = await this.getAllGoalsIds(organizationId);
 
         const tasks = await this.repository.searchTask(description.trim(), goalIds);
         return tasks;

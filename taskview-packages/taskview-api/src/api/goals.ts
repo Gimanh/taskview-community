@@ -29,10 +29,10 @@ export default class TvGoalApi extends TvApiBase {
         );
     }
 
-    public async fetchGoals() {
+    public async fetchGoals(organizationId?: number) {
         return this.request(
             this.$axios.get<AppResponse<GoalResponseFetch>>(
-                `${this.moduleUrl}`
+                `${this.moduleUrl}`, organizationId ? { params: { organizationId } } : undefined
             )
         );
     }

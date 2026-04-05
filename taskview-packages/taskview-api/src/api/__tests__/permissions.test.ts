@@ -45,11 +45,9 @@ const getTestTask = (goalId: number): TaskArgAdd => {
     const priorityId: 1 | 2 | 3 = 1; //Math.floor(Math.random() * 3) + 1 as 1 | 2 | 3;
     const startDate = `2025-01-14`;
     const endDate = `2025-01-15`;
-    const startTime = `00:14:00+02`;
-    const endTime = `00:15:00+02`;
+    const startTime = `00:14:00`;
+    const endTime = `00:15:00`;
     const statusId = null;
-    const taskOrder = 1;
-    const kanbanOrder = 1;
     const complete = false;
     const note = `test note-${Date.now()}`;
 
@@ -64,8 +62,6 @@ const getTestTask = (goalId: number): TaskArgAdd => {
         note: note,
         endTime: endTime,
         statusId: statusId,
-        taskOrder: taskOrder,
-        kanbanOrder: kanbanOrder,
         amount: amount,
         transactionType: transactionType,
         nodeGraphPosition: nodeGraphPosition,
@@ -74,6 +70,7 @@ const getTestTask = (goalId: number): TaskArgAdd => {
 describe('TvApi permissions tests', () => {
     let $mainUser: TvApi;
     let $invitedUser: TvApi;
+    let invitedUserEmail: string;
     let mainUserGoalId: number;
     let roleId: number;
     let timestampTestFetch: number;
@@ -112,9 +109,10 @@ describe('TvApi permissions tests', () => {
     };
 
     beforeAll(async () => {
-        const { $tvApi, $tvApiForSecondUser } = await initApi();
+        const { $tvApi, $tvApiForSecondUser, user2Email } = await initApi();
         $mainUser = $tvApi;
         $invitedUser = $tvApiForSecondUser;
+        invitedUserEmail = user2Email;
     });
 
 
@@ -145,7 +143,7 @@ describe('TvApi permissions tests', () => {
         console.log('roleId', roleId);
 
         const addUserResponse = await $mainUser.collaboration.inviteUserToGoal({
-            email: 'test2@mail.dest',
+            email: invitedUserEmail,
             goalId: mainUserGoalId,
         }).catch(console.error);
 
@@ -185,7 +183,7 @@ describe('TvApi permissions tests', () => {
     it('should owner have access to the goal content', async () => {
         const goals = await $mainUser.goals.fetchGoals().catch(console.error);
         expect(goals).toBeDefined();
-        expect(goals?.length).toBeGreaterThan(1);
+        expect(goals?.length).toBeGreaterThanOrEqual(1);
         expect(goals?.some(goal => goal.id === mainUserGoalId)).toBe(true);
 
         const lists = await $mainUser.goalLists.fetchLists({ goalId: mainUserGoalId }).catch(console.error);

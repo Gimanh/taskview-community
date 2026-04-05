@@ -75,6 +75,11 @@ const router = createRouter({
           component: () => import('./pages/user/account.vue'),
         },
         {
+          path: 'organizations',
+          name: 'organizations',
+          component: () => import('./pages/user/organizations.vue'),
+        },
+        {
           path: ':projectId?/:listId?/:taskId?',
           name: 'user',
           component: () => import('./pages/user/index.vue'),

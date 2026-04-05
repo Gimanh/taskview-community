@@ -39,10 +39,10 @@ export class TvCollaborationApi extends TvApiBase {
         );
     }
 
-    public async fetchAllUsers() {
+    public async fetchAllUsers(organizationId?: number) {
         return this.request(
             this.$axios.get<AppResponse<CollaborationResponseFetchAllUsers[]>>(
-                `${this.moduleUrl}`
+                `${this.moduleUrl}`, organizationId ? { params: { organizationId } } : undefined
             )
         );
     }

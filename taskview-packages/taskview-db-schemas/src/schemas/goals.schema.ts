@@ -1,5 +1,6 @@
 import { integer, pgSchema, timestamp, varchar } from "drizzle-orm/pg-core";
 import { UsersSchema } from "./users.schema";
+import { OrganizationsSchema } from "./organizations.schema";
 // import { createInsertSchema, createSelectSchema } from "drizzle-arktype";
 // we use this schema only for the database operations
 export const GoalsSchema = pgSchema('tasks').table('goals', {
@@ -13,6 +14,7 @@ export const GoalsSchema = pgSchema('tasks').table('goals', {
     editDate: timestamp('edit_date'),
     archive: integer().notNull().default(0),
     backlogVersion: integer('backlog_version').default(1),
+    organizationId: integer('organization_id').references(() => OrganizationsSchema.id, { onDelete: 'cascade' }),
 });
 
 export type GoalsSchemaTypeForSelect = typeof GoalsSchema.$inferSelect;

@@ -13,6 +13,7 @@ import GoalListRoutes from '../tv-modules/lists/GoalListRoutes';
 import StartRoutes from '../tv-modules/start/StartRoutes';
 import TagsRouter from '../tv-modules/tags/TagsRouter';
 import TasksRoutes from '../tv-modules/tasks/TasksRoutes';
+import OrganizationRoutes from '../tv-modules/organizations/OrganizationRoutes';
 import type { Routable } from '../types/routable.type';
 
 type RoutableConstructor = new (...args: any[]) => Routable;
@@ -33,6 +34,7 @@ const routes: Record<string, RoutableConstructor> = {
     '/module/webhooks': WebhooksRoutes,
     '/module/api-tokens': ApiTokensRoutes,
     '/module/sessions': SessionsRoutes,
+    '/module/organizations': OrganizationRoutes,
 };
 
 export default routes;

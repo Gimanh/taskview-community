@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import type { Routable } from '../../types/routable.type';
 import { IsLoggedIn } from '../auth/middlewares/is-logged-in';
+import { IsOrgMemberIfProvided } from '../../middlewares/is-org-member';
 import { CanAddTag } from './middlewares/CanAddTag';
 import { CanDeleteTag } from './middlewares/CanDeleteTag';
 import { CanToggleTag } from './middlewares/CanToggleTag';
@@ -40,7 +41,7 @@ export default class TagsRouter implements Routable {
         /**
          * Fetch tags for goal
          */
-        this.router.get('', [IsLoggedIn], this.controller.fetchAllTagsForUser);
+        this.router.get('', [IsLoggedIn, IsOrgMemberIfProvided], this.controller.fetchAllTagsForUser);
 
         /**
          * Toggle tag for task

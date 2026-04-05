@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import type { Notification } from 'taskview-api'
 import { $tvApi } from '@/plugins/axios'
+import { useOrganizationStore } from './organization.store'
 
 interface NotificationsState {
   notifications: Notification[]
@@ -26,8 +27,9 @@ export const useNotificationsStore = defineStore('notifications', {
 
       this.loading = true
       try {
+        const orgStore = useOrganizationStore()
         const cursor = reset ? undefined : this.notifications.at(-1)?.id
-        const result = await $tvApi.notifications.fetch(cursor)
+        const result = await $tvApi.notifications.fetch(cursor, orgStore.currentOrg?.id)
         if (result) {
           if (reset) {
             this.notifications = result.notifications
@@ -52,7 +54,8 @@ export const useNotificationsStore = defineStore('notifications', {
     },
 
     async markAllRead() {
-      const result = await $tvApi.notifications.markAllRead()
+      const orgStore = useOrganizationStore()
+      const result = await $tvApi.notifications.markAllRead(orgStore.currentOrg?.id)
       if (result) {
         this.notifications.forEach(n => { n.read = true })
       }

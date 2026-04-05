@@ -18,7 +18,8 @@ const DeviceTokenArkType = type({
 export class NotificationsController {
     fetch = async (req: Request, res: Response) => {
         const cursor = req.query.cursor ? Number(req.query.cursor) : undefined;
-        return res.tvJson(await req.appUser.notificationsManager.fetchByUser(cursor));
+        const organizationId = req.query.organizationId ? Number(req.query.organizationId) : undefined;
+        return res.tvJson(await req.appUser.notificationsManager.fetchByUser(cursor, organizationId));
     };
 
     markRead = async (req: Request, res: Response) => {
@@ -29,8 +30,9 @@ export class NotificationsController {
         return res.tvJson(await req.appUser.notificationsManager.markRead(out.notificationId));
     };
 
-    markAllRead = async (_req: Request, res: Response) => {
-        return res.tvJson(await _req.appUser.notificationsManager.markAllRead());
+    markAllRead = async (req: Request, res: Response) => {
+        const organizationId = req.query.organizationId ? Number(req.query.organizationId) : undefined;
+        return res.tvJson(await req.appUser.notificationsManager.markAllRead(organizationId));
     };
 
     registerDevice = async (req: Request, res: Response) => {

@@ -10,5 +10,6 @@ export default defineConfig({
     },
     test: {
         globalSetup: './src/api/__tests__/setup-db.ts',
+        fileParallelism: false,
     },
 })

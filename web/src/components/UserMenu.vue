@@ -8,6 +8,7 @@
       v-bind="{
         ...user,
         label: collapsed ? undefined : user?.name,
+        description: collapsed ? undefined : user?.description,
         trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down'
       }"
       color="neutral"
@@ -45,6 +46,7 @@ import { useLogout } from '@/composables/useLogout'
 import { saveLocale } from '@/plugins/i18n'
 import { useUpdater } from '@/composables/useUpdater'
 import { useUserStore } from '@/stores/user.store'
+import { useOrganizationStore } from '@/stores/organization.store'
 import { $ls } from '@/plugins/axios'
 import avatarImg from '@/assets/images/avatar-1.jpeg'
 
@@ -58,6 +60,7 @@ const appStore = useAppStore()
 const router = useRouter()
 const toast = useToast()
 const userStore = useUserStore()
+const orgStore = useOrganizationStore()
 
 const prodOrDev = ref<'prod' | 'dev'>('prod')
 let counter = 0
@@ -108,7 +111,8 @@ async function handleLogout() {
 }
 
 const user = computed(() => ({
-  name: userStore.email || userStore.login,
+  name: orgStore.currentOrg?.name || userStore.email || userStore.login,
+  description: orgStore.currentOrg ? (userStore.email || userStore.login) : undefined,
   avatar: {
     src: avatarImg,
     alt: userStore.email || userStore.login,
@@ -123,16 +127,33 @@ const items = computed<DropdownMenuItem[][]>(() => [
       avatar: user.value.avatar,
     },
   ],
+  orgStore.organizations.length > 1 ? [
+    {
+      type: 'label' as const,
+      label: t('userMenu.switchOrganization'),
+    },
+    ...orgStore.organizations.map(org => ({
+      label: org.name,
+      icon: org.id === orgStore.currentOrg?.id ? 'i-lucide-check' : 'i-lucide-building-2',
+      onSelect(e: Event) {
+        e.preventDefault()
+        orgStore.setCurrentOrg(org)
+      },
+    })),
+  ] : [],
   [
-    // {
-    //   label: t('userMenu.profile'),
-    //   icon: 'i-lucide-user',
-    // },
     {
       label: t('userMenu.accountSettings'),
       icon: 'i-lucide-settings',
       onSelect() {
         router.push({ name: 'account' })
+      },
+    },
+    {
+      label: t('userMenu.organizations'),
+      icon: 'i-lucide-building-2',
+      onSelect() {
+        router.push({ name: 'organizations' })
       },
     },
   ],

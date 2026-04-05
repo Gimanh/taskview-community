@@ -57,7 +57,7 @@
     "@vue-flow/node-toolbar": "^1.1.1",
     "@vueuse/core": "^14.1.0",
     "arktype": "2.1.20",
-    "axios": "^1.13.4",
+    "axios": "1.13.5",
     "centrifuge": "^5.5.3",
     "date-fns": "^4.1.0",
     "firebase": "^12.10.0",

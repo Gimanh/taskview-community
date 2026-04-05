@@ -1,7 +1,7 @@
 export type FetchAllListsResult = {
-    goalName: string;
-    listName: string;
-    listId: number;
+    goalName: string | null;
+    listName: string | null;
+    listId: number | null;
     goalId: number;
 };
 

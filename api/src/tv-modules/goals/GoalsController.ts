@@ -7,7 +7,7 @@ import {
     UpdateGoalDbArgSchema,
 } from '../../types/goal.type';
 import { logError } from '../../utils/api';
-import { GoalsArkTypeAdd, GoalsArkTypeDelete, GoalsArkTypeUpdate } from './types';
+import { GoalsArkTypeAdd, GoalsArkTypeDelete, GoalsArkTypeFetch, GoalsArkTypeUpdate } from './types';
 
 export default class GoalsController {
     fetchGoals = async (req: Request, res: Response) => {
@@ -106,6 +106,10 @@ export default class GoalsController {
     };
 
     fetchGoalsNew = async (req: Request, res: Response) => {
-        return res.tvJson(await req.appUser.goalsManager.fetchGoalsNew());
+        const out = GoalsArkTypeFetch(req.query);
+        if (out instanceof type.errors) {
+            return res.status(400).send(out.summary);
+        }
+        return res.tvJson(await req.appUser.goalsManager.fetchGoalsNew(out.organizationId));
     };
 }

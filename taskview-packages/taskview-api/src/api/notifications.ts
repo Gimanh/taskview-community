@@ -5,10 +5,13 @@ import type { NotificationResponseFetch, NotificationResponseMarkRead, Notificat
 export default class TvNotificationsApi extends TvApiBase {
     protected moduleUrl = '/module/notifications';
 
-    public async fetch(cursor?: number) {
+    public async fetch(cursor?: number, organizationId?: number) {
+        const params: Record<string, number> = {};
+        if (cursor) params.cursor = cursor;
+        if (organizationId) params.organizationId = organizationId;
         return this.request(
             this.$axios.get<AppResponse<NotificationResponseFetch>>(
-                this.moduleUrl, { params: cursor ? { cursor } : {} }
+                this.moduleUrl, { params }
             )
         );
     }
@@ -21,10 +24,11 @@ export default class TvNotificationsApi extends TvApiBase {
         );
     }
 
-    public async markAllRead() {
+    public async markAllRead(organizationId?: number) {
+        const params = organizationId ? { organizationId } : undefined;
         return this.request(
             this.$axios.patch<AppResponse<NotificationResponseMarkRead>>(
-                `${this.moduleUrl}/read-all`
+                `${this.moduleUrl}/read-all`, undefined, params ? { params } : undefined
             )
         );
     }

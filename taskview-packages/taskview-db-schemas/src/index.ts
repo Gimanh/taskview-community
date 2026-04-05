@@ -15,3 +15,4 @@ export * from './schemas/notification-preferences.schema';
 export * from './schemas/webhooks.schema';
 export * from './schemas/api-tokens.schema';
 export * from './schemas/user-tokens.schema';
+export * from './schemas/organizations.schema';

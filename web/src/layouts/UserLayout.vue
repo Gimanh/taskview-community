@@ -51,6 +51,7 @@ import { useCentrifugo } from '@/composables/useCentrifugo'
 import { usePushNotifications } from '@/composables/usePushNotifications'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useUserStore } from '@/stores/user.store'
+import { useOrganizationStore } from '@/stores/organization.store'
 
 const { isSidebarOpen, isSidebarCollapsed } = useDashboard()
 const { connect: connectCentrifugo } = useCentrifugo()
@@ -59,6 +60,7 @@ const { t } = useI18n()
 const appStore = useAppStore()
 const goalsStore = useGoalsStore()
 const userStore = useUserStore()
+const orgStore = useOrganizationStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -99,6 +101,9 @@ onMounted(async () => {
   appStore.initTaskDetailDisplayMode()
   connectCentrifugo()
   initPush()
+
+  await orgStore.fetchOrganizations()
+  orgStore.restoreCurrentOrg()
 
   await CapacitorUpdater.notifyAppReady()
   console.log('notifyAppReady', APP_VERSION)

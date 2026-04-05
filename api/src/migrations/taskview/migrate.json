@@ -429,5 +429,19 @@
             "Remove JWT storage from user_tokens, add session metadata (device_name, user_agent, last_used_at)",
             "Add trigger to remove user from task assignees when removed from project collaboration"
         ]
+    },
+    "35": {
+        "version": "1.32.0",
+        "name": "Release 1.32.0",
+        "releaseDate": "20260404",
+        "scripts": [
+            "/1.32.0/0.1.32.0.sql",
+            "/1.32.0/1.migrate-organizations.sql"
+        ],
+        "description": [
+            "Added organizations and organization_members tables",
+            "Migrate existing users to personal workspaces",
+            "Added organization_id column to goals"
+        ]
     }
 }

@@ -39,7 +39,8 @@ export class TagsController {
     };
 
     fetchAllTagsForUser = async (req: Request, res: Response) => {
-        return res.tvJson(await req.appUser.tagsManager.fetchAllTagsForUser());
+        const organizationId = req.query.organizationId ? Number(req.query.organizationId) : undefined;
+        return res.tvJson(await req.appUser.tagsManager.fetchAllTagsForUser(organizationId));
     };
 
     /** @deprecated use toggleTagNew instead */
