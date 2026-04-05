@@ -8,6 +8,7 @@ export const useOrganizationStore = defineStore('organization', () => {
   const currentOrg = ref<Organization | null>(null)
   const members = ref<OrgMember[]>([])
   const loading = ref(false)
+  const initialized = ref(false)
 
   async function fetchOrganizations() {
     loading.value = true
@@ -125,6 +126,7 @@ export const useOrganizationStore = defineStore('organization', () => {
     } else if (organizations.value.length) {
       currentOrg.value = organizations.value[0]
     }
+    initialized.value = true
   }
 
   return {
@@ -132,6 +134,7 @@ export const useOrganizationStore = defineStore('organization', () => {
     currentOrg,
     members,
     loading,
+    initialized,
     fetchOrganizations,
     createOrganization,
     updateOrganization,

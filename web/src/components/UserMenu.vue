@@ -5,12 +5,6 @@
     :ui="{ content: collapsed ? 'w-48' : 'w-(--reka-dropdown-menu-trigger-width)', group: 'max-h-screen' }"
   >
     <UButton
-      v-bind="{
-        ...user,
-        label: collapsed ? undefined : user?.name,
-        description: collapsed ? undefined : user?.description,
-        trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down'
-      }"
       color="neutral"
       variant="ghost"
       block
@@ -19,7 +13,18 @@
       :ui="{
         trailingIcon: 'text-dimmed'
       }"
-    />
+    >
+      <template #leading>
+        <UAvatar :src="user.avatar.src" :alt="user.avatar.alt" size="2xs" />
+      </template>
+      <div v-if="!collapsed" class="flex flex-col items-start text-left truncate flex-1">
+        <span class="truncate text-sm font-medium">{{ user.name }}</span>
+        <span class="truncate text-xs text-dimmed">{{ user.description }}</span>
+      </div>
+      <template v-if="!collapsed" #trailing>
+        <UIcon name="i-lucide-chevrons-up-down" class="size-4 text-dimmed" />
+      </template>
+    </UButton>
 
     <template #chip-leading="{ item }">
       <div class="inline-flex items-center justify-center shrink-0 size-5">
@@ -111,8 +116,8 @@ async function handleLogout() {
 }
 
 const user = computed(() => ({
-  name: orgStore.currentOrg?.name || userStore.email || userStore.login,
-  description: orgStore.currentOrg ? (userStore.email || userStore.login) : undefined,
+  name: orgStore.currentOrg?.name || userStore.login || userStore.email,
+  description: userStore.email || userStore.login,
   avatar: {
     src: avatarImg,
     alt: userStore.email || userStore.login,

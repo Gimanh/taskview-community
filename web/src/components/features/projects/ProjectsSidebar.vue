@@ -36,9 +36,6 @@ const { goals } = storeToRefs(goalsStore)
 const activeProjects = computed(() => goals.value.filter(p => p.archive === 0))
 const archivedProjects = computed(() => goals.value.filter(p => p.archive === 1))
 
-onMounted(async () => {
-  await goalsStore.fetchGoals()
-})
 
 watch(() => orgStore.currentOrg, async () => {
   goalsStore.initialized = false

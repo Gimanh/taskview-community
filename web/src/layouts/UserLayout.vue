@@ -1,39 +1,41 @@
 <template>
-  <UDashboardGroup
-    unit="rem"
-    storage="local"
-    class="UDashboardGroup-test"
-  >
-    <UDashboardSidebar
-      id="default"
-      v-model:open="isSidebarOpen"
-      :default-size="20"
-      class="bg-elevated/25"
-      :class="isSidebarCollapsed ? 'overflow-hidden min-w-0 w-0 transition-[width] duration-200 linear' : 'transition-[width] duration-200 linear'"
-      :ui="{ footer: 'lg:border-t lg:border-default' }"
+  <template v-if="orgStore.initialized">
+    <UDashboardGroup
+      unit="rem"
+      storage="local"
+      class="UDashboardGroup-test"
     >
-      <div class="flex items-center justify-between px-1 gap-2">
-        <TvGoalLikeItem
-          to="/user"
-          variant="taskview"
-          class="flex-1"
-        >
-          {{ t('main') }}
-        </TvGoalLikeItem>
-        <NotificationBell />
-      </div>
+      <UDashboardSidebar
+        id="default"
+        v-model:open="isSidebarOpen"
+        :default-size="20"
+        class="bg-elevated/25"
+        :class="isSidebarCollapsed ? 'overflow-hidden min-w-0 w-0 transition-[width] duration-200 linear' : 'transition-[width] duration-200 linear'"
+        :ui="{ footer: 'lg:border-t lg:border-default' }"
+      >
+        <div class="flex items-center justify-between px-1 gap-2">
+          <TvGoalLikeItem
+            to="/user"
+            variant="taskview"
+            class="flex-1"
+          >
+            {{ t('main') }}
+          </TvGoalLikeItem>
+          <NotificationBell />
+        </div>
 
-      <ProjectsSidebar />
+        <ProjectsSidebar />
 
-      <template #footer="{ collapsed }">
-        <UserMenu :collapsed="collapsed" />
-      </template>
-    </UDashboardSidebar>
+        <template #footer="{ collapsed }">
+          <UserMenu :collapsed="collapsed" />
+        </template>
+      </UDashboardSidebar>
 
-    <RouterView />
-  </UDashboardGroup>
+      <RouterView />
+    </UDashboardGroup>
 
-  <TvMobileBottomNav />
+    <TvMobileBottomNav />
+  </template>
 </template>
 
 <script setup lang="ts">
@@ -104,6 +106,7 @@ onMounted(async () => {
 
   await orgStore.fetchOrganizations()
   orgStore.restoreCurrentOrg()
+  await goalsStore.fetchGoals()
 
   await CapacitorUpdater.notifyAppReady()
   console.log('notifyAppReady', APP_VERSION)
