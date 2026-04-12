@@ -35,7 +35,7 @@ export class OrganizationManager {
     if (!org) return false
 
     await this.repository.addMember(org.id, email, 'owner')
-    return org
+    return { ...org, currentUserRole: 'owner' }
   }
 
   async update(data: OrganizationArgUpdate) {

@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core'
 import { FirebaseMessaging } from '@capacitor-firebase/messaging'
 import { $tvApi } from '@/plugins/axios'
 import { useNotificationsStore } from '@/stores/notifications.store'
+import { useOrganizationStore } from '@/stores/organization.store'
 import { useRouter } from 'vue-router'
 import { ALL_TASKS_LIST_ID } from 'taskview-api'
 
@@ -43,9 +44,17 @@ export function usePushNotifications() {
     FirebaseMessaging.addListener('notificationActionPerformed', (action) => {
       const data = action.notification.data as Record<string, string> | undefined
       if (data?.taskId && data?.goalId) {
+        const orgStore = useOrganizationStore()
+        if (data.organizationId) {
+          const org = orgStore.organizations.find(o => o.id === Number(data.organizationId))
+          if (org && org.id !== orgStore.currentOrg?.id) {
+            orgStore.setCurrentOrg(org)
+          }
+        }
         router.push({
           name: 'user',
           params: {
+            orgSlug: orgStore.currentOrgSlug,
             projectId: data.goalId,
             listId: data.goalListId || ALL_TASKS_LIST_ID,
             taskId: data.taskId,

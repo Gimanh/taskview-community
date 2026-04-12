@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { Organization, OrgMember } from 'taskview-api'
 import { $tvApi } from '@/plugins/axios'
 
@@ -9,6 +9,12 @@ export const useOrganizationStore = defineStore('organization', () => {
   const members = ref<OrgMember[]>([])
   const loading = ref(false)
   const initialized = ref(false)
+
+  const currentOrgSlug = computed(() => currentOrg.value?.slug ?? '')
+
+  function findOrgBySlug(slug: string) {
+    return organizations.value.find(o => o.slug === slug) ?? null
+  }
 
   async function fetchOrganizations() {
     loading.value = true
@@ -132,9 +138,11 @@ export const useOrganizationStore = defineStore('organization', () => {
   return {
     organizations,
     currentOrg,
+    currentOrgSlug,
     members,
     loading,
     initialized,
+    findOrgBySlug,
     fetchOrganizations,
     createOrganization,
     updateOrganization,

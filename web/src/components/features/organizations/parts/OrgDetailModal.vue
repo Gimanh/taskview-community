@@ -1,7 +1,7 @@
 <template>
-  <UModal v-model:open="open" :fullscreen="isMobile" :ui="{ content: 'max-w-lg' }">
+  <UModal v-model:open="open" :fullscreen="isMobile" :ui="{ content: 'max-w-lg max-h-[90vh] flex flex-col' }">
     <template #content>
-      <UCard v-if="organization">
+      <UCard v-if="organization" :ui="{ root: 'flex flex-col flex-1 min-h-0', body: 'flex-1 min-h-0 overflow-y-auto' }">
         <template #header>
           <div class="flex items-center justify-between">
             <h3 class="font-semibold">{{ organization.name }}</h3>
@@ -13,12 +13,12 @@
           <template #general>
             <div class="flex flex-col gap-4 pt-4">
               <UFormField :label="t('organizations.name')">
-                <UInput v-model="editName" class="w-full" />
+                <UInput v-model="editName" :disabled="!isAdmin" class="w-full" />
               </UFormField>
               <UFormField :label="t('organizations.slug')">
-                <UInput v-model="editSlug" :placeholder="t('organizations.slugPlaceholder')" class="w-full" />
+                <UInput v-model="editSlug" :disabled="!isAdmin" :placeholder="t('organizations.slugPlaceholder')" class="w-full" />
               </UFormField>
-              <UButton :label="t('organizations.save')" :loading="saving" @click="save" />
+              <UButton v-if="isAdmin" :label="t('organizations.save')" :loading="saving" @click="save" />
             </div>
           </template>
 
@@ -66,17 +66,22 @@
               </div>
             </div>
           </template>
+          <template #sso>
+            <OrgSsoSettings :organization-id="organization.id" />
+          </template>
         </UTabs>
 
         <template #footer>
           <div class="flex justify-between">
             <UButton
+              v-if="isOwner"
               :label="t('organizations.delete')"
               color="error"
               variant="ghost"
               icon="i-lucide-trash-2"
               @click="deleteOrg"
             />
+            <div v-else />
             <UButton :label="t('organizations.save')" variant="ghost" @click="open = false" />
           </div>
         </template>
@@ -90,6 +95,8 @@ import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useOrganizationStore } from '@/stores/organization.store'
 import { useTaskView } from '@/composables/useTaskView'
+import { useOrgPermissions } from '@/composables/useOrgPermissions'
+import OrgSsoSettings from './OrgSsoSettings.vue'
 
 const open = defineModel<boolean>({ default: false })
 const props = defineProps<{
@@ -100,6 +107,7 @@ const { t } = useI18n()
 const toast = useToast()
 const { isMobile } = useTaskView()
 const orgStore = useOrganizationStore()
+const { isAdmin, isOwner } = useOrgPermissions(() => props.organization)
 
 const editName = ref('')
 const editSlug = ref('')
@@ -107,10 +115,16 @@ const newMemberEmail = ref('')
 const saving = ref(false)
 const addingMember = ref(false)
 
-const tabs = computed(() => [
-  { label: t('organizations.general'), slot: 'general' },
-  { label: t('organizations.members'), slot: 'members' },
-])
+const tabs = computed(() => {
+  const items = [
+    { label: t('organizations.general'), slot: 'general' },
+  ]
+  if (isAdmin.value) {
+    items.push({ label: t('organizations.members'), slot: 'members' })
+    items.push({ label: 'SSO', slot: 'sso' })
+  }
+  return items
+})
 
 const roleOptions = [
   { label: 'Admin', value: 'admin' },
@@ -121,7 +135,9 @@ watch(() => props.organization, (org) => {
   if (org) {
     editName.value = org.name
     editSlug.value = org.slug
-    orgStore.fetchMembers(org.id)
+    if (org.currentUserRole === 'owner' || org.currentUserRole === 'admin') {
+      orgStore.fetchMembers(org.id)
+    }
   }
 }, { immediate: true })
 

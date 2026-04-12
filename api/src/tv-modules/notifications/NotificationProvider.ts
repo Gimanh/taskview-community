@@ -4,6 +4,7 @@ import type { NotificationChannel } from './types';
 export interface NotificationMeta {
     goalId: number;
     goalListId: number | null;
+    organizationId: number | null;
 }
 
 export interface NotificationProvider {

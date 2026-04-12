@@ -7,6 +7,7 @@ export type Organization = {
   plan: string
   createdAt: string
   updatedAt: string
+  currentUserRole: 'owner' | 'admin' | 'member'
 }
 
 export type OrgMember = {

@@ -143,6 +143,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
         onSelect(e: Event) {
           e.preventDefault()
           orgStore.setCurrentOrg(org)
+          router.push({ name: 'user', params: { orgSlug: org.slug } })
         },
       })),
     },

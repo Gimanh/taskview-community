@@ -11,6 +11,7 @@ export class CentrifugoProvider implements NotificationProvider {
             notification,
             goalId: meta.goalId,
             goalListId: meta.goalListId,
+            organizationId: meta.organizationId,
         });
     }
 }

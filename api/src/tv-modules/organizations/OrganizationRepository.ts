@@ -106,17 +106,23 @@ export class OrganizationRepository {
     return result[0]
   }
 
-  async fetchForUserByEmail(email: string): Promise<OrganizationsSchemaTypeForSelect[]> {
+  async fetchForUserByEmail(email: string) {
     const result = await callWithCatch(() =>
       this.db.dbDrizzle
-        .select({ org: OrganizationsSchema })
+        .select({
+          org: OrganizationsSchema,
+          role: OrganizationMembersSchema.role,
+        })
         .from(OrganizationMembersSchema)
         .innerJoin(OrganizationsSchema, eq(OrganizationMembersSchema.organizationId, OrganizationsSchema.id))
         .where(eq(OrganizationMembersSchema.email, email))
     )
 
     if (!result) return []
-    return result.map(r => r.org)
+    return result.map(r => ({
+      ...r.org,
+      currentUserRole: r.role,
+    }))
   }
 
   async addMember(orgId: number, email: string, role: string, invitedBy?: number): Promise<OrganizationMembersSchemaTypeForSelect | false> {

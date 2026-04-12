@@ -15,7 +15,7 @@
       >
         <div class="flex items-center justify-between px-1 gap-2">
           <TvGoalLikeItem
-            to="/user"
+            :to="{ name: 'user' }"
             variant="taskview"
             class="flex-1"
           >
@@ -72,7 +72,7 @@ watch(
     if (!initialized || !projectId) return
     const exists = goals.some((g) => g.id === Number(projectId))
     if (!exists) {
-      router.replace(`/${userStore.login}`)
+      router.replace({ name: 'user' })
     }
   },
 )
@@ -104,8 +104,23 @@ onMounted(async () => {
   connectCentrifugo()
   initPush()
 
-  await orgStore.fetchOrganizations()
-  orgStore.restoreCurrentOrg()
+  if (!orgStore.organizations.length) {
+    await orgStore.fetchOrganizations()
+  }
+
+  const slugFromUrl = route.params.orgSlug as string
+  const matchedOrg = orgStore.findOrgBySlug(slugFromUrl)
+  if (matchedOrg) {
+    orgStore.setCurrentOrg(matchedOrg)
+    orgStore.initialized = true
+  } else {
+    orgStore.restoreCurrentOrg()
+    if (orgStore.currentOrg) {
+      router.replace({ name: 'user', params: { orgSlug: orgStore.currentOrgSlug } })
+      return
+    }
+  }
+
   await goalsStore.fetchGoals()
 
   await CapacitorUpdater.notifyAppReady()

@@ -3,6 +3,7 @@ import { useRoute } from 'vue-router'
 
 export const useAppRouteInfo = () => {
   const route = useRoute()
+  const orgSlug = computed(() => String(route.params.orgSlug || ''))
   const isUserRoute = computed(() => route.name === 'user')
   const isAccountRoute = computed(() => route.name === 'account')
   const projectId = computed(() => Number(route.params.projectId) || -1)
@@ -12,6 +13,7 @@ export const useAppRouteInfo = () => {
   const taskId = computed(() => Number(route.params.taskId) || -1)
 
   return {
+    orgSlug,
     isUserRoute,
     isAccountRoute,
     hasProject,

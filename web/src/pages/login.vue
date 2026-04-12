@@ -8,6 +8,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { App } from '@capacitor/app'
 import { Browser } from '@capacitor/browser'
@@ -26,8 +27,10 @@ type LoginResponse = {
   refresh: string
 }
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
+const toast = useToast()
 
 async function loginByCode(code: string, email: string) {
   const result = await $api.post<LoginResponse>('/module/auth/login-by-code', { code, email })
@@ -46,6 +49,15 @@ onMounted(async () => {
     await $ls.updateUserStoreByToken()
     await redirectToUser(router)
     return
+  }
+
+  // Handle SSO error redirect
+  if (route.query.sso_error) {
+    toast.add({
+      title: t('auth.error'),
+      description: t('auth.ssoError'),
+      color: 'error',
+    })
   }
 
   // Handle OAuth callback tokens from URL

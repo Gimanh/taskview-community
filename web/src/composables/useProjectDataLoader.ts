@@ -11,6 +11,7 @@ export function useProjectDataLoader(projectId: Ref<number>) {
   const tagsStore = useTagsStore()
 
   tagsStore.fetchAllTags()
+  collaborationStore.fetchAllCollaborationUsers()
 
   watch(projectId, (id) => {
     if (id > 0) {
