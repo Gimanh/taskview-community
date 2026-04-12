@@ -497,6 +497,7 @@ export default {
     created: 'SSO провайдер создан',
     updated: 'SSO провайдер обновлён',
     deleted: 'SSO провайдер удалён',
+    domainAlreadyExists: 'SSO для этого домена уже настроен',
     saveFailed: 'Не удалось сохранить настройки SSO',
     deleteFailed: 'Не удалось удалить SSO конфигурацию',
     fillRequired: 'Заполните все обязательные поля',

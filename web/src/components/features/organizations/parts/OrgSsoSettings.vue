@@ -416,9 +416,13 @@ async function saveConfig() {
     isEditing.value = false
     resetForm()
     await fetchConfig()
-  } catch (error) {
-    console.error('SSO save failed:', error)
-    toast.add({ title: t('sso.saveFailed'), color: 'error' })
+  } catch (error: unknown) {
+    const axiosError = error as { response?: { status?: number, data?: { response?: { message?: string } } } }
+    if (axiosError.response?.status === 409) {
+      toast.add({ title: t('sso.domainAlreadyExists'), color: 'error' })
+    } else {
+      toast.add({ title: t('sso.saveFailed'), color: 'error' })
+    }
   } finally {
     saving.value = false
   }

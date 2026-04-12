@@ -158,8 +158,16 @@ export class SsoController {
       return res.status(400).send(out.summary)
     }
 
+    const existing = await this.ssoRepo.findEnabledByDomain(out.emailDomainRestriction)
+    if (existing) {
+      return res.status(409).tvJson({ message: 'SSO config for this domain already exists' })
+    }
+
     const config = await req.appUser.ssoManager.createConfig(out).catch(logError)
-    return res.tvJson(config ?? null)
+    if (!config) {
+      return res.status(500).tvJson({ message: 'Failed to create SSO config' })
+    }
+    return res.tvJson(config)
   }
 
   updateConfig = async (req: Request, res: Response) => {

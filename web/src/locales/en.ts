@@ -525,6 +525,7 @@ export default {
     created: 'SSO provider created',
     updated: 'SSO provider updated',
     deleted: 'SSO provider deleted',
+    domainAlreadyExists: 'SSO config for this domain already exists',
     saveFailed: 'Failed to save SSO configuration',
     deleteFailed: 'Failed to delete SSO configuration',
     fillRequired: 'Please fill in all required fields',

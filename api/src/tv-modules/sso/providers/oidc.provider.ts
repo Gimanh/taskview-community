@@ -13,10 +13,15 @@ export class OidcProvider implements SsoProvider {
 
   private async getOidcConfig(): Promise<client.Configuration> {
     if (!this.oidcConfig) {
+      const issuerUrl = new URL(this.config.oidcIssuer!)
+      const isDev = process.env.NODE_ENV !== 'production'
+
       this.oidcConfig = await client.discovery(
-        new URL(this.config.oidcIssuer!),
+        issuerUrl,
         this.config.oidcClientId!,
         this.config.oidcClientSecret!,
+        undefined,
+        isDev ? { execute: [client.allowInsecureRequests] } : undefined,
       )
     }
     return this.oidcConfig
