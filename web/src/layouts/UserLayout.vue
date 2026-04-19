@@ -95,6 +95,8 @@ App.addListener('appStateChange', async ({ isActive }) => {
     } finally {
       updateInProgress = false
     }
+
+    initPush()
   }
 })
 

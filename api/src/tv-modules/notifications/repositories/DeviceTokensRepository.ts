@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 import { DeviceTokensSchema, type DeviceTokensSchemaTypeForSelect } from 'taskview-db-schemas';
 import { Database } from '../../../modules/db';
 import { callWithCatch } from '../../../utils/helpers';
@@ -11,6 +11,14 @@ export class DeviceTokensRepository {
     }
 
     async register(userId: number, token: string, platform: string, timezone: string): Promise<boolean> {
+        await callWithCatch(() =>
+            this.db.dbDrizzle.delete(DeviceTokensSchema)
+                .where(and(
+                    eq(DeviceTokensSchema.token, token),
+                    ne(DeviceTokensSchema.userId, userId),
+                ))
+        );
+
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.insert(DeviceTokensSchema).values({
                 userId,

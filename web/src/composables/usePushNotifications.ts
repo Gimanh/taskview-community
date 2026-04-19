@@ -9,6 +9,7 @@ import { ALL_TASKS_LIST_ID } from 'taskview-api'
 
 const registered = ref(false)
 let initialized = false
+let currentToken: string | null = null
 
 export function usePushNotifications() {
   const supported = Capacitor.isNativePlatform()
@@ -19,18 +20,22 @@ export function usePushNotifications() {
     if (initialized || !supported) return
     initialized = true
 
+    await FirebaseMessaging.removeAllListeners()
+
     const permission = await FirebaseMessaging.requestPermissions()
     if (permission.receive !== 'granted') return
 
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
     const { token } = await FirebaseMessaging.getToken()
     if (token) {
+      currentToken = token
       const platform = Capacitor.getPlatform() as 'android' | 'ios'
       await $tvApi.notifications.registerDevice(token, platform, timezone)
       registered.value = true
     }
 
     FirebaseMessaging.addListener('tokenReceived', async ({ token }) => {
+      currentToken = token
       const platform = Capacitor.getPlatform() as 'android' | 'ios'
       await $tvApi.notifications.registerDevice(token, platform, timezone)
       registered.value = true
@@ -64,5 +69,15 @@ export function usePushNotifications() {
     })
   }
 
-  return { supported, registered, init }
+  function reset() {
+    initialized = false
+    registered.value = false
+    currentToken = null
+  }
+
+  function getCurrentToken() {
+    return currentToken
+  }
+
+  return { supported, registered, init, reset, getCurrentToken }
 }
