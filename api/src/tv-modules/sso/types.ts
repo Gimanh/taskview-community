@@ -27,7 +27,7 @@ export const SsoConfigArkTypeCreate = type({
   'oidcCallbackUrl?': 'string',
   'oidcScope?': 'string',
 
-  'defaultOrgRole?': 'string',
+  'defaultOrgRole?': "'admin' | 'member'",
   emailDomainRestriction: 'string > 0',
 })
 
@@ -51,7 +51,7 @@ export const SsoConfigArkTypeUpdate = type({
   'oidcCallbackUrl?': 'string',
   'oidcScope?': 'string',
 
-  'defaultOrgRole?': 'string',
+  'defaultOrgRole?': "'admin' | 'member'",
   'emailDomainRestriction?': 'string',
 })
 

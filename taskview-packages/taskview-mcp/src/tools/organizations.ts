@@ -63,9 +63,9 @@ export function registerOrganizationsTools(server: McpServer, api: TvApi) {
         logoUrl: z.string().optional().describe('New logo URL'),
       },
     },
-    async (params) => {
+    async ({ organizationId, ...updates }) => {
       try {
-        const org = await api.organizations.update(params)
+        const org = await api.organizations.update(organizationId, updates)
         if (!org) return err('Organization not found or update failed')
         return ok(org)
       } catch (e) { return err(e) }
@@ -82,7 +82,7 @@ export function registerOrganizationsTools(server: McpServer, api: TvApi) {
     },
     async ({ organizationId }) => {
       try {
-        const result = await api.organizations.delete({ organizationId })
+        const result = await api.organizations.delete(organizationId)
         return ok({ deleted: result })
       } catch (e) { return err(e) }
     },

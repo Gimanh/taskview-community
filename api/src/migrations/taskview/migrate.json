@@ -451,13 +451,15 @@
         "scripts": [
             "/1.33.0/0.1.33.0.sql",
             "/1.33.0/1.add-saml-signing-fields.sql",
-            "/1.33.0/2.add-saml-logout-url.sql"
+            "/1.33.0/2.add-saml-logout-url.sql",
+            "/1.33.0/3.add-scim-fields.sql"
         ],
         "description": [
             "Added SSO support (SAML 2.0 + OIDC)",
             "Added sso_configs, sso_identities, saml_request_cache tables",
             "Added SAML AuthnRequest signing support",
-            "Added SAML logout URL for SLO"
+            "Added SAML logout URL for SLO",
+            "Added SCIM provisioning support"
         ]
     }
 }

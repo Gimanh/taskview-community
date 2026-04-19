@@ -1,11 +1,21 @@
 <template>
-  <UModal v-model:open="open" :fullscreen="isMobile">
+  <UModal
+    v-model:open="open"
+    :fullscreen="isMobile"
+  >
     <template #content>
       <UCard>
         <template #header>
           <div class="flex items-center justify-between">
-            <h3 class="font-semibold">{{ t('organizations.create') }}</h3>
-            <UButton icon="i-lucide-x" variant="ghost" color="neutral" @click="open = false" />
+            <h3 class="font-semibold">
+              {{ t('organizations.create') }}
+            </h3>
+            <UButton
+              icon="i-lucide-x"
+              variant="ghost"
+              color="neutral"
+              @click="open = false"
+            />
           </div>
         </template>
 
@@ -22,7 +32,11 @@
 
         <template #footer>
           <div class="flex justify-end gap-2">
-            <UButton :label="t('organizations.save')" :loading="loading" @click="create" />
+            <UButton
+              :label="t('organizations.save')"
+              :loading="loading"
+              @click="create"
+            />
           </div>
         </template>
       </UCard>

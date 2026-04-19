@@ -482,6 +482,7 @@ export default {
     memberAdded: 'Member added',
     memberRemoved: 'Member removed',
     roleUpdated: 'Role updated',
+    close: 'Close',
     slugTaken: 'This slug is already taken',
   },
   sso: {
@@ -510,6 +511,8 @@ export default {
     samlSigningKeyPlaceholder: 'Paste PEM private key (-----BEGIN PRIVATE KEY-----...)',
     samlSigningCert: 'SP Certificate (PEM)',
     samlSigningCertPlaceholder: 'Paste PEM certificate (-----BEGIN CERTIFICATE-----...)',
+    secretConfigured: 'Value is configured (leave empty to keep current)',
+    secretAlreadySet: 'Configured - leave empty to keep current value',
     oidcIssuer: 'Issuer URL',
     oidcClientId: 'Client ID',
     oidcClientSecret: 'Client Secret',
@@ -529,6 +532,16 @@ export default {
     saveFailed: 'Failed to save SSO configuration',
     deleteFailed: 'Failed to delete SSO configuration',
     fillRequired: 'Please fill in all required fields',
+  },
+  scim: {
+    description: 'Automatically sync user lifecycle from your IdP',
+    endpointUrl: 'SCIM Endpoint URL',
+    generateToken: 'Generate SCIM Token',
+    regenerateToken: 'Regenerate Token',
+    tokenWarning: 'Copy this token now. It will not be shown again.',
+    tokenGenerated: 'SCIM token generated',
+    tokenFailed: 'Failed to generate token',
+    toggleFailed: 'Failed to toggle SCIM',
   },
   apiTokens: {
     title: 'API Tokens',
@@ -595,5 +608,10 @@ export default {
     serverUrl: 'Server URL',
     serverUrlHint: 'Enter the full API server URL, e.g. https://api.example.com',
     defaultServer: 'Default server',
+  },
+  connection: {
+    offline: 'No internet connection',
+    restored: 'Connection restored',
+    reload: 'Reload',
   },
 }

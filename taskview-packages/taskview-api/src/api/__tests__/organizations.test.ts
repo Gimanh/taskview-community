@@ -55,8 +55,7 @@ describe('Organizations: creation and management', () => {
   })
 
   it('should allow owner to update name and slug', async () => {
-    const updated = await user1Api.organizations.update({
-      organizationId: createdOrgId,
+    const updated = await user1Api.organizations.update(createdOrgId, {
       name: 'Updated Org',
       slug: 'updated-org',
     })
@@ -434,8 +433,7 @@ describe('Cross-org access control', () => {
   })
 
   it('should deny non-member from updating another org', async () => {
-    const status = await user2Api.organizations.update({
-      organizationId: user1OrgId,
+    const status = await user2Api.organizations.update(user1OrgId, {
       name: 'Hacked Org',
     }).catch((err) => err.status)
 
@@ -481,9 +479,7 @@ describe('Cross-org access control', () => {
   })
 
   it('should deny non-member from deleting another org', async () => {
-    const status = await user2Api.organizations.delete({
-      organizationId: user1OrgId,
-    }).catch((err) => err.status)
+    const status = await user2Api.organizations.delete(user1OrgId).catch((err) => err.status)
 
     expect(status).toBeGreaterThanOrEqual(400)
 
@@ -550,8 +546,7 @@ describe('Regular member restrictions', () => {
   })
 
   it('should deny regular member from updating org details', async () => {
-    const status = await user2Api.organizations.update({
-      organizationId: orgId,
+    const status = await user2Api.organizations.update(orgId, {
       name: 'Member Changed Name',
     }).catch((err) => err.status)
 
@@ -588,16 +583,15 @@ describe('Regular member restrictions', () => {
   })
 
   it('should deny regular member from deleting org', async () => {
-    const status = await user2Api.organizations.delete({
-      organizationId: orgId,
-    }).catch((err) => err.status)
+    const status = await user2Api.organizations.delete(orgId).catch((err) => err.status)
 
     expect(status).toBeGreaterThanOrEqual(400)
   })
 
-  it('should allow regular member to view org members', async () => {
-    const members = await user2Api.organizations.fetchMembers(orgId)
-    expect(members.length).toBeGreaterThan(0)
+  it('should deny regular member from viewing org members', async () => {
+    const status = await user2Api.organizations.fetchMembers(orgId)
+      .catch((err) => err.status)
+    expect(status).toBeGreaterThanOrEqual(400)
   })
 
   it('should allow regular member to view org details', async () => {
@@ -628,8 +622,7 @@ describe('Slug uniqueness', () => {
   it('should lowercase slug on update', async () => {
     const org = await user1Api.organizations.create({ name: 'Update Slug Case' })
     const newSlug = `UPDATED-SLUG-${Date.now()}`
-    const updated = await user1Api.organizations.update({
-      organizationId: org.id,
+    const updated = await user1Api.organizations.update(org.id, {
       slug: newSlug,
     })
     expect(updated).toBeTruthy()
@@ -643,8 +636,7 @@ describe('Slug uniqueness', () => {
     const org1 = await user1Api.organizations.create({ name: 'Slug A', slug: slug1 })
     await user1Api.organizations.create({ name: 'Slug B', slug: slug2 })
 
-    const result = await user1Api.organizations.update({
-      organizationId: org1.id,
+    const result = await user1Api.organizations.update(org1.id, {
       slug: slug2,
     }).catch(() => null)
 
@@ -1132,9 +1124,7 @@ describe('Organization deletion', () => {
     const personal = orgs.find(o => (o as any).isPersonal === 1)
 
     if (personal) {
-      await user1Api.organizations.delete({
-        organizationId: personal.id,
-      }).catch(() => null)
+      await user1Api.organizations.delete(personal.id).catch(() => null)
 
       const orgsAfter = await user1Api.organizations.fetch()
       const stillExists = orgsAfter.find(o => o.id === personal.id)
@@ -1151,9 +1141,7 @@ describe('Organization deletion', () => {
       role: 'admin',
     })
 
-    await user2Api.organizations.delete({
-      organizationId: org.id,
-    }).catch(() => null)
+    await user2Api.organizations.delete(org.id).catch(() => null)
 
     const orgs = await user1Api.organizations.fetch()
     const stillExists = orgs.find(o => o.id === org.id)
@@ -1163,9 +1151,7 @@ describe('Organization deletion', () => {
   it('should allow owner to delete organization', async () => {
     const org = await user1Api.organizations.create({ name: 'Will Be Deleted' })
 
-    const result = await user1Api.organizations.delete({
-      organizationId: org.id,
-    })
+    const result = await user1Api.organizations.delete(org.id)
 
     expect(result).toBeTruthy()
 

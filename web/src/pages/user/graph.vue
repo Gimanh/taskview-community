@@ -4,8 +4,8 @@
   >
     <template #header>
       <UDashboardNavbar
-      :title="`${projectName} - ${t('graph.title')}`"
-      :ui="{title: 'shrink-0'}"
+        :title="`${projectName} - ${t('graph.title')}`"
+        :ui="{title: 'shrink-0'}"
       >
         <template #leading>
           <TvCollapseSidebarDesktop />
@@ -13,13 +13,13 @@
         <template #right>
           <div class="w-full">
             <UButton
-            icon="i-lucide-filter"
-            :color="showFilters ? 'primary' : 'neutral'"
-            variant="soft"
-            size="lg"
-            :ui="{leadingIcon: 'size-4'}"
-            @click="showFilters = !showFilters"
-          />
+              icon="i-lucide-filter"
+              :color="showFilters ? 'primary' : 'neutral'"
+              variant="soft"
+              size="lg"
+              :ui="{leadingIcon: 'size-4'}"
+              @click="showFilters = !showFilters"
+            />
           </div>
         </template>
       </UDashboardNavbar>
@@ -39,7 +39,11 @@
             />
           </div>
         </div>
-        <ProjectGraph v-model:list-ids="selectedListIds" v-model:assignee-ids="selectedAssigneeIds" class="h-full w-full" />
+        <ProjectGraph
+          v-model:list-ids="selectedListIds"
+          v-model:assignee-ids="selectedAssigneeIds"
+          class="h-full w-full"
+        />
       </div>
     </template>
   </UDashboardPanel>

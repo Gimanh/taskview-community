@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto'
 import * as client from 'openid-client'
 import type { Request, Response } from 'express'
 import type { SsoConfigsSchemaTypeForSelect } from 'taskview-db-schemas'
@@ -32,8 +33,29 @@ export class OidcProvider implements SsoProvider {
     const scope = this.config.oidcScope ?? 'openid email profile'
     const codeVerifier = client.randomPKCECodeVerifier()
     const codeChallenge = await client.calculatePKCECodeChallenge(codeVerifier)
+    const csrfToken = randomBytes(32).toString('hex')
+    const nonce = randomBytes(32).toString('hex')
+
+    const statePayload = JSON.stringify({
+      csrf: csrfToken,
+      relay: relayState ?? '',
+    })
 
     res.cookie(`sso_cv_${this.config.id}`, codeVerifier, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 5 * 60 * 1000,
+    })
+
+    res.cookie(`sso_state_${this.config.id}`, csrfToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 5 * 60 * 1000,
+    })
+
+    res.cookie(`sso_nonce_${this.config.id}`, nonce, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
@@ -46,11 +68,9 @@ export class OidcProvider implements SsoProvider {
       code_challenge: codeChallenge,
       code_challenge_method: 'S256',
       response_type: 'code',
+      state: statePayload,
+      nonce,
     })
-
-    if (relayState) {
-      params.set('state', relayState)
-    }
 
     const authUrl = client.buildAuthorizationUrl(config, params)
     res.redirect(authUrl.href)
@@ -59,21 +79,51 @@ export class OidcProvider implements SsoProvider {
   async handleCallback(req: Request): Promise<SsoAuthResult> {
     const config = await this.getOidcConfig()
     const codeVerifier = req.cookies[`sso_cv_${this.config.id}`]
+    const storedCsrf = req.cookies[`sso_state_${this.config.id}`]
+    const storedNonce = req.cookies[`sso_nonce_${this.config.id}`]
 
     if (!codeVerifier) {
       throw new Error('Missing PKCE code verifier — session may have expired')
     }
 
+    if (!storedCsrf) {
+      throw new Error('Missing CSRF state — session may have expired')
+    }
+
+    if (!storedNonce) {
+      throw new Error('Missing nonce — session may have expired')
+    }
+
+    const returnedState = req.query.state as string | undefined
+    if (!returnedState) {
+      throw new Error('Missing state parameter in callback')
+    }
+
+    let statePayload: { csrf: string, relay: string }
+    try {
+      statePayload = JSON.parse(returnedState)
+    } catch {
+      throw new Error('Invalid state parameter format')
+    }
+
+    if (statePayload.csrf !== storedCsrf) {
+      throw new Error('CSRF state mismatch — possible CSRF attack')
+    }
+
     const currentUrl = new URL(req.originalUrl, `${req.protocol}://${req.get('host')}`)
     const tokens = await client.authorizationCodeGrant(config, currentUrl, {
       pkceCodeVerifier: codeVerifier,
-      expectedState: req.query.state as string | undefined,
+      expectedState: returnedState,
     })
 
     const claims = tokens.claims()
 
     if (!claims || !claims.email) {
       throw new Error('OIDC token missing email claim')
+    }
+
+    if (claims.nonce !== storedNonce) {
+      throw new Error('Nonce mismatch — possible token replay attack')
     }
 
     return {

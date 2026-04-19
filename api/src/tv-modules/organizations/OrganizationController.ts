@@ -4,7 +4,6 @@ import { logError } from '../../utils/api'
 import {
   OrganizationArkTypeCreate,
   OrganizationArkTypeUpdate,
-  OrganizationArkTypeDelete,
   OrganizationMemberArkTypeAdd,
   OrganizationMemberArkTypeUpdateRole,
   OrganizationMemberArkTypeRemove,
@@ -22,22 +21,23 @@ export class OrganizationController {
   }
 
   update = async (req: Request, res: Response) => {
+    const orgId = Number(req.params.orgId)
+    if (!orgId) return res.status(400).end()
+
     const out = OrganizationArkTypeUpdate(req.body)
     if (out instanceof type.errors) {
       return res.status(400).send(out.summary)
     }
 
-    const org = await req.appUser.organizationManager.update(out).catch(logError)
+    const org = await req.appUser.organizationManager.update({ ...out, organizationId: orgId }).catch(logError)
     return res.tvJson(org ?? null)
   }
 
   delete = async (req: Request, res: Response) => {
-    const out = OrganizationArkTypeDelete(req.body)
-    if (out instanceof type.errors) {
-      return res.status(400).send(out.summary)
-    }
+    const orgId = Number(req.params.orgId)
+    if (!orgId) return res.status(400).end()
 
-    const result = await req.appUser.organizationManager.delete(out.organizationId).catch(logError)
+    const result = await req.appUser.organizationManager.delete(orgId).catch(logError)
     return res.tvJson(!!result)
   }
 

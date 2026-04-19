@@ -15,14 +15,27 @@
       }"
     >
       <template #leading>
-        <UAvatar :src="user.avatar.src" :alt="user.avatar.alt" size="2xs" />
+        <UAvatar
+          :src="user.avatar.src"
+          :alt="user.avatar.alt"
+          size="2xs"
+        />
       </template>
-      <div v-if="!collapsed" class="flex flex-col items-start text-left truncate flex-1">
+      <div
+        v-if="!collapsed"
+        class="flex flex-col items-start text-left truncate flex-1"
+      >
         <span class="truncate text-sm font-medium">{{ user.name }}</span>
         <span class="truncate text-xs text-dimmed">{{ user.description }}</span>
       </div>
-      <template v-if="!collapsed" #trailing>
-        <UIcon name="i-lucide-chevrons-up-down" class="size-4 text-dimmed" />
+      <template
+        v-if="!collapsed"
+        #trailing
+      >
+        <UIcon
+          name="i-lucide-chevrons-up-down"
+          class="size-4 text-dimmed"
+        />
       </template>
     </UButton>
 

@@ -1,10 +1,12 @@
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray, ne } from 'drizzle-orm'
 import {
   OrganizationsSchema,
   OrganizationMembersSchema,
   CollaborationUsersSchema,
   CollaborationUsersToGoalsSchema,
   GoalsSchema,
+  UsersSchema,
+  UserTokensSchema,
   type OrganizationsSchemaTypeForSelect,
   type OrganizationMembersSchemaTypeForSelect,
 } from 'taskview-db-schemas'
@@ -53,6 +55,28 @@ export class OrganizationRepository {
 
     if (!result) return false
     return result[0]
+  }
+
+  async invalidateSessionsForOrgOnlyMembers(orgId: number): Promise<void> {
+    await callWithCatch(() =>
+      this.db.dbDrizzle.delete(UserTokensSchema).where(
+        inArray(
+          UserTokensSchema.userId,
+          this.db.dbDrizzle
+            .select({ id: UsersSchema.id })
+            .from(UsersSchema)
+            .innerJoin(OrganizationMembersSchema, eq(OrganizationMembersSchema.email, UsersSchema.email))
+            .where(eq(OrganizationMembersSchema.organizationId, orgId))
+            .except(
+              this.db.dbDrizzle
+                .select({ id: UsersSchema.id })
+                .from(UsersSchema)
+                .innerJoin(OrganizationMembersSchema, eq(OrganizationMembersSchema.email, UsersSchema.email))
+                .where(ne(OrganizationMembersSchema.organizationId, orgId))
+            )
+        )
+      )
+    )
   }
 
   async delete(orgId: number): Promise<boolean> {

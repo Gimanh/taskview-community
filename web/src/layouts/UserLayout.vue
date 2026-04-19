@@ -1,4 +1,5 @@
 <template>
+  <ConnectionStatusBanner />
   <template v-if="orgStore.initialized">
     <UDashboardGroup
       unit="rem"
@@ -47,12 +48,12 @@ import { useDashboard } from '@/composables/useDashboard'
 import { useUpdater } from '@/composables/useUpdater'
 import { useAppStore } from '@/stores/app.store'
 import { useI18n } from 'vue-i18n'
+import ConnectionStatusBanner from '@/components/ConnectionStatusBanner.vue'
 import ProjectsSidebar from '@/components/features/projects/ProjectsSidebar.vue'
 import NotificationBell from '@/components/NotificationBell.vue'
 import { useCentrifugo } from '@/composables/useCentrifugo'
 import { usePushNotifications } from '@/composables/usePushNotifications'
 import { useGoalsStore } from '@/stores/goals.store'
-import { useUserStore } from '@/stores/user.store'
 import { useOrganizationStore } from '@/stores/organization.store'
 
 const { isSidebarOpen, isSidebarCollapsed } = useDashboard()
@@ -61,7 +62,6 @@ const { init: initPush } = usePushNotifications()
 const { t } = useI18n()
 const appStore = useAppStore()
 const goalsStore = useGoalsStore()
-const userStore = useUserStore()
 const orgStore = useOrganizationStore()
 const route = useRoute()
 const router = useRouter()

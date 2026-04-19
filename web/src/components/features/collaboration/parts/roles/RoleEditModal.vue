@@ -3,8 +3,8 @@
     v-model:open="isOpen"
     :fullscreen="isMobile"
   >
-  <template #header="{close}">
-    <div class="flex items-center justify-between w-full">
+    <template #header="{close}">
+      <div class="flex items-center justify-between w-full">
         <h3 class="text-lg font-semibold">
           {{ t('collaboration.roles.assignPermissions') }}
         </h3>
@@ -15,7 +15,7 @@
           @click="close"
         />
       </div>
-  </template>
+    </template>
     <template #body>
       <div class="space-y-4">
         <div class="flex items-center gap-2 p-3 bg-elevated rounded-lg">

@@ -23,13 +23,14 @@ export default class OrganizationRoutes implements Routable {
   initRoutes() {
     this.router.post('', [IsLoggedIn], this.controller.create)
     this.router.get('', [IsLoggedIn], this.controller.fetch)
-    this.router.get('/:orgId', [IsLoggedIn, IsOrgMember], this.controller.getById)
-    this.router.patch('', [IsLoggedIn, IsOrgAdmin], this.controller.update)
-    this.router.delete('', [IsLoggedIn, IsOrgOwner], this.controller.delete)
 
-    this.router.get('/:orgId/members', [IsLoggedIn, IsOrgAdmin], this.controller.fetchMembers)
     this.router.post('/members', [IsLoggedIn, IsOrgAdmin], this.controller.addMember)
     this.router.patch('/members/role', [IsLoggedIn, IsOrgAdmin], this.controller.updateMemberRole)
     this.router.delete('/members', [IsLoggedIn, IsOrgAdmin], this.controller.removeMember)
+
+    this.router.get('/:orgId', [IsLoggedIn, IsOrgMember], this.controller.getById)
+    this.router.patch('/:orgId', [IsLoggedIn, IsOrgAdmin], this.controller.update)
+    this.router.delete('/:orgId', [IsLoggedIn, IsOrgOwner], this.controller.delete)
+    this.router.get('/:orgId/members', [IsLoggedIn, IsOrgAdmin], this.controller.fetchMembers)
   }
 }

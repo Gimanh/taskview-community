@@ -812,7 +812,7 @@ describe('API Tokens', () => {
             // currently succeeds — token can create orgs (not ideal)
             // cleanup if it was created
             if (typeof org === 'object' && org?.id) {
-                await $api.organizations.delete({ organizationId: org.id }).catch(() => {})
+                await $api.organizations.delete(org.id).catch(() => {})
             }
 
             await $api.apiTokens.delete(created!.item.id);

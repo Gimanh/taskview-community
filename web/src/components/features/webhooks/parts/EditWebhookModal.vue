@@ -1,5 +1,8 @@
 <template>
-  <UModal v-model:open="isOpen" :fullscreen="isMobile">
+  <UModal
+    v-model:open="isOpen"
+    :fullscreen="isMobile"
+  >
     <template #header>
       <h3 class="text-lg font-semibold">
         {{ t('webhooks.edit') }}

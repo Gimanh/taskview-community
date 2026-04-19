@@ -42,7 +42,7 @@ export const useOrganizationStore = defineStore('organization', () => {
 
   async function updateOrganization(id: number, updates: { name?: string, slug?: string, logoUrl?: string | null }) {
     try {
-      const org = await $tvApi.organizations.update({ organizationId: id, ...updates })
+      const org = await $tvApi.organizations.update(id, updates)
       if (org) {
         const idx = organizations.value.findIndex(o => o.id === id)
         if (idx !== -1) organizations.value[idx] = org
@@ -56,7 +56,7 @@ export const useOrganizationStore = defineStore('organization', () => {
 
   async function deleteOrganization(id: number) {
     try {
-      const result = await $tvApi.organizations.delete({ organizationId: id })
+      const result = await $tvApi.organizations.delete(id)
       if (result) {
         organizations.value = organizations.value.filter(o => o.id !== id)
         if (currentOrg.value?.id === id) currentOrg.value = null

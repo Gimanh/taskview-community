@@ -25,10 +25,12 @@ export default class SsoRoutes implements Routable {
     this.router.get('/callback/:configId', this.controller.handleCallback)
     this.router.post('/callback/:configId', this.controller.handleCallback)
 
-    this.router.get('/admin/metadata', [IsLoggedIn], this.controller.parseMetadata)
-    this.router.get('/admin/configs', [IsLoggedIn], this.controller.listConfigs)
+    this.router.get('/admin/metadata', [IsLoggedIn, IsOrgAdmin], this.controller.parseMetadata)
+    this.router.get('/admin/configs', [IsLoggedIn, IsOrgAdmin], this.controller.listConfigs)
     this.router.post('/admin/configs', [IsLoggedIn, IsOrgAdmin], this.controller.createConfig)
     this.router.patch('/admin/configs/:configId', [IsLoggedIn, IsSsoConfigAdmin], this.controller.updateConfig)
     this.router.delete('/admin/configs/:configId', [IsLoggedIn, IsSsoConfigAdmin], this.controller.deleteConfig)
+    this.router.post('/admin/configs/:configId/scim-token', [IsLoggedIn, IsSsoConfigAdmin], this.controller.generateScimToken)
+    this.router.patch('/admin/configs/:configId/scim', [IsLoggedIn, IsSsoConfigAdmin], this.controller.toggleScim)
   }
 }

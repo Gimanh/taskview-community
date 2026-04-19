@@ -1,5 +1,9 @@
 <template>
-  <UModal v-model:open="isOpen" :fullscreen="isMobile" :ui="{ content: 'sm:max-w-3xl', body: 'p-0!' }">
+  <UModal
+    v-model:open="isOpen"
+    :fullscreen="isMobile"
+    :ui="{ content: 'sm:max-w-3xl', body: 'p-0!' }"
+  >
     <template #header>
       <div class="flex items-center justify-between w-full gap-3">
         <h3 class="text-lg font-semibold">
@@ -30,7 +34,10 @@
       >
         <p>{{ t('webhooks.noDeliveries') }}</p>
       </div>
-      <div v-else ref="scrollContainer">
+      <div
+        v-else
+        ref="scrollContainer"
+      >
         <UTable
           :data="webhooksStore.deliveries"
           :columns="columns"

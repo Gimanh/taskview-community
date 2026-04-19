@@ -26,6 +26,9 @@ export const SsoConfigsSchema = pgSchema('tv_auth').table('sso_configs', {
   defaultOrgRole: varchar('default_org_role').notNull().default('member'),
   emailDomainRestriction: varchar('email_domain_restriction').notNull().unique(),
 
+  scimToken: varchar('scim_token'),
+  scimEnabled: integer('scim_enabled').notNull().default(0),
+
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 })

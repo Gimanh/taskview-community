@@ -115,18 +115,18 @@ export const useBaseScreenStore = defineStore('base-screen-store', {
         localTask.complete = task.complete
 
         switch (prop) {
-          case 'tasks':
-            this.processLastAdded(task)
-            break
-          case 'tasksToday':
-            this.processToday(task)
-            break
-          case 'tasksUpcoming':
-            this.processUpcoming(task)
-            break
-          case 'tasksLastCompleted':
-            this.processLastCompleted(task)
-            break
+        case 'tasks':
+          this.processLastAdded(task)
+          break
+        case 'tasksToday':
+          this.processToday(task)
+          break
+        case 'tasksUpcoming':
+          this.processUpcoming(task)
+          break
+        case 'tasksLastCompleted':
+          this.processLastCompleted(task)
+          break
         }
       }
     },

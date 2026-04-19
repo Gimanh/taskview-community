@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
       <div>
         <h2 class="text-lg font-semibold">
           {{ t('sessions.title') }}
@@ -30,11 +30,17 @@
       v-else-if="store.sessions.length === 0"
       class="flex flex-col items-center justify-center h-32 text-muted"
     >
-      <UIcon name="i-lucide-monitor" class="size-10 mb-3" />
+      <UIcon
+        name="i-lucide-monitor"
+        class="size-10 mb-3"
+      />
       <p>{{ t('sessions.empty') }}</p>
     </div>
 
-    <div v-else class="flex flex-col gap-3">
+    <div
+      v-else
+      class="flex flex-col gap-3"
+    >
       <SessionItem
         v-for="session in store.sessions"
         :key="session.id"
@@ -42,7 +48,10 @@
       />
     </div>
 
-    <UModal v-model:open="showDeleteAllConfirm" :fullscreen="isMobile">
+    <UModal
+      v-model:open="showDeleteAllConfirm"
+      :fullscreen="isMobile"
+    >
       <template #header>
         <h3 class="text-lg font-semibold">
           {{ t('sessions.deleteAll') }}
@@ -88,7 +97,7 @@ const showDeleteAllConfirm = ref(false)
 const deletingAll = ref(false)
 
 const hasOtherSessions = computed(() =>
-  store.sessions.some((s) => !s.isCurrent)
+  store.sessions.some((s) => !s.isCurrent),
 )
 
 async function handleDeleteAll() {

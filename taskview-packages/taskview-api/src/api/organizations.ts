@@ -4,7 +4,6 @@ import type {
   Organization,
   OrganizationArgCreate,
   OrganizationArgUpdate,
-  OrganizationArgDelete,
   OrgMember,
   OrgMemberArgAdd,
   OrgMemberArgUpdateRole,
@@ -32,15 +31,15 @@ export default class TvOrganizationsApi extends TvApiBase {
     )
   }
 
-  public async update(data: OrganizationArgUpdate) {
+  public async update(orgId: number, data: Omit<OrganizationArgUpdate, 'organizationId'>) {
     return this.request(
-      this.$axios.patch<AppResponse<Organization>>(this.moduleUrl, data)
+      this.$axios.patch<AppResponse<Organization>>(`${this.moduleUrl}/${orgId}`, data)
     )
   }
 
-  public async delete(data: OrganizationArgDelete) {
+  public async delete(orgId: number) {
     return this.request(
-      this.$axios.delete<AppResponse<boolean>>(this.moduleUrl, { data })
+      this.$axios.delete<AppResponse<boolean>>(`${this.moduleUrl}/${orgId}`)
     )
   }
 

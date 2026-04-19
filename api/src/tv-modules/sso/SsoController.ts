@@ -1,28 +1,17 @@
+import { createHash, randomBytes } from 'crypto'
 import { type } from 'arktype'
 import { hashSync } from 'bcryptjs'
 import type { Request, Response } from 'express'
 import { $logger } from '../../modules/logget'
 import { logError } from '../../utils/api'
-import { isEmail } from '../../utils/helpers'
+import { generateString, isEmail } from '../../utils/helpers'
 import AuthModel from '../auth/AuthModel'
 import { OrganizationRepository } from '../organizations/OrganizationRepository'
 import { createSsoProvider } from './providers/provider-factory'
 import { SsoRepository } from './SsoRepository'
 import { parseSamlMetadata } from './saml-metadata-parser'
+import { generateLoginCode, stripSecrets, validateMetadataUrl } from './sso.utils'
 import { SsoConfigArkTypeCreate, SsoConfigArkTypeUpdate } from './types'
-
-function generateRandomString(length: number): string {
-  let result = ''
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return result
-}
-
-function generateLoginCode(): string {
-  return `${generateRandomString(12)}:${Date.now()}`.toLowerCase()
-}
 
 export class SsoController {
   private readonly ssoRepo = new SsoRepository()
@@ -67,8 +56,8 @@ export class SsoController {
       let userData = await this.authModel.getUserByLogin(ssoResult.email, isEmail(ssoResult.email))
 
       if (!userData) {
-        const password = generateRandomString(16)
-        const login = generateRandomString(7)
+        const password = generateString(16)
+        const login = generateString(7)
         const id = await this.authModel.registerUserInDb({
           login,
           email: ssoResult.email,
@@ -114,9 +103,13 @@ export class SsoController {
       const encodedAuthData = encodeURIComponent(JSON.stringify(authData))
 
       try {
-        const relayState = req.body?.RelayState || req.query?.state
+        let relayState = req.body?.RelayState as string | undefined
+        if (!relayState && req.query?.state) {
+          const stateData = JSON.parse(req.query.state as string)
+          relayState = stateData.relay
+        }
         if (relayState) {
-          const platformData = JSON.parse(relayState as string)
+          const platformData = JSON.parse(relayState)
           if (platformData.platform === 'mobile') {
             return res.redirect(`taskview://login?tokens=${encodedAuthData}`)
           }
@@ -149,7 +142,7 @@ export class SsoController {
     if (!orgId) return res.status(400).tvJson({ message: 'organizationId is required' })
 
     const configs = await this.ssoRepo.listByOrgId(orgId)
-    return res.tvJson(configs)
+    return res.tvJson(configs.map(stripSecrets))
   }
 
   createConfig = async (req: Request, res: Response) => {
@@ -167,7 +160,7 @@ export class SsoController {
     if (!config) {
       return res.status(500).tvJson({ message: 'Failed to create SSO config' })
     }
-    return res.tvJson(config)
+    return res.tvJson(stripSecrets(config))
   }
 
   updateConfig = async (req: Request, res: Response) => {
@@ -180,15 +173,18 @@ export class SsoController {
     }
 
     const config = await req.appUser.ssoManager.updateConfig(configId, out).catch(logError)
-    return res.tvJson(config ?? null)
+    return res.tvJson(config ? stripSecrets(config) : null)
   }
 
   parseMetadata = async (req: Request, res: Response) => {
     const metadataUrl = req.query.url as string
     if (!metadataUrl) return res.status(400).tvJson({ message: 'url is required' })
 
+    const urlError = validateMetadataUrl(metadataUrl)
+    if (urlError) return res.status(400).tvJson({ message: urlError })
+
     try {
-      const response = await fetch(metadataUrl)
+      const response = await fetch(metadataUrl, { redirect: 'error' })
       if (!response.ok) {
         return res.status(400).tvJson({ message: `Failed to fetch metadata: ${response.status}` })
       }
@@ -201,6 +197,43 @@ export class SsoController {
       $logger.error(error, 'Failed to parse SAML metadata')
       return res.status(400).tvJson({ message: 'Failed to fetch or parse metadata' })
     }
+  }
+
+  generateScimToken = async (req: Request, res: Response) => {
+    const configId = Number(req.params.configId)
+    if (!configId) return res.status(400).end()
+
+    const rawToken = `tvscim_${randomBytes(32).toString('hex')}`
+    const hashedToken = createHash('sha256').update(rawToken).digest('hex')
+
+    const config = await this.ssoRepo.update(configId, {
+      scimToken: hashedToken,
+      scimEnabled: 1,
+    })
+
+    if (!config) {
+      return res.status(404).tvJson({ message: 'SSO config not found' })
+    }
+
+    return res.tvJson({ token: rawToken })
+  }
+
+  toggleScim = async (req: Request, res: Response) => {
+    const configId = Number(req.params.configId)
+    if (!configId) return res.status(400).end()
+
+    const enabled = req.body.enabled ? 1 : 0
+
+    const config = await this.ssoRepo.update(configId, {
+      scimEnabled: enabled,
+      ...(enabled === 0 ? { scimToken: null } : {}),
+    })
+
+    if (!config) {
+      return res.status(404).tvJson({ message: 'SSO config not found' })
+    }
+
+    return res.tvJson({ scimEnabled: config.scimEnabled })
   }
 
   deleteConfig = async (req: Request, res: Response) => {

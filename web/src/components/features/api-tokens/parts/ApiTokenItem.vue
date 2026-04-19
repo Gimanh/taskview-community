@@ -15,8 +15,14 @@
             {{ t('apiTokens.expires') }}: {{ formatDate(token.expiresAt) }}
           </span>
         </div>
-        <div v-if="token.allowedPermissions.length > 0" class="flex items-center gap-1 mt-1">
-          <UBadge variant="subtle" size="xs">
+        <div
+          v-if="token.allowedPermissions.length > 0"
+          class="flex items-center gap-1 mt-1"
+        >
+          <UBadge
+            variant="subtle"
+            size="xs"
+          >
             {{ token.allowedPermissions.length }} {{ t('apiTokens.permissionsCount') }}
           </UBadge>
         </div>
@@ -31,7 +37,10 @@
     />
   </div>
 
-  <UModal v-model:open="showDeleteConfirm" :fullscreen="isMobile">
+  <UModal
+    v-model:open="showDeleteConfirm"
+    :fullscreen="isMobile"
+  >
     <template #header>
       <h3 class="text-lg font-semibold">
         {{ t('common.delete') }}

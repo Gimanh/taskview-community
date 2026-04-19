@@ -15,6 +15,7 @@ import TagsRouter from '../tv-modules/tags/TagsRouter';
 import TasksRoutes from '../tv-modules/tasks/TasksRoutes';
 import OrganizationRoutes from '../tv-modules/organizations/OrganizationRoutes';
 import SsoRoutes from '../tv-modules/sso/SsoRoutes';
+import ScimRoutes from '../tv-modules/scim/ScimRoutes';
 import type { Routable } from '../types/routable.type';
 
 type RoutableConstructor = new (...args: any[]) => Routable;
@@ -37,6 +38,7 @@ const routes: Record<string, RoutableConstructor> = {
     '/module/sessions': SessionsRoutes,
     '/module/organizations': OrganizationRoutes,
     '/module/sso': SsoRoutes,
+    '/scim/v2': ScimRoutes,
 };
 
 export default routes;

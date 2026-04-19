@@ -7,20 +7,24 @@ export type SsoConfig = {
 
   samlEntryPoint: string | null
   samlIssuer: string | null
-  samlCert: string | null
   samlCallbackUrl: string | null
-  samlSigningKey: string | null
-  samlSigningCert: string | null
   samlLogoutUrl: string | null
 
   oidcIssuer: string | null
   oidcClientId: string | null
-  oidcClientSecret: string | null
   oidcCallbackUrl: string | null
   oidcScope: string | null
 
   defaultOrgRole: string
   emailDomainRestriction: string
+
+  scimEnabled: number
+
+  hasSamlCert: boolean
+  hasSamlSigningKey: boolean
+  hasSamlSigningCert: boolean
+  hasOidcClientSecret: boolean
+  hasScimToken: boolean
 
   createdAt: string
   updatedAt: string

@@ -44,6 +44,18 @@ export default class TvSsoApi extends TvApiBase {
     )
   }
 
+  public async generateScimToken(configId: number) {
+    return this.request(
+      this.$axios.post<AppResponse<{ token: string }>>(`${this.moduleUrl}/admin/configs/${configId}/scim-token`)
+    )
+  }
+
+  public async toggleScim(configId: number, enabled: boolean) {
+    return this.request(
+      this.$axios.patch<AppResponse<{ scimEnabled: number }>>(`${this.moduleUrl}/admin/configs/${configId}/scim`, { enabled })
+    )
+  }
+
   public async checkDomain(domain: string) {
     return this.request(
       this.$axios.get<AppResponse<SsoProviderPublic | null>>(`${this.moduleUrl}/providers`, {

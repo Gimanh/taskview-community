@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+import { $logger } from '../modules/logget';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12;
@@ -30,4 +31,19 @@ export function decrypt(encrypted: string): string {
     const decipher = createDecipheriv(ALGORITHM, key, iv, { authTagLength: AUTH_TAG_LENGTH });
     decipher.setAuthTag(authTag);
     return Buffer.concat([decipher.update(data), decipher.final()]).toString('utf8');
+}
+
+export function encryptField(value: string | null | undefined): string | null {
+    if (!value) return null
+    return encrypt(value)
+}
+
+export function decryptField(value: string | null): string | null {
+    if (!value) return null
+    try {
+        return decrypt(value)
+    } catch {
+        $logger.warn('Failed to decrypt field — returning raw value (possible migration or key mismatch)')
+        return value
+    }
 }

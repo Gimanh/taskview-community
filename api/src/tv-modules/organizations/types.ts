@@ -20,19 +20,12 @@ export const OrganizationArkTypeCreate = type({
 export type OrganizationArgCreate = typeof OrganizationArkTypeCreate.infer
 
 export const OrganizationArkTypeUpdate = type({
-  organizationId: 'number',
   'name?': 'string',
   'slug?': 'string',
   'logoUrl?': 'string | null',
 })
 
-export type OrganizationArgUpdate = typeof OrganizationArkTypeUpdate.infer
-
-export const OrganizationArkTypeDelete = type({
-  organizationId: 'number',
-})
-
-export type OrganizationArgDelete = typeof OrganizationArkTypeDelete.infer
+export type OrganizationArgUpdate = typeof OrganizationArkTypeUpdate.infer & { organizationId: number }
 
 export const OrganizationMemberArkTypeAdd = type({
   organizationId: 'number',

@@ -1,5 +1,8 @@
 <template>
-  <UModal v-model:open="isOpen" :fullscreen="isMobile">
+  <UModal
+    v-model:open="isOpen"
+    :fullscreen="isMobile"
+  >
     <template #header>
       <h3 class="text-lg font-semibold">
         {{ t('webhooks.add') }}
@@ -44,7 +47,10 @@
     </template>
   </UModal>
 
-  <UModal v-model:open="showSecret" :fullscreen="isMobile">
+  <UModal
+    v-model:open="showSecret"
+    :fullscreen="isMobile"
+  >
     <template #header>
       <h3 class="text-lg font-semibold">
         {{ t('webhooks.secretTitle') }}

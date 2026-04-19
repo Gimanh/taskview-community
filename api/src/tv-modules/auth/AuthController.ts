@@ -1,4 +1,5 @@
 import { compare, hashSync } from 'bcryptjs';
+import { randomInt } from 'crypto';
 import type { Request, Response } from 'express';
 import jwt, { type Algorithm, decode } from 'jsonwebtoken';
 import { z } from 'zod';
@@ -89,15 +90,13 @@ export default class AuthController {
     }
 
     makeidLogin(length: number) {
-        let result = '';
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        const charactersLength = characters.length;
-        let counter = 0;
-        while (counter < length) {
-            result += characters.charAt(Math.floor(Math.random() * charactersLength));
-            counter += 1;
+        let result = ''
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+        const charactersLength = characters.length
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(randomInt(charactersLength))
         }
-        return result;
+        return result
     }
 
     generateEmailConfirmCode() {
@@ -329,6 +328,9 @@ export default class AuthController {
             return res.status(400).send({ message: 'Code expired, get new code' });
         }
 
+        // Invalidate code immediately to prevent replay attacks
+        await req.appUser.authManager.repository.updateLoginCode(null, userData.email);
+
         const sessionId = await req.appUser.authManager.sessionStorage.createSession(
             userData.id,
             req.ip,
@@ -342,8 +344,6 @@ export default class AuthController {
             id: sessionId,
             userData,
         } as const);
-
-        await req.appUser.authManager.repository.updateLoginCode(null, userData.email);
 
         await this.setRefreshToken(res, tokens.refresh);
 
@@ -401,7 +401,7 @@ export default class AuthController {
 
         email = (email as string).toLowerCase();
         if (!isEmail(email)) {
-            return res.status(40).end();
+            return res.status(400).end();
         }
 
         password = hashSync(password, 10);
@@ -438,7 +438,7 @@ export default class AuthController {
             emailTemplate = EnEmailTemplate;
         }
 
-        const confirmUrl = `https://${process.env.APP_URL}/module/auth/confirm/email/${confirmEmailCode}/login/${login}`;
+        const confirmUrl = `${process.env.APP_URL}/module/auth/confirm/email/${confirmEmailCode}/login/${login}`;
 
         if (emailTemplate) {
             confirmEmailBody = emailTemplate.replace('{link}', confirmUrl);

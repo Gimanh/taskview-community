@@ -1,20 +1,25 @@
 <template>
   <div class="flex items-center justify-between p-4 border border-default rounded-lg">
-    <div class="flex items-center gap-3 min-w-0">
+    <div class="flex items-start gap-3 min-w-0">
       <UIcon
         :name="deviceIcon"
-        class="size-5 shrink-0 text-primary"
+        class="size-5 shrink-0 text-primary mt-1"
       />
       <div class="min-w-0">
         <div class="flex items-center gap-2">
           <p class="font-medium">
             {{ session.deviceName || t('sessions.unknown') }}
           </p>
-          <UBadge v-if="session.isCurrent" variant="subtle" color="primary" size="xs">
+          <UBadge
+            v-if="session.isCurrent"
+            variant="subtle"
+            color="primary"
+            size="xs"
+          >
             {{ t('sessions.current') }}
           </UBadge>
         </div>
-        <div class="flex items-center gap-3 text-xs text-muted mt-1">
+        <div class="flex flex-col items-start gap-1 text-xs text-muted mt-1">
           <span v-if="session.userIp">{{ session.userIp }}</span>
           <span>{{ t('sessions.created') }}: {{ formatDate(session.createdAt) }}</span>
           <span v-if="session.lastUsedAt">
@@ -33,7 +38,10 @@
     />
   </div>
 
-  <UModal v-model:open="showDeleteConfirm" :fullscreen="isMobile">
+  <UModal
+    v-model:open="showDeleteConfirm"
+    :fullscreen="isMobile"
+  >
     <template #header>
       <h3 class="text-lg font-semibold">
         {{ t('common.delete') }}

@@ -116,6 +116,36 @@ export class SsoRepository {
     return !!(result?.rowCount && result.rowCount > 0)
   }
 
+  async findByScimToken(hashedToken: string): Promise<SsoConfigsSchemaTypeForSelect | null> {
+    const result = await callWithCatch(() =>
+      this.db.dbDrizzle
+        .select()
+        .from(SsoConfigsSchema)
+        .where(
+          and(
+            eq(SsoConfigsSchema.scimToken, hashedToken),
+            eq(SsoConfigsSchema.scimEnabled, 1),
+          )
+        )
+    )
+    if (!result || result.length === 0) return null
+    return result[0]
+  }
+
+  async deleteIdentityByUser(userId: number, ssoConfigId: number): Promise<boolean> {
+    const result = await callWithCatch(() =>
+      this.db.dbDrizzle
+        .delete(SsoIdentitiesSchema)
+        .where(
+          and(
+            eq(SsoIdentitiesSchema.userId, userId),
+            eq(SsoIdentitiesSchema.ssoConfigId, ssoConfigId),
+          )
+        )
+    )
+    return !!(result?.rowCount && result.rowCount > 0)
+  }
+
   async upsertIdentity(data: {
     userId: number
     ssoConfigId: number

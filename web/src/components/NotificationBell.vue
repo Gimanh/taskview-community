@@ -8,7 +8,10 @@
     :aria-label="t('notifications.title')"
     @click="isOpen = true"
   >
-    <template v-if="notificationsStore.unreadCount > 0" #trailing>
+    <template
+      v-if="notificationsStore.unreadCount > 0"
+      #trailing
+    >
       <UBadge
         :label="notificationsStore.unreadCount > 99 ? '99+' : String(notificationsStore.unreadCount)"
         color="error"
@@ -30,7 +33,9 @@
   >
     <template #header>
       <div class="flex items-center justify-between w-full">
-        <h3 class="font-semibold">{{ t('notifications.title') }}</h3>
+        <h3 class="font-semibold">
+          {{ t('notifications.title') }}
+        </h3>
         <UButton
           v-if="notificationsStore.unreadCount > 0"
           :label="t('notifications.markAllRead')"
@@ -64,7 +69,9 @@
               :class="notification.read ? 'text-dimmed' : 'text-primary'"
             />
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium truncate">{{ notification.title }}</p>
+              <p class="text-sm font-medium truncate">
+                {{ notification.title }}
+              </p>
               <p
                 v-if="notification.body"
                 class="text-xs text-dimmed mt-0.5 line-clamp-2"

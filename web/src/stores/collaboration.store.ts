@@ -36,7 +36,7 @@ export const useCollaborationStore = defineStore('collaboration', {
       this.allUsers = users
     },
     
-/**
+    /**
          * Fetch users for a specific goal for collaboration section
          */
     async fetchCollaborationUsersForGoal(goalId: GoalItem['id']): Promise<void> {

@@ -56,6 +56,7 @@ export class OrganizationManager {
     const userId = this.getUserId()
     if (org.ownerId !== userId) return false
 
+    await this.repository.invalidateSessionsForOrgOnlyMembers(orgId)
     return await this.repository.delete(orgId)
   }
 

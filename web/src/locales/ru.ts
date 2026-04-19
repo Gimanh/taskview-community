@@ -454,6 +454,7 @@ export default {
     memberAdded: 'Участник добавлен',
     memberRemoved: 'Участник удалён',
     roleUpdated: 'Роль обновлена',
+    close: 'Закрыть',
     slugTaken: 'Этот slug уже занят',
   },
   sso: {
@@ -482,6 +483,8 @@ export default {
     samlSigningKeyPlaceholder: 'Вставьте PEM приватный ключ (-----BEGIN PRIVATE KEY-----...)',
     samlSigningCert: 'Сертификат SP (PEM)',
     samlSigningCertPlaceholder: 'Вставьте PEM сертификат (-----BEGIN CERTIFICATE-----...)',
+    secretConfigured: 'Значение задано (оставьте пустым чтобы сохранить текущее)',
+    secretAlreadySet: 'Настроено — оставьте пустым чтобы сохранить текущее значение',
     oidcIssuer: 'URL издателя',
     oidcClientId: 'Client ID',
     oidcClientSecret: 'Client Secret',
@@ -501,6 +504,16 @@ export default {
     saveFailed: 'Не удалось сохранить настройки SSO',
     deleteFailed: 'Не удалось удалить SSO конфигурацию',
     fillRequired: 'Заполните все обязательные поля',
+  },
+  scim: {
+    description: 'Автоматическая синхронизация пользователей из IdP',
+    endpointUrl: 'SCIM Endpoint URL',
+    generateToken: 'Сгенерировать SCIM токен',
+    regenerateToken: 'Перегенерировать токен',
+    tokenWarning: 'Скопируйте токен сейчас. Он не будет показан повторно.',
+    tokenGenerated: 'SCIM токен сгенерирован',
+    tokenFailed: 'Не удалось сгенерировать токен',
+    toggleFailed: 'Не удалось переключить SCIM',
   },
   notifications: {
     title: 'Уведомления',
@@ -527,5 +540,10 @@ export default {
     serverUrl: 'URL сервера',
     serverUrlHint: 'Введите полный URL API сервера, например https://api.example.com',
     defaultServer: 'Основной сервер',
+  },
+  connection: {
+    offline: 'Нет подключения к интернету',
+    restored: 'Соединение восстановлено',
+    reload: 'Обновить',
   },
 }

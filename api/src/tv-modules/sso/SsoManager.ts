@@ -1,5 +1,7 @@
 import type { AppUser } from '../../core/AppUser'
+import { encrypt, encryptField } from '../../utils/crypto'
 import { SsoRepository } from './SsoRepository'
+import { SSO_SECRET_FIELDS } from './sso.utils'
 import type { SsoConfigArgCreate, SsoConfigArgUpdate } from './types'
 
 export class SsoManager {
@@ -23,14 +25,14 @@ export class SsoManager {
       enabled: data.enabled ?? 1,
       samlEntryPoint: data.samlEntryPoint ?? null,
       samlIssuer: data.samlIssuer ?? null,
-      samlCert: data.samlCert ?? null,
+      samlCert: encryptField(data.samlCert),
       samlCallbackUrl: data.samlCallbackUrl ?? null,
-      samlSigningKey: data.samlSigningKey ?? null,
-      samlSigningCert: data.samlSigningCert ?? null,
+      samlSigningKey: encryptField(data.samlSigningKey),
+      samlSigningCert: encryptField(data.samlSigningCert),
       samlLogoutUrl: data.samlLogoutUrl ?? null,
       oidcIssuer: data.oidcIssuer ?? null,
       oidcClientId: data.oidcClientId ?? null,
-      oidcClientSecret: data.oidcClientSecret ?? null,
+      oidcClientSecret: encryptField(data.oidcClientSecret),
       oidcCallbackUrl: data.oidcCallbackUrl ?? null,
       oidcScope: data.oidcScope ?? null,
       defaultOrgRole: data.defaultOrgRole ?? 'member',
@@ -39,7 +41,17 @@ export class SsoManager {
   }
 
   async updateConfig(configId: number, data: SsoConfigArgUpdate) {
-    return await this.repository.update(configId, data)
+    const encrypted: Partial<SsoConfigArgUpdate> = { ...data }
+    for (const field of SSO_SECRET_FIELDS) {
+      if (field in encrypted) {
+        if (encrypted[field]) {
+          encrypted[field] = encrypt(encrypted[field]!)
+        } else {
+          delete encrypted[field]
+        }
+      }
+    }
+    return await this.repository.update(configId, encrypted)
   }
 
   async deleteConfig(configId: number) {
