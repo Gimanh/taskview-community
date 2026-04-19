@@ -1,6 +1,6 @@
 {
   "name": "taskview-ce-monorepo",
-  "version": "1.42.3",
+  "version": "1.42.5",
   "private": true,
   "description": "TaskView CE monorepo containing web, API, and packages",
   "workspaces": [

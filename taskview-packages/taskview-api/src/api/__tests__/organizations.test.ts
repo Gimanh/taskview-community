@@ -22,6 +22,31 @@ afterAll(async () => {
   await deleteAllGoals()
 })
 
+describe('Default user has a personal organization', () => {
+  it('default user (login: user, email: test@mail.dest) should have at least one organization', async () => {
+    const orgs = await user1Api.organizations.fetch()
+
+    expect(orgs.length).toBeGreaterThan(0)
+
+    const personal = orgs.find(o => (o as any).isPersonal === 1)
+    expect(personal).toBeTruthy()
+    expect(personal!.name).toContain('workspace')
+  })
+
+  it('default user should be an owner of their personal organization', async () => {
+    const orgs = await user1Api.organizations.fetch()
+    const personal = orgs.find(o => (o as any).isPersonal === 1)
+
+    expect(personal).toBeTruthy()
+
+    const members = await user1Api.organizations.fetchMembers(personal!.id)
+    const owner = members.find(m => m.email === user1Email)
+
+    expect(owner).toBeTruthy()
+    expect(owner!.role).toBe('owner')
+  })
+})
+
 describe('Organizations: creation and management', () => {
   let createdOrgId: number
 

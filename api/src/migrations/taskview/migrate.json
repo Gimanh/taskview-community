@@ -461,5 +461,16 @@
             "Added SAML logout URL for SLO",
             "Added SCIM provisioning support"
         ]
+    },
+    "37": {
+        "version": "1.44.0",
+        "name": "Release 1.44.0",
+        "releaseDate": "20260418",
+        "scripts": [
+            "/1.44.0/0.create-missing-personal-orgs.sql"
+        ],
+        "description": [
+            "Create personal organizations for users without any organization membership"
+        ]
     }
 }

@@ -146,7 +146,7 @@ async function handleSubmit() {
         })
 
         emit('success', result.data.access)
-        redirectToUser(router)
+        await redirectToUser(router)
       }
     } else {
       await $api.post('/module/auth/send-login-code', { email: state.email })
