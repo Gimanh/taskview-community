@@ -1,35 +1,36 @@
 # TaskView MCP Server
 
-MCP (Model Context Protocol) server for TaskView. Enables AI clients (Claude Code, Claude Desktop) to manage projects and tasks via the API.
+[![npm version](https://img.shields.io/npm/v/taskview-mcp.svg)](https://www.npmjs.com/package/taskview-mcp)
+
+MCP (Model Context Protocol) server for [TaskView](https://taskview.tech). Lets AI assistants like Claude Code and Claude Desktop manage projects and tasks via the TaskView API.
+
+```
+AI client  ──stdio──▶  taskview-mcp  ──HTTPS──▶  TaskView API
+```
 
 ## Requirements
 
 - Node.js >= 24
-- TaskView API token (`tvk_...`) — generated in account settings
+- A TaskView API token (`tvk_...`) — generate one in your TaskView account settings [Read about API tokens](https://taskview.tech/docs/features/api-tokens)
 
-## Setup
+## Quick start
 
-```bash
-pnpm build:packages
-cd community/taskview-packages/taskview-mcp
-pnpm build
-```
-
-## Configuration
+No installation needed — use `npx` directly in your MCP client config.
 
 ### Claude Code
 
-Add to `.claude/settings.json` or `~/.claude.json`:
+You can set your `URL` to your TaskView instance in `TASKVIEW_URL`.  
+Add to `.claude/settings.json` (project) or `~/.claude.json` (global):
 
 ```json
 {
   "mcpServers": {
     "taskview": {
-      "command": "node",
-      "args": ["/path/to/taskview-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "taskview-mcp"],
       "env": {
         "TASKVIEW_URL": "https://api.taskview.tech",
-        "TASKVIEW_TOKEN": "tvk_your_token"
+        "TASKVIEW_TOKEN": "tvk_your_token_here"
       }
     }
   }
@@ -44,123 +45,78 @@ Add to `claude_desktop_config.json`:
 {
   "mcpServers": {
     "taskview": {
-      "command": "node",
-      "args": ["/path/to/taskview-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "taskview-mcp"],
       "env": {
         "TASKVIEW_URL": "https://api.taskview.tech",
-        "TASKVIEW_TOKEN": "tvk_your_token"
+        "TASKVIEW_TOKEN": "tvk_your_token_here"
       }
     }
   }
 }
 ```
 
-## Environment Variables
+### Global install (optional)
 
-| Variable | Description | Example |
-|---|---|---|
-| `TASKVIEW_URL` | TaskView API server URL | `https://api.taskview.tech` |
-| `TASKVIEW_TOKEN` | API token with `tvk_` prefix | `tvk_abc123...` |
-
-## Available Tools
-
-### Projects (Goals)
-
-| Tool | Description |
-|---|---|
-| `list_goals` | List all accessible projects |
-| `create_goal` | Create a new project |
-| `update_goal` | Update a project |
-| `delete_goal` | Delete a project |
-
-### Lists
-
-| Tool | Description |
-|---|---|
-| `list_lists` | Get task lists within a project |
-| `create_list` | Create a task list |
-| `update_list` | Update a task list |
-| `delete_list` | Delete a task list |
-
-### Tasks
-
-| Tool | Description |
-|---|---|
-| `list_tasks` | List tasks with filters and pagination |
-| `get_task` | Get a task by ID |
-| `create_task` | Create a task |
-| `update_task` | Update a task |
-| `delete_task` | Delete a task |
-| `toggle_task_assignees` | Assign or unassign users |
-| `get_task_history` | Get task change history |
-
-### Tags
-
-| Tool | Description |
-|---|---|
-| `list_tags` | List all user tags |
-| `create_tag` | Create a tag |
-| `update_tag` | Update a tag |
-| `delete_tag` | Delete a tag |
-| `toggle_task_tag` | Add or remove a tag from a task |
-
-### Kanban
-
-| Tool | Description |
-|---|---|
-| `list_kanban_columns` | Get kanban board columns |
-| `create_kanban_column` | Create a column |
-| `update_kanban_column` | Update a column |
-| `delete_kanban_column` | Delete a column |
-
-### Collaboration
-
-| Tool | Description |
-|---|---|
-| `list_collaborators` | List all collaborators |
-| `list_collaborators_for_goal` | List project collaborators |
-| `invite_collaborator` | Invite a user by email |
-| `remove_collaborator` | Remove a user from a project |
-| `toggle_collaborator_roles` | Update user roles |
-| `list_roles` | List project roles |
-| `create_role` | Create a role |
-| `delete_role` | Delete a role |
-| `list_permissions` | List available permissions |
-| `toggle_role_permission` | Toggle a permission for a role |
-
-### Task Dependencies (Graph)
-
-| Tool | Description |
-|---|---|
-| `list_task_dependencies` | List dependency edges in a project |
-| `add_task_dependency` | Create a dependency between tasks |
-| `delete_task_dependency` | Delete a dependency edge |
-
-### Notifications
-
-| Tool | Description |
-|---|---|
-| `list_notifications` | Get user notifications |
-| `mark_notification_read` | Mark a notification as read |
-| `mark_all_notifications_read` | Mark all notifications as read |
-
-## Architecture
-
-```
-Claude Code/Desktop
-  -> stdio -> taskview-mcp
-    -> HTTP (Authorization: Bearer tvk_...) -> TaskView API
-```
-
-The MCP server uses the `taskview-api` package as an HTTP client. All requests go through the full API stack — authentication, permission checks, and validation.
-
-## Development
+If you prefer a pinned install over `npx`:
 
 ```bash
-# Rebuild after changes
+npm install -g taskview-mcp
+```
+
+Then use `"command": "taskview-mcp"` (no `args` needed).
+
+## Environment variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `TASKVIEW_URL` | yes | TaskView API server URL (e.g. `https://api.taskview.tech`) |
+| `TASKVIEW_TOKEN` | yes | API token with `tvk_` prefix |
+
+## Available tools
+
+37 tools covering the full TaskView surface.
+
+**Projects (Goals)** — `list_goals`, `create_goal`, `update_goal`, `delete_goal`
+
+**Lists** — `list_lists`, `create_list`, `update_list`, `delete_list`
+
+**Tasks** — `list_tasks`, `get_task`, `create_task`, `update_task`, `delete_task`, `toggle_task_assignees`, `get_task_history`
+
+**Tags** — `list_tags`, `create_tag`, `update_tag`, `delete_tag`, `toggle_task_tag`
+
+**Kanban** — `list_kanban_columns`, `create_kanban_column`, `update_kanban_column`, `delete_kanban_column`
+
+**Collaboration** — `list_collaborators`, `list_collaborators_for_goal`, `invite_collaborator`, `remove_collaborator`, `toggle_collaborator_roles`, `list_roles`, `create_role`, `delete_role`, `list_permissions`, `toggle_role_permission`
+
+**Task dependencies (graph)** — `list_task_dependencies`, `add_task_dependency`, `delete_task_dependency`
+
+**Notifications** — `list_notifications`, `mark_notification_read`, `mark_all_notifications_read`
+
+## How it works
+
+The MCP server uses the `taskview-api` client under the hood. Every tool call goes through the full API stack — authentication, permission checks, and validation. The MCP process itself is stateless; your token never leaves your machine except in `Authorization: Bearer ...` headers to your TaskView API server.
+
+## Development (from monorepo)
+
+If you're working on the package from the TaskView monorepo:
+
+```bash
+# from repo root
+pnpm build:packages
 cd community/taskview-packages/taskview-mcp
 pnpm build
 
-# Run directly (for debugging)
+# run directly for debugging
 TASKVIEW_URL=http://localhost:3000 TASKVIEW_TOKEN=tvk_... node dist/index.js
 ```
+
+## License
+
+See [LICENSE.md](https://github.com/Gimanh/taskview-community/blob/main/LICENSE.md) in the TaskView repository.
+
+## Links
+
+- [TaskView](https://github.com/Gimanh/taskview-community) — project repository
+- [Model Context Protocol](https://modelcontextprotocol.io) — protocol specification
+- [Issues](https://github.com/Gimanh/taskview-community/issues) — bug reports & feature requests
