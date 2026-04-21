@@ -1,4 +1,4 @@
-export const API_URL = 'http://localhost:1401';
+export const API_URL = 'http://localhost:11401';
 export const DEFAULT_USER = 'user';
 export const DEFAULT_USER_2 = 'user2';
 export const DEFAULT_PASSWORD = 'user1!#Q';
@@ -37,6 +37,9 @@ export const initApi = async () => {
     expect(authResponse.data.userData.id).toBeGreaterThan(0);
     expect(authResponse.data.userData.email).toBeTruthy();
 
+    const user1Email: string = authResponse.data.userData.email;
+    const user2Email: string = authResponseForSecondUser.data.userData.email;
+
     const deleteAllGoals = async () => {
         for (const $api of [$tvApi, $tvApiForSecondUser]) {
             const goals = await $api.goals.fetchGoals().catch(console.error);
@@ -52,6 +55,8 @@ export const initApi = async () => {
     return {
         $tvApi,
         $tvApiForSecondUser,
+        user1Email,
+        user2Email,
         deleteAllGoals
     };
 }

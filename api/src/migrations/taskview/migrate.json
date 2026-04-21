@@ -429,5 +429,48 @@
             "Remove JWT storage from user_tokens, add session metadata (device_name, user_agent, last_used_at)",
             "Add trigger to remove user from task assignees when removed from project collaboration"
         ]
+    },
+    "35": {
+        "version": "1.32.0",
+        "name": "Release 1.32.0",
+        "releaseDate": "20260404",
+        "scripts": [
+            "/1.32.0/0.1.32.0.sql",
+            "/1.32.0/1.migrate-organizations.sql"
+        ],
+        "description": [
+            "Added organizations and organization_members tables",
+            "Migrate existing users to personal workspaces",
+            "Added organization_id column to goals"
+        ]
+    },
+    "36": {
+        "version": "1.33.0",
+        "name": "Release 1.33.0",
+        "releaseDate": "20260411",
+        "scripts": [
+            "/1.33.0/0.1.33.0.sql",
+            "/1.33.0/1.add-saml-signing-fields.sql",
+            "/1.33.0/2.add-saml-logout-url.sql",
+            "/1.33.0/3.add-scim-fields.sql"
+        ],
+        "description": [
+            "Added SSO support (SAML 2.0 + OIDC)",
+            "Added sso_configs, sso_identities, saml_request_cache tables",
+            "Added SAML AuthnRequest signing support",
+            "Added SAML logout URL for SLO",
+            "Added SCIM provisioning support"
+        ]
+    },
+    "37": {
+        "version": "1.44.0",
+        "name": "Release 1.44.0",
+        "releaseDate": "20260418",
+        "scripts": [
+            "/1.44.0/0.create-missing-personal-orgs.sql"
+        ],
+        "description": [
+            "Create personal organizations for users without any organization membership"
+        ]
     }
 }

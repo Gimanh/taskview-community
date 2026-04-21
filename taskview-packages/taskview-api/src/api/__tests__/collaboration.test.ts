@@ -11,10 +11,12 @@ import { initApi } from './init-api';
 
 describe('Collaboration', () => {
     let $api: TvApi;
+    let user1Email: string;
 
     beforeAll(async () => {
-        const { $tvApi } = await initApi();
+        const { $tvApi, user1Email: u1Email } = await initApi();
         $api = $tvApi;
+        user1Email = u1Email;
     });
 
     let collaborationGoal: GoalItem | null;
@@ -131,7 +133,7 @@ describe('Collaboration', () => {
         expect(collabUser?.roles).toBeDefined();
         expect(collabUser?.goalOwner).toBeDefined();
 
-        const owner = users?.find((user) => user.email === 'test@mail.dest');
+        const owner = users?.find((user) => user.email === user1Email);
         expect(owner?.goalOwner).toBe(true);
     });
 
@@ -304,5 +306,249 @@ describe('Collaboration', () => {
 
         expect(user3?.roles).toEqual([editorId!]);
 
+    });
+
+    it('should handle inviting already existing collaborator', async () => {
+        const addResult1 = await $api.collaboration.inviteUserToGoal({
+            goalId: collaborationGoal?.id!,
+            email: email,
+        }).catch(console.error);
+
+        if (!addResult1) {
+            throw new Error('Failed to add user to goal');
+        }
+
+        await $api.collaboration.inviteUserToGoal({
+            goalId: collaborationGoal?.id!,
+            email: email,
+        }).catch(console.error);
+
+        const users = await $api.collaboration.fetchUsersForGoal(collaborationGoal?.id!).catch(console.error);
+        const matchingUsers = users?.filter((u) => u.email === email);
+
+        expect(matchingUsers?.length).toBe(1);
+    });
+
+    it('should remove user roles when user is deleted from goal', async () => {
+        const roles = await $api.collaboration.fetchRolesForGoal(collaborationGoal?.id!).catch(console.error);
+        const editorRole = roles?.find((r) => r.name === 'editor');
+        expect(editorRole).toBeDefined();
+
+        const addResult = await $api.collaboration.inviteUserToGoal({
+            goalId: collaborationGoal?.id!,
+            email: email,
+        }).catch(console.error);
+
+        if (!addResult) {
+            throw new Error('Failed to add user to goal');
+        }
+
+        await $api.collaboration.toggleUserRoles({
+            goalId: collaborationGoal?.id!,
+            userId: addResult.id,
+            roles: [editorRole?.id!],
+        }).catch(console.error);
+
+        await $api.collaboration.deleteUserFromGoal({
+            goalId: collaborationGoal?.id!,
+            id: addResult.id,
+        }).catch(console.error);
+
+        const reAddResult = await $api.collaboration.inviteUserToGoal({
+            goalId: collaborationGoal?.id!,
+            email: email,
+        }).catch(console.error);
+
+        if (!reAddResult) {
+            throw new Error('Failed to re-add user to goal');
+        }
+
+        const users = await $api.collaboration.fetchUsersForGoal(collaborationGoal?.id!).catch(console.error);
+        const user = users?.find((u) => u.email === email);
+
+        expect(user?.roles).toBeDefined();
+        expect(user?.roles.length).toBe(0);
+    });
+
+    it('should handle removing all roles from user', async () => {
+        const roles = await $api.collaboration.fetchRolesForGoal(collaborationGoal?.id!).catch(console.error);
+        const editorRole = roles?.find((r) => r.name === 'editor');
+        expect(editorRole).toBeDefined();
+
+        const addResult = await $api.collaboration.inviteUserToGoal({
+            goalId: collaborationGoal?.id!,
+            email: email,
+        }).catch(console.error);
+
+        if (!addResult) {
+            throw new Error('Failed to add user to goal');
+        }
+
+        await $api.collaboration.toggleUserRoles({
+            goalId: collaborationGoal?.id!,
+            userId: addResult.id,
+            roles: [editorRole?.id!],
+        }).catch(console.error);
+
+        const users1 = await $api.collaboration.fetchUsersForGoal(collaborationGoal?.id!).catch(console.error);
+        const user1 = users1?.find((u) => u.email === email);
+        expect(user1?.roles.length).toBeGreaterThan(0);
+
+        await $api.collaboration.toggleUserRoles({
+            goalId: collaborationGoal?.id!,
+            userId: addResult.id,
+            roles: [],
+        }).catch(console.error);
+
+        const users2 = await $api.collaboration.fetchUsersForGoal(collaborationGoal?.id!).catch(console.error);
+        const user2 = users2?.find((u) => u.email === email);
+
+        expect(user2?.roles).toBeDefined();
+        expect(user2?.roles.length).toBe(0);
+    });
+
+    it('should keep user in collaboration when added to multiple goals', async () => {
+        const goal2 = await $api.goals.createGoal({
+            name: `Multi goal collab-${Date.now()}`,
+        }).catch(console.error);
+
+        if (!goal2) {
+            throw new Error('Failed to create second goal');
+        }
+
+        // add same user to both goals
+        const user1 = await $api.collaboration.inviteUserToGoal({
+            goalId: collaborationGoal?.id!,
+            email: email,
+        }).catch(console.error);
+
+        const user2 = await $api.collaboration.inviteUserToGoal({
+            goalId: goal2.id,
+            email: email,
+        }).catch(console.error);
+
+        if (!user1 || !user2) {
+            throw new Error('Failed to add user to goals');
+        }
+
+        // user should be in both goals
+        const usersGoal1 = await $api.collaboration.fetchUsersForGoal(collaborationGoal?.id!).catch(console.error);
+        const usersGoal2 = await $api.collaboration.fetchUsersForGoal(goal2.id).catch(console.error);
+
+        expect(usersGoal1?.find((u) => u.email === email)).toBeDefined();
+        expect(usersGoal2?.find((u) => u.email === email)).toBeDefined();
+
+        // remove from first goal
+        await $api.collaboration.deleteUserFromGoal({
+            goalId: collaborationGoal?.id!,
+            id: user1.id,
+        }).catch(console.error);
+
+        // user should still be in second goal
+        const usersGoal2After = await $api.collaboration.fetchUsersForGoal(goal2.id).catch(console.error);
+        expect(usersGoal2After?.find((u) => u.email === email)).toBeDefined();
+
+        // user should appear in fetchAllUsers (still in goal2)
+        const allUsers = await $api.collaboration.fetchAllUsers().catch(console.error);
+        expect(allUsers?.find((u) => u.email === email)).toBeDefined();
+
+        await $api.goals.deleteGoal(goal2.id).catch(() => {});
+    });
+
+    it('should not appear in fetchAllUsers after removed from all goals', async () => {
+        const uniqueEmail = `cleanup-${Date.now()}@test.com`;
+
+        const goal2 = await $api.goals.createGoal({
+            name: `Cleanup collab-${Date.now()}`,
+        }).catch(console.error);
+
+        if (!goal2) {
+            throw new Error('Failed to create goal');
+        }
+
+        // add user to two goals
+        const user1 = await $api.collaboration.inviteUserToGoal({
+            goalId: collaborationGoal?.id!,
+            email: uniqueEmail,
+        }).catch(console.error);
+
+        const user2 = await $api.collaboration.inviteUserToGoal({
+            goalId: goal2.id,
+            email: uniqueEmail,
+        }).catch(console.error);
+
+        if (!user1 || !user2) {
+            throw new Error('Failed to add user to goals');
+        }
+
+        // remove from both goals
+        await $api.collaboration.deleteUserFromGoal({
+            goalId: collaborationGoal?.id!,
+            id: user1.id,
+        }).catch(console.error);
+
+        await $api.collaboration.deleteUserFromGoal({
+            goalId: goal2.id,
+            id: user2.id,
+        }).catch(console.error);
+
+        // user should not appear in any goal
+        const usersGoal1 = await $api.collaboration.fetchUsersForGoal(collaborationGoal?.id!).catch(console.error);
+        const usersGoal2 = await $api.collaboration.fetchUsersForGoal(goal2.id).catch(console.error);
+
+        expect(usersGoal1?.find((u) => u.email === uniqueEmail)).toBeUndefined();
+        expect(usersGoal2?.find((u) => u.email === uniqueEmail)).toBeUndefined();
+
+        // user should not appear in fetchAllUsers
+        const allUsers = await $api.collaboration.fetchAllUsers().catch(console.error);
+        expect(allUsers?.find((u) => u.email === uniqueEmail)).toBeUndefined();
+
+        await $api.goals.deleteGoal(goal2.id).catch(() => {});
+    });
+
+    it('should remove user from task assignees when removed from goal', async () => {
+        const assigneeEmail = `assignee-${Date.now()}@test.com`;
+
+        // invite user to goal
+        const collabUser = await $api.collaboration.inviteUserToGoal({
+            goalId: collaborationGoal?.id!,
+            email: assigneeEmail,
+        }).catch(console.error);
+
+        if (!collabUser) {
+            throw new Error('Failed to invite user');
+        }
+
+        // create a task
+        const task = await $api.tasks.createTask({
+            goalId: collaborationGoal?.id!,
+            description: `Assignee removal test-${Date.now()}`,
+        }).catch(console.error);
+
+        if (!task) {
+            throw new Error('Failed to create task');
+        }
+
+        // assign user to task
+        await $api.tasks.toggleTasksAssignee({
+            taskId: task.id,
+            userIds: [collabUser.id],
+        }).catch(console.error);
+
+        // verify user is assigned
+        const taskBefore = await $api.tasks.fetchTaskById(task.id).catch(console.error);
+        expect(taskBefore?.assignedUsers).toContain(collabUser.id);
+
+        // remove user from goal collaboration
+        await $api.collaboration.deleteUserFromGoal({
+            goalId: collaborationGoal?.id!,
+            id: collabUser.id,
+        }).catch(console.error);
+
+        // verify user is no longer assigned to task (DB trigger removes assignee)
+        const taskAfter = await $api.tasks.fetchTaskById(task.id).catch(console.error);
+        expect(taskAfter?.assignedUsers).not.toContain(collabUser.id);
+
+        await $api.tasks.deleteTask(task.id).catch(() => {});
     });
 });

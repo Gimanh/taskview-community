@@ -1,7 +1,7 @@
 {
   "name": "taskview-api",
   "private": false,
-  "version": "1.17.2",
+  "version": "1.42.5",
   "type": "module",
   "main": "./dist/taskview-api.umd.js",
   "module": "./dist/taskview-api.es.js",
@@ -22,11 +22,14 @@
     "build-watch": "tsc && vite build --watch",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
-    "test": "vitest"
+    "test": "vitest",
+    "test:build-images": "bash src/api/__tests__/docker/build-test-images.sh",
+    "test:docker": "bash src/api/__tests__/docker/run-tests.sh",
+    "test:run": "bash src/api/__tests__/docker/run-tests-only.sh"
   },
   "devDependencies": {
     "@testcontainers/postgresql": "^11.7.1",
-    "axios": "^1.2.3",
+    "axios": "1.13.5",
     "bun": "^1.3.0",
     "testcontainers": "^11.7.1",
     "typescript": "~5.8.3",

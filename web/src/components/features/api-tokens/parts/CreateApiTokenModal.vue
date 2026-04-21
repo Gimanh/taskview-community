@@ -1,5 +1,8 @@
 <template>
-  <UModal v-model:open="isOpen" :fullscreen="isMobile">
+  <UModal
+    v-model:open="isOpen"
+    :fullscreen="isMobile"
+  >
     <template #header>
       <h3 class="text-lg font-semibold">
         {{ t('apiTokens.add') }}
@@ -88,7 +91,10 @@
     </template>
   </UModal>
 
-  <UModal v-model:open="showToken" :fullscreen="isMobile">
+  <UModal
+    v-model:open="showToken"
+    :fullscreen="isMobile"
+  >
     <template #header>
       <h3 class="text-lg font-semibold">
         {{ t('apiTokens.tokenCreated') }}
@@ -161,7 +167,7 @@ const expirationOptions = [
 const goalOptions = computed(() =>
   goalsStore.goals
     .filter((g) => g.archive === 0)
-    .map((g) => ({ label: g.name, value: g.id }))
+    .map((g) => ({ label: g.name, value: g.id })),
 )
 
 const permissionGroupNames: Record<number, string> = {

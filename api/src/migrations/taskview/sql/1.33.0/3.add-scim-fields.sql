@@ -1,0 +1,2 @@
+ALTER TABLE tv_auth.sso_configs ADD COLUMN IF NOT EXISTS scim_token VARCHAR;
+ALTER TABLE tv_auth.sso_configs ADD COLUMN IF NOT EXISTS scim_enabled INTEGER NOT NULL DEFAULT 0;

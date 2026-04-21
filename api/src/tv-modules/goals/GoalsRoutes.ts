@@ -3,6 +3,7 @@ import type { Routable } from '../../types/routable.type';
 import { IsLoggedIn } from '../auth/middlewares/is-logged-in';
 import GoalsController from './GoalsController';
 // import { CanArchiveGoal } from './middlewares/CanArchiveGoal';
+import { IsOrgMemberIfProvided } from '../../middlewares/is-org-member';
 import { canAddGoal } from './middlewares/can-add-goal';
 import { canDeleteGoal } from './middlewares/can-delete-goal';
 import { canEditGoal } from './middlewares/can-edit-goal';
@@ -23,9 +24,9 @@ export default class GoalsRoutes implements Routable {
     }
 
     initRoutes() {
-        this.router.post('', [IsLoggedIn, canAddGoal], this.goalsController.createGoal);
+        this.router.post('', [IsLoggedIn, IsOrgMemberIfProvided, canAddGoal], this.goalsController.createGoal);
         this.router.patch('', [IsLoggedIn, canEditGoal], this.goalsController.updateGoalNew);
         this.router.delete('', [IsLoggedIn, canDeleteGoal], this.goalsController.deleteGoalNew);
-        this.router.get('', [IsLoggedIn, canFetchGoals], this.goalsController.fetchGoalsNew);
+        this.router.get('', [IsLoggedIn, IsOrgMemberIfProvided, canFetchGoals], this.goalsController.fetchGoalsNew);
     }
 }

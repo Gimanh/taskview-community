@@ -23,7 +23,7 @@ const api = {
     console.log('savedServer', savedServer, LS_KEY_MAIN_SERVER)
     if (savedServer) {
       $api.defaults.baseURL = savedServer
-      $api.defaults.headers.common['ngrok-skip-browser-warning'] = "1"
+      $api.defaults.headers.common['ngrok-skip-browser-warning'] = '1'
       $tvApi.setBaseUrl(savedServer)
     }
 

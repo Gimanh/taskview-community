@@ -70,7 +70,10 @@
     </div>
   </div>
 
-  <UModal v-model:open="showRotateConfirm" :fullscreen="isMobile">
+  <UModal
+    v-model:open="showRotateConfirm"
+    :fullscreen="isMobile"
+  >
     <template #header>
       <h3 class="text-lg font-semibold">
         {{ t('webhooks.rotateSecret') }}
@@ -98,7 +101,10 @@
     </template>
   </UModal>
 
-  <UModal v-model:open="showRotatedSecret" :fullscreen="isMobile">
+  <UModal
+    v-model:open="showRotatedSecret"
+    :fullscreen="isMobile"
+  >
     <template #header>
       <h3 class="text-lg font-semibold">
         {{ t('webhooks.secretTitle') }}

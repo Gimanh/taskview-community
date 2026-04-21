@@ -22,7 +22,7 @@
 
       <div class="flex-1 min-w-0 self-start flex flex-col gap-1">
         <p
-          class="text-base"
+          class="text-base break-all"
           :class="{ 'line-through text-muted': localComplete }"
         >
           {{ task.description }}

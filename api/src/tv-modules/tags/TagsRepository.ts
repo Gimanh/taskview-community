@@ -109,9 +109,15 @@ export class TagsRepository {
         return tags.rows;
     }
 
-    async fetchAllTagsForUser(userId: number): Promise<TagsSchemaTypeForSelect[]> {
+    async fetchAllTagsForUser(userId: number, organizationId?: number): Promise<TagsSchemaTypeForSelect[]> {
+        const ownTagsConditions = [eq(TagsSchema.owner, userId)];
+        if (organizationId) {
+            ownTagsConditions.push(
+                inArray(TagsSchema.goalId, this.db.dbDrizzle.select({ id: GoalsSchema.id }).from(GoalsSchema).where(eq(GoalsSchema.organizationId, organizationId)))
+            );
+        }
         const ownTags = await callWithCatch(() =>
-            this.db.dbDrizzle.select().from(TagsSchema).where(eq(TagsSchema.owner, userId))
+            this.db.dbDrizzle.select().from(TagsSchema).where(and(...ownTagsConditions))
         );
 
         const allTags: TagsSchemaTypeForSelect[] = [];
@@ -120,7 +126,7 @@ export class TagsRepository {
             allTags.push(...ownTags);
         }
 
-        const sharedGoals = await this.user.goalsManager.fetchSharedGoals();
+        const sharedGoals = await this.user.goalsManager.fetchSharedGoals(organizationId);
 
         if (sharedGoals.length > 0) {
             const goalIds: number[] = [];

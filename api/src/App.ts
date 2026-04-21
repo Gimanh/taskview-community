@@ -58,7 +58,7 @@ export default class App {
         this.app.use(cors({
             credentials: true,
             origin(origin, cb) {
-                if (!origin) return cb(null, true);
+                if (!origin || origin === 'null') return cb(null, true);
                 if (allow.has(origin)) return cb(null, true);
                 return cb(new Error(`CORS blocked origin: ${origin}`), false);
             },

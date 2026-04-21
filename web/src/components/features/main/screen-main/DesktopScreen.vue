@@ -20,10 +20,12 @@ import WidgetToday from './parts/WidgetToday.vue'
 import WidgetUpcoming from './parts/WidgetUpcoming.vue'
 import { useBaseScreenStore } from '@/stores/base-screen.store'
 import { useCollaborationStore } from '@/stores/collaboration.store'
+import { useOrganizationStore } from '@/stores/organization.store'
 import { useTaskView } from '@/composables/useTaskView'
 
 const baseScreenStore = useBaseScreenStore()
 const collaborationStore = useCollaborationStore()
+const orgStore = useOrganizationStore()
 const { isMobile } = useTaskView()
 
 
@@ -44,4 +46,10 @@ Promise.allSettled([
   baseScreenStore.fetchAllAvailableLists(),
   collaborationStore.fetchAllCollaborationUsers(),
 ])
+
+watch(() => orgStore.currentOrg, () => {
+  baseScreenStore.fetchAllState()
+  baseScreenStore.fetchAllAvailableLists()
+  collaborationStore.fetchAllCollaborationUsers()
+})
 </script>

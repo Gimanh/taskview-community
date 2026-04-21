@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import type { Routable } from '../../types/routable.type';
 import { IsLoggedIn } from '../auth/middlewares/is-logged-in';
+import { IsOrgMemberIfProvided } from '../../middlewares/is-org-member';
 import { CollaborationController } from './CollaborationController';
 import { CanAddUserCollaboration } from './middlewares/CanAddUserCollaboration';
 import { CanDeleteUserCollaboration } from './middlewares/CanDeleteUserCollaboration';
@@ -50,7 +51,7 @@ export default class CollaborationRoutes implements Routable {
         /**
          * Fetch all users for collaboration
          */
-        this.router.get('', [IsLoggedIn], this.collaborationController.fetchAllUsersNew);
+        this.router.get('', [IsLoggedIn, IsOrgMemberIfProvided], this.collaborationController.fetchAllUsersNew);
 
         /**
          * Fetch users for goal for collaboration

@@ -134,7 +134,8 @@ export class CollaborationController {
     };
 
     fetchAllUsersNew = async (req: Request, res: Response) => {
-        const users = await req.appUser.collaborationManager.fetchAllUsersNew();
+        const organizationId = req.query.organizationId ? Number(req.query.organizationId) : undefined;
+        const users = await req.appUser.collaborationManager.fetchAllUsersNew(organizationId);
         return res.tvJson(users);
     };
 

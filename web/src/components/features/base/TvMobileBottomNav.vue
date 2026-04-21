@@ -1,5 +1,5 @@
 <template>
-  <nav class="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-default pb-safe">
+  <nav class="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-default pb-safe bg-default">
     <div class="flex items-center justify-between min-h-14">
       <UButton
         v-for="item in navItems"

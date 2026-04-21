@@ -106,6 +106,7 @@ export interface DeadlineJobData {
     description: string;
     goalId: number;
     goalListId: number | null;
+    organizationId: number | null;
     endDate: string;
     endTime: string | null;
     initiatorId: number | null;

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
       <div>
         <h2 class="text-lg font-semibold">
           {{ t('apiTokens.title') }}
@@ -29,11 +29,17 @@
       v-else-if="store.tokens.length === 0"
       class="flex flex-col items-center justify-center h-32 text-muted"
     >
-      <UIcon name="i-lucide-key-round" class="size-10 mb-3" />
+      <UIcon
+        name="i-lucide-key-round"
+        class="size-10 mb-3"
+      />
       <p>{{ t('apiTokens.empty') }}</p>
     </div>
 
-    <div v-else class="flex flex-col gap-3">
+    <div
+      v-else
+      class="flex flex-col gap-3"
+    >
       <ApiTokenItem
         v-for="token in store.tokens"
         :key="token.id"

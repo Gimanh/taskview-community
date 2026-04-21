@@ -9,6 +9,8 @@ import { StartManager } from '../tv-modules/start/StartManager';
 import { TagsManager } from '../tv-modules/tags/TagsManager';
 import { IntegrationsManager } from '../tv-modules/integrations/IntegrationsManager';
 import { NotificationsManager } from '../tv-modules/notifications/NotificationsManager';
+import { OrganizationManager } from '../tv-modules/organizations/OrganizationManager';
+import { SsoManager } from '../tv-modules/sso/SsoManager';
 import { TasksManager } from '../tv-modules/tasks/TasksManager';
 import type { UserDbRecord, UserJwtPayload } from '../types/auth.types';
 import { GoalPermissionsFetcher } from './GoalPermissionsFetcher';
@@ -33,6 +35,8 @@ export class AppUser {
     public readonly graphManager: GraphManager;
     public readonly integrationsManager: IntegrationsManager;
     public readonly notificationsManager: NotificationsManager;
+    public readonly organizationManager: OrganizationManager;
+    public readonly ssoManager: SsoManager;
 
     constructor(userData?: UserJwtPayload) {
         this.userData = userData;
@@ -49,6 +53,8 @@ export class AppUser {
         this.graphManager = new GraphManager(this);
         this.integrationsManager = new IntegrationsManager(this);
         this.notificationsManager = new NotificationsManager(this);
+        this.organizationManager = new OrganizationManager(this);
+        this.ssoManager = new SsoManager(this);
     }
 
     getTokenId(): number | undefined {

@@ -1,0 +1,64 @@
+{
+  "name": "taskview-mcp",
+  "version": "1.42.5",
+  "description": "MCP (Model Context Protocol) server for TaskView — lets AI assistants (Claude Code, Claude Desktop, etc.) manage projects and tasks via the TaskView API",
+  "type": "module",
+  "bin": {
+    "taskview-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "taskview",
+    "claude",
+    "claude-code",
+    "claude-desktop",
+    "ai",
+    "llm",
+    "task-management",
+    "project-management",
+    "kanban",
+    "list",
+    "task",
+    "graph"
+  ],
+  "author": {
+    "name": "Nikolai Giman",
+    "email": "gimanhead@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gimanh/taskview-community",
+    "directory": "community/taskview-packages/taskview-mcp"
+  },
+  "homepage": "https://github.com/Gimanh/taskview-community",
+  "bugs": {
+    "url": "https://github.com/Gimanh/taskview-community/issues"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run --exclude 'src/__tests__/integration/**'",
+    "test:integration": "sh -c '. ./.env.test && vitest run src/__tests__/integration/'",
+    "test:all": "sh -c '. ./.env.test && vitest run'"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.28.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "axios": "1.13.5",
+    "taskview-api": "workspace:*",
+    "typescript": "~5.8.3",
+    "vite": "^8.0.3",
+    "vitest": "^4.1.2",
+    "zod": "^3.23.8"
+  }
+}

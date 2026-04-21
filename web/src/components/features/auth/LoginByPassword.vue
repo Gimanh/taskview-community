@@ -123,7 +123,7 @@ async function onSubmit() {
 
       emit('success', result.data.access)
 
-      redirectToUser(router)
+      await redirectToUser(router)
     }
   } catch (error: unknown) {
     const axiosError = error as { response?: { status?: number } }

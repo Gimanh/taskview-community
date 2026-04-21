@@ -33,11 +33,14 @@ export class DeadlineScheduler {
             startAfter = deadlineDay > new Date() ? deadlineDay : undefined;
         }
 
+        const organizationId = await this.resolveOrganizationId(Database.getInstance(), task.goalId);
+
         const data: DeadlineJobData = {
             taskId: task.id,
             description: task.description ?? '',
             goalId: task.goalId,
             goalListId: task.goalListId,
+            organizationId,
             endDate: task.endDate,
             endTime: task.endTime,
             initiatorId: initiatorId ?? null,
@@ -63,7 +66,7 @@ export class DeadlineScheduler {
         await boss.createQueue(DEADLINE_JOB);
 
         await boss.work<DeadlineJobData>(DEADLINE_JOB, async ([job]) => {
-            const { taskId, description, goalId, goalListId, endDate, endTime, initiatorId, immediate } = job.data;
+            const { taskId, description, goalId, goalListId, organizationId, endDate, endTime, initiatorId, immediate } = job.data;
 
             if (!taskId) return;
             $logger.info(`[DeadlineScheduler] Worker: job=${job.id} task=${taskId}`);
@@ -105,7 +108,7 @@ export class DeadlineScheduler {
                 recipientIds,
                 NotificationType.DEADLINE,
                 message,
-                { goalId, goalListId },
+                { goalId, goalListId, organizationId: organizationId ?? null },
                 taskId,
             );
         });
@@ -113,6 +116,15 @@ export class DeadlineScheduler {
 
     private singletonKey(taskId: number): string {
         return `deadline-${taskId}`;
+    }
+
+    private async resolveOrganizationId(db: Database, goalId: number): Promise<number | null> {
+        const result = await db.dbDrizzle
+            .select({ organizationId: GoalsSchema.organizationId })
+            .from(GoalsSchema)
+            .where(eq(GoalsSchema.id, goalId))
+            .limit(1);
+        return result[0]?.organizationId ?? null;
     }
 
     private async resolveRecipients(db: Database, taskId: number, goalId: number, taskOwner: number | null): Promise<number[] | null> {

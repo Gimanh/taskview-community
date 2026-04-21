@@ -10,7 +10,10 @@
         </template>
         <template #right>
           <div class="flex items-center gap-2 overflow-x-auto">
-            <div v-if="showFilters" class="hidden lg:contents">
+            <div
+              v-if="showFilters"
+              class="hidden lg:contents"
+            >
               <TvKanbanFilters
                 v-model:list-ids="selectedListIds"
                 v-model:assignee-ids="selectedAssigneeIds"

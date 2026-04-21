@@ -69,8 +69,8 @@ export default class GoalsManager {
     }
 
     /** @deprecated use fetchSharedGoalsForUser from GoalsRepository instead */
-    async fetchSharedGoals() {
-        const goals = await this.goalsRepository.fetchSharedGoals(this.user);
+    async fetchSharedGoals(organizationId?: number) {
+        const goals = await this.goalsRepository.fetchSharedGoals(this.user, organizationId);
         return await Promise.all(
             goals.map(
                 async (g) =>
@@ -91,8 +91,8 @@ export default class GoalsManager {
         return await this.goalsRepository.updateArchive(goalId, archive);
     }
 
-    async fetchAllOwnGoalsIds() {
-        return await this.goalsRepository.fetchAllOwnGoalsIds(this.user);
+    async fetchAllOwnGoalsIds(organizationId?: number) {
+        return await this.goalsRepository.fetchAllOwnGoalsIds(this.user, organizationId);
     }
 
     async createGoal(goalData: GoalsArgAdd): Promise<GoalsItemForClientWithPermissions | false> {
@@ -100,10 +100,28 @@ export default class GoalsManager {
         if (!isNotNullable(userId)) {
             return false;
         }
-        const goal = await this.goalsRepository.createGoal(goalData, userId);
+
+        let ownerId = userId;
+        if (goalData.organizationId) {
+            const org = await this.user.organizationManager.getById(goalData.organizationId);
+            if (!org) return false;
+            ownerId = org.ownerId;
+        } else {
+            const personalOrgId = await this.user.organizationManager.getPersonalOrgId();
+            if (!personalOrgId) return false;
+            goalData = { ...goalData, organizationId: personalOrgId };
+        }
+
+        const creatorId = goalData.organizationId && ownerId !== userId ? userId : undefined;
+        const goal = await this.goalsRepository.createGoal(goalData, ownerId, creatorId);
         if (!goal) {
             return false;
         }
+
+        if (creatorId) {
+            await this.addCreatorAsCollaboratorWithFullAccess(goal.id);
+        }
+
         return {
             ...goal,
             permissions: (
@@ -138,9 +156,9 @@ export default class GoalsManager {
         return await this.goalsRepository.deleteGoalNew(goalData);
     }
 
-    async fetchGoalsNew(): Promise<GoalsItemForClientWithPermissions[]> {
-        const sharedGoals = await this.goalsRepository.fetchSharedGoalsForUser(this.user!);
-        const ownGoals = await this.goalsRepository.fetchGoalsNew(this.user.getUserData()?.id!);
+    async fetchGoalsNew(organizationId?: number): Promise<GoalsItemForClientWithPermissions[]> {
+        const sharedGoals = await this.goalsRepository.fetchSharedGoalsForUser(this.user!, organizationId);
+        const ownGoals = await this.goalsRepository.fetchGoalsNew(this.user.getUserData()?.id!, organizationId);
 
         const allowedGoalIds = this.user.getAllowedGoalIds();
         const filterByAllowed = allowedGoalIds && allowedGoalIds.length > 0;
@@ -180,5 +198,27 @@ export default class GoalsManager {
         }
 
         return [...ownGoalsWithPermissions, ...sharedGoalsWithPermissions];
+    }
+
+    private async addCreatorAsCollaboratorWithFullAccess(goalId: number) {
+        const email = this.user.getUserData()?.email
+        if (!email) return
+
+        const collabUser = await this.user.collaborationManager.addUserNew({ goalId, email })
+        if (!collabUser) return
+
+        const role = await this.user.collaborationRolesManager.repository.addRoleNew('TvOrgAdmin', goalId)
+        if (!role) return
+
+        const allPermissions = await this.user.collaborationRolesManager.repository.fetchAllAvailablePermissionsNew()
+        if (allPermissions.length > 0) {
+            await this.user.collaborationRolesManager.repository.assignAllPermissionsToRole(role.id, allPermissions.map(p => p.id))
+        }
+
+        await this.user.collaborationManager.repository.toggleUserRolesNew({
+            goalId,
+            userId: collabUser.id,
+            roles: [role.id],
+        })
     }
 }

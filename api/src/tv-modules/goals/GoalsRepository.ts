@@ -105,20 +105,25 @@ export class GoalsRepository {
         return !!(del.rowCount && del.rowCount > 0);
     }
 
-    async fetchSharedGoals(user: AppUser): Promise<GoalItemInDb[]> {
+    async fetchSharedGoals(user: AppUser, organizationId?: number): Promise<GoalItemInDb[]> {
         if (!user.getUserData()?.email) {
             $logger.error('Trying fetch shared goals without active user');
             return [];
         }
 
-        const result = await this.db
-            .query<GoalItemInDb>(
-                `select tg.* from tasks.goals tg
+        const params: any[] = [user.getUserData()?.email, user.getUserData()?.id];
+        let sql = `select tg.* from tasks.goals tg
             left join collaboration.users_to_goals utg on utg.goal_id = tg.id
             left join collaboration.users cu on cu.id = utg.user_id
-                    where cu.email = $1 and tg.owner <> $2`,
-                [user.getUserData()?.email, user.getUserData()?.id]
-            )
+                    where cu.email = $1 and tg.owner <> $2`;
+
+        if (organizationId) {
+            sql += ' and tg.organization_id = $3';
+            params.push(organizationId);
+        }
+
+        const result = await this.db
+            .query<GoalItemInDb>(sql, params)
             .catch(logError);
 
         if (!result) {
@@ -128,9 +133,16 @@ export class GoalsRepository {
         return result.rows;
     }
 
-    async fetchSharedGoalsForUser(user: AppUser): Promise<GoalsSchemaTypeForSelect[]> {
-        // debugger;
+    async fetchSharedGoalsForUser(user: AppUser, organizationId?: number): Promise<GoalsSchemaTypeForSelect[]> {
         const result = await callWithCatch(() => {
+            const conditions = [
+                eq(CollaborationUsersSchema.email, user.getUserData()?.email!),
+                ne(GoalsSchema.owner, user.getUserData()?.id!),
+            ];
+            if (organizationId) {
+                conditions.push(eq(GoalsSchema.organizationId, organizationId));
+            }
+
             const query = this.db.dbDrizzle
                 .select({
                     id: GoalsSchema.id,
@@ -142,6 +154,8 @@ export class GoalsRepository {
                     creatorId: GoalsSchema.creatorId,
                     editDate: GoalsSchema.editDate,
                     archive: GoalsSchema.archive,
+                    backlogVersion: GoalsSchema.backlogVersion,
+                    organizationId: GoalsSchema.organizationId,
                 })
                 .from(GoalsSchema)
                 .leftJoin(CollaborationUsersToGoalsSchema, eq(GoalsSchema.id, CollaborationUsersToGoalsSchema.goalId))
@@ -149,12 +163,7 @@ export class GoalsRepository {
                     CollaborationUsersSchema,
                     eq(CollaborationUsersToGoalsSchema.userId, CollaborationUsersSchema.id)
                 )
-                .where(
-                    and(
-                        eq(CollaborationUsersSchema.email, user.getUserData()?.email!),
-                        ne(GoalsSchema.owner, user.getUserData()?.id!)
-                    )
-                );
+                .where(and(...conditions));
             // const sql = query.toSQL();
             // console.log('query', sql);
             return query;
@@ -183,29 +192,34 @@ export class GoalsRepository {
         return !!(result.rowCount && result.rowCount > 0);
     }
 
-    async fetchAllOwnGoalsIds(user: AppUser): Promise<number[]> {
-        const ownGoals = await this.db
-            .query<{ id: number }>('select id from tasks.goals where owner = $1 and archive = $2', [
-                user.getUserData()?.id,
-                0,
-            ])
-            .catch(logError);
-
-        if (!ownGoals) {
-            $logger.error(`Can not fetch own goals for all state`);
-            return [];
+    async fetchAllOwnGoalsIds(user: AppUser, organizationId?: number): Promise<number[]> {
+        const conditions = [
+            eq(GoalsSchema.owner, user.getUserData()?.id!),
+            eq(GoalsSchema.archive, 0),
+        ];
+        if (organizationId) {
+            conditions.push(eq(GoalsSchema.organizationId, organizationId));
         }
 
-        return ownGoals.rows.map((g) => g.id);
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({ id: GoalsSchema.id })
+                .from(GoalsSchema)
+                .where(and(...conditions))
+        );
+
+        if (!result) return [];
+        return result.map((g) => g.id);
     }
 
-    async createGoal(goalData: GoalsArgAdd, userId: number): Promise<GoalsSchemaTypeForSelect | false> {
+    async createGoal(goalData: GoalsArgAdd, ownerId: number, creatorId?: number): Promise<GoalsSchemaTypeForSelect | false> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle
                 .insert(GoalsSchema)
                 .values({
                     ...goalData,
-                    owner: userId,
+                    owner: ownerId,
+                    ...(creatorId && { creatorId }),
                 })
                 .returning()
         );
@@ -240,9 +254,22 @@ export class GoalsRepository {
         return !!(result?.rowCount && result.rowCount > 0);
     }
 
-    async fetchGoalsNew(userId: number): Promise<GoalsSchemaTypeForSelect[]> {
+    async findGoalById(goalId: number): Promise<GoalsSchemaTypeForSelect | false> {
         const result = await callWithCatch(() =>
-            this.db.dbDrizzle.select().from(GoalsSchema).where(eq(GoalsSchema.owner, userId))
+            this.db.dbDrizzle.select().from(GoalsSchema).where(eq(GoalsSchema.id, goalId))
+        );
+        if (!result || result.length === 0) return false;
+        return result[0];
+    }
+
+    async fetchGoalsNew(userId: number, organizationId?: number): Promise<GoalsSchemaTypeForSelect[]> {
+        const conditions = [eq(GoalsSchema.owner, userId)];
+        if (organizationId) {
+            conditions.push(eq(GoalsSchema.organizationId, organizationId));
+        }
+
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle.select().from(GoalsSchema).where(and(...conditions))
         );
         if (!result) {
             return [];

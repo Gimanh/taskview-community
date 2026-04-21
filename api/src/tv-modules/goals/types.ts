@@ -6,6 +6,7 @@ export const GoalsArkTypeAdd = type({
     name: 'string',
     'description?': 'string | null',
     'color?': 'string | null',
+    'organizationId?': 'number',
 });
 
 export type GoalsArgAdd = typeof GoalsArkTypeAdd.infer;
@@ -24,5 +25,11 @@ export const GoalsArkTypeDelete = type({
 });
 
 export type GoalsArgDelete = typeof GoalsArkTypeDelete.infer;
+
+export const GoalsArkTypeFetch = type({
+    'organizationId?': type('string | number').pipe((v) => Number(v)),
+});
+
+export type GoalsArgFetch = typeof GoalsArkTypeFetch.infer;
 
 export type GoalsItemForClientWithPermissions = GoalsSchemaTypeForSelect & { permissions: GoalPermissionsForClient };

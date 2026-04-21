@@ -53,6 +53,12 @@
             />
           </div>
         </template>
+
+        <template #sso>
+          <div class="pt-4">
+            <LoginBySso />
+          </div>
+        </template>
       </UTabs>
     </template>
     
@@ -97,6 +103,7 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import LoginByCode from './LoginByCode.vue'
 import LoginByPassword from './LoginByPassword.vue'
+import LoginBySso from './LoginBySso.vue'
 import ForgotPassword from './ForgotPassword.vue'
 import SocialButtons from './SocialButtons.vue'
 import ServerSelector from './ServerSelector.vue'
@@ -107,13 +114,14 @@ const emit = defineEmits<{
   success: [token: string]
 }>()
 
-type View = 'code' | 'password' | 'forgot'
+type View = 'code' | 'password' | 'sso' | 'forgot'
 
 const currentView = ref<View>('code')
 
 const tabs = computed(() => [
   { value: 'code', label: t('auth.magicLink'), slot: 'code' as const },
   { value: 'password', label: t('auth.password'), slot: 'password' as const },
+  { value: 'sso', label: 'SSO', slot: 'sso' as const },
 ])
 
 function onTabChange(value: string | number) {

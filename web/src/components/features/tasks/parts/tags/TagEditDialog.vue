@@ -18,7 +18,10 @@
           />
         </UFormField>
 
-        <UFormField :label="t('tags.color')" class="w-full">
+        <UFormField
+          :label="t('tags.color')"
+          class="w-full"
+        >
           <UColorPicker
             v-model="tagColor"
             :presets="colorPresets"

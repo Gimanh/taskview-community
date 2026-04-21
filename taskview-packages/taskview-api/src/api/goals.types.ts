@@ -42,9 +42,10 @@ export type GoalItem = {
     permissions: GoalPermissions;
     archive: 1 | 0;
     dateCreation: string | null;
+    organizationId: number | null;
 };
 
-export type GoalArgItemAdd = Pick<GoalItem, 'name'> & Partial<Pick<GoalItem, | 'description' | 'color'>>;
+export type GoalArgItemAdd = Pick<GoalItem, 'name'> & Partial<Pick<GoalItem, 'description' | 'color' | 'organizationId'>>;
 
 export type GoalResponseAdd = GoalItem | null;
 

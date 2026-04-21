@@ -1,39 +1,42 @@
 <template>
-  <UDashboardGroup
-    unit="rem"
-    storage="local"
-    class="UDashboardGroup-test"
-  >
-    <UDashboardSidebar
-      id="default"
-      v-model:open="isSidebarOpen"
-      :default-size="20"
-      class="bg-elevated/25"
-      :class="isSidebarCollapsed ? 'overflow-hidden min-w-0 w-0 transition-[width] duration-200 linear' : 'transition-[width] duration-200 linear'"
-      :ui="{ footer: 'lg:border-t lg:border-default' }"
+  <ConnectionStatusBanner />
+  <template v-if="orgStore.initialized">
+    <UDashboardGroup
+      unit="rem"
+      storage="local"
+      class="UDashboardGroup-test"
     >
-      <div class="flex items-center justify-between px-1 gap-2">
-        <TvGoalLikeItem
-          to="/user"
-          variant="taskview"
-          class="flex-1"
-        >
-          {{ t('main') }}
-        </TvGoalLikeItem>
-        <NotificationBell />
-      </div>
+      <UDashboardSidebar
+        id="default"
+        v-model:open="isSidebarOpen"
+        :default-size="20"
+        class="bg-elevated/25"
+        :class="isSidebarCollapsed ? 'overflow-hidden min-w-0 w-0 transition-[width] duration-200 linear' : 'transition-[width] duration-200 linear'"
+        :ui="{ footer: 'lg:border-t lg:border-default' }"
+      >
+        <div class="flex items-center justify-between px-1 gap-2">
+          <TvGoalLikeItem
+            :to="{ name: 'user' }"
+            variant="taskview"
+            class="flex-1"
+          >
+            {{ t('main') }}
+          </TvGoalLikeItem>
+          <NotificationBell />
+        </div>
 
-      <ProjectsSidebar />
+        <ProjectsSidebar />
 
-      <template #footer="{ collapsed }">
-        <UserMenu :collapsed="collapsed" />
-      </template>
-    </UDashboardSidebar>
+        <template #footer="{ collapsed }">
+          <UserMenu :collapsed="collapsed" />
+        </template>
+      </UDashboardSidebar>
 
-    <RouterView />
-  </UDashboardGroup>
+      <RouterView />
+    </UDashboardGroup>
 
-  <TvMobileBottomNav />
+    <TvMobileBottomNav />
+  </template>
 </template>
 
 <script setup lang="ts">
@@ -45,12 +48,13 @@ import { useDashboard } from '@/composables/useDashboard'
 import { useUpdater } from '@/composables/useUpdater'
 import { useAppStore } from '@/stores/app.store'
 import { useI18n } from 'vue-i18n'
+import ConnectionStatusBanner from '@/components/ConnectionStatusBanner.vue'
 import ProjectsSidebar from '@/components/features/projects/ProjectsSidebar.vue'
 import NotificationBell from '@/components/NotificationBell.vue'
 import { useCentrifugo } from '@/composables/useCentrifugo'
 import { usePushNotifications } from '@/composables/usePushNotifications'
 import { useGoalsStore } from '@/stores/goals.store'
-import { useUserStore } from '@/stores/user.store'
+import { useOrganizationStore } from '@/stores/organization.store'
 
 const { isSidebarOpen, isSidebarCollapsed } = useDashboard()
 const { connect: connectCentrifugo } = useCentrifugo()
@@ -58,7 +62,7 @@ const { init: initPush } = usePushNotifications()
 const { t } = useI18n()
 const appStore = useAppStore()
 const goalsStore = useGoalsStore()
-const userStore = useUserStore()
+const orgStore = useOrganizationStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -68,7 +72,7 @@ watch(
     if (!initialized || !projectId) return
     const exists = goals.some((g) => g.id === Number(projectId))
     if (!exists) {
-      router.replace(`/${userStore.login}`)
+      router.replace({ name: 'user' })
     }
   },
 )
@@ -91,6 +95,8 @@ App.addListener('appStateChange', async ({ isActive }) => {
     } finally {
       updateInProgress = false
     }
+
+    initPush()
   }
 })
 
@@ -99,6 +105,25 @@ onMounted(async () => {
   appStore.initTaskDetailDisplayMode()
   connectCentrifugo()
   initPush()
+
+  if (!orgStore.organizations.length) {
+    await orgStore.fetchOrganizations()
+  }
+
+  const slugFromUrl = route.params.orgSlug as string
+  const matchedOrg = orgStore.findOrgBySlug(slugFromUrl)
+  if (matchedOrg) {
+    orgStore.setCurrentOrg(matchedOrg)
+    orgStore.initialized = true
+  } else {
+    orgStore.restoreCurrentOrg()
+    if (orgStore.currentOrg) {
+      router.replace({ name: 'user', params: { orgSlug: orgStore.currentOrgSlug } })
+      return
+    }
+  }
+
+  await goalsStore.fetchGoals()
 
   await CapacitorUpdater.notifyAppReady()
   console.log('notifyAppReady', APP_VERSION)

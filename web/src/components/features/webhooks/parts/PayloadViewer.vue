@@ -1,5 +1,9 @@
 <template>
-  <UModal v-model:open="isOpen" :fullscreen="isMobile" :ui="{ content: 'sm:max-w-3xl' }">
+  <UModal
+    v-model:open="isOpen"
+    :fullscreen="isMobile"
+    :ui="{ content: 'sm:max-w-3xl' }"
+  >
     <template #header>
       <h3 class="text-lg font-semibold">
         {{ t('webhooks.payload') }}

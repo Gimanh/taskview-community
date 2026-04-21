@@ -2,15 +2,28 @@
   <UPageCard class="w-full">
     <div class="flex flex-col gap-4">
       <div>
-        <h2 class="text-lg font-semibold">{{ t('notifications.settings.title') }}</h2>
-        <p class="text-sm text-dimmed mt-1">{{ t('notifications.settings.description') }}</p>
+        <h2 class="text-lg font-semibold">
+          {{ t('notifications.settings.title') }}
+        </h2>
+        <p class="text-sm text-dimmed mt-1">
+          {{ t('notifications.settings.description') }}
+        </p>
       </div>
 
-      <div v-if="loading" class="flex justify-center py-4">
-        <UIcon name="i-lucide-loader-2" class="size-5 animate-spin" />
+      <div
+        v-if="loading"
+        class="flex justify-center py-4"
+      >
+        <UIcon
+          name="i-lucide-loader-2"
+          class="size-5 animate-spin"
+        />
       </div>
 
-      <div v-else class="flex flex-col gap-0 divide-y divide-default">
+      <div
+        v-else
+        class="flex flex-col gap-0 divide-y divide-default"
+      >
         <div
           v-for="item in notificationTypes"
           :key="item.type"
@@ -18,8 +31,12 @@
         >
           <div class="flex flex-col gap-3">
             <div>
-              <p class="text-sm font-medium">{{ item.label }}</p>
-              <p class="text-xs text-dimmed">{{ item.description }}</p>
+              <p class="text-sm font-medium">
+                {{ item.label }}
+              </p>
+              <p class="text-xs text-dimmed">
+                {{ item.description }}
+              </p>
             </div>
             <div class="flex gap-4">
               <label

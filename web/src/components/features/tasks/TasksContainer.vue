@@ -58,9 +58,9 @@ const hasListSelected = computed(() => !!route.params.listId)
 
 async function goBackToLists() {
   if (route.params.projectId) {
-    await router.push({ name:'user', params: { projectId: route.params.projectId } })
+    await router.push({ name: 'user', params: { projectId: route.params.projectId } })
   } else {
-    await router.push({ name:'user' })
+    await router.push({ name: 'user' })
   }
 }
 

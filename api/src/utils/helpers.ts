@@ -1,3 +1,4 @@
+import { randomInt } from 'crypto';
 import { UAParser } from 'ua-parser-js';
 import { $logger } from '../modules/logget';
 
@@ -8,15 +9,13 @@ export function isEmail(email: string): boolean {
 }
 
 export function generateString(length: number) {
-    let result = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const charactersLength = characters.length;
-    let counter = 0;
-    while (counter < length) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-        counter += 1;
+    let result = ''
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    const charactersLength = characters.length
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(randomInt(charactersLength))
     }
-    return result;
+    return result
 }
 
 export function time() {

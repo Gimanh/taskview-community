@@ -1,5 +1,5 @@
-import { and, eq, desc, lt, sql } from 'drizzle-orm';
-import { NotificationsSchema, TasksSchema, type NotificationsSchemaTypeForSelect } from 'taskview-db-schemas';
+import { and, eq, desc, lt, sql, inArray } from 'drizzle-orm';
+import { NotificationsSchema, TasksSchema, GoalsSchema, type NotificationsSchemaTypeForSelect } from 'taskview-db-schemas';
 import { Database } from '../../../modules/db';
 import { callWithCatch } from '../../../utils/helpers';
 
@@ -24,11 +24,23 @@ export class NotificationsRepository {
         return result[0];
     }
 
-    async fetchByUser(userId: number, cursor?: number) {
+    async fetchByUser(userId: number, cursor?: number, organizationId?: number) {
         const limit = 30;
         const conditions = [eq(NotificationsSchema.userId, userId)];
         if (cursor) {
             conditions.push(lt(NotificationsSchema.id, cursor));
+        }
+        if (organizationId) {
+            conditions.push(
+                inArray(
+                    NotificationsSchema.taskId,
+                    this.db.dbDrizzle
+                        .select({ id: TasksSchema.id })
+                        .from(TasksSchema)
+                        .innerJoin(GoalsSchema, eq(TasksSchema.goalId, GoalsSchema.id))
+                        .where(eq(GoalsSchema.organizationId, organizationId))
+                )
+            );
         }
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.select({
@@ -83,14 +95,27 @@ export class NotificationsRepository {
         return !!result;
     }
 
-    async markAllRead(userId: number): Promise<boolean> {
+    async markAllRead(userId: number, organizationId?: number): Promise<boolean> {
+        const conditions = [
+            eq(NotificationsSchema.userId, userId),
+            eq(NotificationsSchema.read, false),
+        ];
+        if (organizationId) {
+            conditions.push(
+                inArray(
+                    NotificationsSchema.taskId,
+                    this.db.dbDrizzle
+                        .select({ id: TasksSchema.id })
+                        .from(TasksSchema)
+                        .innerJoin(GoalsSchema, eq(TasksSchema.goalId, GoalsSchema.id))
+                        .where(eq(GoalsSchema.organizationId, organizationId))
+                )
+            );
+        }
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.update(NotificationsSchema)
                 .set({ read: true })
-                .where(and(
-                    eq(NotificationsSchema.userId, userId),
-                    eq(NotificationsSchema.read, false),
-                ))
+                .where(and(...conditions))
         );
         return !!result;
     }

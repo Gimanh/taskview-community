@@ -1,4 +1,5 @@
 import { compare, hashSync } from 'bcryptjs';
+import { randomInt } from 'crypto';
 import type { Request, Response } from 'express';
 import jwt, { type Algorithm, decode } from 'jsonwebtoken';
 import { z } from 'zod';
@@ -17,6 +18,7 @@ import { generateString, isEmail, time } from '../../utils/helpers';
 import EnEmailTemplate from './mail/confirm-email-en';
 import RuEmailTemplate from './mail/confirm-email-ru';
 import type { ExternalAuthUser } from './strategies/external-auth.types';
+import { OrganizationRepository } from '../organizations/OrganizationRepository';
 
 export default class AuthController {
     private readonly jwtAlg: Algorithm = process.env.JWT_ALG as Algorithm;
@@ -24,6 +26,15 @@ export default class AuthController {
     private readonly jwtRefreshExp: string = process.env.REFRESH_LIFE_TIME!;
 
     private readonly refreshTokenCookieName: string = 'taskview-refresh';
+    private readonly orgRepository: OrganizationRepository = new OrganizationRepository();
+
+    private async createPersonalWorkspace(userId: number, email: string, login: string) {
+        const slug = `org-${crypto.randomUUID().slice(0, 8)}`
+        const org = await this.orgRepository.create({ name: `${login}'s workspace`, slug }, userId, true)
+        if (org) {
+            await this.orgRepository.addMember(org.id, email, 'owner')
+        }
+    }
 
     comparePasswords(pwd: string, hash: string): Promise<boolean> {
         return new Promise((resolve) => {
@@ -79,15 +90,13 @@ export default class AuthController {
     }
 
     makeidLogin(length: number) {
-        let result = '';
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        const charactersLength = characters.length;
-        let counter = 0;
-        while (counter < length) {
-            result += characters.charAt(Math.floor(Math.random() * charactersLength));
-            counter += 1;
+        let result = ''
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+        const charactersLength = characters.length
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(randomInt(charactersLength))
         }
-        return result;
+        return result
     }
 
     generateEmailConfirmCode() {
@@ -143,6 +152,7 @@ export default class AuthController {
                 return res.status(500).end();
             }
 
+            await this.createPersonalWorkspace(id, email, login)
             $logger.info(`[AuthController:sendLoginCode] user registered`);
         }
 
@@ -206,6 +216,8 @@ export default class AuthController {
                 $logger.error(`Can not register user`);
                 return res.status(500).send(`Can not register user`);
             }
+
+            await this.createPersonalWorkspace(id, user.email, login)
 
             userData = await req.appUser.authManager.repository.getUserByLogin(
                 user.email,
@@ -316,6 +328,9 @@ export default class AuthController {
             return res.status(400).send({ message: 'Code expired, get new code' });
         }
 
+        // Invalidate code immediately to prevent replay attacks
+        await req.appUser.authManager.repository.updateLoginCode(null, userData.email);
+
         const sessionId = await req.appUser.authManager.sessionStorage.createSession(
             userData.id,
             req.ip,
@@ -329,8 +344,6 @@ export default class AuthController {
             id: sessionId,
             userData,
         } as const);
-
-        await req.appUser.authManager.repository.updateLoginCode(null, userData.email);
 
         await this.setRefreshToken(res, tokens.refresh);
 
@@ -388,7 +401,7 @@ export default class AuthController {
 
         email = (email as string).toLowerCase();
         if (!isEmail(email)) {
-            return res.status(40).end();
+            return res.status(400).end();
         }
 
         password = hashSync(password, 10);
@@ -411,6 +424,8 @@ export default class AuthController {
             return res.status(500).end();
         }
 
+        await this.createPersonalWorkspace(id, email, login)
+
         let emailTemplate: string = '';
         let confirmEmailBody: string = '';
         const acceptLanguage = req.headers['accept-language'];
@@ -423,7 +438,7 @@ export default class AuthController {
             emailTemplate = EnEmailTemplate;
         }
 
-        const confirmUrl = `https://${process.env.APP_URL}/module/auth/confirm/email/${confirmEmailCode}/login/${login}`;
+        const confirmUrl = `${process.env.APP_URL}/module/auth/confirm/email/${confirmEmailCode}/login/${login}`;
 
         if (emailTemplate) {
             confirmEmailBody = emailTemplate.replace('{link}', confirmUrl);

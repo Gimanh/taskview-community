@@ -192,4 +192,14 @@ export class CollaborationRolesRepository {
 
         return result;
     }
+
+    async assignAllPermissionsToRole(roleId: number, permissionIds: number[]): Promise<boolean> {
+        if (permissionIds.length === 0) return false
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .insert(CollaborationPermissionsToRoleSchema)
+                .values(permissionIds.map(permissionId => ({ roleId, permissionId })))
+        )
+        return !!result
+    }
 }

@@ -61,6 +61,7 @@ export class FCMProvider implements NotificationProvider {
                 taskId: notification.taskId ? String(notification.taskId) : '',
                 goalId: String(meta.goalId),
                 goalListId: meta.goalListId ? String(meta.goalListId) : '',
+                organizationId: meta.organizationId ? String(meta.organizationId) : '',
                 notificationId: String(notification.id),
             },
             android: {

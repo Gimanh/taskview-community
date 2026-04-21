@@ -2,14 +2,9 @@
   <UDropdownMenu
     :items="items"
     :content="{ align: 'center', collisionPadding: 12 }"
-    :ui="{ content: collapsed ? 'w-48' : 'w-(--reka-dropdown-menu-trigger-width)' }"
+    :ui="{ content: collapsed ? 'w-48' : 'w-(--reka-dropdown-menu-trigger-width)', group: 'max-h-screen' }"
   >
     <UButton
-      v-bind="{
-        ...user,
-        label: collapsed ? undefined : user?.name,
-        trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down'
-      }"
       color="neutral"
       variant="ghost"
       block
@@ -18,7 +13,31 @@
       :ui="{
         trailingIcon: 'text-dimmed'
       }"
-    />
+    >
+      <template #leading>
+        <UAvatar
+          :src="user.avatar.src"
+          :alt="user.avatar.alt"
+          size="2xs"
+        />
+      </template>
+      <div
+        v-if="!collapsed"
+        class="flex flex-col items-start text-left truncate flex-1"
+      >
+        <span class="truncate text-sm font-medium">{{ user.name }}</span>
+        <span class="truncate text-xs text-dimmed">{{ user.description }}</span>
+      </div>
+      <template
+        v-if="!collapsed"
+        #trailing
+      >
+        <UIcon
+          name="i-lucide-chevrons-up-down"
+          class="size-4 text-dimmed"
+        />
+      </template>
+    </UButton>
 
     <template #chip-leading="{ item }">
       <div class="inline-flex items-center justify-center shrink-0 size-5">
@@ -45,6 +64,7 @@ import { useLogout } from '@/composables/useLogout'
 import { saveLocale } from '@/plugins/i18n'
 import { useUpdater } from '@/composables/useUpdater'
 import { useUserStore } from '@/stores/user.store'
+import { useOrganizationStore } from '@/stores/organization.store'
 import { $ls } from '@/plugins/axios'
 import avatarImg from '@/assets/images/avatar-1.jpeg'
 
@@ -58,6 +78,7 @@ const appStore = useAppStore()
 const router = useRouter()
 const toast = useToast()
 const userStore = useUserStore()
+const orgStore = useOrganizationStore()
 
 const prodOrDev = ref<'prod' | 'dev'>('prod')
 let counter = 0
@@ -108,7 +129,8 @@ async function handleLogout() {
 }
 
 const user = computed(() => ({
-  name: userStore.email || userStore.login,
+  name: orgStore.currentOrg?.name || userStore.login || userStore.email,
+  description: userStore.email || userStore.login,
   avatar: {
     src: avatarImg,
     alt: userStore.email || userStore.login,
@@ -123,16 +145,35 @@ const items = computed<DropdownMenuItem[][]>(() => [
       avatar: user.value.avatar,
     },
   ],
+  orgStore.organizations.length > 1 ? [
+    {
+      label: orgStore.currentOrg?.name || t('userMenu.switchOrganization'),
+      icon: 'i-lucide-building-2',
+      
+      children: orgStore.organizations.map(org => ({
+        label: org.name,
+        icon: org.id === orgStore.currentOrg?.id ? 'i-lucide-check' : undefined,
+        onSelect(e: Event) {
+          e.preventDefault()
+          orgStore.setCurrentOrg(org)
+          router.push({ name: 'user', params: { orgSlug: org.slug } })
+        },
+      })),
+    },
+  ] : [],
   [
-    // {
-    //   label: t('userMenu.profile'),
-    //   icon: 'i-lucide-user',
-    // },
     {
       label: t('userMenu.accountSettings'),
       icon: 'i-lucide-settings',
       onSelect() {
         router.push({ name: 'account' })
+      },
+    },
+    {
+      label: t('userMenu.organizations'),
+      icon: 'i-lucide-building-2',
+      onSelect() {
+        router.push({ name: 'organizations' })
       },
     },
   ],

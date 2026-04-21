@@ -10,10 +10,10 @@ export class NotificationsManager {
         this.repository = new NotificationsRepository();
     }
 
-    async fetchByUser(cursor?: number) {
+    async fetchByUser(cursor?: number, organizationId?: number) {
         const userId = this.user.getUserData()?.id;
         if (!userId) return { notifications: [] };
-        const notifications = await this.repository.fetchByUser(userId, cursor);
+        const notifications = await this.repository.fetchByUser(userId, cursor, organizationId);
         return { notifications };
     }
 
@@ -23,9 +23,9 @@ export class NotificationsManager {
         return this.repository.markRead(notificationId, userId);
     }
 
-    async markAllRead() {
+    async markAllRead(organizationId?: number) {
         const userId = this.user.getUserData()?.id;
         if (!userId) return false;
-        return this.repository.markAllRead(userId);
+        return this.repository.markAllRead(userId, organizationId);
     }
 }

@@ -2,7 +2,6 @@
   <UModal 
     v-model:open="model" 
     :fullscreen="isMobile"
-    
   >
     <template #header>
       <div class="flex items-center justify-between w-full">

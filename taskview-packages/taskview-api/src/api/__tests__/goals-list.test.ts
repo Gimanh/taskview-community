@@ -1,4 +1,5 @@
 import { TvApi } from '@/tv';
+import { AxiosError } from 'axios';
 import {
     describe,
     it,
@@ -71,6 +72,15 @@ describe('TvApi', () => {
             expect(addListResponse?.creatorId).toBeDefined();
             expect(addListResponse?.editDate).toBeDefined();
             expect(addListResponse?.archive).toBe(0);
+        });
+
+        it('should fail to create list without goalId', async () => {
+            //@ts-expect-error - we are testing the error case
+            const response = await $api.goalLists.createList({
+                name: 'List without goalId',
+            }).catch((err: AxiosError) => err.status);
+
+            expect(response).toEqual(400);
         });
 
     });
@@ -165,6 +175,11 @@ describe('TvApi', () => {
             }
 
             expect(deleteListResponse).toBe(true);
+        });
+
+        it('should fail to delete non-existent list', async () => {
+            const response = await $api.goalLists.deleteList(999999).catch((err: AxiosError) => err.status);
+            expect(response).toBeGreaterThanOrEqual(400);
         });
     });
 

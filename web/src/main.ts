@@ -40,7 +40,7 @@ const router = createRouter({
       component: () => import('./pages/reset-password.vue'),
     },
     {
-      path: '/:user',
+      path: '/:orgSlug',
       component: () => import('./layouts/UserLayout.vue'),
       beforeEnter: [authenticated],
       children: [
@@ -73,6 +73,11 @@ const router = createRouter({
           path: 'account',
           name: 'account',
           component: () => import('./pages/user/account.vue'),
+        },
+        {
+          path: 'organizations',
+          name: 'organizations',
+          component: () => import('./pages/user/organizations.vue'),
         },
         {
           path: ':projectId?/:listId?/:taskId?',

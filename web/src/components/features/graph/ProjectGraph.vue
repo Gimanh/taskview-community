@@ -108,7 +108,7 @@ const applyFilters = () => {
   }
   if (assigneeIds.value.length > 0) {
     filtered = filtered.filter((n) =>
-      n.data.task.assignedUsers?.some((id: number) => assigneeIds.value.includes(id))
+      n.data.task.assignedUsers?.some((id: number) => assigneeIds.value.includes(id)),
     )
   }
   const nodeIds = new Set(filtered.map((n) => n.id))

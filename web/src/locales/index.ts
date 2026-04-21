@@ -8,4 +8,4 @@ export const messages = {
 
 export type Locale = keyof typeof messages
 export const locales: Locale[] = ['en', 'ru']
-export const defaultLocale: Locale = 'ru'
+export const defaultLocale: Locale = 'en'

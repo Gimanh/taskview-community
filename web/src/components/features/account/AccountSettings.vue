@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-6 p-4 lg:p-6 w-full max-w-full lg:max-w-2xl m-0 lg:mx-auto">
+  <div class="flex flex-col gap-6 p-1 lg:p-6 w-full max-w-full lg:max-w-2xl m-0 lg:mx-auto">
     <NotificationSettings />
 
     <UPageCard class="w-full">

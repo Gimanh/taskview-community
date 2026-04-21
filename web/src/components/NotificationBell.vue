@@ -8,7 +8,10 @@
     :aria-label="t('notifications.title')"
     @click="isOpen = true"
   >
-    <template v-if="notificationsStore.unreadCount > 0" #trailing>
+    <template
+      v-if="notificationsStore.unreadCount > 0"
+      #trailing
+    >
       <UBadge
         :label="notificationsStore.unreadCount > 99 ? '99+' : String(notificationsStore.unreadCount)"
         color="error"
@@ -30,7 +33,9 @@
   >
     <template #header>
       <div class="flex items-center justify-between w-full">
-        <h3 class="font-semibold">{{ t('notifications.title') }}</h3>
+        <h3 class="font-semibold">
+          {{ t('notifications.title') }}
+        </h3>
         <UButton
           v-if="notificationsStore.unreadCount > 0"
           :label="t('notifications.markAllRead')"
@@ -64,7 +69,9 @@
               :class="notification.read ? 'text-dimmed' : 'text-primary'"
             />
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium truncate">{{ notification.title }}</p>
+              <p class="text-sm font-medium truncate">
+                {{ notification.title }}
+              </p>
               <p
                 v-if="notification.body"
                 class="text-xs text-dimmed mt-0.5 line-clamp-2"
@@ -119,11 +126,13 @@ import { useUserStore } from '@/stores/user.store'
 import { useTaskView } from '@/composables/useTaskView'
 import { ALL_TASKS_LIST_ID } from 'taskview-api'
 import { formatDistanceToNow } from 'date-fns'
+import { useOrganizationStore } from '@/stores/organization.store'
 
 const { t } = useI18n()
 const router = useRouter()
 const notificationsStore = useNotificationsStore()
 const userStore = useUserStore()
+const orgStore = useOrganizationStore()
 const { isMobile } = useTaskView()
 const isOpen = ref(false)
 
@@ -178,5 +187,9 @@ onMounted(() => {
   if (userStore.isLoggedIn) {
     notificationsStore.fetchNotifications(true)
   }
+})
+
+watch(() => orgStore.currentOrg, () => {
+  notificationsStore.fetchNotifications(true)
 })
 </script>

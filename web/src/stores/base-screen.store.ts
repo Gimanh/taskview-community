@@ -13,6 +13,7 @@ import {
 } from '@/types/base-screen.types'
 import type { AppResponse } from '@/types/global-app.types'
 import type { TaskItem } from '@/types/tasks.types'
+import { useOrganizationStore } from '@/stores/organization.store'
 
 export const useBaseScreenStore = defineStore('base-screen-store', {
   getters: {
@@ -48,9 +49,14 @@ export const useBaseScreenStore = defineStore('base-screen-store', {
     async fetchAllState() {
       this.taskIdToUser = {}
       this.loading = true
+      const orgStore = useOrganizationStore()
+      const params = new URLSearchParams({ tz: Intl.DateTimeFormat().resolvedOptions().timeZone })
+      if (orgStore.currentOrg) {
+        params.set('organizationId', String(orgStore.currentOrg.id))
+      }
       const result = await $api
         .get<AppResponse<MainScreenAllStateResponse>>(
-          `/module/about/fetchallstate?tz=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`,
+          `/module/about/fetchallstate?${params.toString()}`,
         )
         .catch((err) => console.log(err))
 
@@ -80,8 +86,13 @@ export const useBaseScreenStore = defineStore('base-screen-store', {
     },
 
     async fetchAllAvailableLists() {
+      const orgStore = useOrganizationStore()
+      const params: Record<string, string> = {}
+      if (orgStore.currentOrg) {
+        params.organizationId = String(orgStore.currentOrg.id)
+      }
       const result = await $api
-        .get<AppResponse<GoalAndListsResp>>('/module/about/fetch/lists')
+        .get<AppResponse<GoalAndListsResp>>('/module/about/fetch/lists', { params })
         .catch((err) => console.log(err))
       if (result) {
         this.lists = result.data.response
@@ -104,18 +115,18 @@ export const useBaseScreenStore = defineStore('base-screen-store', {
         localTask.complete = task.complete
 
         switch (prop) {
-          case 'tasks':
-            this.processLastAdded(task)
-            break
-          case 'tasksToday':
-            this.processToday(task)
-            break
-          case 'tasksUpcoming':
-            this.processUpcoming(task)
-            break
-          case 'tasksLastCompleted':
-            this.processLastCompleted(task)
-            break
+        case 'tasks':
+          this.processLastAdded(task)
+          break
+        case 'tasksToday':
+          this.processToday(task)
+          break
+        case 'tasksUpcoming':
+          this.processUpcoming(task)
+          break
+        case 'tasksLastCompleted':
+          this.processLastCompleted(task)
+          break
         }
       }
     },
@@ -183,8 +194,13 @@ export const useBaseScreenStore = defineStore('base-screen-store', {
     },
 
     async searchTaskRequest(taskDescription: string): Promise<BaseScreenSearchResponse> {
+      const orgStore = useOrganizationStore()
+      const params = new URLSearchParams({ description: taskDescription })
+      if (orgStore.currentOrg) {
+        params.set('organizationId', String(orgStore.currentOrg.id))
+      }
       const result = await $api
-        .get<AppResponse<BaseScreenSearchResponse>>(`/module/about/search-task?description=${taskDescription}`)
+        .get<AppResponse<BaseScreenSearchResponse>>(`/module/about/search-task?${params.toString()}`)
         .catch(logError)
       if (!result) return []
       return result.data.response

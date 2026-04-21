@@ -1,6 +1,6 @@
 import { eq, and, or, isNull, inArray } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { TasksSchema, CollaborationUsersSchema, UsersSchema } from 'taskview-db-schemas';
+import { TasksSchema, CollaborationUsersSchema, UsersSchema, GoalsSchema } from 'taskview-db-schemas';
 import { eventBus, type AppEvents } from '../../core/EventBus';
 import { getJobQueue } from '../../core/JobQueue';
 import { Database } from '../../modules/db';
@@ -108,6 +108,7 @@ export class NotificationDispatcher implements Dispatcher {
     ): Promise<void> {
         const initiatorName = await this.resolveUserName(data.initiatorId);
         const message = NotificationMessages.assign(task.description, initiatorName);
+        const organizationId = await this.resolveOrganizationId(task.goalId);
 
         $logger.info(`[NotificationDispatcher] Assign notification for task=${data.taskId}, recipients=[${recipientIds.join(',')}]`);
 
@@ -115,7 +116,7 @@ export class NotificationDispatcher implements Dispatcher {
             recipientIds,
             NotificationType.ASSIGN,
             message,
-            { goalId: task.goalId, goalListId: task.goalListId },
+            { goalId: task.goalId, goalListId: task.goalListId, organizationId },
             data.taskId,
         );
     }
@@ -135,6 +136,7 @@ export class NotificationDispatcher implements Dispatcher {
 
         const tz = task.owner ? await this.deviceTokensRepo.getTimezoneByUserId(task.owner) : 'UTC';
         const message = NotificationMessages.deadline(task.description, task.endDate, task.endTime, tz);
+        const organizationId = await this.resolveOrganizationId(task.goalId);
 
         $logger.info(`[NotificationDispatcher] Expired deadline notification for task=${data.taskId}, recipients=[${recipientIds.join(',')}]`);
 
@@ -142,7 +144,7 @@ export class NotificationDispatcher implements Dispatcher {
             recipientIds,
             NotificationType.DEADLINE,
             message,
-            { goalId: task.goalId, goalListId: task.goalListId },
+            { goalId: task.goalId, goalListId: task.goalListId, organizationId },
             data.taskId,
         );
     }
@@ -150,6 +152,16 @@ export class NotificationDispatcher implements Dispatcher {
     private async onTaskDeleted(data: AppEvents['task.deleted']): Promise<void> {
         this.notificationsRepo.deleteByTaskAndType(data.taskId, NotificationType.DEADLINE);
         await this.deadlineScheduler.cancel(data.taskId);
+    }
+
+    private async resolveOrganizationId(goalId: number): Promise<number | null> {
+        const db = Database.getInstance();
+        const result = await db.dbDrizzle
+            .select({ organizationId: GoalsSchema.organizationId })
+            .from(GoalsSchema)
+            .where(eq(GoalsSchema.id, goalId))
+            .limit(1);
+        return result[0]?.organizationId ?? null;
     }
 
     private async resolveUserName(userId: number): Promise<string> {

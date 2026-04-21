@@ -10,6 +10,7 @@ export const DEFAULT_GOAL_ITEM: GoalItem = {
   permissions: {},
   archive: 0,
   dateCreation: null,
+  organizationId: null,
 }
 
 export const AllGoalPermissions = TvPermissions
