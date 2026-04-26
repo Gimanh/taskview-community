@@ -456,6 +456,9 @@ export default {
       server: 'Server returned an error. Try refreshing the page.',
       unknown: 'Failed to load analytics.',
     },
+    help: {
+      aria: 'Help for this metric',
+    },
     chartTypes: {
       line: 'Line',
       bar: 'Bar',

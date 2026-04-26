@@ -120,7 +120,10 @@ onBeforeUnmount(() => {
 
 watch(() => props.section, () => {
   if (!props.section.allowedChartTypes.includes(currentChartType.value)) {
+    // Reassigning currentChartType triggers its own watcher, which calls render().
+    // Skip render here to avoid double-init race ("Canvas is already in use").
     currentChartType.value = props.section.defaultChartType ?? props.section.allowedChartTypes[0] ?? 'bar'
+    return
   }
   render()
 }, { deep: true })

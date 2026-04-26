@@ -14,6 +14,7 @@ export type AnalyticsDrillDownState = {
   sectionTitle: string | null
   bucket: string | null
   tasks: AnalyticsDrillDownTask[]
+  error: AnalyticsError
 }
 
 export type AnalyticsErrorKind = 'forbidden' | 'network' | 'server' | 'unknown'

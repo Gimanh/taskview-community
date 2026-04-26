@@ -7,7 +7,7 @@
         variant="ghost"
         size="xs"
         square
-        aria-label="Help"
+        :aria-label="t('analytics.help.aria')"
         @click="isOpen = true"
       />
     </UTooltip>
@@ -31,6 +31,7 @@
 <script setup lang="ts">
 import type { AnalyticsSectionHelp, LocalizedText } from 'taskview-api'
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAnalyticsLocale } from './composables/useAnalyticsLocale'
 
 const props = defineProps<{
@@ -38,6 +39,7 @@ const props = defineProps<{
   sectionTitle: LocalizedText
 }>()
 
+const { t } = useI18n()
 const { pick } = useAnalyticsLocale()
 const isOpen = ref(false)
 </script>

@@ -195,6 +195,8 @@ watch(
     if (analyticsStore.scope.kind === 'project') {
       analyticsStore.scope = { kind: 'org' }
     }
+    analyticsStore.availableGoals = []
+    analyticsStore.sections = []
     analyticsStore.fetchSections()
   },
 )

@@ -49,6 +49,7 @@ export const useAnalyticsStore = defineStore('analytics', {
       sectionTitle: null,
       bucket: null,
       tasks: [],
+      error: null,
     },
   }),
   getters: {
@@ -144,6 +145,7 @@ export const useAnalyticsStore = defineStore('analytics', {
       this.drillDown.sectionTitle = args.sectionTitle
       this.drillDown.bucket = args.bucket
       this.drillDown.tasks = []
+      this.drillDown.error = null
 
       const orgStore = useOrganizationStore()
       const organizationId = orgStore.currentOrg?.id
@@ -171,7 +173,8 @@ export const useAnalyticsStore = defineStore('analytics', {
         }
       } catch (e) {
         if (controller.signal.aborted || isCancelled(e)) return
-        throw e
+        const err = classifyError(e)
+        if (err) this.drillDown.error = err
       } finally {
         if (drillDownAbortController === controller) {
           drillDownAbortController = null
@@ -189,6 +192,7 @@ export const useAnalyticsStore = defineStore('analytics', {
       this.drillDown.sectionId = null
       this.drillDown.sectionTitle = null
       this.drillDown.bucket = null
+      this.drillDown.error = null
     },
   },
 })

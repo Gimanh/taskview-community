@@ -3,19 +3,28 @@
     v-model:open="open"
     :title="analyticsStore.drillDown.sectionTitle ?? t('analytics.drillDown.defaultTitle')"
     :description="analyticsStore.drillDown.bucket ?? ''"
+    :fullscreen="isMobile"
   >
     <template #body>
+      <UAlert
+        v-if="drillDownErrorMessage"
+        color="error"
+        variant="soft"
+        :title="drillDownErrorMessage"
+        icon="i-lucide-alert-triangle"
+        class="mb-4"
+      />
       <div v-if="analyticsStore.drillDown.loading" class="flex items-center justify-center py-12">
         <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin text-zinc-400" />
       </div>
       <div
-        v-else-if="analyticsStore.drillDown.tasks.length === 0"
+        v-else-if="!analyticsStore.drillDown.error && analyticsStore.drillDown.tasks.length === 0"
         class="flex flex-col items-center gap-2 py-12 text-center text-sm text-zinc-500"
       >
         <UIcon name="i-lucide-check-circle-2" class="size-8 text-zinc-400" />
         <p>{{ t('analytics.drillDown.empty') }}</p>
       </div>
-      <ul v-else class="flex flex-col gap-2">
+      <ul v-else-if="analyticsStore.drillDown.tasks.length > 0" class="flex flex-col gap-2">
         <li
           v-for="task in analyticsStore.drillDown.tasks"
           :key="task.id"
@@ -60,12 +69,14 @@ import { ALL_TASKS_LIST_ID, type AnalyticsDrillDownTask } from 'taskview-api'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { useTaskView } from '@/composables/useTaskView'
 import { useAnalyticsStore } from '@/stores/analytics.store'
 
 const analyticsStore = useAnalyticsStore()
 const router = useRouter()
 const route = useRoute()
 const { t } = useI18n()
+const { isMobile } = useTaskView()
 
 const open = computed({
   get: () => analyticsStore.drillDown.open,
@@ -73,6 +84,12 @@ const open = computed({
     if (!v) analyticsStore.closeDrillDown()
     else analyticsStore.drillDown.open = true
   },
+})
+
+const drillDownErrorMessage = computed(() => {
+  const e = analyticsStore.drillDown.error
+  if (!e) return null
+  return t(`analytics.errors.${e.kind}`)
 })
 
 const priorityLabel: Record<number, string> = {
