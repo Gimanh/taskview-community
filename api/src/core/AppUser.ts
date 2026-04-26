@@ -11,6 +11,7 @@ import { IntegrationsManager } from '../tv-modules/integrations/IntegrationsMana
 import { NotificationsManager } from '../tv-modules/notifications/NotificationsManager';
 import { OrganizationManager } from '../tv-modules/organizations/OrganizationManager';
 import { SsoManager } from '../tv-modules/sso/SsoManager';
+import { AnalyticsManager } from '../tv-modules/analytics/AnalyticsManager';
 import { TasksManager } from '../tv-modules/tasks/TasksManager';
 import type { UserDbRecord, UserJwtPayload } from '../types/auth.types';
 import { GoalPermissionsFetcher } from './GoalPermissionsFetcher';
@@ -37,6 +38,7 @@ export class AppUser {
     public readonly notificationsManager: NotificationsManager;
     public readonly organizationManager: OrganizationManager;
     public readonly ssoManager: SsoManager;
+    public readonly analyticsManager: AnalyticsManager;
 
     constructor(userData?: UserJwtPayload) {
         this.userData = userData;
@@ -55,6 +57,7 @@ export class AppUser {
         this.notificationsManager = new NotificationsManager(this);
         this.organizationManager = new OrganizationManager(this);
         this.ssoManager = new SsoManager(this);
+        this.analyticsManager = new AnalyticsManager(this);
     }
 
     getTokenId(): number | undefined {
