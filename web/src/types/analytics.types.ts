@@ -1,23 +1,48 @@
-import type { GoalItem } from 'taskview-api'
-import type { CollaborationUsers } from './collaboration.types'
-import type { AppResponse } from './global-app.types'
-import type { TaskItem } from './tasks.types'
+import type {
+  AnalyticsAvailableGoal,
+  AnalyticsDrillDownTask,
+  AnalyticsPeriod,
+  AnalyticsScope,
+  AnalyticsSection,
+  AnalyticsSectionsResponse,
+} from 'taskview-api'
 
-export type AnalyticsStoreState = {
-    loading: boolean;
-    tasks: TaskItem[];
-    users: CollaborationUsers;
-    tasksForProject: TaskItem[];
-};
+export type AnalyticsDrillDownState = {
+  open: boolean
+  loading: boolean
+  sectionId: string | null
+  sectionTitle: string | null
+  bucket: string | null
+  tasks: AnalyticsDrillDownTask[]
+  error: AnalyticsError
+}
 
-export type FetchAnalyticsDataResponse = AppResponse<{
-    tasks: AnalyticsStoreState['tasks'];
-    users: CollaborationUsers;
-}>;
+export type AnalyticsErrorKind = 'forbidden' | 'network' | 'server' | 'unknown'
 
-export type FetchAnalyticsTasksArg = { startDate: string; endDate: string };
+export type AnalyticsError = {
+  kind: AnalyticsErrorKind
+  status?: number
+} | null
 
-export type FetchAnalyticsForProject = {
-    goalId: GoalItem['id'];
-    dates: FetchAnalyticsTasksArg;
-};
+export type AnalyticsState = {
+  scope: AnalyticsScope
+  period: AnalyticsPeriod
+  customFrom: string | null
+  customTo: string | null
+  sections: AnalyticsSection[]
+  failedSectionIds: string[]
+  availableGoals: AnalyticsAvailableGoal[]
+  range: AnalyticsSectionsResponse['range'] | null
+  loading: boolean
+  error: AnalyticsError
+  drillDown: AnalyticsDrillDownState
+}
+
+export type AnalyticsOpenDrillDownArgs = {
+  sectionId: string
+  sectionTitle: string
+  bucket: string
+  index: number
+  datasetId: string
+  meta?: Record<string, unknown>
+}

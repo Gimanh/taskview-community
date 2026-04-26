@@ -1,11 +1,19 @@
 import type { AppUser } from '../../core/AppUser'
 import { isNotNullable } from '../../utils/helpers'
 import { OrganizationRepository } from './OrganizationRepository'
-import type { OrganizationArgCreate, OrganizationArgUpdate } from './types'
+import {
+  ORG_ADMIN_ROLES,
+  type OrganizationArgCreate,
+  type OrganizationArgUpdate,
+  type OrgRole,
+} from './types'
+
+type OrgMember = Awaited<ReturnType<OrganizationRepository['getMemberByEmail']>>
 
 export class OrganizationManager {
   public readonly repository: OrganizationRepository
   private readonly user: AppUser
+  private readonly memberCache: Map<number, OrgMember> = new Map()
 
   constructor(user: AppUser) {
     this.user = user
@@ -115,9 +123,20 @@ export class OrganizationManager {
   }
 
   async getCurrentUserMember(orgId: number) {
+    if (this.memberCache.has(orgId)) {
+      return this.memberCache.get(orgId)!
+    }
     const email = this.getUserEmail()
     if (!email) return false
-    return await this.repository.getMemberByEmail(orgId, email)
+    const member = await this.repository.getMemberByEmail(orgId, email)
+    this.memberCache.set(orgId, member)
+    return member
+  }
+
+  async isCurrentUserOrgAdmin(orgId: number): Promise<boolean> {
+    const member = await this.getCurrentUserMember(orgId)
+    if (!member) return false
+    return ORG_ADMIN_ROLES.includes(member.role as OrgRole)
   }
 
   private generateSlug(): string {
