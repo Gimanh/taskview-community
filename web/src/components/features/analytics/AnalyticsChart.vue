@@ -61,9 +61,19 @@ function render() {
   if (props.section.payload.kind !== 'series') return
 
   const config: ChartConfiguration = build(props.section, currentChartType.value)
+  const isDrillable = !!props.section.drillDown
+
   config.options = {
     ...(config.options ?? {}),
-    onClick: (_evt, elements, chart) => {
+    onHover: (event, elements) => {
+      const target = event.native?.target as HTMLElement | undefined
+      if (!target) return
+      target.style.cursor = isDrillable && elements.length ? 'pointer' : 'default'
+    },
+  }
+
+  if (isDrillable) {
+    config.options.onClick = (_evt, elements, chart) => {
       if (!elements.length) return
       const el = elements[0]
       const datasetIndex = el.datasetIndex
@@ -78,7 +88,7 @@ function render() {
         index,
         meta: sectionDs?.meta,
       })
-    },
+    }
   }
 
   if (instance) {
