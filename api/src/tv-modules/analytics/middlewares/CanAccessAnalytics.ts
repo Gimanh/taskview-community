@@ -12,7 +12,7 @@ export const CanAccessAnalytics = async (req: Request, res: Response, next: Next
   const member = await req.appUser.organizationManager.getCurrentUserMember(orgId)
   if (!member) return res.status(403).end()
 
-  if (await req.appUser.organizationManager.isCurrentUserOrgAdmin(orgId)) return next()
+  if (await req.appUser.organizationManager.isCurrentUserOrgOwner(orgId)) return next()
 
   const scope = req.query?.scope
 

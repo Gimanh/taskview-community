@@ -32,7 +32,7 @@ export class AnalyticsManager {
     const userData = this.user.getUserData()
     if (!userData?.id || !userData?.email) return []
 
-    const ids = await this.user.organizationManager.isCurrentUserOrgAdmin(organizationId)
+    const ids = await this.user.organizationManager.isCurrentUserOrgOwner(organizationId)
       ? await this.repository.fetchAllGoalIdsInOrg(organizationId)
       : await this.fetchMemberAccessibleGoalIds(userData.id, userData.email, organizationId)
 

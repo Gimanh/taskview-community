@@ -2,10 +2,9 @@ import type { AppUser } from '../../core/AppUser'
 import { isNotNullable } from '../../utils/helpers'
 import { OrganizationRepository } from './OrganizationRepository'
 import {
-  ORG_ADMIN_ROLES,
+  OrgRoles,
   type OrganizationArgCreate,
   type OrganizationArgUpdate,
-  type OrgRole,
 } from './types'
 
 type OrgMember = Awaited<ReturnType<OrganizationRepository['getMemberByEmail']>>
@@ -48,9 +47,10 @@ export class OrganizationManager {
 
   async update(data: OrganizationArgUpdate) {
     if (data.slug) {
-      data = { ...data, slug: data.slug.toLowerCase() }
-      const existing = await this.repository.findBySlug(data.slug)
+      const slug = data.slug.toLowerCase()
+      const existing = await this.repository.findBySlug(slug)
       if (existing && existing.id !== data.organizationId) return false
+      data = { ...data, slug }
     }
 
     return await this.repository.update(data)
@@ -133,10 +133,10 @@ export class OrganizationManager {
     return member
   }
 
-  async isCurrentUserOrgAdmin(orgId: number): Promise<boolean> {
+  async isCurrentUserOrgOwner(orgId: number): Promise<boolean> {
     const member = await this.getCurrentUserMember(orgId)
     if (!member) return false
-    return ORG_ADMIN_ROLES.includes(member.role as OrgRole)
+    return member.role === OrgRoles.OWNER
   }
 
   private generateSlug(): string {
