@@ -71,6 +71,7 @@
     "pino": "^9.4.0",
     "rotating-file-stream": "^3.2.5",
     "semver": "^7.6.3",
+    "taskview-api": "workspace:^",
     "taskview-db-schemas": "workspace:^",
     "terser": "^5.36.0",
     "ua-parser-js": "^2.0.9",

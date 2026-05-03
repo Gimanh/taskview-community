@@ -472,5 +472,27 @@
         "description": [
             "Create personal organizations for users without any organization membership"
         ]
+    },
+    "38": {
+        "version": "1.45.0",
+        "name": "Release 1.45.0",
+        "releaseDate": "20260425",
+        "scripts": [
+            "/1.45.0/0.analytics_indexes.sql"
+        ],
+        "description": [
+            "Add composite indexes on tasks.tasks for analytics queries"
+        ]
+    },
+    "39": {
+        "version": "1.46.0",
+        "name": "Release 1.46.0",
+        "releaseDate": "20260426",
+        "scripts": [
+            "/1.46.0/0.add-analytics-permission.sql"
+        ],
+        "description": [
+            "Add analytics_can_view permission for project-level analytics access"
+        ]
     }
 }

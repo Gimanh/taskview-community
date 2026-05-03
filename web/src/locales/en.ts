@@ -436,10 +436,72 @@ export default {
     docker: 'Docker Images',
     accountSettings: 'Account settings',
     organizations: 'Organizations',
+    analytics: 'Analytics',
     switchOrganization: 'Switch organization',
     logout: 'Log out',
     logoutFailed: 'Logout failed',
     logoutFailedDescription: 'Try clearing browser cache to remove the authorization token',
+  },
+  analytics: {
+    page: {
+      title: 'Analytics',
+      subtitle: 'Productivity and project health metrics',
+      emptyState: 'No data yet. Create tasks to see analytics.',
+      emptyStateForPeriod: 'No data for the selected period. Try a longer one.',
+      partialFailure: 'Some sections failed to load. Try refreshing.',
+    },
+    errors: {
+      forbidden: 'You do not have access to these analytics.',
+      network: 'Could not reach the server. Check your connection.',
+      server: 'Server returned an error. Try refreshing the page.',
+      unknown: 'Failed to load analytics.',
+    },
+    help: {
+      aria: 'Help for this metric',
+    },
+    chartTypes: {
+      line: 'Line',
+      bar: 'Bar',
+      area: 'Area',
+      stackedBar: 'Stacked',
+      stackedArea: 'Stacked area',
+      horizontalBar: 'Horiz.',
+      donut: 'Donut',
+      histogram: 'Histogram',
+      radar: 'Radar',
+    },
+    units: {
+      days: 'd',
+      hours: 'h',
+    },
+    priorities: {
+      low: 'Low',
+      medium: 'Medium',
+      high: 'High',
+    },
+    filters: {
+      periods: {
+        '7d': '7 days',
+        '30d': '30 days',
+        '90d': '90 days',
+        '180d': 'Quarter',
+        '365d': 'Year',
+      },
+      scopes: {
+        org: 'Whole organization',
+      },
+    },
+    drillDown: {
+      defaultTitle: 'Tasks',
+      empty: 'No tasks in this selection',
+      noTaskTitle: 'Untitled',
+      due: 'due',
+      created: 'created',
+      closed: 'closed',
+    },
+    sectionCard: {
+      noData: 'No data for the selected period',
+    },
   },
   account: {
     title: 'Account settings',
