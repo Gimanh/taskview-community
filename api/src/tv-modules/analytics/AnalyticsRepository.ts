@@ -1,4 +1,4 @@
-import { eq, inArray, sql, type SQL } from 'drizzle-orm'
+import { and, eq, inArray, sql, type SQL } from 'drizzle-orm'
 import { GoalsSchema } from 'taskview-db-schemas'
 import { Database } from '../../modules/db'
 import { callWithCatch } from '../../utils/helpers'
@@ -74,24 +74,30 @@ export class AnalyticsRepository {
       this.db.dbDrizzle
         .select({ id: GoalsSchema.id })
         .from(GoalsSchema)
-        .where(eq(GoalsSchema.organizationId, organizationId)),
+        .where(and(
+          eq(GoalsSchema.organizationId, organizationId),
+          eq(GoalsSchema.archive, 0),
+        )),
     )
     return (result ?? []).map(r => r.id).filter((id): id is number => id !== null)
   }
 
-  async fetchGoalIdsWithPermission(
+  async fetchGoalIdsWithPermissions(
     userId: number,
     email: string,
     organizationId: number,
-    permissionName: string,
+    permissionNames: string[],
   ): Promise<number[]> {
+    if (permissionNames.length === 0) return []
+
     const result = await this.db.dbDrizzle.execute<{ id: number }>(sql`
       select g.id from tasks.goals g
       where g.organization_id = ${organizationId}
+        and g.archive = 0
         and (
           g.owner = ${userId}
-          or exists (
-            select 1
+          or (
+            select count(distinct p.name)
             from collaboration.users cu
             join collaboration.users_to_goals utg on utg.user_id = cu.id and utg.goal_id = g.id
             join collaboration.users_to_roles utr on utr.user_id = cu.id
@@ -99,8 +105,8 @@ export class AnalyticsRepository {
             join collaboration.permissions_to_role ptr on ptr.role_id = r.id
             join tv_auth.permissions p on p.id = ptr.permission_id
             where cu.email = ${email}
-              and p.name = ${permissionName}
-          )
+              and p.name = any(${sql`ARRAY[${sql.join(permissionNames.map(n => sql`${n}`), sql`, `)}]::text[]`})
+          ) = ${permissionNames.length}
         )
     `)
     return result.rows.map(r => Number(r.id)).filter(id => Number.isInteger(id))

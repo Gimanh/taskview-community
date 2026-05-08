@@ -88,6 +88,7 @@ export class WorkloadByAssigneeSection implements SectionBuilder {
       no_priority: 'null',
     }
     const priorityFilter = priorityByDataset[arg.datasetId]
+    if (priorityFilter === undefined) return []
 
     return ctx.repository.fetchOpenTasksAssignedWithPriority(
       ctx.accessibleGoalIds,

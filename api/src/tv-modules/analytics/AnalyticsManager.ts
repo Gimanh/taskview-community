@@ -29,14 +29,14 @@ export class AnalyticsManager {
   }
 
   async getAccessibleGoalIds(organizationId: number): Promise<number[]> {
-    const userData = this.user.getUserData()
-    if (!userData?.id || !userData?.email) return []
+    return this.fetchGoalIds(organizationId, [GoalPermissions.ANALYTICS_CAN_VIEW])
+  }
 
-    const ids = await this.user.organizationManager.isCurrentUserOrgOwner(organizationId)
-      ? await this.repository.fetchAllGoalIdsInOrg(organizationId)
-      : await this.fetchMemberAccessibleGoalIds(userData.id, userData.email, organizationId)
-
-    return this.applyTokenFilter(ids)
+  async getDrillDownGoalIds(organizationId: number): Promise<number[]> {
+    return this.fetchGoalIds(organizationId, [
+      GoalPermissions.ANALYTICS_CAN_VIEW,
+      GoalPermissions.TASKS_CAN_WATCH_DETAILS,
+    ])
   }
 
   async buildSections(params: AnalyticsArgBuildSections): Promise<AnalyticsSectionsResponse> {
@@ -96,7 +96,7 @@ export class AnalyticsManager {
       return { sectionId, tasks: [], total: 0 }
     }
 
-    const allAccessible = await this.getAccessibleGoalIds(organizationId)
+    const allAccessible = await this.getDrillDownGoalIds(organizationId)
     const accessibleGoalIds = this.narrowToScope(allAccessible, scope)
 
     const ctx: BuilderContext = {
@@ -116,13 +116,20 @@ export class AnalyticsManager {
     return { sectionId, tasks, total: tasks.length }
   }
 
-  private async fetchMemberAccessibleGoalIds(userId: number, email: string, organizationId: number): Promise<number[]> {
-    return this.repository.fetchGoalIdsWithPermission(
-      userId,
-      email,
-      organizationId,
-      GoalPermissions.ANALYTICS_CAN_VIEW,
-    )
+  private async fetchGoalIds(organizationId: number, permissions: string[]): Promise<number[]> {
+    const userData = this.user.getUserData()
+    if (!userData?.id || !userData?.email) return []
+
+    const ids = await this.user.organizationManager.isCurrentUserOrgOwner(organizationId)
+      ? await this.repository.fetchAllGoalIdsInOrg(organizationId)
+      : await this.repository.fetchGoalIdsWithPermissions(
+        userData.id,
+        userData.email,
+        organizationId,
+        permissions,
+      )
+
+    return this.applyTokenFilter(ids)
   }
 
   private applyTokenFilter(ids: number[]): number[] {
