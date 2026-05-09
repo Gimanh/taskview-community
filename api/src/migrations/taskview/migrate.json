@@ -494,5 +494,18 @@
         "description": [
             "Add analytics_can_view permission for project-level analytics access"
         ]
+    },
+    "40": {
+        "version": "1.47.0",
+        "name": "Release 1.47.0",
+        "releaseDate": "20260509",
+        "scripts": [
+            "/1.47.0/0.analytics_indexes_v2.sql"
+        ],
+        "description": [
+            "Add indexes on tasks_auth.task_assignee, collaboration.users_to_goals, tasks.task_relations(to_task_id) for analytics joins",
+            "Add partial index on tasks.goals(organization_id) WHERE archive = 0 for analytics goal lookup",
+            "Add partial index on tasks.tasks(goal_id) WHERE complete IS NOT TRUE for open-task analytics queries"
+        ]
     }
 }

@@ -4,16 +4,16 @@ import { CompletedTasksKpi } from './kpi/CompletedTasksKpi'
 import { OverdueKpi } from './kpi/OverdueKpi'
 import { CycleTimeKpi } from './kpi/CycleTimeKpi'
 import { ThroughputSection } from './productivity/ThroughputSection'
-import { PriorityMixOverTimeSection } from './productivity/PriorityMixOverTimeSection'
+// import { PriorityMixOverTimeSection } from './productivity/PriorityMixOverTimeSection'
 import { WorkloadByAssigneeSection } from './workload/WorkloadByAssigneeSection'
-import { BlockedByDependenciesSection } from './workload/BlockedByDependenciesSection'
-import { TimeInKanbanStatusSection } from './workload/TimeInKanbanStatusSection'
-import { AgingOpenTasksSection } from './workload/AgingOpenTasksSection'
+// import { BlockedByDependenciesSection } from './workload/BlockedByDependenciesSection'
+// import { TimeInKanbanStatusSection } from './workload/TimeInKanbanStatusSection'
+// import { AgingOpenTasksSection } from './workload/AgingOpenTasksSection'
 import { OverdueByAgeSection } from './quality/OverdueByAgeSection'
-import { CycleTimeHistogramSection } from './quality/CycleTimeHistogramSection'
+// import { CycleTimeHistogramSection } from './quality/CycleTimeHistogramSection'
 import { StaleTasksSection } from './quality/StaleTasksSection'
-import { CycleTimePerProjectSection } from './quality/CycleTimePerProjectSection'
-import { StatusDistributionSection } from './usage/StatusDistributionSection'
+// import { CycleTimePerProjectSection } from './quality/CycleTimePerProjectSection'
+// import { StatusDistributionSection } from './usage/StatusDistributionSection'
 import { ActiveProjectsSection } from './usage/ActiveProjectsSection'
 import { IncomeExpenseMonthSection } from './financial/IncomeExpenseMonthSection'
 import { IncomeExpensePerProjectSection } from './financial/IncomeExpensePerProjectSection'
@@ -39,19 +39,19 @@ const builders: SectionBuilder[] = [
   new AmountCoverageKpi(),
   // Productivity
   new ThroughputSection(),
-  new PriorityMixOverTimeSection(),
+  // new PriorityMixOverTimeSection(),
   // Workload
   new WorkloadByAssigneeSection(),
-  new BlockedByDependenciesSection(),
-  new TimeInKanbanStatusSection(),
-  new AgingOpenTasksSection(),
+  // new BlockedByDependenciesSection(),
+  // new TimeInKanbanStatusSection(),
+  // new AgingOpenTasksSection(),
   // Quality
   new OverdueByAgeSection(),
-  new CycleTimeHistogramSection(),
+  // new CycleTimeHistogramSection(),
   new StaleTasksSection(),
-  new CycleTimePerProjectSection(),
+  // new CycleTimePerProjectSection(),
   // Usage
-  new StatusDistributionSection(),
+  // new StatusDistributionSection(),
   new ActiveProjectsSection(),
   // Financial
   new IncomeExpenseMonthSection(),
