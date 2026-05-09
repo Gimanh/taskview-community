@@ -126,6 +126,8 @@ export const GoalPermissions = {
 
     INTEGRATIONS_CAN_MANAGE: 'integrations_can_manage',
     INTEGRATIONS_CAN_VIEW: 'integrations_can_view',
+
+    ANALYTICS_CAN_VIEW: 'analytics_can_view',
 } as const;
 
 export type PermissionsEntityType =

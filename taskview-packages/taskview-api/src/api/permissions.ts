@@ -125,6 +125,11 @@ export const TvPermissions: Record<Uppercase<keyof GoalPermissions>, keyof GoalP
 
     INTEGRATIONS_CAN_MANAGE: 'integrations_can_manage',
     INTEGRATIONS_CAN_VIEW: 'integrations_can_view',
+
+    /**
+     * Can view analytics dashboards and KPIs for this goal
+     */
+    ANALYTICS_CAN_VIEW: 'analytics_can_view',
 } as const;
 
 export type GoalPermissions = {
@@ -167,4 +172,6 @@ export type GoalPermissions = {
 
     integrations_can_manage?: true;
     integrations_can_view?: true;
+
+    analytics_can_view?: true;
 };

@@ -176,6 +176,13 @@ const items = computed<DropdownMenuItem[][]>(() => [
         router.push({ name: 'organizations' })
       },
     },
+    {
+      label: t('userMenu.analytics'),
+      icon: 'i-lucide-bar-chart-3',
+      onSelect() {
+        router.push({ name: 'analytics' })
+      },
+    },
   ],
   [
     {

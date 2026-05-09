@@ -35,12 +35,12 @@ export class GoalPermissionsRepository {
         if (goalInfo.rows[0].owner === user.getUserData()?.id) {
             query = `select name as "permissionName", id as "permissionId" from tv_auth.permissions;`;
         } else {
-            query = `select p.name as "permissionName", p.id as "permissionId"  
+            query = `select p.name as "permissionName", p.id as "permissionId"
                         from collaboration.users cu
                                 left join collaboration.users_to_goals utg on cu.id = utg.user_id
                                 left join tasks.goals tg on utg.goal_id = tg.id
                                 left join collaboration.users_to_roles utr on utr.user_id = cu.id
-                                left join collaboration.roles rol on utr.role_id = rol.id
+                                left join collaboration.roles rol on utr.role_id = rol.id and rol.goal_id = tg.id
                                 left join collaboration.permissions_to_role ptr on rol.id = ptr.role_id
                                 left join tv_auth.permissions p on ptr.permission_id = p.id
                         where email = $1 and tg.id = $2 and p.name is not null and p.id is not null;`;

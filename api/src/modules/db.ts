@@ -8,13 +8,24 @@ export class Database {
     public dbDrizzle: ReturnType<typeof drizzle>;
 
     private constructor() {
+        const poolMaxRaw = Number(process.env.DB_POOL_MAX);
+        const poolMax = Number.isFinite(poolMaxRaw) && poolMaxRaw > 0 ? poolMaxRaw : 20;
+
         this.pool = new Pool({
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME,
             port: +process.env.DB_PORT!,
+            max: poolMax,
             idleTimeoutMillis: 30000,
+            connectionTimeoutMillis: 10000,
+        });
+
+        this.pool.on('connect', (client) => {
+            client.query("SET TIME ZONE 'UTC'").catch((err) => {
+                console.error('Failed to set session timezone to UTC:', err);
+            });
         });
 
         this.dbDrizzle = drizzle({ client: this.pool, casing: 'camelCase' });
@@ -48,7 +59,7 @@ export class Database {
         try {
             const res = await client.query(text, params);
             const duration = Date.now() - start;
-            $logger.info('executed query', { text, duration, rows: res.rowCount });
+            $logger.info({ text, duration, rows: res.rowCount }, 'executed query');
             // console.log('executed query', { text, duration, rows: res.rowCount });
             return res;
         } catch (err) {

@@ -80,6 +80,11 @@ const router = createRouter({
           component: () => import('./pages/user/organizations.vue'),
         },
         {
+          path: 'analytics',
+          name: 'analytics',
+          component: () => import('./pages/user/analytics.vue'),
+        },
+        {
           path: ':projectId?/:listId?/:taskId?',
           name: 'user',
           component: () => import('./pages/user/index.vue'),

@@ -60,6 +60,17 @@ export function parseDeviceName(userAgent: string | undefined): string {
     return parts.length > 0 ? parts.join(', ') : 'Unknown'
 }
 
+export function parsePositiveInt(value: unknown): number | null {
+    if (typeof value === 'number') {
+        return Number.isInteger(value) && value > 0 ? value : null
+    }
+    if (typeof value === 'string' && /^\d+$/.test(value)) {
+        const n = Number(value)
+        return Number.isSafeInteger(n) && n > 0 ? n : null
+    }
+    return null
+}
+
 export const chunk = <T>(array: T[], size: number): T[][] => {
     if (!Array.isArray(array)) {
         throw new TypeError('Expected array');

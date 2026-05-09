@@ -5,6 +5,11 @@
 TaskView is a self-hosted project and task management platform focused on clarity, ownership, and control.
 TaskView is built for teams that want a transparent, self-hosted alternative to SaaS task managers.
 
+[![License](https://img.shields.io/badge/license-Source--Available-blue)](./LICENSE)
+[![Active Development](https://img.shields.io/badge/status-active-brightgreen)]()
+ 
+[**Live demo**](https://app.taskview.tech) · [**Documentation**](https://taskview.tech/docs/) · [**iOS**](https://apps.apple.com/lk/app/taskview-todo-list-tasks/id6499107867) · [**Android**](https://play.google.com/store/apps/details?id=com.handscreamgnl.taskview.app&hl=en)
+
 ## Apps
 * [Docs](https://taskview.tech/docs/) 
 * [Web](https://app.taskview.tech/)  
@@ -134,11 +139,18 @@ Make sure the image versions match the version defined in the root package.json.
 
 ## Roadmap
 
-- Plugin / extension system
+
 - [X] Migrate to NuxtUI or similar ui library
-- Enterprise SSO and identity integrations
+- [X] Enterprise SSO and identity integrations
 - [X] Redesign
-- Desktop version
+- [X] API tokens
+- [X] Webhooks
+- [X] MCP server
+- [X] Notifications
+- [X] Analytics
+- [X] API client
+- [ ] Desktop version
+- [ ] Plugin / extension system
 
 
 Note for contributors: contributions are accepted under the CLA (see CONTRIBUTING.md). The Project is distributed under the TaskView Source-Available License.
