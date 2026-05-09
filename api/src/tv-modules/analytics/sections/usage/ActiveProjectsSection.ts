@@ -4,13 +4,6 @@ import { sectionLocales } from '../locales'
 
 type StatusKey = 'active' | 'fading' | 'dead' | 'empty'
 
-const STATUS_LABEL_RU: Record<StatusKey, string> = {
-  active: 'Активен',
-  fading: 'Затухает',
-  dead: 'Мёртв',
-  empty: 'Без задач',
-}
-
 const COLOR_BY_STATUS: Record<StatusKey, 'success' | 'warning' | 'danger' | 'neutral'> = {
   active: 'success',
   fading: 'warning',
@@ -34,10 +27,12 @@ export class ActiveProjectsSection implements SectionBuilder {
 
     const rows = await ctx.repository.fetchActiveProjects(ctx.accessibleGoalIds)
     const loc = this.loc
+    const labelTexts = rows.map(r => loc.labels![r.status_key])
 
     const payload: AnalyticsSeriesPayload = {
       kind: 'series',
-      labels: rows.map(r => STATUS_LABEL_RU[r.status_key]),
+      labels: labelTexts.map(l => l.ru),
+      labelTexts,
       labelKind: 'category',
       datasets: [
         {

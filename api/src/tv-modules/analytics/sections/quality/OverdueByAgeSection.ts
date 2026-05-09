@@ -19,9 +19,13 @@ export class OverdueByAgeSection implements SectionBuilder {
     const row = await ctx.repository.fetchOverdueByAge(ctx.accessibleGoalIds)
     const loc = this.loc
 
+    const bucketKeys = ['bucket_1_3', 'bucket_4_7', 'bucket_8_14', 'bucket_15_plus'] as const
+    const labelTexts = bucketKeys.map(k => loc.labels![k])
+
     const payload: AnalyticsSeriesPayload = {
       kind: 'series',
-      labels: ['1–3д', '4–7д', '8–14д', '15+'],
+      labels: labelTexts.map(l => l.ru),
+      labelTexts,
       labelKind: 'category',
       datasets: [
         {

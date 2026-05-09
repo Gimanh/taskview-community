@@ -96,8 +96,18 @@ export class AnalyticsManager {
       return { sectionId, tasks: [], total: 0 }
     }
 
-    const allAccessible = await this.getDrillDownGoalIds(organizationId)
-    const accessibleGoalIds = this.narrowToScope(allAccessible, scope)
+    const aggregateGoalIds = this.narrowToScope(
+      await this.getAccessibleGoalIds(organizationId),
+      scope,
+    )
+    const accessibleGoalIds = this.narrowToScope(
+      await this.getDrillDownGoalIds(organizationId),
+      scope,
+    )
+
+    if (aggregateGoalIds.length > 0 && accessibleGoalIds.length === 0) {
+      return { sectionId, tasks: [], total: 0, denied: true }
+    }
 
     const ctx: BuilderContext = {
       appUser: this.user,

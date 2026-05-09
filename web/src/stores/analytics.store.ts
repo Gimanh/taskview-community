@@ -50,6 +50,7 @@ export const useAnalyticsStore = defineStore('analytics', {
       bucket: null,
       tasks: [],
       error: null,
+      denied: false,
     },
   }),
   getters: {
@@ -146,6 +147,7 @@ export const useAnalyticsStore = defineStore('analytics', {
       this.drillDown.bucket = args.bucket
       this.drillDown.tasks = []
       this.drillDown.error = null
+      this.drillDown.denied = false
 
       const orgStore = useOrganizationStore()
       const organizationId = orgStore.currentOrg?.id
@@ -170,6 +172,7 @@ export const useAnalyticsStore = defineStore('analytics', {
         if (controller.signal.aborted) return
         if (result) {
           this.drillDown.tasks = result.tasks
+          this.drillDown.denied = result.denied === true
         }
       } catch (e) {
         if (controller.signal.aborted || isCancelled(e)) return
@@ -193,6 +196,7 @@ export const useAnalyticsStore = defineStore('analytics', {
       this.drillDown.sectionTitle = null
       this.drillDown.bucket = null
       this.drillDown.error = null
+      this.drillDown.denied = false
     },
   },
 })

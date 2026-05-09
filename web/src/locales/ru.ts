@@ -466,6 +466,7 @@ export default {
     drillDown: {
       defaultTitle: 'Задачи',
       empty: 'Нет задач в этой выборке',
+      denied: 'У вас нет прав на просмотр деталей задач',
       noTaskTitle: 'Без названия',
       due: 'до',
       created: 'создано',

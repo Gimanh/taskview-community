@@ -18,6 +18,13 @@
         <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin text-zinc-400" />
       </div>
       <div
+        v-else-if="!analyticsStore.drillDown.error && analyticsStore.drillDown.denied"
+        class="flex flex-col items-center gap-2 py-12 text-center text-sm text-zinc-500"
+      >
+        <UIcon name="i-lucide-lock" class="size-8 text-zinc-400" />
+        <p>{{ t('analytics.drillDown.denied') }}</p>
+      </div>
+      <div
         v-else-if="!analyticsStore.drillDown.error && analyticsStore.drillDown.tasks.length === 0"
         class="flex flex-col items-center gap-2 py-12 text-center text-sm text-zinc-500"
       >

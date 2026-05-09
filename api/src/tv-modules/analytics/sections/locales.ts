@@ -8,6 +8,7 @@ export type SectionLocale = {
     details: LocalizedText
   }
   datasets?: Record<string, LocalizedText>
+  labels?: Record<string, LocalizedText>
   xAxisLabel?: LocalizedText
   yAxisLabel?: LocalizedText
 }
@@ -358,6 +359,12 @@ export const sectionLocales = {
     datasets: {
       overdue: { ru: 'Просрочено', en: 'Overdue' },
     },
+    labels: {
+      bucket_1_3: { ru: '1–3 дн', en: '1–3 d' },
+      bucket_4_7: { ru: '4–7 дн', en: '4–7 d' },
+      bucket_8_14: { ru: '8–14 дн', en: '8–14 d' },
+      bucket_15_plus: { ru: '15+ дн', en: '15+ d' },
+    },
     yAxisLabel: { ru: 'Задач', en: 'Tasks' },
   },
 
@@ -554,6 +561,12 @@ export const sectionLocales = {
     },
     datasets: {
       count: { ru: 'Проектов', en: 'Projects' },
+    },
+    labels: {
+      active: { ru: 'Активен', en: 'Active' },
+      fading: { ru: 'Затухает', en: 'Fading' },
+      dead: { ru: 'Мёртв', en: 'Dead' },
+      empty: { ru: 'Без задач', en: 'Empty' },
     },
     yAxisLabel: { ru: 'Проектов', en: 'Projects' },
   },

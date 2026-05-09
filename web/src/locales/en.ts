@@ -494,6 +494,7 @@ export default {
     drillDown: {
       defaultTitle: 'Tasks',
       empty: 'No tasks in this selection',
+      denied: 'You do not have permission to view individual task details',
       noTaskTitle: 'Untitled',
       due: 'due',
       created: 'created',

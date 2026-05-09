@@ -60,6 +60,7 @@ export type AnalyticsReferenceLine = {
 export type AnalyticsSeriesPayload = {
   kind: 'series'
   labels: string[]
+  labelTexts?: LocalizedText[]
   labelKind: 'date' | 'category'
   datasets: AnalyticsDataset[]
   referenceLines?: AnalyticsReferenceLine[]
@@ -149,6 +150,7 @@ export type AnalyticsDrillDownResponse = {
   sectionId: string
   tasks: AnalyticsDrillDownTask[]
   total: number
+  denied?: boolean
 }
 
 export type AnalyticsFetchDrillDownArg = {

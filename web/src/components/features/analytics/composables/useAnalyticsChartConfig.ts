@@ -15,6 +15,13 @@ export function useAnalyticsChartConfig() {
   const { colorFor, paletteForCount, transparentize } = useAnalyticsTheme()
   const { t } = useI18n()
 
+  function displayLabels(payload: AnalyticsSeriesPayload): string[] {
+    if (payload.labelTexts && payload.labelTexts.length === payload.labels.length) {
+      return payload.labelTexts.map(pick)
+    }
+    return payload.labels
+  }
+
   function build(section: AnalyticsSection, chartType: AnalyticsChartType): AnyChartConfig {
     if (section.payload.kind !== 'series') {
       throw new Error('useAnalyticsChartConfig only supports series payloads')
@@ -49,7 +56,7 @@ export function useAnalyticsChartConfig() {
     payload: AnalyticsSeriesPayload,
   ): AnyChartConfig {
     const MAX_ENTITIES = 5
-    const limitedLabels = payload.labels.slice(0, MAX_ENTITIES)
+    const limitedLabels = displayLabels(payload).slice(0, MAX_ENTITIES)
 
     const axisLabels = payload.datasets.map(ds => pick(ds.label))
     const colors = paletteForCount(limitedLabels.length)
@@ -104,7 +111,7 @@ export function useAnalyticsChartConfig() {
     return {
       type: 'line' as ChartType,
       data: {
-        labels: payload.labels,
+        labels: displayLabels(payload),
         datasets: payload.datasets.map((ds, i) => {
           const color = colorFor(ds.colorToken, i)
           return {
@@ -130,16 +137,17 @@ export function useAnalyticsChartConfig() {
     indexAxis: 'x' | 'y',
     stacked: boolean,
   ): AnyChartConfig {
-    const useMultiColor = payload.datasets.length === 1 && payload.labels.length > 1
+    const labels = displayLabels(payload)
+    const useMultiColor = payload.datasets.length === 1 && labels.length > 1
 
     return {
       type: 'bar',
       data: {
-        labels: payload.labels,
+        labels,
         datasets: payload.datasets.map((ds, i) => {
           const singleColor = colorFor(ds.colorToken, i)
           const backgroundColor = useMultiColor
-            ? paletteForCount(payload.labels.length)
+            ? paletteForCount(labels.length)
             : singleColor
           return {
             label: pick(ds.label),
@@ -157,11 +165,12 @@ export function useAnalyticsChartConfig() {
 
   function donutChart(section: AnalyticsSection, payload: AnalyticsSeriesPayload): AnyChartConfig {
     const firstDs = payload.datasets[0]
-    const colors = paletteForCount(payload.labels.length)
+    const labels = displayLabels(payload)
+    const colors = paletteForCount(labels.length)
     return {
       type: 'doughnut',
       data: {
-        labels: payload.labels,
+        labels,
         datasets: [
           {
             label: firstDs ? pick(firstDs.label) : pick(section.title),
