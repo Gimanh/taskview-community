@@ -9,6 +9,7 @@ import { registerCollaborationTools } from './tools/collaboration.js'
 import { registerGraphTools } from './tools/graph.js'
 import { registerNotificationsTools } from './tools/notifications.js'
 import { registerOrganizationsTools } from './tools/organizations.js'
+import { registerTimeTrackingTools } from './tools/time-tracking.js'
 
 export function createMcpServer(api: TvApi) {
   const server = new McpServer({
@@ -25,6 +26,7 @@ export function createMcpServer(api: TvApi) {
   registerGraphTools(server, api)
   registerNotificationsTools(server, api)
   registerOrganizationsTools(server, api)
+  registerTimeTrackingTools(server, api)
 
   return server
 }

@@ -9,6 +9,7 @@ export const OrganizationsSchema = pgSchema('tv_auth').table('organizations', {
   logoUrl: varchar('logo_url'),
   isPersonal: integer('is_personal').notNull().default(0),
   plan: varchar().notNull().default('free'),
+  timeTrackingAutostopHours: integer('time_tracking_autostop_hours').default(24),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 })

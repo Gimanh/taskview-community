@@ -128,6 +128,10 @@ export const GoalPermissions = {
     INTEGRATIONS_CAN_VIEW: 'integrations_can_view',
 
     ANALYTICS_CAN_VIEW: 'analytics_can_view',
+
+    TIMETRACKING_CAN_VIEW: 'timetracking_can_view',
+    TIMETRACKING_CAN_LOG: 'timetracking_can_log',
+    TIMETRACKING_CAN_MANAGE_ALL: 'timetracking_can_manage_all',
 } as const;
 
 export type PermissionsEntityType =

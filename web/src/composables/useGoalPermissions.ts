@@ -80,6 +80,10 @@ export const useGoalPermissions = () => {
   const canViewIntegrations = computed(() => permissions.INTEGRATIONS_CAN_VIEW || permissions.INTEGRATIONS_CAN_MANAGE)
   const canManageIntegrations = computed(() => permissions.INTEGRATIONS_CAN_MANAGE)
 
+  const canViewTimeTracking = computed(() => permissions.TIMETRACKING_CAN_VIEW || permissions.TIMETRACKING_CAN_MANAGE_ALL)
+  const canLogTime = computed(() => permissions.TIMETRACKING_CAN_LOG || permissions.TIMETRACKING_CAN_MANAGE_ALL)
+  const canManageAllTime = computed(() => permissions.TIMETRACKING_CAN_MANAGE_ALL)
+
   return {
     permissions,
     canDeleteGoal,
@@ -114,5 +118,8 @@ export const useGoalPermissions = () => {
     canManageGraph,
     canViewIntegrations,
     canManageIntegrations,
+    canViewTimeTracking,
+    canLogTime,
+    canManageAllTime,
   }
 }

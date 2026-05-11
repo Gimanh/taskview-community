@@ -112,6 +112,12 @@
         class="flex-1"
       />
 
+      <!-- Time tracking -->
+      <TaskTimeTracking
+        :task-id="task.id"
+        class="flex-1"
+      />
+
       <!-- History -->
       <TaskHistory
         :task-id="task.id"
@@ -144,6 +150,7 @@ import TaskAssigneeSelect from '@/components/features/tasks/parts/TaskAssigneeSe
 import TaskListSelect from '@/components/features/tasks/parts/TaskListSelect.vue'
 import TaskKanbanStatusSelect from '@/components/features/tasks/parts/TaskKanbanStatusSelect.vue'
 import TaskAmountEditor from '@/components/features/tasks/parts/TaskAmountEditor.vue'
+import TaskTimeTracking from '@/components/features/tasks/parts/TaskTimeTracking.vue'
 import TaskHistory from '@/components/features/tasks/parts/TaskHistory.vue'
 import TaskDeadline from '@/components/features/tasks/parts/TaskDeadline.vue'
 import TaskSubtasks from '@/components/features/tasks/parts/TaskSubtasks.vue'

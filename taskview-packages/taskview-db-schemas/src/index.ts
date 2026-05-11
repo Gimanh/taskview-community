@@ -17,3 +17,5 @@ export * from './schemas/api-tokens.schema';
 export * from './schemas/user-tokens.schema';
 export * from './schemas/organizations.schema';
 export * from './schemas/sso.schema';
+export * from './schemas/time-entries.schema';
+export * from './schemas/time-entries-history.schema';

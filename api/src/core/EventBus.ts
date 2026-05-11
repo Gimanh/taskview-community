@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import type { TasksSchemaTypeForSelect } from 'taskview-db-schemas';
+import type { TasksSchemaTypeForSelect, TimeEntriesSchemaTypeForSelect } from 'taskview-db-schemas';
 import { $logger } from '../modules/logget';
 
 export interface AppEvents {
@@ -10,6 +10,11 @@ export interface AppEvents {
     'collaboration.userAdded': { goalId: number; email: string; initiatorId: number };
     'collaboration.userRemoved': { goalId: number; collaborationUserId: number; initiatorId: number };
     'collaboration.rolesChanged': { goalId: number; collaborationUserId: number; initiatorId: number };
+    'time-entry.started': { entry: TimeEntriesSchemaTypeForSelect; taskId: number; userId: number; goalId: number };
+    'time-entry.stopped': { entry: TimeEntriesSchemaTypeForSelect; taskId: number; userId: number; goalId: number; durationSeconds: number };
+    'time-entry.created': { entry: TimeEntriesSchemaTypeForSelect; initiatorId: number };
+    'time-entry.updated': { entry: TimeEntriesSchemaTypeForSelect; changes: Record<string, unknown>; initiatorId: number };
+    'time-entry.deleted': { entryId: number; taskId: number; goalId: number; userId: number; initiatorId: number };
 }
 
 type EventName = keyof AppEvents;

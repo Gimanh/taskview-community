@@ -507,5 +507,24 @@
             "Add partial index on tasks.goals(organization_id) WHERE archive = 0 for analytics goal lookup",
             "Add partial index on tasks.tasks(goal_id) WHERE complete IS NOT TRUE for open-task analytics queries"
         ]
+    },
+    "41": {
+        "version": "1.48.0",
+        "name": "Release 1.48.0",
+        "releaseDate": "20260511",
+        "scripts": [
+            "/1.48.0/0.create-time-entries.sql",
+            "/1.48.0/1.create-time-entries-history.sql",
+            "/1.48.0/2.alter-organizations-add-autostop.sql",
+            "/1.48.0/3.add-timetracking-permissions.sql",
+            "/1.48.0/all-triggers.sql"
+        ],
+        "description": [
+            "Added time-tracking module: tasks.time_entries with one-active-timer-per-user partial unique index",
+            "Added history.time_entries audit table with FK ON DELETE CASCADE to time_entries (history removed with the entry)",
+            "Added time_tracking_autostop_hours column to tv_auth.organizations (default 24, NULL = disabled)",
+            "Added timetracking_can_log and timetracking_can_manage_all goal-level permissions (granted to new projects only, matching the 1.46.0 analytics convention)",
+            "all-triggers.sql: updated add_roles_and_permissions function with new permissions; added log_changes_time_entries trigger (BEFORE UPDATE writes JSONB snapshot to history.time_entries)"
+        ]
     }
 }
