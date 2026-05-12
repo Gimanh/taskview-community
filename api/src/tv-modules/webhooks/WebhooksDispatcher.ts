@@ -23,6 +23,11 @@ export class WebhooksDispatcher implements Dispatcher {
         eventBus.on('task.updated', (data) => this.dispatch('task.updated', data.task.goalId, data));
         eventBus.on('task.deleted', (data) => this.dispatch('task.deleted', data.goalId, data));
         eventBus.on('task.assigneesChanged', (data) => this.dispatchAssigneesChanged(data));
+        eventBus.on('time-entry.started', (data) => this.dispatch('time-entry.started', data.goalId, data));
+        eventBus.on('time-entry.stopped', (data) => this.dispatch('time-entry.stopped', data.goalId, data));
+        eventBus.on('time-entry.created', (data) => this.dispatch('time-entry.created', data.entry.goalId, data));
+        eventBus.on('time-entry.updated', (data) => this.dispatch('time-entry.updated', data.entry.goalId, data));
+        eventBus.on('time-entry.deleted', (data) => this.dispatch('time-entry.deleted', data.goalId, data));
     }
 
     async registerWorkers(): Promise<void> {
