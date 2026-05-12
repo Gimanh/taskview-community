@@ -3,6 +3,7 @@ export type TimeEntryItem = {
     taskId: number
     goalId: number
     userId: number
+    userEmail: string | null
     startedAt: string
     endedAt: string | null
     durationSeconds: number | null

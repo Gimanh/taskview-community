@@ -679,6 +679,9 @@ export default {
   },
   timeTracking: {
     title: 'Time tracking',
+    empty: 'No time entries yet',
+    you: 'You',
+    unknownUser: 'Unknown user',
     start: 'Start',
     stop: 'Stop',
     running: 'Running',

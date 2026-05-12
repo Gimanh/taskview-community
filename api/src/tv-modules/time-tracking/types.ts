@@ -1,6 +1,10 @@
 import { type } from 'arktype'
 import type { TimeEntriesSchemaTypeForSelect } from 'taskview-db-schemas'
 
+export type TimeEntryWithUser = TimeEntriesSchemaTypeForSelect & {
+    userEmail: string | null
+}
+
 const NumberFromString = type('string|number').pipe((v) => Number(v))
 const OptionalNumberFromString = type('string|number|undefined').pipe((v) => v === undefined ? undefined : Number(v))
 const DateFromString = type('string|Date').pipe((v) => v instanceof Date ? v : new Date(v))
@@ -111,8 +115,13 @@ export type TimeEntryFilters = {
 }
 
 export type TimeEntryStartResult = {
-    entry: TimeEntriesSchemaTypeForSelect
-    autoStoppedEntry: TimeEntriesSchemaTypeForSelect | null
+    entry: TimeEntryWithUser
+    autoStoppedEntry: TimeEntryWithUser | null
+}
+
+export type TimeEntryInsertResult = {
+    entry: TimeEntryWithUser | null
+    conflict: boolean
 }
 
 export type TimeEntryUserSeconds = { userId: number; seconds: number }

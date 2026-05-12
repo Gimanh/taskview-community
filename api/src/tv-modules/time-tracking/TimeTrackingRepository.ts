@@ -1,26 +1,45 @@
-import { and, desc, eq, gte, isNull, lte, sql, type SQL } from 'drizzle-orm'
+import { and, desc, eq, gte, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm'
 import {
     TimeEntriesSchema,
     TimeEntriesHistorySchema,
     TasksSchema,
-    type TimeEntriesSchemaTypeForSelect,
+    UsersSchema,
     type TimeEntriesHistorySchemaTypeForSelect,
 } from 'taskview-db-schemas'
 import { Database } from '../../modules/db'
 import { $logger } from '../../modules/logget'
 import { callWithCatch } from '../../utils/helpers'
-
-const PG_UNIQUE_VIOLATION = '23505'
 import type {
     TimeEntryFilters,
     TimeEntryGoalSummary,
     TimeEntryInsertParams,
+    TimeEntryInsertResult,
     TimeEntryTaskSummary,
     TimeEntryUpdateParams,
+    TimeEntryWithUser,
 } from './types'
+
+const PG_UNIQUE_VIOLATION = '23505'
 
 export class TimeTrackingRepository {
     private readonly db: Database
+
+    private static readonly entryWithUserProjection = {
+        id: TimeEntriesSchema.id,
+        taskId: TimeEntriesSchema.taskId,
+        goalId: TimeEntriesSchema.goalId,
+        userId: TimeEntriesSchema.userId,
+        startedAt: TimeEntriesSchema.startedAt,
+        endedAt: TimeEntriesSchema.endedAt,
+        durationSeconds: TimeEntriesSchema.durationSeconds,
+        description: TimeEntriesSchema.description,
+        source: TimeEntriesSchema.source,
+        billable: TimeEntriesSchema.billable,
+        autoStopped: TimeEntriesSchema.autoStopped,
+        createdAt: TimeEntriesSchema.createdAt,
+        editedAt: TimeEntriesSchema.editedAt,
+        userEmail: UsersSchema.email,
+    }
 
     constructor() {
         this.db = Database.getInstance()
@@ -36,24 +55,41 @@ export class TimeTrackingRepository {
         return result?.[0] ?? null
     }
 
-    async findActiveForUser(userId: number): Promise<TimeEntriesSchemaTypeForSelect | null> {
+    async findActiveForUser(userId: number): Promise<TimeEntryWithUser | null> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle
-                .select()
+                .select(TimeTrackingRepository.entryWithUserProjection)
                 .from(TimeEntriesSchema)
+                .leftJoin(UsersSchema, eq(UsersSchema.id, TimeEntriesSchema.userId))
                 .where(and(eq(TimeEntriesSchema.userId, userId), isNull(TimeEntriesSchema.endedAt))),
         )
         return result?.[0] ?? null
     }
 
-    async findById(id: number): Promise<TimeEntriesSchemaTypeForSelect | null> {
+    async findById(id: number): Promise<TimeEntryWithUser | null> {
         const result = await callWithCatch(() =>
-            this.db.dbDrizzle.select().from(TimeEntriesSchema).where(eq(TimeEntriesSchema.id, id)),
+            this.db.dbDrizzle
+                .select(TimeTrackingRepository.entryWithUserProjection)
+                .from(TimeEntriesSchema)
+                .leftJoin(UsersSchema, eq(UsersSchema.id, TimeEntriesSchema.userId))
+                .where(eq(TimeEntriesSchema.id, id)),
         )
         return result?.[0] ?? null
     }
 
-    async insert(data: TimeEntryInsertParams): Promise<TimeEntriesSchemaTypeForSelect | null> {
+    async findByIds(ids: number[]): Promise<TimeEntryWithUser[]> {
+        if (ids.length === 0) return []
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select(TimeTrackingRepository.entryWithUserProjection)
+                .from(TimeEntriesSchema)
+                .leftJoin(UsersSchema, eq(UsersSchema.id, TimeEntriesSchema.userId))
+                .where(inArray(TimeEntriesSchema.id, ids)),
+        )
+        return result ?? []
+    }
+
+    async insert(data: TimeEntryInsertParams): Promise<TimeEntryWithUser | null> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle
                 .insert(TimeEntriesSchema)
@@ -68,14 +104,14 @@ export class TimeTrackingRepository {
                     source: data.source,
                     billable: data.billable ?? true,
                 })
-                .returning(),
+                .returning({ id: TimeEntriesSchema.id }),
         )
-        return result?.[0] ?? null
+        const id = result?.[0]?.id
+        if (!id) return null
+        return this.findById(id)
     }
 
-    async tryInsertActiveTimer(
-        data: TimeEntryInsertParams,
-    ): Promise<{ entry: TimeEntriesSchemaTypeForSelect | null; conflict: boolean }> {
+    async tryInsertActiveTimer(data: TimeEntryInsertParams): Promise<TimeEntryInsertResult> {
         try {
             const result = await this.db.dbDrizzle
                 .insert(TimeEntriesSchema)
@@ -90,8 +126,11 @@ export class TimeTrackingRepository {
                     source: data.source,
                     billable: data.billable ?? true,
                 })
-                .returning()
-            return { entry: result?.[0] ?? null, conflict: false }
+                .returning({ id: TimeEntriesSchema.id })
+            const id = result?.[0]?.id
+            if (!id) return { entry: null, conflict: false }
+            const entry = await this.findById(id)
+            return { entry, conflict: false }
         } catch (error) {
             const code = (error as { code?: string } | null)?.code
             if (code === PG_UNIQUE_VIOLATION) {
@@ -102,15 +141,17 @@ export class TimeTrackingRepository {
         }
     }
 
-    async updateById(id: number, data: TimeEntryUpdateParams): Promise<TimeEntriesSchemaTypeForSelect | null> {
+    async updateById(id: number, data: TimeEntryUpdateParams): Promise<TimeEntryWithUser | null> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle
                 .update(TimeEntriesSchema)
                 .set(data)
                 .where(eq(TimeEntriesSchema.id, id))
-                .returning(),
+                .returning({ id: TimeEntriesSchema.id }),
         )
-        return result?.[0] ?? null
+        const updatedId = result?.[0]?.id
+        if (!updatedId) return null
+        return this.findById(updatedId)
     }
 
     async deleteById(id: number): Promise<boolean> {
@@ -120,7 +161,7 @@ export class TimeTrackingRepository {
         return !!result?.rowCount
     }
 
-    async fetchEntries(filters: TimeEntryFilters): Promise<TimeEntriesSchemaTypeForSelect[]> {
+    async fetchEntries(filters: TimeEntryFilters): Promise<TimeEntryWithUser[]> {
         const conditions: SQL[] = []
         if (filters.goalId !== undefined) conditions.push(eq(TimeEntriesSchema.goalId, filters.goalId))
         if (filters.taskId !== undefined) conditions.push(eq(TimeEntriesSchema.taskId, filters.taskId))
@@ -133,8 +174,9 @@ export class TimeTrackingRepository {
 
         const result = await callWithCatch(() =>
             this.db.dbDrizzle
-                .select()
+                .select(TimeTrackingRepository.entryWithUserProjection)
                 .from(TimeEntriesSchema)
+                .leftJoin(UsersSchema, eq(UsersSchema.id, TimeEntriesSchema.userId))
                 .where(conditions.length > 0 ? and(...conditions) : undefined)
                 .orderBy(desc(TimeEntriesSchema.startedAt))
                 .limit(limit)
@@ -216,8 +258,8 @@ export class TimeTrackingRepository {
         return result ?? []
     }
 
-    async autoStopOverdue(): Promise<TimeEntriesSchemaTypeForSelect[]> {
-        const result = await callWithCatch(() =>
+    async autoStopOverdue(): Promise<TimeEntryWithUser[]> {
+        const updated = await callWithCatch(() =>
             this.db.dbDrizzle
                 .update(TimeEntriesSchema)
                 .set({
@@ -239,8 +281,9 @@ export class TimeTrackingRepository {
                         )`,
                     ),
                 )
-                .returning(),
+                .returning({ id: TimeEntriesSchema.id }),
         )
-        return result ?? []
+        const ids = (updated ?? []).map((r) => r.id)
+        return this.findByIds(ids)
     }
 }

@@ -142,8 +142,9 @@ export const TvPermissions: Record<Uppercase<keyof GoalPermissions>, keyof GoalP
      */
     TIMETRACKING_CAN_LOG: 'timetracking_can_log',
     /**
-     * Edit/delete time entries of other project members. Includes viewing the
-     * full project log.
+     * Full time-tracking access on this project: log own time, view all entries
+     * (own and other members'), and edit/delete entries of any project member.
+     * Implies both view and log permissions.
      */
     TIMETRACKING_CAN_MANAGE_ALL: 'timetracking_can_manage_all',
 } as const;

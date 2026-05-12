@@ -56,7 +56,10 @@
       <span>{{ t('timeTracking.willStopOther') }}</span>
     </div>
 
-    <div class="flex flex-col gap-2">
+    <div
+      v-if="entries.length > 0"
+      class="flex flex-col gap-2 max-h-80 overflow-y-auto pr-1"
+    >
       <TaskTimeTrackingEntry
         v-for="entry in entries"
         :key="entry.id"
@@ -64,6 +67,16 @@
         @delete="onDelete"
         @update="onUpdate"
       />
+    </div>
+    <div
+      v-else
+      class="flex flex-col items-center gap-1 py-3 text-xs text-muted"
+    >
+      <UIcon
+        name="i-lucide-inbox"
+        class="size-5"
+      />
+      <span>{{ t('timeTracking.empty') }}</span>
     </div>
 
     <div

@@ -1,4 +1,3 @@
-import type { TimeEntriesSchemaTypeForSelect } from 'taskview-db-schemas'
 import type { AppUser } from '../../core/AppUser'
 import { eventBus } from '../../core/EventBus'
 import { TimeTrackingRepository } from './TimeTrackingRepository'
@@ -11,6 +10,7 @@ import {
     type TimeEntryArgUpdate,
     type TimeEntryStartResult,
     type TimeEntryUpdateParams,
+    type TimeEntryWithUser,
 } from './types'
 
 export class TimeTrackingManager {
@@ -30,7 +30,7 @@ export class TimeTrackingManager {
         return Math.max(0, Math.round((endedAt.getTime() - startedAt.getTime()) / 1000))
     }
 
-    async getActive(): Promise<TimeEntriesSchemaTypeForSelect | null> {
+    async getActive(): Promise<TimeEntryWithUser | null> {
         const userId = this.getCurrentUserId()
         if (!userId) return null
         return this.repository.findActiveForUser(userId)
@@ -71,7 +71,7 @@ export class TimeTrackingManager {
         return null
     }
 
-    private async closeActiveTimer(userId: number): Promise<TimeEntriesSchemaTypeForSelect | null> {
+    private async closeActiveTimer(userId: number): Promise<TimeEntryWithUser | null> {
         const active = await this.repository.findActiveForUser(userId)
         if (!active) return null
 
@@ -93,7 +93,7 @@ export class TimeTrackingManager {
         return stopped
     }
 
-    async stop(data: TimeEntryArgStop): Promise<TimeEntriesSchemaTypeForSelect | null> {
+    async stop(data: TimeEntryArgStop): Promise<TimeEntryWithUser | null> {
         const userId = this.getCurrentUserId()
         if (!userId) return null
 
@@ -121,7 +121,7 @@ export class TimeTrackingManager {
         return stopped
     }
 
-    async createManual(data: TimeEntryArgCreate): Promise<TimeEntriesSchemaTypeForSelect | null> {
+    async createManual(data: TimeEntryArgCreate): Promise<TimeEntryWithUser | null> {
         const userId = this.getCurrentUserId()
         if (!userId) return null
 
@@ -147,7 +147,7 @@ export class TimeTrackingManager {
         return entry
     }
 
-    async update(data: TimeEntryArgUpdate): Promise<TimeEntriesSchemaTypeForSelect | null> {
+    async update(data: TimeEntryArgUpdate): Promise<TimeEntryWithUser | null> {
         const userId = this.getCurrentUserId()
         if (!userId) return null
 
@@ -210,7 +210,7 @@ export class TimeTrackingManager {
         return true
     }
 
-    async fetchEntries(filters: TimeEntryArgFetchEntries): Promise<TimeEntriesSchemaTypeForSelect[]> {
+    async fetchEntries(filters: TimeEntryArgFetchEntries): Promise<TimeEntryWithUser[]> {
         const userId = this.getCurrentUserId()
         if (!userId) return []
 
@@ -221,10 +221,13 @@ export class TimeTrackingManager {
             goalId = task.goalId
         }
 
+        const hasProjectScope = filters.goalId !== undefined || filters.taskId !== undefined
+        const effectiveUserId = hasProjectScope ? filters.userId : (filters.userId ?? userId)
+
         return this.repository.fetchEntries({
             goalId,
             taskId: filters.taskId,
-            userId: filters.userId ?? userId,
+            userId: effectiveUserId,
             from: filters.from,
             to: filters.to,
             limit: filters.limit,

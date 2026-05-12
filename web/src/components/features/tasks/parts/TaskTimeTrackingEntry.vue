@@ -2,9 +2,10 @@
   <div class="flex flex-col gap-1 px-2 py-1.5 rounded bg-elevated/50 text-sm">
     <div class="flex items-center justify-between gap-2">
       <div class="flex flex-col min-w-0 flex-1">
-        <span class="font-mono text-xs text-muted">
-          {{ formattedStarted }}
-        </span>
+        <div class="flex items-center gap-2 text-xs text-muted">
+          <span class="font-mono">{{ formattedStarted }}</span>
+          <span class="truncate">· {{ userLabel }}</span>
+        </div>
         <span
           v-if="entry.description"
           class="truncate"
@@ -83,6 +84,9 @@ const isOwn = computed(() => userStore.payloadData?.id === props.entry.userId)
 const canEdit = computed(() => (isOwn.value ? canLogTime.value : canManageAllTime.value))
 
 const formattedStarted = computed(() => new Date(props.entry.startedAt).toLocaleString())
+const userLabel = computed(() =>
+  isOwn.value ? t('timeTracking.you') : (props.entry.userEmail ?? t('timeTracking.unknownUser')),
+)
 
 const onSubmit = (payload: TimeEntryFormPayload) => {
   emit('update', { id: props.entry.id, ...payload })

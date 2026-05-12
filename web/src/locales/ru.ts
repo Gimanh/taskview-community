@@ -611,6 +611,9 @@ export default {
   },
   timeTracking: {
     title: 'Учёт времени',
+    empty: 'Записей времени пока нет',
+    you: 'Вы',
+    unknownUser: 'Неизвестный пользователь',
     start: 'Запустить',
     stop: 'Остановить',
     running: 'Идёт',

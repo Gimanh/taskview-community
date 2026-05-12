@@ -14,8 +14,8 @@ VALUES
     ),
     (
         'timetracking_can_manage_all',
-        'Edit/delete time entries of other project members (implies view)',
+        'Full time-tracking access: log own time + view and edit/delete entries of any project member',
         2,
-        '{"en": "Manage all time entries. User can edit/delete time entries of any project member. Includes viewing the full project log.", "ru": "Управление чужими записями времени. Пользователь может редактировать/удалять записи любого участника проекта. Включает просмотр всех записей проекта."}'::jsonb
+        '{"en": "Manage all time entries. Full time-tracking access on this project: user can log own time, view all entries (own and other members''), and edit/delete entries of any project member. Implies both view and log permissions.", "ru": "Управление всеми записями времени. Полный доступ к учёту времени на этом проекте: пользователь может вести свой таймер, видеть все записи (свои и других участников) и редактировать/удалять записи любого участника. Включает права на просмотр и ведение времени."}'::jsonb
     )
 ON CONFLICT (name) DO NOTHING;
