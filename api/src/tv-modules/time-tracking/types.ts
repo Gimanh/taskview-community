@@ -107,6 +107,8 @@ const Timezone = type('string').narrow((v, ctx) => {
     }
 })
 
+const MAX_REPORT_WINDOW_MS = 2 * 365 * 24 * 60 * 60 * 1000
+
 export const TimeReportArkTypeFilters = type({
     'goalIds?': NumberListFromString,
     'userId?': OptionalNumberFromString,
@@ -114,6 +116,19 @@ export const TimeReportArkTypeFilters = type({
     to: DateFromString,
     'billable?': BooleanFromString,
     'timezone?': Timezone,
+}).narrow((data, ctx) => {
+    const fromMs = data.from.getTime()
+    const toMs = data.to.getTime()
+    if (!Number.isFinite(fromMs) || !Number.isFinite(toMs)) {
+        return ctx.mustBe('valid from/to dates')
+    }
+    if (fromMs >= toMs) {
+        return ctx.mustBe('from earlier than to')
+    }
+    if (toMs - fromMs > MAX_REPORT_WINDOW_MS) {
+        return ctx.mustBe('range no wider than 2 years')
+    }
+    return true
 })
 export type TimeReportFilters = typeof TimeReportArkTypeFilters.infer
 

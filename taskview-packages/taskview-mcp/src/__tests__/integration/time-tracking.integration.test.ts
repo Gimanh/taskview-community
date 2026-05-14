@@ -245,6 +245,26 @@ describe('time-tracking integration', () => {
     expect(result.isError).toBe(true)
   })
 
+  it('rejects report with from >= to', async () => {
+    const result = await call(tools, 'get_time_report', {
+      scope: 'summary',
+      organizationId,
+      from: iso(60),
+      to: iso(-60),
+    })
+    expect(result.isError).toBe(true)
+  })
+
+  it('rejects report with date range wider than 2 years', async () => {
+    const result = await call(tools, 'get_time_report', {
+      scope: 'summary',
+      organizationId,
+      from: '2000-01-01T00:00:00Z',
+      to: '2099-12-31T23:59:59Z',
+    })
+    expect(result.isError).toBe(true)
+  })
+
   it('deletes a time entry', async () => {
     const created = await call(tools, 'log_time', {
       taskId,

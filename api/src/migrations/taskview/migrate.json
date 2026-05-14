@@ -538,5 +538,16 @@
             "Added compound indexes on tasks.time_entries (goal_id, started_at, user_id) and (goal_id, started_at, task_id) for time-tracking report aggregations",
             "Added partial index on tasks.time_entries(goal_id, started_at) WHERE billable = TRUE for billable-only reports"
         ]
+    },
+    "43": {
+        "version": "1.50.0",
+        "name": "Release 1.50.0",
+        "releaseDate": "20260514",
+        "scripts": [
+            "/1.50.0/0.update-timetracking-permissions-descriptions.sql"
+        ],
+        "description": [
+            "Updated descriptions of timetracking_can_view and timetracking_can_manage_all to document that these permissions also expose contributor emails through the time-entry log"
+        ]
     }
 }

@@ -963,6 +963,65 @@ describe('TvApi time-tracking tests', () => {
             expect(status).toBe(400);
         });
 
+        it('reportSummary with from >= to is rejected (400)', async () => {
+            const status = await $mainUser.timeTracking.reportSummary({
+                organizationId,
+                from: isoMinutesFromNow(60),
+                to: isoMinutesAgo(60),
+            }).catch((err) => err.status);
+            expect(status).toBe(400);
+        });
+
+        it('reportSummary with from == to is rejected (400)', async () => {
+            const sameMoment = new Date().toISOString();
+            const status = await $mainUser.timeTracking.reportSummary({
+                organizationId,
+                from: sameMoment,
+                to: sameMoment,
+            }).catch((err) => err.status);
+            expect(status).toBe(400);
+        });
+
+        it('reportSummary with date range wider than 2 years is rejected (400)', async () => {
+            const status = await $mainUser.timeTracking.reportSummary({
+                organizationId,
+                from: '2000-01-01T00:00:00Z',
+                to: '2099-12-31T23:59:59Z',
+            }).catch((err) => err.status);
+            expect(status).toBe(400);
+        });
+
+        it('reportByDay with date range wider than 2 years is rejected (400)', async () => {
+            const status = await $mainUser.timeTracking.reportByDay({
+                organizationId,
+                from: '2000-01-01T00:00:00Z',
+                to: '2099-12-31T23:59:59Z',
+            }).catch((err) => err.status);
+            expect(status).toBe(400);
+        });
+
+        it('reportContributors with from >= to is rejected (400)', async () => {
+            const status = await $mainUser.timeTracking.reportContributors({
+                organizationId,
+                from: isoMinutesFromNow(60),
+                to: isoMinutesAgo(60),
+            }).catch((err) => err.status);
+            expect(status).toBe(400);
+        });
+
+        it('report with exactly 2-year window is accepted', async () => {
+            const twoYearsAgo = new Date()
+            twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
+            twoYearsAgo.setHours(twoYearsAgo.getHours() + 1)
+            const result = await $mainUser.timeTracking.reportSummary({
+                organizationId,
+                from: twoYearsAgo.toISOString(),
+                to: new Date().toISOString(),
+            }).catch((err) => err.status);
+            expect(typeof result).toBe('object');
+            expect((result as { totalSeconds: number }).totalSeconds).toBeGreaterThanOrEqual(0);
+        });
+
         it('deleting an active timer removes it and clears active state', async () => {
             const started = await $mainUser.timeTracking.start({ taskId }).catch(console.error);
             expect(started?.entry).toBeDefined();
