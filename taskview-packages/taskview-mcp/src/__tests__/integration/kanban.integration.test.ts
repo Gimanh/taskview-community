@@ -46,6 +46,16 @@ describe('kanban integration', () => {
     expect(data.updated).toBe(true)
   })
 
+  it('updates column viewOrder', async () => {
+    const result = await call(tools, 'update_kanban_column', { id: columnId, name: `Reordered ${ts()}`, viewOrder: 5 })
+    const data = parse(result)
+    expect(data.updated).toBe(true)
+
+    const columns = parse(await call(tools, 'list_kanban_columns', { goalId })) as Array<{ id: number; viewOrder: number }>
+    const updated = columns.find((c) => c.id === columnId)
+    expect(updated?.viewOrder).toBe(5)
+  })
+
   it('deletes a column', async () => {
     const result = await call(tools, 'delete_kanban_column', { id: columnId })
     const data = parse(result)

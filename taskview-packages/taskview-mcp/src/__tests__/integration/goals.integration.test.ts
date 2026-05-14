@@ -40,6 +40,27 @@ describe('goals integration', () => {
     expect(goal.name).toBe(newName)
   })
 
+  it('updates goal description and color', async () => {
+    const description = `New description ${ts()}`
+    const color = '#FF6B35'
+    const result = await call(tools, 'update_goal', { id: createdGoalIds[0], description, color })
+    const goal = parse(result)
+
+    expect(goal.description).toBe(description)
+    expect(goal.color).toBe(color)
+  })
+
+  it('archives and unarchives a goal', async () => {
+    const created = parse(await call(tools, 'create_goal', { name: `Archive Test ${ts()}` }))
+    createdGoalIds.push(created.id)
+
+    const archived = parse(await call(tools, 'update_goal', { id: created.id, archive: 1 }))
+    expect(archived.archive).toBe(1)
+
+    const unarchived = parse(await call(tools, 'update_goal', { id: created.id, archive: 0 }))
+    expect(unarchived.archive).toBe(0)
+  })
+
   it('deletes a goal', async () => {
     const extraName = `ToDelete ${ts()}`
     const createResult = await call(tools, 'create_goal', { name: extraName })

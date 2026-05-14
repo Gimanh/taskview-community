@@ -1,11 +1,17 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { registerGoalsTools } from '../../tools/goals.js'
 import { registerTasksTools } from '../../tools/tasks.js'
+import { registerListsTools } from '../../tools/lists.js'
+import { registerKanbanTools } from '../../tools/kanban.js'
+import { registerCollaborationTools } from '../../tools/collaboration.js'
 import { api, captureServer, call, parse, ts } from './setup.js'
 
 const { server, tools } = captureServer()
 registerGoalsTools(server, api)
 registerTasksTools(server, api)
+registerListsTools(server, api)
+registerKanbanTools(server, api)
+registerCollaborationTools(server, api)
 
 let goalId: number
 let taskId: number
@@ -45,7 +51,7 @@ describe('tasks integration', () => {
   })
 
   it('lists tasks for goal', async () => {
-    const result = await call(tools, 'list_tasks', { goalId, page: 1, showCompleted: true })
+    const result = await call(tools, 'list_tasks', { goalId, page: 0, showCompleted: false })
 
     if (result.isError) {
       expect(result.content[0].text).toContain('403')
@@ -91,5 +97,113 @@ describe('tasks integration', () => {
     const data = parse(result)
 
     expect(data.delete).toBe(true)
+  })
+
+  it('toggles task assignees (add and remove)', async () => {
+    const collabs = parse(await call(tools, 'list_collaborators_for_goal', { goalId })) as Array<{ id: number }>
+    expect(collabs.length).toBeGreaterThan(0)
+    const userId = collabs[0].id
+
+    const created = parse(await call(tools, 'create_task', { goalId, description: `Assignee ${ts()}` }))
+
+    const added = await call(tools, 'toggle_task_assignees', { taskId: created.id, userIds: [userId] })
+    parse(added)
+    const taskAfter = parse(await call(tools, 'get_task', { taskId: created.id }))
+    expect(taskAfter.assignedUsers).toContain(userId)
+
+    const removed = await call(tools, 'toggle_task_assignees', { taskId: created.id, userIds: [] })
+    parse(removed)
+    const taskFinal = parse(await call(tools, 'get_task', { taskId: created.id }))
+    expect(taskFinal.assignedUsers).not.toContain(userId)
+
+    await call(tools, 'delete_task', { taskId: created.id }).catch(() => {})
+  })
+
+  it('restores a task from history', async () => {
+    const initialDesc = `History Initial ${ts()}`
+    const created = parse(await call(tools, 'create_task', { goalId, description: initialDesc }))
+
+    await call(tools, 'update_task', { id: created.id, description: `History Updated ${ts()}` })
+    await call(tools, 'update_task', { id: created.id, description: `History Final ${ts()}` })
+
+    const history = parse(await call(tools, 'get_task_history', { taskId: created.id }))
+    const initialRecord = history.history.find((h: { description: string }) => h.description === initialDesc)
+    expect(initialRecord).toBeDefined()
+    expect(initialRecord.historyId).toBeTypeOf('number')
+
+    const restored = await call(tools, 'restore_task_from_history', {
+      taskId: created.id,
+      historyId: initialRecord.historyId,
+    })
+    const data = parse(restored)
+    expect(data.recovery).toBe(true)
+
+    const final = parse(await call(tools, 'get_task', { taskId: created.id }))
+    expect(final.description).toBe(initialDesc)
+
+    await call(tools, 'delete_task', { taskId: created.id }).catch(() => {})
+  })
+
+  it('updates task note, dates and moves between lists/columns', async () => {
+    const created = parse(await call(tools, 'create_task', { goalId, description: `Drag ${ts()}` }))
+
+    const noteResult = parse(await call(tools, 'update_task', {
+      id: created.id,
+      note: 'updated note',
+      startDate: '2026-05-01',
+      endDate: '2026-05-15',
+    }))
+    expect(noteResult.note).toBe('updated note')
+    expect(noteResult.startDate).toBe('2026-05-01')
+    expect(noteResult.endDate).toBe('2026-05-15')
+
+    const list = parse(await call(tools, 'create_list', { goalId, name: `Drag List ${ts()}` }))
+    const moved = parse(await call(tools, 'update_task', { id: created.id, goalListId: list.id }))
+    expect(moved.goalListId).toBe(list.id)
+
+    const columns = parse(await call(tools, 'list_kanban_columns', { goalId })) as Array<{ id: number }>
+    if (columns.length > 0) {
+      const moveToColumn = parse(await call(tools, 'update_task', { id: created.id, statusId: columns[0].id }))
+      expect(moveToColumn.statusId).toBe(columns[0].id)
+    }
+
+    await call(tools, 'delete_task', { taskId: created.id }).catch(() => {})
+    await call(tools, 'delete_list', { id: list.id }).catch(() => {})
+  })
+
+  it('lists tasks with searchText filter', async () => {
+    const unique = `searchable-${ts()}`
+    const created = parse(await call(tools, 'create_task', { goalId, description: `Find me ${unique}` }))
+
+    const result = await call(tools, 'list_tasks', { goalId, searchText: unique, showCompleted: false })
+    if (result.isError) {
+      expect(result.content[0].text).toContain('403')
+      await call(tools, 'delete_task', { taskId: created.id }).catch(() => {})
+      return
+    }
+    const tasks = parse(result)
+    expect(tasks.some((t: { id: number }) => t.id === created.id)).toBe(true)
+    expect(tasks.every((t: { description: string }) => t.description.includes(unique))).toBe(true)
+
+    await call(tools, 'delete_task', { taskId: created.id }).catch(() => {})
+  })
+
+  it('lists tasks filtered by componentId (list)', async () => {
+    const list = parse(await call(tools, 'create_list', { goalId, name: `Filter List ${ts()}` }))
+    const inList = parse(await call(tools, 'create_task', { goalId, goalListId: list.id, description: `In-list ${ts()}` }))
+    const outOfList = parse(await call(tools, 'create_task', { goalId, description: `Out-of-list ${ts()}` }))
+
+    const result = await call(tools, 'list_tasks', { goalId, componentId: list.id, showCompleted: false })
+    if (result.isError) {
+      await call(tools, 'delete_list', { id: list.id }).catch(() => {})
+      return
+    }
+    const tasks = parse(result) as Array<{ id: number }>
+    expect(tasks.some((t) => t.id === inList.id)).toBe(true)
+    expect(tasks.some((t) => t.id === outOfList.id)).toBe(false)
+
+    await call(tools, 'delete_task', { taskId: inList.id }).catch(() => {})
+    await call(tools, 'delete_task', { taskId: outOfList.id }).catch(() => {})
+    await call(tools, 'delete_list', { id: list.id }).catch(() => {})
   })
 })

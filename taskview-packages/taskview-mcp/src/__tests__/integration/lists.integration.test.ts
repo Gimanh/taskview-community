@@ -46,6 +46,25 @@ describe('lists integration', () => {
     expect(list.name).toBe(newName)
   })
 
+  it('updates list description', async () => {
+    const newDesc = `New description ${ts()}`
+    const result = await call(tools, 'update_list', { id: listId, description: newDesc })
+    const list = parse(result)
+    expect(list.description).toBe(newDesc)
+  })
+
+  it('archives and unarchives a list', async () => {
+    const created = parse(await call(tools, 'create_list', { goalId, name: `Archive List ${ts()}` }))
+
+    const archived = parse(await call(tools, 'update_list', { id: created.id, archive: 1 }))
+    expect(archived.archive).toBe(1)
+
+    const unarchived = parse(await call(tools, 'update_list', { id: created.id, archive: 0 }))
+    expect(unarchived.archive).toBe(0)
+
+    await call(tools, 'delete_list', { id: created.id }).catch(() => {})
+  })
+
   it('deletes a list', async () => {
     const createResult = await call(tools, 'create_list', { goalId, name: `ToDelete ${ts()}` })
     const created = parse(createResult)
