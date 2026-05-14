@@ -183,6 +183,13 @@ const items = computed<DropdownMenuItem[][]>(() => [
         router.push({ name: 'analytics' })
       },
     },
+    {
+      label: t('userMenu.timeReports'),
+      icon: 'i-lucide-clock-4',
+      onSelect() {
+        router.push({ name: 'time-reports' })
+      },
+    },
   ],
   [
     {

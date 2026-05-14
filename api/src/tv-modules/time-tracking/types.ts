@@ -10,6 +10,19 @@ const OptionalNumberFromString = type('string|number|undefined').pipe((v) => v =
 const DateFromString = type('string|Date').pipe((v) => v instanceof Date ? v : new Date(v))
 const OptionalDateFromString = type('string|Date|undefined').pipe((v) => v === undefined ? undefined : v instanceof Date ? v : new Date(v))
 
+const NumberListFromString = type('string|number|number[]|undefined').pipe((v) => {
+    if (v === undefined) return undefined
+    if (typeof v === 'number') return [v]
+    if (Array.isArray(v)) return v.map((n) => Number(n)).filter((n) => Number.isFinite(n))
+    return v.split(',').map((s) => Number(s.trim())).filter((n) => Number.isFinite(n))
+})
+
+const BooleanFromString = type('string|boolean|undefined').pipe((v) => {
+    if (v === undefined) return undefined
+    if (typeof v === 'boolean') return v
+    return v === 'true' || v === '1'
+})
+
 const DESCRIPTION_MAX = 500
 const Description = type('string').narrow((v, ctx) => {
     const codepoints = [...v].length
@@ -51,9 +64,12 @@ export const TimeEntryArkTypeDelete = type({
 export type TimeEntryArgDelete = typeof TimeEntryArkTypeDelete.infer
 
 export const TimeEntryArkTypeFetchEntries = type({
+    'organizationId?': OptionalNumberFromString,
     'goalId?': OptionalNumberFromString,
+    'goalIds?': NumberListFromString,
     'taskId?': OptionalNumberFromString,
     'userId?': OptionalNumberFromString,
+    'billable?': BooleanFromString,
     'from?': OptionalDateFromString,
     'to?': OptionalDateFromString,
     'limit?': OptionalNumberFromString,
@@ -81,6 +97,74 @@ export const TIME_ENTRY_SOURCE = {
     MANUAL: 1,
 } as const
 
+const Timezone = type('string').narrow((v, ctx) => {
+    try {
+        new Intl.DateTimeFormat('en-US', { timeZone: v })
+        return true
+    }
+    catch {
+        return ctx.mustBe('a valid IANA timezone name')
+    }
+})
+
+export const TimeReportArkTypeFilters = type({
+    'goalIds?': NumberListFromString,
+    'userId?': OptionalNumberFromString,
+    from: DateFromString,
+    to: DateFromString,
+    'billable?': BooleanFromString,
+    'timezone?': Timezone,
+})
+export type TimeReportFilters = typeof TimeReportArkTypeFilters.infer
+
+export type TimeReportRequest = {
+    organizationId: number
+    filters: TimeReportFilters
+}
+
+export type TimeReportRepoFilters = {
+    goalIds: number[]
+    userId?: number
+    from: Date
+    to: Date
+    billable?: boolean
+    timezone?: string
+}
+
+export type TimeReportByDayRow = {
+    day: string
+    totalSeconds: number
+    entriesCount: number
+}
+
+export type TimeReportByUserRow = {
+    userId: number
+    userEmail: string | null
+    totalSeconds: number
+    entriesCount: number
+}
+
+export type TimeReportByTaskRow = {
+    taskId: number
+    taskDescription: string | null
+    goalId: number
+    totalSeconds: number
+    entriesCount: number
+}
+
+export type TimeReportSummary = {
+    totalSeconds: number
+    totalBillableSeconds: number
+    entriesCount: number
+}
+
+export type TimeReportContributor = {
+    userId: number
+    userEmail: string | null
+    totalSeconds: number
+    entriesCount: number
+}
+
 export type TimeEntrySource = typeof TIME_ENTRY_SOURCE[keyof typeof TIME_ENTRY_SOURCE]
 
 export type TimeEntryInsertParams = {
@@ -105,9 +189,10 @@ export type TimeEntryUpdateParams = Partial<{
 }>
 
 export type TimeEntryFilters = {
-    goalId?: number
+    goalIds?: number[]
     taskId?: number
     userId?: number
+    billable?: boolean
     from?: Date
     to?: Date
     limit?: number

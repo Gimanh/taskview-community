@@ -50,6 +50,7 @@
       :initial-started-at="entry.startedAt"
       :initial-ended-at="entry.endedAt ?? undefined"
       :initial-description="entry.description ?? ''"
+      :initial-billable="entry.billable"
       class="border-t border-default"
       @submit="onSubmit"
       @cancel="editing = false"

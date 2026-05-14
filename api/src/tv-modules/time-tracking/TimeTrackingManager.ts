@@ -1,5 +1,6 @@
 import type { AppUser } from '../../core/AppUser'
 import { eventBus } from '../../core/EventBus'
+import { GoalPermissions } from '../../types/auth.types'
 import { TimeTrackingRepository } from './TimeTrackingRepository'
 import {
     TIME_ENTRY_SOURCE,
@@ -11,7 +12,16 @@ import {
     type TimeEntryStartResult,
     type TimeEntryUpdateParams,
     type TimeEntryWithUser,
+    type TimeReportByDayRow,
+    type TimeReportByTaskRow,
+    type TimeReportByUserRow,
+    type TimeReportContributor,
+    type TimeReportRepoFilters,
+    type TimeReportRequest,
+    type TimeReportSummary,
 } from './types'
+
+type ResolvedReportFilters = TimeReportRepoFilters
 
 export class TimeTrackingManager {
     public readonly repository: TimeTrackingRepository
@@ -72,14 +82,7 @@ export class TimeTrackingManager {
     }
 
     private async closeActiveTimer(userId: number): Promise<TimeEntryWithUser | null> {
-        const active = await this.repository.findActiveForUser(userId)
-        if (!active) return null
-
-        const endedAt = new Date()
-        const stopped = await this.repository.updateById(active.id, {
-            endedAt,
-            durationSeconds: this.computeDuration(active.startedAt, endedAt),
-        })
+        const stopped = await this.repository.closeActiveAtomicForUser(userId, new Date())
         if (!stopped) return null
 
         eventBus.emit('time-entry.stopped', {
@@ -221,13 +224,31 @@ export class TimeTrackingManager {
             goalId = task.goalId
         }
 
-        const hasProjectScope = filters.goalId !== undefined || filters.taskId !== undefined
-        const effectiveUserId = hasProjectScope ? filters.userId : (filters.userId ?? userId)
+        const hasSingleScope = goalId !== undefined
+
+        let goalIds: number[]
+        if (hasSingleScope) {
+            goalIds = [goalId!]
+        } else {
+            if (filters.organizationId === undefined) return []
+            const accessibleGoalIds = await this.user.permissionsFetcher.getAccessibleGoalIds(
+                filters.organizationId,
+                [GoalPermissions.TIMETRACKING_CAN_VIEW, GoalPermissions.TIMETRACKING_CAN_MANAGE_ALL],
+            )
+            if (accessibleGoalIds.length === 0) return []
+
+            const requested = filters.goalIds && filters.goalIds.length > 0 ? filters.goalIds : null
+            goalIds = requested
+                ? requested.filter((id) => accessibleGoalIds.includes(id))
+                : accessibleGoalIds
+            if (goalIds.length === 0) return []
+        }
 
         return this.repository.fetchEntries({
-            goalId,
+            goalIds,
             taskId: filters.taskId,
-            userId: effectiveUserId,
+            userId: filters.userId,
+            billable: filters.billable,
             from: filters.from,
             to: filters.to,
             limit: filters.limit,
@@ -260,5 +281,68 @@ export class TimeTrackingManager {
         if (!existing) return null
 
         return this.repository.fetchHistory(entryId)
+    }
+
+    async getViewableGoalIds(organizationId: number): Promise<number[]> {
+        return this.user.permissionsFetcher.getAccessibleGoalIds(organizationId, [
+            GoalPermissions.TIMETRACKING_CAN_VIEW,
+            GoalPermissions.TIMETRACKING_CAN_MANAGE_ALL,
+        ])
+    }
+
+    private async resolveReportFilters(req: TimeReportRequest): Promise<ResolvedReportFilters | null> {
+        const data = this.user.getUserData()
+        if (!data) return null
+
+        const allowedIds = await this.getViewableGoalIds(req.organizationId)
+        if (allowedIds.length === 0) return null
+
+        const requestedIds = req.filters.goalIds && req.filters.goalIds.length > 0 ? req.filters.goalIds : null
+        const goalIds = requestedIds
+            ? requestedIds.filter((id) => allowedIds.includes(id))
+            : allowedIds
+
+        if (goalIds.length === 0) return null
+
+        return {
+            goalIds,
+            userId: req.filters.userId,
+            from: req.filters.from,
+            to: req.filters.to,
+            billable: req.filters.billable,
+            timezone: req.filters.timezone,
+        }
+    }
+
+    async reportByDay(req: TimeReportRequest): Promise<TimeReportByDayRow[]> {
+        const resolved = await this.resolveReportFilters(req)
+        if (!resolved) return []
+        return this.repository.aggregateByDay(resolved)
+    }
+
+    async reportByUser(req: TimeReportRequest): Promise<TimeReportByUserRow[]> {
+        const resolved = await this.resolveReportFilters(req)
+        if (!resolved) return []
+        return this.repository.aggregateByUser(resolved)
+    }
+
+    async reportByTask(req: TimeReportRequest): Promise<TimeReportByTaskRow[]> {
+        const resolved = await this.resolveReportFilters(req)
+        if (!resolved) return []
+        return this.repository.aggregateByTask(resolved)
+    }
+
+    async reportSummary(req: TimeReportRequest): Promise<TimeReportSummary> {
+        const resolved = await this.resolveReportFilters(req)
+        if (!resolved) {
+            return { totalSeconds: 0, totalBillableSeconds: 0, entriesCount: 0 }
+        }
+        return this.repository.getReportSummary(resolved)
+    }
+
+    async reportContributors(req: TimeReportRequest): Promise<TimeReportContributor[]> {
+        const resolved = await this.resolveReportFilters(req)
+        if (!resolved) return []
+        return this.repository.fetchContributors({ ...resolved, userId: undefined })
     }
 }

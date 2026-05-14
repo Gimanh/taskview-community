@@ -138,3 +138,10 @@ export type PermissionsEntityType =
     | typeof GoalPermissionsFetcher.PERMISSION_TYPE_FOR_GOAL
     | typeof GoalPermissionsFetcher.PERMISSION_TYPE_FOR_TASKLIST
     | typeof GoalPermissionsFetcher.PERMISSION_TYPE_FOR_TASK;
+
+export type FetchGoalIdsWithAnyPermissionParams = {
+    userId: number;
+    email: string;
+    organizationId: number;
+    permissionNames: string[];
+};

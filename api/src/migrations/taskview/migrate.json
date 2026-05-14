@@ -526,5 +526,17 @@
             "Added timetracking_can_log and timetracking_can_manage_all goal-level permissions (granted to new projects only, matching the 1.46.0 analytics convention)",
             "all-triggers.sql: updated add_roles_and_permissions function with new permissions; added log_changes_time_entries trigger (BEFORE UPDATE writes JSONB snapshot to history.time_entries)"
         ]
+    },
+    "42": {
+        "version": "1.49.0",
+        "name": "Release 1.49.0",
+        "releaseDate": "20260512",
+        "scripts": [
+            "/1.49.0/0.time_entries_report_indexes.sql"
+        ],
+        "description": [
+            "Added compound indexes on tasks.time_entries (goal_id, started_at, user_id) and (goal_id, started_at, task_id) for time-tracking report aggregations",
+            "Added partial index on tasks.time_entries(goal_id, started_at) WHERE billable = TRUE for billable-only reports"
+        ]
     }
 }

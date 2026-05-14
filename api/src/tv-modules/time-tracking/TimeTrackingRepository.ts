@@ -17,6 +17,12 @@ import type {
     TimeEntryTaskSummary,
     TimeEntryUpdateParams,
     TimeEntryWithUser,
+    TimeReportByDayRow,
+    TimeReportByTaskRow,
+    TimeReportByUserRow,
+    TimeReportContributor,
+    TimeReportRepoFilters,
+    TimeReportSummary,
 } from './types'
 
 const PG_UNIQUE_VIOLATION = '23505'
@@ -64,6 +70,21 @@ export class TimeTrackingRepository {
                 .where(and(eq(TimeEntriesSchema.userId, userId), isNull(TimeEntriesSchema.endedAt))),
         )
         return result?.[0] ?? null
+    }
+
+    async closeActiveAtomicForUser(userId: number, endedAt: Date): Promise<TimeEntryWithUser | null> {
+        const updated = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .update(TimeEntriesSchema)
+                .set({
+                    endedAt,
+                    durationSeconds: sql<number>`greatest(0, round(extract(epoch from ${endedAt}::timestamp - ${TimeEntriesSchema.startedAt}))::int)`,
+                })
+                .where(and(eq(TimeEntriesSchema.userId, userId), isNull(TimeEntriesSchema.endedAt)))
+                .returning({ id: TimeEntriesSchema.id }),
+        )
+        if (!updated || updated.length === 0) return null
+        return this.findById(updated[0].id)
     }
 
     async findById(id: number): Promise<TimeEntryWithUser | null> {
@@ -162,10 +183,13 @@ export class TimeTrackingRepository {
     }
 
     async fetchEntries(filters: TimeEntryFilters): Promise<TimeEntryWithUser[]> {
+        if (filters.goalIds !== undefined && filters.goalIds.length === 0) return []
+
         const conditions: SQL[] = []
-        if (filters.goalId !== undefined) conditions.push(eq(TimeEntriesSchema.goalId, filters.goalId))
+        if (filters.goalIds !== undefined) conditions.push(inArray(TimeEntriesSchema.goalId, filters.goalIds))
         if (filters.taskId !== undefined) conditions.push(eq(TimeEntriesSchema.taskId, filters.taskId))
         if (filters.userId !== undefined) conditions.push(eq(TimeEntriesSchema.userId, filters.userId))
+        if (filters.billable !== undefined) conditions.push(eq(TimeEntriesSchema.billable, filters.billable))
         if (filters.from !== undefined) conditions.push(gte(TimeEntriesSchema.startedAt, filters.from))
         if (filters.to !== undefined) conditions.push(lte(TimeEntriesSchema.startedAt, filters.to))
 
@@ -285,5 +309,111 @@ export class TimeTrackingRepository {
         )
         const ids = (updated ?? []).map((r) => r.id)
         return this.findByIds(ids)
+    }
+
+    private reportConditions(filters: TimeReportRepoFilters): SQL[] {
+        const conditions: SQL[] = [
+            inArray(TimeEntriesSchema.goalId, filters.goalIds),
+            gte(TimeEntriesSchema.startedAt, filters.from),
+            lte(TimeEntriesSchema.startedAt, filters.to),
+        ]
+        if (filters.userId !== undefined) conditions.push(eq(TimeEntriesSchema.userId, filters.userId))
+        if (filters.billable !== undefined) conditions.push(eq(TimeEntriesSchema.billable, filters.billable))
+        return conditions
+    }
+
+    async aggregateByDay(filters: TimeReportRepoFilters): Promise<TimeReportByDayRow[]> {
+        if (filters.goalIds.length === 0) return []
+        const tzLiteral = filters.timezone ? `'${filters.timezone.replace(/'/g, "''")}'` : null
+        const dayExpr = tzLiteral
+            ? sql<string>`to_char((${TimeEntriesSchema.startedAt} AT TIME ZONE 'UTC' AT TIME ZONE ${sql.raw(tzLiteral)})::date, 'YYYY-MM-DD')`
+            : sql<string>`to_char(${TimeEntriesSchema.startedAt}::date, 'YYYY-MM-DD')`
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({
+                    day: dayExpr,
+                    totalSeconds: sql<number>`coalesce(sum(${TimeEntriesSchema.durationSeconds}), 0)::int`,
+                    entriesCount: sql<number>`count(*)::int`,
+                })
+                .from(TimeEntriesSchema)
+                .where(and(...this.reportConditions(filters)))
+                .groupBy(dayExpr)
+                .orderBy(dayExpr),
+        )
+        return result ?? []
+    }
+
+    async aggregateByUser(filters: TimeReportRepoFilters): Promise<TimeReportByUserRow[]> {
+        if (filters.goalIds.length === 0) return []
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({
+                    userId: TimeEntriesSchema.userId,
+                    userEmail: UsersSchema.email,
+                    totalSeconds: sql<number>`coalesce(sum(${TimeEntriesSchema.durationSeconds}), 0)::int`,
+                    entriesCount: sql<number>`count(*)::int`,
+                })
+                .from(TimeEntriesSchema)
+                .leftJoin(UsersSchema, eq(UsersSchema.id, TimeEntriesSchema.userId))
+                .where(and(...this.reportConditions(filters)))
+                .groupBy(TimeEntriesSchema.userId, UsersSchema.email)
+                .orderBy(sql`coalesce(sum(${TimeEntriesSchema.durationSeconds}), 0) desc`),
+        )
+        return result ?? []
+    }
+
+    async aggregateByTask(filters: TimeReportRepoFilters): Promise<TimeReportByTaskRow[]> {
+        if (filters.goalIds.length === 0) return []
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({
+                    taskId: TimeEntriesSchema.taskId,
+                    taskDescription: TasksSchema.description,
+                    goalId: TimeEntriesSchema.goalId,
+                    totalSeconds: sql<number>`coalesce(sum(${TimeEntriesSchema.durationSeconds}), 0)::int`,
+                    entriesCount: sql<number>`count(*)::int`,
+                })
+                .from(TimeEntriesSchema)
+                .leftJoin(TasksSchema, eq(TasksSchema.id, TimeEntriesSchema.taskId))
+                .where(and(...this.reportConditions(filters)))
+                .groupBy(TimeEntriesSchema.taskId, TasksSchema.description, TimeEntriesSchema.goalId)
+                .orderBy(sql`coalesce(sum(${TimeEntriesSchema.durationSeconds}), 0) desc`),
+        )
+        return result ?? []
+    }
+
+    async getReportSummary(filters: TimeReportRepoFilters): Promise<TimeReportSummary> {
+        const empty: TimeReportSummary = { totalSeconds: 0, totalBillableSeconds: 0, entriesCount: 0 }
+        if (filters.goalIds.length === 0) return empty
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({
+                    totalSeconds: sql<number>`coalesce(sum(${TimeEntriesSchema.durationSeconds}), 0)::int`,
+                    totalBillableSeconds: sql<number>`coalesce(sum(case when ${TimeEntriesSchema.billable} then ${TimeEntriesSchema.durationSeconds} else 0 end), 0)::int`,
+                    entriesCount: sql<number>`count(*)::int`,
+                })
+                .from(TimeEntriesSchema)
+                .where(and(...this.reportConditions(filters))),
+        )
+        return result?.[0] ?? empty
+    }
+
+    async fetchContributors(filters: TimeReportRepoFilters): Promise<TimeReportContributor[]> {
+        if (filters.goalIds.length === 0) return []
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({
+                    userId: TimeEntriesSchema.userId,
+                    userEmail: UsersSchema.email,
+                    totalSeconds: sql<number>`coalesce(sum(${TimeEntriesSchema.durationSeconds}), 0)::int`,
+                    entriesCount: sql<number>`count(*)::int`,
+                })
+                .from(TimeEntriesSchema)
+                .leftJoin(UsersSchema, eq(UsersSchema.id, TimeEntriesSchema.userId))
+                .where(and(...this.reportConditions(filters)))
+                .groupBy(TimeEntriesSchema.userId, UsersSchema.email)
+                .orderBy(sql`coalesce(sum(${TimeEntriesSchema.durationSeconds}), 0) desc`),
+        )
+        return result ?? []
     }
 }

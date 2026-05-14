@@ -142,6 +142,70 @@ export function registerTimeTrackingTools(server: McpServer, api: TvApi) {
   )
 
   server.registerTool(
+    'get_time_report',
+    {
+      description:
+        'Aggregated time report. Choose scope: by-day (daily totals), by-user (per member), by-task (per task), summary (totals + billable). Filter by org, optional projects, optional user, date range.',
+      inputSchema: {
+        scope: z.enum(['by-day', 'by-user', 'by-task', 'summary']).describe('Aggregation scope'),
+        organizationId: z.coerce.number().describe('Organization ID'),
+        from: z.string().describe('ISO 8601 start date (inclusive)'),
+        to: z.string().describe('ISO 8601 end date (inclusive)'),
+        goalIds: z.array(z.coerce.number()).optional().describe('Limit to specific projects; if omitted — all projects user has VIEW access to'),
+        userId: z.coerce.number().optional().describe('Limit to a specific user; if omitted — all visible members'),
+        billable: z.boolean().optional().describe('Filter by billable flag'),
+      },
+    },
+    async (params) => {
+      try {
+        const filters = {
+          organizationId: params.organizationId,
+          goalIds: params.goalIds,
+          userId: params.userId,
+          from: params.from,
+          to: params.to,
+          billable: params.billable,
+        }
+        let result: unknown
+        switch (params.scope) {
+          case 'by-day':   result = await api.timeTracking.reportByDay(filters); break
+          case 'by-user':  result = await api.timeTracking.reportByUser(filters); break
+          case 'by-task':  result = await api.timeTracking.reportByTask(filters); break
+          case 'summary':  result = await api.timeTracking.reportSummary(filters); break
+        }
+        return ok(result)
+      } catch (e) { return err(e) }
+    },
+  )
+
+  server.registerTool(
+    'get_time_contributors',
+    {
+      description:
+        'List users who logged time in the given projects and date range, with total seconds and entry counts. Useful for "who worked on this project last month".',
+      inputSchema: {
+        organizationId: z.coerce.number().describe('Organization ID'),
+        from: z.string().describe('ISO 8601 start date (inclusive)'),
+        to: z.string().describe('ISO 8601 end date (inclusive)'),
+        goalIds: z.array(z.coerce.number()).optional().describe('Limit to specific projects'),
+        billable: z.boolean().optional().describe('Filter by billable flag'),
+      },
+    },
+    async (params) => {
+      try {
+        const result = await api.timeTracking.reportContributors({
+          organizationId: params.organizationId,
+          goalIds: params.goalIds,
+          from: params.from,
+          to: params.to,
+          billable: params.billable,
+        })
+        return ok(result)
+      } catch (e) { return err(e) }
+    },
+  )
+
+  server.registerTool(
     'delete_time_entry',
     {
       description: 'Delete a time entry (writes a record to history.time_entries before deletion).',

@@ -56,6 +56,11 @@
       />
     </UFormField>
 
+    <UCheckbox
+      v-model="billable"
+      :label="t('timeTracking.billable')"
+    />
+
     <div class="flex justify-end gap-2">
       <UButton
         :label="t('timeTracking.cancel')"
@@ -85,12 +90,14 @@ export type TimeEntryFormPayload = {
   startedAt: string
   endedAt: string
   description: string
+  billable: boolean
 }
 
 const props = defineProps<{
   initialStartedAt?: string
   initialEndedAt?: string
   initialDescription?: string
+  initialBillable?: boolean
   submitLabel?: string
 }>()
 
@@ -118,6 +125,7 @@ const endDate = shallowRef<CalendarDate | undefined>(initialEnd.date)
 const startTime = shallowRef<Time | undefined>(initialStart.time)
 const endTime = shallowRef<Time | undefined>(initialEnd.time)
 const description = ref(props.initialDescription ?? '')
+const billable = ref(props.initialBillable ?? true)
 
 const startOpen = ref(false)
 const endOpen = ref(false)
@@ -154,6 +162,7 @@ const onSubmit = () => {
     startedAt: startJs.value.toISOString(),
     endedAt: endJs.value.toISOString(),
     description: description.value,
+    billable: billable.value,
   })
 }
 </script>

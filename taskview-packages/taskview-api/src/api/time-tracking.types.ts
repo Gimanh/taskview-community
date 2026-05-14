@@ -46,9 +46,12 @@ export type TimeEntryUpdateArg = {
 }
 
 export type TimeEntryFetchFilters = {
+    organizationId?: number
     goalId?: number
+    goalIds?: number[]
     taskId?: number
     userId?: number
+    billable?: boolean
     from?: string | Date
     to?: string | Date
     limit?: number
@@ -77,3 +80,47 @@ export const TIME_ENTRY_SOURCE = {
     TIMER: 0,
     MANUAL: 1,
 } as const
+
+export type TimeReportFilters = {
+    organizationId: number
+    goalIds?: number[]
+    userId?: number
+    from: string | Date
+    to: string | Date
+    billable?: boolean
+    timezone?: string
+}
+
+export type TimeReportByDayRow = {
+    day: string
+    totalSeconds: number
+    entriesCount: number
+}
+
+export type TimeReportByUserRow = {
+    userId: number
+    userEmail: string | null
+    totalSeconds: number
+    entriesCount: number
+}
+
+export type TimeReportByTaskRow = {
+    taskId: number
+    taskDescription: string | null
+    goalId: number
+    totalSeconds: number
+    entriesCount: number
+}
+
+export type TimeReportSummary = {
+    totalSeconds: number
+    totalBillableSeconds: number
+    entriesCount: number
+}
+
+export type TimeReportContributor = {
+    userId: number
+    userEmail: string | null
+    totalSeconds: number
+    entriesCount: number
+}

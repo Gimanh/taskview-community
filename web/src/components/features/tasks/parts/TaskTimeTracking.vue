@@ -175,6 +175,7 @@ const onUpdate = (payload: TimeEntryFormPayload & { id: number }) =>
     startedAt: payload.startedAt,
     endedAt: payload.endedAt,
     description: payload.description || undefined,
+    billable: payload.billable,
   })
 
 const onSubmitManual = async (payload: TimeEntryFormPayload) => {
@@ -183,6 +184,7 @@ const onSubmitManual = async (payload: TimeEntryFormPayload) => {
     startedAt: payload.startedAt,
     endedAt: payload.endedAt,
     description: payload.description || undefined,
+    billable: payload.billable,
   })
   if (created) manualOpen.value = false
 }
