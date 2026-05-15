@@ -108,24 +108,29 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
+const fromDate = (d: Date): { date: CalendarDate; time: Time } => ({
+  date: new CalendarDate(d.getFullYear(), d.getMonth() + 1, d.getDate()),
+  time: new Time(d.getHours(), d.getMinutes()),
+})
+
 const fromIso = (iso: string | undefined): { date?: CalendarDate; time?: Time } => {
   if (!iso) return {}
-  const d = new Date(iso)
-  return {
-    date: new CalendarDate(d.getFullYear(), d.getMonth() + 1, d.getDate()),
-    time: new Time(d.getHours(), d.getMinutes()),
-  }
+  return fromDate(new Date(iso))
 }
 
-const initialStart = fromIso(props.initialStartedAt)
-const initialEnd = fromIso(props.initialEndedAt)
+const isEditMode = props.initialStartedAt !== undefined
+const defaultStart = fromDate(new Date(Date.now() - 60 * 60 * 1000))
+const defaultEnd = fromDate(new Date())
+
+const initialStart = isEditMode ? fromIso(props.initialStartedAt) : defaultStart
+const initialEnd = isEditMode ? fromIso(props.initialEndedAt) : defaultEnd
 
 const startDate = shallowRef<CalendarDate | undefined>(initialStart.date)
 const endDate = shallowRef<CalendarDate | undefined>(initialEnd.date)
 const startTime = shallowRef<Time | undefined>(initialStart.time)
 const endTime = shallowRef<Time | undefined>(initialEnd.time)
 const description = ref(props.initialDescription ?? '')
-const billable = ref(props.initialBillable ?? true)
+const billable = ref(isEditMode ? props.initialBillable === true : true)
 
 const startOpen = ref(false)
 const endOpen = ref(false)

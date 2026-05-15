@@ -56,28 +56,30 @@
       <span>{{ t('timeTracking.willStopOther') }}</span>
     </div>
 
-    <div
-      v-if="entries.length > 0"
-      class="flex flex-col gap-2 max-h-80 overflow-y-auto pr-1"
-    >
-      <TaskTimeTrackingEntry
-        v-for="entry in entries"
-        :key="entry.id"
-        :entry="entry"
-        @delete="onDelete"
-        @update="onUpdate"
-      />
-    </div>
-    <div
-      v-else
-      class="flex flex-col items-center gap-1 py-3 text-xs text-muted"
-    >
-      <UIcon
-        name="i-lucide-inbox"
-        class="size-5"
-      />
-      <span>{{ t('timeTracking.empty') }}</span>
-    </div>
+    <template v-if="canViewTimeTracking">
+      <div
+        v-if="entries.length > 0"
+        class="flex flex-col gap-2 max-h-80 overflow-y-auto pr-1"
+      >
+        <TaskTimeTrackingEntry
+          v-for="entry in entries"
+          :key="entry.id"
+          :entry="entry"
+          @delete="onDelete"
+          @update="onUpdate"
+        />
+      </div>
+      <div
+        v-else
+        class="flex flex-col items-center gap-1 py-3 text-xs text-muted"
+      >
+        <UIcon
+          name="i-lucide-inbox"
+          class="size-5"
+        />
+        <span>{{ t('timeTracking.empty') }}</span>
+      </div>
+    </template>
 
     <div
       v-if="canLogTime"
@@ -192,7 +194,7 @@ const onSubmitManual = async (payload: TimeEntryFormPayload) => {
 watch(
   () => props.taskId,
   (id) => {
-    if (id) store.fetchEntriesForTask(id)
+    if (id && canViewTimeTracking.value) store.fetchEntriesForTask(id)
   },
   { immediate: true },
 )
@@ -202,6 +204,8 @@ onMounted(() => {
 })
 
 useEventListener(document, 'visibilitychange', () => {
-  if (!document.hidden && props.taskId) store.fetchEntriesForTask(props.taskId)
+  if (!document.hidden && props.taskId && canViewTimeTracking.value) {
+    store.fetchEntriesForTask(props.taskId)
+  }
 })
 </script>

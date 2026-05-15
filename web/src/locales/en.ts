@@ -729,6 +729,8 @@ export default {
       colEntries: 'Entries',
       empty: 'No data for the selected filters',
       recentEntries: 'Recent entries',
+      noPermission: 'You don\'t have permission to view time reports',
+      noPermissionHint: 'Ask a project admin for the time-tracking view permission to access reports.',
     },
   },
 }

@@ -475,7 +475,7 @@ describe('TvApi time-tracking tests', () => {
             invitedRoleId = roleId;
         });
 
-        it('can start, stop, createManual, update and delete OWN entries', async () => {
+        it('can start, stop and createManual but cannot update or delete OWN entries', async () => {
             const started = await $invitedUser.timeTracking.start({ taskId }).catch(console.error);
             expect(started?.entry).toBeDefined();
 
@@ -489,14 +489,14 @@ describe('TvApi time-tracking tests', () => {
             }).catch(console.error);
             expect(manual?.taskId).toBe(taskId);
 
-            const updated = await $invitedUser.timeTracking.update({
+            const updateStatus = await $invitedUser.timeTracking.update({
                 id: manual!.id,
-                description: 'updated own',
-            }).catch(console.error);
-            expect(updated?.description).toBe('updated own');
+                description: 'should not pass',
+            }).catch((err) => err.status);
+            expect(updateStatus).toBe(403);
 
-            const del = await $invitedUser.timeTracking.delete(manual!.id).catch(console.error);
-            expect(del?.deleted).toBe(true);
+            const deleteStatus = await $invitedUser.timeTracking.delete(manual!.id).catch((err) => err.status);
+            expect(deleteStatus).toBe(403);
         });
 
         it('cannot view or edit other users entries (no VIEW/MANAGE_ALL)', async () => {
@@ -537,25 +537,8 @@ describe('TvApi time-tracking tests', () => {
             expect(status).toBe(403);
         });
 
-        it('cannot update or delete OWN entry after TIMETRACKING_CAN_LOG is revoked', async () => {
-            const ownEntry = await $invitedUser.timeTracking.createManual({
-                taskId,
-                startedAt: isoMinutesAgo(60),
-                endedAt: isoMinutesAgo(30),
-                description: 'original',
-            }).catch(console.error);
-            expect(ownEntry).toBeDefined();
-
+        it('cannot start or createManual after TIMETRACKING_CAN_LOG is revoked', async () => {
             await togglePermissionForRole(invitedRoleId, TvPermissions.TIMETRACKING_CAN_LOG);
-
-            const updateStatus = await $invitedUser.timeTracking.update({
-                id: ownEntry!.id,
-                description: 'should not pass',
-            }).catch((err) => err.status);
-            expect(updateStatus).toBe(403);
-
-            const deleteStatus = await $invitedUser.timeTracking.delete(ownEntry!.id).catch((err) => err.status);
-            expect(deleteStatus).toBe(403);
 
             const startStatus = await $invitedUser.timeTracking.start({ taskId }).catch((err) => err.status);
             expect(startStatus).toBe(403);

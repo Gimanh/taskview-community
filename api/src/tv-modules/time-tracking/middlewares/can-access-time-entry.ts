@@ -9,8 +9,6 @@ export const canAccessTimeEntry = (action: Action) => async (req: Request, res: 
     const entryId = Number(req.params.id)
     if (!entryId) return res.status(400).end()
 
-    const userId = req.appUser.getUserData()!.id
-
     const entry = await req.appUser.timeTrackingManager.repository.findById(entryId).catch(logError)
     if (!entry) return res.status(404).end()
 
@@ -33,8 +31,6 @@ export const canAccessTimeEntry = (action: Action) => async (req: Request, res: 
         return res.status(403).end()
     }
 
-    const isOwn = entry.userId === userId
-    if (isOwn && checker.hasPermissions(GoalPermissions.TIMETRACKING_CAN_LOG)) return next()
     if (checker.hasPermissions(GoalPermissions.TIMETRACKING_CAN_MANAGE_ALL)) return next()
 
     return res.status(403).end()

@@ -4,8 +4,9 @@
       <UDashboardNavbar :title="t('timeTracking.reports.title')" />
     </template>
     <template #body>
+      <TimeReportsNoPermission v-if="projectId !== null && !canViewReports" />
       <TimeReportsLayout
-        v-if="orgId !== null && projectId !== null"
+        v-else-if="orgId !== null && projectId !== null"
         :organization-id="orgId"
         :available-projects="visibleProjects"
         :default-goal-ids="defaultGoalIds"
@@ -24,6 +25,7 @@ import { TvPermissions } from 'taskview-api'
 import { useOrganizationStore } from '@/stores/organization.store'
 import { useGoalsStore } from '@/stores/goals.store'
 import TimeReportsLayout from '@/components/features/time-reports/TimeReportsLayout.vue'
+import TimeReportsNoPermission from '@/components/features/time-reports/TimeReportsNoPermission.vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -47,5 +49,11 @@ const defaultGoalIds = computed(() => (projectId.value !== null ? [projectId.val
 
 const canManageAll = computed(
   () => currentGoal.value?.permissions[TvPermissions.TIMETRACKING_CAN_MANAGE_ALL] === true,
+)
+
+const canViewReports = computed(
+  () =>
+    currentGoal.value?.permissions[TvPermissions.TIMETRACKING_CAN_VIEW] === true ||
+    currentGoal.value?.permissions[TvPermissions.TIMETRACKING_CAN_MANAGE_ALL] === true,
 )
 </script>

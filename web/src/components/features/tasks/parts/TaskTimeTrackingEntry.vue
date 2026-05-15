@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-1 px-2 py-1.5 rounded bg-elevated/50 text-sm">
-    <div class="flex items-center justify-between gap-2">
+    <div class="flex lg:items-center flex-col lg:flex-row justify-between gap-2">
       <div class="flex flex-col min-w-0 flex-1">
         <div class="flex items-center gap-2 text-xs text-muted">
           <span class="font-mono">{{ formattedStarted }}</span>
@@ -17,7 +17,7 @@
           :label="formatDuration(entry.durationSeconds ?? 0)"
           color="neutral"
           variant="subtle"
-          size="xs"
+          size="sm"
         />
         <UBadge
           v-else
@@ -26,6 +26,7 @@
           variant="subtle"
           size="xs"
         />
+        <div class="w-full flex justify-end gap-2">
         <UButton
           v-if="entry.endedAt && !editing && canEdit"
           icon="i-lucide-pencil"
@@ -42,6 +43,8 @@
           size="xs"
           @click="emit('delete', entry.id)"
         />
+        </div>
+        
       </div>
     </div>
 
@@ -79,10 +82,10 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const editing = ref(false)
 const userStore = useUserStore()
-const { canLogTime, canManageAllTime } = useGoalPermissions()
+const { canManageAllTime } = useGoalPermissions()
 
 const isOwn = computed(() => userStore.payloadData?.id === props.entry.userId)
-const canEdit = computed(() => (isOwn.value ? canLogTime.value : canManageAllTime.value))
+const canEdit = computed(() => canManageAllTime.value)
 
 const formattedStarted = computed(() => new Date(props.entry.startedAt).toLocaleString())
 const userLabel = computed(() =>

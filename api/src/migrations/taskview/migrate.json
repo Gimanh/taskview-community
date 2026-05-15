@@ -542,12 +542,13 @@
     "43": {
         "version": "1.50.0",
         "name": "Release 1.50.0",
-        "releaseDate": "20260514",
+        "releaseDate": "20260515",
         "scripts": [
             "/1.50.0/0.update-timetracking-permissions-descriptions.sql"
         ],
         "description": [
-            "Updated descriptions of timetracking_can_view and timetracking_can_manage_all to document that these permissions also expose contributor emails through the time-entry log"
+            "Updated descriptions of timetracking_can_view and timetracking_can_manage_all to document that these permissions also expose contributor emails through the time-entry log",
+            "Tightened timetracking_can_log description: it grants only start/stop/createManual, NOT edit/delete (including own entries). Edit/delete now requires timetracking_can_manage_all — see can-access-time-entry middleware change."
         ]
     }
 }

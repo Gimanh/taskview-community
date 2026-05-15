@@ -7,6 +7,7 @@
         color="neutral"
         variant="outline"
         size="lg"
+        class="grow lg:grow-0"
         :ui="activatorStyle"
       />
       <template #content>
@@ -28,6 +29,7 @@
         color="neutral"
         variant="outline"
         size="lg"
+        class="grow lg:grow-0"
         :ui="activatorStyle"
       />
       <template #content>
@@ -40,13 +42,14 @@
       </template>
     </UPopover>
 
+    <div class="flex flex-col lg:flex-row w-full lg:w-auto gap-2">
     <USelectMenu
       v-if="availableProjects.length > 0"
       v-model="selectedGoalIds"
       :items="projectOptions"
       multiple
       :placeholder="t('timeTracking.reports.allProjects')"
-      class="min-w-56"
+      class="lg:min-w-56 w-full lg:w-auto"
       size="lg"
     />
 
@@ -55,9 +58,11 @@
       v-model="selectedUser"
       :items="contributorOptions"
       :placeholder="t('timeTracking.reports.allUsers')"
-      class="min-w-56"
+      class="lg:min-w-56 w-full lg:w-auto"
       size="lg"
     />
+    </div>
+    
 
     <UCheckbox
       v-model="billableOnly"

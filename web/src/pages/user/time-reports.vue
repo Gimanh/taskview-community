@@ -4,8 +4,9 @@
       <UDashboardNavbar :title="t('timeTracking.reports.title')" />
     </template>
     <template #body>
+      <TimeReportsNoPermission v-if="orgId !== null && visibleProjects.length === 0" />
       <TimeReportsLayout
-        v-if="orgId !== null"
+        v-else-if="orgId !== null"
         :organization-id="orgId"
         :available-projects="visibleProjects"
         :can-filter-by-user="hasAnyManageAll"
@@ -22,6 +23,7 @@ import { TvPermissions } from 'taskview-api'
 import { useOrganizationStore } from '@/stores/organization.store'
 import { useGoalsStore } from '@/stores/goals.store'
 import TimeReportsLayout from '@/components/features/time-reports/TimeReportsLayout.vue'
+import TimeReportsNoPermission from '@/components/features/time-reports/TimeReportsNoPermission.vue'
 
 const { t } = useI18n()
 const orgStore = useOrganizationStore()
