@@ -114,6 +114,7 @@
 
       <!-- Time tracking -->
       <TaskTimeTracking
+        v-if="canViewTimeTracking || canLogTime"
         :task-id="task.id"
         class="flex-1"
       />
@@ -162,6 +163,8 @@ const toast = useToast()
 const tasksStore = useTasksStore()
 const {
   canEditTaskStatus,
+  canViewTimeTracking,
+  canLogTime,
 } = useGoalPermissions()
 const task = computed(() => tasksStore.selectedTask ?? null)
 const projectId = computed(() => task.value?.goalId ?? 0)
