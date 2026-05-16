@@ -6,6 +6,11 @@ import { getApiTokensManager } from '../tv-modules/api-tokens/ApiTokensManager';
 import { TOKEN_PREFIX } from '../tv-modules/api-tokens/types';
 
 export const appUserMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+    if (req.method === 'OPTIONS') {
+        req.appUser = new AppUser();
+        return next();
+    }
+
     const token = req.headers['authorization']?.split(' ')[1];
 
     if (token && token.startsWith(TOKEN_PREFIX)) {

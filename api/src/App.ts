@@ -1,24 +1,12 @@
-import cors from 'cors';
 import express, { type Request, type Response } from 'express';
 import helmet from 'helmet';
 import { appUserMiddleware } from './middlewares/app-user-middleware';
+import { corsMiddleware } from './middlewares/cors';
 import errorHandler from './middlewares/error-handler';
 import routes from './routes';
 import passport, { initPassportLogin } from './tv-modules/auth/strategies/passport-login';
 import cookieParser from 'cookie-parser';
 import { registerAllEventHandlers, startAllWorkers } from './core/all-events';
-
-const allow = new Set([
-    ...(process.env.CORS_REMOVE_DEFAULT_ALLOWED_ORIGINS === 'true' ? [] : [
-        // default allowed origins for official TaskView apps
-        "https://app.taskview.tech",
-        "https://taskview.handscream.com",
-        "capacitor://taskview.handscream.com",
-        "capacitor://app.taskview.tech",
-        "https://appleid.apple.com"
-    ]),
-    ...(process.env.CORS_ALLOWED_ORIGINS?.split(',') || []),
-]);
 
 export default class App {
     public app: express.Application;
@@ -52,19 +40,9 @@ export default class App {
             next();
         });
 
-        this.app.use(cookieParser());
-        this.app.use(appUserMiddleware);
-
-        this.app.use(cors({
-            credentials: true,
-            origin(origin, cb) {
-                if (!origin || origin === 'null') return cb(null, true);
-                if (allow.has(origin)) return cb(null, true);
-                return cb(new Error(`CORS blocked origin: ${origin}`), false);
-            },
-        }));
-
         this.app.use(helmet());
+        this.app.use(corsMiddleware);
+        this.app.use(cookieParser());
         this.app.use(express.json({
             verify: (req: any, _res, buf) => {
                 // Store raw body for webhook signature verification github and gitlab integrations
@@ -74,6 +52,7 @@ export default class App {
             },
         }));
         this.app.use(express.urlencoded({ extended: true }));
+        this.app.use(appUserMiddleware);
     }
 
     private initializeRoutes() {
