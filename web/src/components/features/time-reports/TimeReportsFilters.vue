@@ -43,24 +43,24 @@
     </UPopover>
 
     <div class="flex flex-col lg:flex-row w-full lg:w-auto gap-2">
-    <USelectMenu
-      v-if="availableProjects.length > 0"
-      v-model="selectedGoalIds"
-      :items="projectOptions"
-      multiple
-      :placeholder="t('timeTracking.reports.allProjects')"
-      class="lg:min-w-56 w-full lg:w-auto"
-      size="lg"
-    />
+      <USelectMenu
+        v-if="availableProjects.length > 0"
+        v-model="selectedGoalIds"
+        :items="projectOptions"
+        multiple
+        :placeholder="t('timeTracking.reports.allProjects')"
+        class="lg:min-w-56 w-full lg:w-auto"
+        size="lg"
+      />
 
-    <USelectMenu
-      v-if="canFilterByUser && contributorOptions.length > 0"
-      v-model="selectedUser"
-      :items="contributorOptions"
-      :placeholder="t('timeTracking.reports.allUsers')"
-      class="lg:min-w-56 w-full lg:w-auto"
-      size="lg"
-    />
+      <USelectMenu
+        v-if="canFilterByUser && contributorOptions.length > 0"
+        v-model="selectedUser"
+        :items="contributorOptions"
+        :placeholder="t('timeTracking.reports.allUsers')"
+        class="lg:min-w-56 w-full lg:w-auto"
+        size="lg"
+      />
     </div>
     
 

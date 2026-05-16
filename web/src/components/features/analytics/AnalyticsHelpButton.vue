@@ -1,6 +1,9 @@
 <template>
   <span class="inline-flex">
-    <UTooltip :text="pick(props.help.summary)" :delay-duration="150">
+    <UTooltip
+      :text="pick(props.help.summary)"
+      :delay-duration="150"
+    >
       <UButton
         icon="i-lucide-circle-help"
         color="neutral"
@@ -12,7 +15,10 @@
       />
     </UTooltip>
 
-    <UModal v-model:open="isOpen" :title="pick(props.sectionTitle)">
+    <UModal
+      v-model:open="isOpen"
+      :title="pick(props.sectionTitle)"
+    >
       <template #body>
         <div class="flex flex-col gap-4">
           <div>

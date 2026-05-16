@@ -75,6 +75,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import type { Organization } from 'taskview-api'
 import { useOrganizationStore } from '@/stores/organization.store'
 import { useTaskView } from '@/composables/useTaskView'
 import OrgCreateModal from './parts/OrgCreateModal.vue'
@@ -86,13 +87,13 @@ const orgStore = useOrganizationStore()
 
 const showCreateModal = ref(false)
 const showDetailModal = ref(false)
-const selectedOrg = ref<any>(null)
+const selectedOrg = ref<Organization | null>(null)
 
 onMounted(() => {
   orgStore.fetchOrganizations()
 })
 
-function selectOrg(org: any) {
+function selectOrg(org: Organization) {
   selectedOrg.value = org
   showDetailModal.value = true
 }

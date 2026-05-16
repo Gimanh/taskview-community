@@ -23,7 +23,7 @@ export const isNotNullable = <T>(val: T): val is Exclude<T, null | undefined> =>
   return val !== null && val !== undefined
 }
 
-export const logError = (err: any) => console.log(err)
+export const logError = (err: unknown) => console.log(err)
 
 export function validLogin(login: string) {
   const re = /^[a-z0-9]{4,30}$/

@@ -10,7 +10,10 @@
         :ui="{ list: 'bg-zinc-100 dark:bg-zinc-800' }"
       />
     </div>
-    <div class="relative" :style="{ height: `${height ?? 320}px` }">
+    <div
+      class="relative"
+      :style="{ height: `${height ?? 320}px` }"
+    >
       <canvas ref="canvas" />
     </div>
   </div>

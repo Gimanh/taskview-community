@@ -30,24 +30,24 @@ export function useAnalyticsChartConfig() {
     const payload = section.payload
 
     switch (chartType) {
-      case 'line':
-        return lineOrArea(section, payload, false, false)
-      case 'area':
-        return lineOrArea(section, payload, true, false)
-      case 'stackedArea':
-        return lineOrArea(section, payload, true, true)
-      case 'bar':
-        return barChart(section, payload, 'x', false)
-      case 'stackedBar':
-        return barChart(section, payload, 'x', true)
-      case 'horizontalBar':
-        return barChart(section, payload, 'y', payload.datasets.some(d => d.stack))
-      case 'donut':
-        return donutChart(section, payload)
-      case 'histogram':
-        return histogramChart(section, payload)
-      case 'radar':
-        return radarChart(section, payload)
+    case 'line':
+      return lineOrArea(section, payload, false, false)
+    case 'area':
+      return lineOrArea(section, payload, true, false)
+    case 'stackedArea':
+      return lineOrArea(section, payload, true, true)
+    case 'bar':
+      return barChart(section, payload, 'x', false)
+    case 'stackedBar':
+      return barChart(section, payload, 'x', true)
+    case 'horizontalBar':
+      return barChart(section, payload, 'y', payload.datasets.some(d => d.stack))
+    case 'donut':
+      return donutChart(section, payload)
+    case 'histogram':
+      return histogramChart(section, payload)
+    case 'radar':
+      return radarChart(section, payload)
     }
   }
 
@@ -279,16 +279,16 @@ export function useAnalyticsChartConfig() {
   function formatValue(value: number, unit: AnalyticsSeriesPayload['unit']): string {
     if (value === null || Number.isNaN(value)) return '—'
     switch (unit) {
-      case 'percent':
-        return `${value}%`
-      case 'days':
-        return `${value} ${t('analytics.units.days')}`
-      case 'hours':
-        return `${value} ${t('analytics.units.hours')}`
-      case 'currency':
-        return value.toLocaleString()
-      default:
-        return String(value)
+    case 'percent':
+      return `${value}%`
+    case 'days':
+      return `${value} ${t('analytics.units.days')}`
+    case 'hours':
+      return `${value} ${t('analytics.units.hours')}`
+    case 'currency':
+      return value.toLocaleString()
+    default:
+      return String(value)
     }
   }
 

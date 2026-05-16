@@ -14,24 +14,39 @@
         icon="i-lucide-alert-triangle"
         class="mb-4"
       />
-      <div v-if="analyticsStore.drillDown.loading" class="flex items-center justify-center py-12">
-        <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin text-zinc-400" />
+      <div
+        v-if="analyticsStore.drillDown.loading"
+        class="flex items-center justify-center py-12"
+      >
+        <UIcon
+          name="i-lucide-loader-circle"
+          class="size-6 animate-spin text-zinc-400"
+        />
       </div>
       <div
         v-else-if="!analyticsStore.drillDown.error && analyticsStore.drillDown.denied"
         class="flex flex-col items-center gap-2 py-12 text-center text-sm text-zinc-500"
       >
-        <UIcon name="i-lucide-lock" class="size-8 text-zinc-400" />
+        <UIcon
+          name="i-lucide-lock"
+          class="size-8 text-zinc-400"
+        />
         <p>{{ t('analytics.drillDown.denied') }}</p>
       </div>
       <div
         v-else-if="!analyticsStore.drillDown.error && analyticsStore.drillDown.tasks.length === 0"
         class="flex flex-col items-center gap-2 py-12 text-center text-sm text-zinc-500"
       >
-        <UIcon name="i-lucide-check-circle-2" class="size-8 text-zinc-400" />
+        <UIcon
+          name="i-lucide-check-circle-2"
+          class="size-8 text-zinc-400"
+        />
         <p>{{ t('analytics.drillDown.empty') }}</p>
       </div>
-      <ul v-else-if="analyticsStore.drillDown.tasks.length > 0" class="flex flex-col gap-2">
+      <ul
+        v-else-if="analyticsStore.drillDown.tasks.length > 0"
+        class="flex flex-col gap-2"
+      >
         <li
           v-for="task in analyticsStore.drillDown.tasks"
           :key="task.id"
@@ -59,12 +74,18 @@
                 <span>{{ task.goalName }}</span>
                 <span v-if="task.endDate">{{ t('analytics.drillDown.due') }} {{ fmtDate(task.endDate) }}</span>
                 <span>{{ t('analytics.drillDown.created') }} {{ fmtDate(task.date_creation) }}</span>
-                <span v-if="task.complete" class="text-emerald-600 dark:text-emerald-400">
+                <span
+                  v-if="task.complete"
+                  class="text-emerald-600 dark:text-emerald-400"
+                >
                   {{ t('analytics.drillDown.closed') }} {{ fmtDate(task.date_complete) }}
                 </span>
               </div>
             </div>
-            <UIcon name="i-lucide-chevron-right" class="size-4 shrink-0 text-zinc-400" />
+            <UIcon
+              name="i-lucide-chevron-right"
+              class="size-4 shrink-0 text-zinc-400"
+            />
           </div>
         </li>
       </ul>

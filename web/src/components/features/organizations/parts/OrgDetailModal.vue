@@ -93,6 +93,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import type { Organization } from 'taskview-api'
 import { useOrganizationStore } from '@/stores/organization.store'
 import { useTaskView } from '@/composables/useTaskView'
 import { useOrgPermissions } from '@/composables/useOrgPermissions'
@@ -101,7 +102,7 @@ import OrgSsoSettings from './OrgSsoSettings.vue'
 
 const open = defineModel<boolean>({ default: false })
 const props = defineProps<{
-  organization: any
+  organization: Organization | null
 }>()
 
 const { t } = useI18n()

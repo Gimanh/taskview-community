@@ -56,7 +56,10 @@
           v-else-if="showEmpty"
           class="flex flex-col items-center gap-3 py-16 text-center"
         >
-          <UIcon name="i-lucide-bar-chart-3" class="size-12 text-zinc-400" />
+          <UIcon
+            name="i-lucide-bar-chart-3"
+            class="size-12 text-zinc-400"
+          />
           <p class="text-sm text-zinc-500">
             {{ emptyMessage }}
           </p>

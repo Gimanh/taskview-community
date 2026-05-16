@@ -6,7 +6,10 @@
           <h3 class="text-base font-semibold">
             {{ pick(section.title) }}
           </h3>
-          <p v-if="section.description" class="text-sm text-zinc-500 dark:text-zinc-400">
+          <p
+            v-if="section.description"
+            class="text-sm text-zinc-500 dark:text-zinc-400"
+          >
             {{ pick(section.description) }}
           </p>
         </div>
@@ -18,7 +21,10 @@
       </div>
     </template>
 
-    <div v-if="section.payload.kind === 'series' && section.payload.datasets.length === 0" class="py-12 text-center text-sm text-zinc-500">
+    <div
+      v-if="section.payload.kind === 'series' && section.payload.datasets.length === 0"
+      class="py-12 text-center text-sm text-zinc-500"
+    >
       {{ t('analytics.sectionCard.noData') }}
     </div>
     <AnalyticsChart
