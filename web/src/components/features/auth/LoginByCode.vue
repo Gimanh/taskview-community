@@ -29,6 +29,13 @@
           placeholder="000000"
           icon="i-lucide-key-round"
           class="w-full text-center tracking-widest"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+          maxlength="6"
+          pattern="[0-9]{6}"
         />
       </UFormField>
 
@@ -94,7 +101,7 @@ const showCodeField = ref(false)
 const isLoading = ref(false)
 
 const emailType = type('string.email').configure({ message: t('auth.invalidEmail') })
-const codeType = type('string > 0').configure({ message: t('auth.codeMustBe6') })
+const codeType = type('/^\\d{6}$/').configure({ message: t('auth.codeMustBe6') })
 
 const EmailSchema = type({
   email: emailType,
@@ -130,8 +137,8 @@ async function handleSubmit() {
   try {
     if (showCodeField.value) {
       const result = await $api.post<LoginResponse>('/module/auth/login-by-code', {
-        code: state.code,
-        email: state.email,
+        code: state.code.trim(),
+        email: state.email.trim(),
       })
 
       if (result.data.access) {
@@ -149,12 +156,13 @@ async function handleSubmit() {
         await redirectToUser(router)
       }
     } else {
-      await $api.post('/module/auth/send-login-code', { email: state.email })
-      await $ls.setValue('user-email', state.email)
+      const email = state.email.trim()
+      await $api.post('/module/auth/send-login-code', { email })
+      await $ls.setValue('user-email', email)
 
       toast.add({
         title: t('auth.codeSent'),
-        description: t('auth.checkInbox', { email: state.email }),
+        description: t('auth.checkInbox', { email }),
         color: 'success',
       })
 
@@ -162,16 +170,16 @@ async function handleSubmit() {
     }
   } catch (error: unknown) {
     const axiosError = error as { response?: { status?: number } }
+    const status = axiosError.response?.status
     if (showCodeField.value) {
-      toast.add({
-        title: t('auth.error'),
-        description: axiosError.response?.status === 403 ? t('auth.invalidCode') : t('auth.loginFailed'),
-        color: 'error',
-      })
+      let description = t('auth.loginFailed')
+      if (status === 429) description = t('auth.tooManyAttempts')
+      else if (status === 400 || status === 403) description = t('auth.invalidCode')
+      toast.add({ title: t('auth.error'), description, color: 'error' })
     } else {
       toast.add({
         title: t('auth.error'),
-        description: t('auth.failedToSendCode'),
+        description: status === 429 ? t('auth.tooManyAttempts') : t('auth.failedToSendCode'),
         color: 'error',
       })
     }
@@ -186,22 +194,24 @@ function goBack() {
 }
 
 async function resendCode() {
-  if (!state.email) return
+  const email = state.email.trim()
+  if (!email) return
 
   isLoading.value = true
 
   try {
-    await $api.post('/module/auth/send-login-code', { email: state.email })
+    await $api.post('/module/auth/send-login-code', { email })
 
     toast.add({
       title: t('auth.codeResent'),
-      description: t('auth.newCodeSent', { email: state.email }),
+      description: t('auth.newCodeSent', { email }),
       color: 'success',
     })
-  } catch {
+  } catch (error: unknown) {
+    const status = (error as { response?: { status?: number } }).response?.status
     toast.add({
       title: t('auth.error'),
-      description: t('auth.failedToResendCode'),
+      description: status === 429 ? t('auth.tooManyAttempts') : t('auth.failedToResendCode'),
       color: 'error',
     })
   } finally {

@@ -71,6 +71,7 @@ export default {
     failedToSendCode: 'Не удалось отправить код. Попробуйте снова.',
     failedToResendCode: 'Не удалось отправить код повторно',
     failedToSendResetLink: 'Не удалось отправить ссылку. Попробуйте снова.',
+    tooManyAttempts: 'Слишком много неверных попыток. Подождите несколько минут и попробуйте снова.',
 
     // SSO
     ssoSignIn: 'Войти через SSO',
