@@ -17,8 +17,11 @@ import {
 import { generateString, isEmail, time } from '../../utils/helpers';
 import EnEmailTemplate from './mail/confirm-email-en';
 import RuEmailTemplate from './mail/confirm-email-ru';
+import LoginCodeEmailTemplate from './mail/login-code-en';
 import type { ExternalAuthUser } from './strategies/external-auth.types';
 import { OrganizationRepository } from '../organizations/OrganizationRepository';
+
+const LOGIN_CODE_TTL_MS = 5 * 60 * 1000;
 
 export default class AuthController {
     private readonly jwtAlg: Algorithm = process.env.JWT_ALG as Algorithm;
@@ -104,7 +107,8 @@ export default class AuthController {
     }
 
     generateLoginCode() {
-        return `${this.makeidLogin(12)}:${Date.now()}`.toLocaleLowerCase();
+        const code = String(randomInt(100000, 1000000));
+        return `${code}:${Date.now()}`;
     }
     /**
      * Register user by email and send login code to the email
@@ -165,26 +169,36 @@ export default class AuthController {
 
         const lastUpdate = userData.remember_token?.split(':')[1];
         const now = Date.now();
+        const RESEND_COOLDOWN_MS = 60 * 1000;
 
-        if (!lastUpdate || (lastUpdate && now - +lastUpdate > 60 * 1000)) {
-            $logger.info(`[AuthController:sendLoginCode] updating login code for user`);
-
-            await req.appUser.authManager.repository.updateLoginCode(code, email);
-
-            $logger.info(`[AuthController:sendLoginCode] sending code by email to`);
-
-            await this.sendCodeByEmail(code.split(':')[0], email);
+        if (lastUpdate && now - +lastUpdate < RESEND_COOLDOWN_MS) {
+            return res.status(429).send({
+                message: 'Please wait before requesting another code.',
+                retryAfter: Math.ceil((RESEND_COOLDOWN_MS - (now - +lastUpdate)) / 1000),
+            });
         }
+
+        $logger.info(`[AuthController:sendLoginCode] updating login code for user`);
+        await req.appUser.authManager.repository.updateLoginCode(code, email);
+        $logger.info(`[AuthController:sendLoginCode] sending code by email to`);
+        this.sendCodeByEmail(code.split(':')[0], email)
+            .then((ok) => {
+                if (!ok) $logger.error({ email }, 'Failed to send login code email');
+            })
+            .catch((err) => $logger.error({ err, email }, 'Failed to send login code email'));
         return res.status(200).end();
     };
 
     async sendCodeByEmail(code: string, email: string) {
+        const text = `Your TaskView verification code is ${code}\n\nUse this code to sign in. The code expires in 5 minutes.\n\nIf you didn't request this code, ignore this email.`;
+        const html = LoginCodeEmailTemplate.replace('{code}', code);
+
         return await Email.send({
-            text: null,
+            text,
             to: email,
-            subject: 'Code',
+            subject: `Your TaskView code: ${code}`,
             from: process.env.SMTP_FROM_EMAIL as string,
-            attachment: [{ data: `<span>Code <strong>${code}</strong></span>`, alternative: true }],
+            attachment: [{ data: html, alternative: true }],
         });
     }
 
@@ -295,8 +309,8 @@ export default class AuthController {
 
     loginByCode = async (req: Request, res: Response) => {
         const schema = z.object({
-            email: z.string().email().toLowerCase(),
-            code: z.string().min(12).toLowerCase(),
+            email: z.string().trim().email().toLowerCase(),
+            code: z.string().trim().regex(/^\d{6}$/, '6-digit code'),
         });
 
         const data = schema.safeParse(req.body);
@@ -323,7 +337,7 @@ export default class AuthController {
             return res.status(400).send({ message: 'Invalid code' });
         }
 
-        if (tokenFromDb[1] && Date.now() - +tokenFromDb[1] > 60 * 1000) {
+        if (tokenFromDb[1] && Date.now() - +tokenFromDb[1] > LOGIN_CODE_TTL_MS) {
             await req.appUser.authManager.repository.updateLoginCode(null, userData.email);
             return res.status(400).send({ message: 'Code expired, get new code' });
         }
@@ -538,9 +552,11 @@ export default class AuthController {
             subject: 'Remind password!',
             from: process.env.SMTP_FROM_EMAIL as string,
             attachment: [{ data: remindPasswordBody, alternative: true }],
-        }).catch((err) => {
-            $logger.error({ err, to: userData.email }, 'Failed to send remind password email');
-        });
+        })
+            .then((ok) => {
+                if (!ok) $logger.error({ to: userData.email }, 'Failed to send remind password email');
+            })
+            .catch((err) => $logger.error({ err, to: userData.email }, 'Failed to send remind password email'));
 
         return respond();
     };
