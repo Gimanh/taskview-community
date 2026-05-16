@@ -26,6 +26,7 @@ export function useGoalPermissionsFor(goalRef: Ref<GoalItem | null>) {
     canViewGraph: computed(() => hasPermission(goalRef.value, 'GRAPH_CAN_VIEW') || hasPermission(goalRef.value, 'GRAPH_CAN_MANAGE')),
     canViewIntegrations: computed(() => hasPermission(goalRef.value, 'INTEGRATIONS_CAN_VIEW') || hasPermission(goalRef.value, 'INTEGRATIONS_CAN_MANAGE')),
     canManageIntegrations: computed(() => hasPermission(goalRef.value, 'INTEGRATIONS_CAN_MANAGE')),
+    canViewTimeTracking: computed(() => hasPermission(goalRef.value, 'TIMETRACKING_CAN_VIEW') || hasPermission(goalRef.value, 'TIMETRACKING_CAN_MANAGE_ALL')),
   }
 }
 

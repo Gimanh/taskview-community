@@ -104,6 +104,7 @@ export default {
     collaboration: 'Collaboration',
     integrations: 'Integrations',
     webhooks: 'Webhooks',
+    timeReports: 'Time reports',
     edit: 'Edit',
     moveToArchive: 'Move to Archive',
     restoreFromArchive: 'Restore from Archive',

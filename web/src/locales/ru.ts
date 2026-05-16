@@ -103,6 +103,8 @@ export default {
     graph: 'Граф',
     collaboration: 'Совместная работа',
     integrations: 'Интеграции',
+    webhooks: 'Вебхуки',
+    timeReports: 'Отчёты по времени',
     edit: 'Редактировать',
     moveToArchive: 'В архив',
     restoreFromArchive: 'Восстановить из архива',

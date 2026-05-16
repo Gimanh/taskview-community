@@ -107,6 +107,17 @@
         :to="{ name: 'webhooks', params: { projectId: selectedProject?.id } }"
         @click="contextMenu?.close()"
       />
+      <!-- Time Reports -->
+      <UButton
+        v-if="canViewTimeTracking"
+        :label="t('contextMenu.timeReports')"
+        icon="i-lucide-clock"
+        variant="ghost"
+        color="neutral"
+        class="w-full justify-start"
+        :to="{ name: 'project-time-reports', params: { projectId: selectedProject?.id } }"
+        @click="contextMenu?.close()"
+      />
 
       <USeparator class="my-1" />
 
@@ -222,6 +233,7 @@ const {
   canViewKanban,
   canViewGraph,
   canViewIntegrations,
+  canViewTimeTracking,
   canManageUsers,
   canEditGoal,
   canDeleteGoal,
