@@ -23,6 +23,7 @@ async function cleanDatabase() {
 
     const tables = [
         'tv_auth.api_tokens',
+        'tv_auth.user_tokens',
         'history.tasks_tasks',
         'collaboration.users',
         'tasks.goals',

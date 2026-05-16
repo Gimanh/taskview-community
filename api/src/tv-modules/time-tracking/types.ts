@@ -1,0 +1,238 @@
+import { type } from 'arktype'
+import type { TimeEntriesSchemaTypeForSelect } from 'taskview-db-schemas'
+
+export type TimeEntryWithUser = TimeEntriesSchemaTypeForSelect & {
+    userEmail: string | null
+}
+
+const NumberFromString = type('string|number').pipe((v) => Number(v))
+const OptionalNumberFromString = type('string|number|undefined').pipe((v) => v === undefined ? undefined : Number(v))
+const DateFromString = type('string|Date').pipe((v) => v instanceof Date ? v : new Date(v))
+const OptionalDateFromString = type('string|Date|undefined').pipe((v) => v === undefined ? undefined : v instanceof Date ? v : new Date(v))
+
+const NumberListFromString = type('string|number|number[]|undefined').pipe((v) => {
+    if (v === undefined) return undefined
+    if (typeof v === 'number') return [v]
+    if (Array.isArray(v)) return v.map((n) => Number(n)).filter((n) => Number.isFinite(n))
+    return v.split(',').map((s) => Number(s.trim())).filter((n) => Number.isFinite(n))
+})
+
+const BooleanFromString = type('string|boolean|undefined').pipe((v) => {
+    if (v === undefined) return undefined
+    if (typeof v === 'boolean') return v
+    return v === 'true' || v === '1'
+})
+
+const DESCRIPTION_MAX = 500
+const Description = type('string').narrow((v, ctx) => {
+    const codepoints = [...v].length
+    return codepoints <= DESCRIPTION_MAX || ctx.mustBe(`at most ${DESCRIPTION_MAX} characters (got ${codepoints})`)
+})
+
+export const TimeEntryArkTypeStart = type({
+    taskId: 'number',
+    'description?': Description,
+})
+export type TimeEntryArgStart = typeof TimeEntryArkTypeStart.infer
+
+export const TimeEntryArkTypeStop = type({
+    'entryId?': 'number',
+})
+export type TimeEntryArgStop = typeof TimeEntryArkTypeStop.infer
+
+export const TimeEntryArkTypeCreate = type({
+    taskId: 'number',
+    startedAt: DateFromString,
+    endedAt: DateFromString,
+    'description?': Description,
+    'billable?': 'boolean',
+})
+export type TimeEntryArgCreate = typeof TimeEntryArkTypeCreate.infer
+
+export const TimeEntryArkTypeUpdate = type({
+    id: 'number',
+    'startedAt?': OptionalDateFromString,
+    'endedAt?': OptionalDateFromString,
+    'description?': Description,
+    'billable?': 'boolean',
+})
+export type TimeEntryArgUpdate = typeof TimeEntryArkTypeUpdate.infer
+
+export const TimeEntryArkTypeDelete = type({
+    id: NumberFromString,
+})
+export type TimeEntryArgDelete = typeof TimeEntryArkTypeDelete.infer
+
+export const TimeEntryArkTypeFetchEntries = type({
+    'organizationId?': OptionalNumberFromString,
+    'goalId?': OptionalNumberFromString,
+    'goalIds?': NumberListFromString,
+    'taskId?': OptionalNumberFromString,
+    'userId?': OptionalNumberFromString,
+    'billable?': BooleanFromString,
+    'from?': OptionalDateFromString,
+    'to?': OptionalDateFromString,
+    'limit?': OptionalNumberFromString,
+    'offset?': OptionalNumberFromString,
+})
+export type TimeEntryArgFetchEntries = typeof TimeEntryArkTypeFetchEntries.infer
+
+export const TimeEntryArkTypeSummaryByGoal = type({
+    goalId: NumberFromString,
+})
+export type TimeEntryArgSummaryByGoal = typeof TimeEntryArkTypeSummaryByGoal.infer
+
+export const TimeEntryArkTypeSummaryByTask = type({
+    taskId: NumberFromString,
+})
+export type TimeEntryArgSummaryByTask = typeof TimeEntryArkTypeSummaryByTask.infer
+
+export const TimeEntryArkTypeHistory = type({
+    id: NumberFromString,
+})
+export type TimeEntryArgHistory = typeof TimeEntryArkTypeHistory.infer
+
+export const TIME_ENTRY_SOURCE = {
+    TIMER: 0,
+    MANUAL: 1,
+} as const
+
+const Timezone = type('string').narrow((v, ctx) => {
+    try {
+        new Intl.DateTimeFormat('en-US', { timeZone: v })
+        return true
+    }
+    catch {
+        return ctx.mustBe('a valid IANA timezone name')
+    }
+})
+
+const MAX_REPORT_WINDOW_MS = 2 * 365 * 24 * 60 * 60 * 1000
+
+export const TimeReportArkTypeFilters = type({
+    'goalIds?': NumberListFromString,
+    'userId?': OptionalNumberFromString,
+    from: DateFromString,
+    to: DateFromString,
+    'billable?': BooleanFromString,
+    'timezone?': Timezone,
+}).narrow((data, ctx) => {
+    const fromMs = data.from.getTime()
+    const toMs = data.to.getTime()
+    if (!Number.isFinite(fromMs) || !Number.isFinite(toMs)) {
+        return ctx.mustBe('valid from/to dates')
+    }
+    if (fromMs >= toMs) {
+        return ctx.mustBe('from earlier than to')
+    }
+    if (toMs - fromMs > MAX_REPORT_WINDOW_MS) {
+        return ctx.mustBe('range no wider than 2 years')
+    }
+    return true
+})
+export type TimeReportFilters = typeof TimeReportArkTypeFilters.infer
+
+export type TimeReportRequest = {
+    organizationId: number
+    filters: TimeReportFilters
+}
+
+export type TimeReportRepoFilters = {
+    goalIds: number[]
+    userId?: number
+    from: Date
+    to: Date
+    billable?: boolean
+    timezone?: string
+}
+
+export type TimeReportByDayRow = {
+    day: string
+    totalSeconds: number
+    entriesCount: number
+}
+
+export type TimeReportByUserRow = {
+    userId: number
+    userEmail: string | null
+    totalSeconds: number
+    entriesCount: number
+}
+
+export type TimeReportByTaskRow = {
+    taskId: number
+    taskDescription: string | null
+    goalId: number
+    totalSeconds: number
+    entriesCount: number
+}
+
+export type TimeReportSummary = {
+    totalSeconds: number
+    totalBillableSeconds: number
+    entriesCount: number
+}
+
+export type TimeReportContributor = {
+    userId: number
+    userEmail: string | null
+    totalSeconds: number
+    entriesCount: number
+}
+
+export type TimeEntrySource = typeof TIME_ENTRY_SOURCE[keyof typeof TIME_ENTRY_SOURCE]
+
+export type TimeEntryInsertParams = {
+    taskId: number
+    goalId: number
+    userId: number
+    source: TimeEntrySource
+    startedAt?: Date
+    endedAt?: Date | null
+    durationSeconds?: number | null
+    description?: string | null
+    billable?: boolean
+}
+
+export type TimeEntryUpdateParams = Partial<{
+    startedAt: Date
+    endedAt: Date | null
+    durationSeconds: number | null
+    description: string | null
+    billable: boolean
+    autoStopped: boolean
+}>
+
+export type TimeEntryFilters = {
+    goalIds?: number[]
+    taskId?: number
+    userId?: number
+    billable?: boolean
+    from?: Date
+    to?: Date
+    limit?: number
+    offset?: number
+}
+
+export type TimeEntryStartResult = {
+    entry: TimeEntryWithUser
+    autoStoppedEntry: TimeEntryWithUser | null
+}
+
+export type TimeEntryInsertResult = {
+    entry: TimeEntryWithUser | null
+    conflict: boolean
+}
+
+export type TimeEntryUserSeconds = { userId: number; seconds: number }
+
+export type TimeEntryTaskSummary = {
+    totalSeconds: number
+    byUser: TimeEntryUserSeconds[]
+}
+
+export type TimeEntryGoalSummary = {
+    totalSeconds: number
+    byUser: TimeEntryUserSeconds[]
+    byTask: { taskId: number; seconds: number }[]
+}

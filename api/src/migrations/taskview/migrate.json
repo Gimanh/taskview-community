@@ -507,5 +507,48 @@
             "Add partial index on tasks.goals(organization_id) WHERE archive = 0 for analytics goal lookup",
             "Add partial index on tasks.tasks(goal_id) WHERE complete IS NOT TRUE for open-task analytics queries"
         ]
+    },
+    "41": {
+        "version": "1.48.0",
+        "name": "Release 1.48.0",
+        "releaseDate": "20260511",
+        "scripts": [
+            "/1.48.0/0.create-time-entries.sql",
+            "/1.48.0/1.create-time-entries-history.sql",
+            "/1.48.0/2.alter-organizations-add-autostop.sql",
+            "/1.48.0/3.add-timetracking-permissions.sql",
+            "/1.48.0/all-triggers.sql"
+        ],
+        "description": [
+            "Added time-tracking module: tasks.time_entries with one-active-timer-per-user partial unique index",
+            "Added history.time_entries audit table with FK ON DELETE CASCADE to time_entries (history removed with the entry)",
+            "Added time_tracking_autostop_hours column to tv_auth.organizations (default 24, NULL = disabled)",
+            "Added timetracking_can_log and timetracking_can_manage_all goal-level permissions (granted to new projects only, matching the 1.46.0 analytics convention)",
+            "all-triggers.sql: updated add_roles_and_permissions function with new permissions; added log_changes_time_entries trigger (BEFORE UPDATE writes JSONB snapshot to history.time_entries)"
+        ]
+    },
+    "42": {
+        "version": "1.49.0",
+        "name": "Release 1.49.0",
+        "releaseDate": "20260512",
+        "scripts": [
+            "/1.49.0/0.time_entries_report_indexes.sql"
+        ],
+        "description": [
+            "Added compound indexes on tasks.time_entries (goal_id, started_at, user_id) and (goal_id, started_at, task_id) for time-tracking report aggregations",
+            "Added partial index on tasks.time_entries(goal_id, started_at) WHERE billable = TRUE for billable-only reports"
+        ]
+    },
+    "43": {
+        "version": "1.50.0",
+        "name": "Release 1.50.0",
+        "releaseDate": "20260515",
+        "scripts": [
+            "/1.50.0/0.update-timetracking-permissions-descriptions.sql"
+        ],
+        "description": [
+            "Updated descriptions of timetracking_can_view and timetracking_can_manage_all to document that these permissions also expose contributor emails through the time-entry log",
+            "Tightened timetracking_can_log description: it grants only start/stop/createManual, NOT edit/delete (including own entries). Edit/delete now requires timetracking_can_manage_all — see can-access-time-entry middleware change."
+        ]
     }
 }

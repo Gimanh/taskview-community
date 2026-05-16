@@ -3,11 +3,13 @@ import type { Dispatcher } from './Dispatcher';
 import { NotificationDispatcher } from '../tv-modules/notifications/NotificationDispatcher';
 import { RealtimeDispatcher } from '../tv-modules/realtime/RealtimeDispatcher';
 import { WebhooksDispatcher } from '../tv-modules/webhooks/WebhooksDispatcher';
+import { TimeTrackingDispatcher } from '../tv-modules/time-tracking/TimeTrackingDispatcher';
 
 const dispatchers: Dispatcher[] = [
     new NotificationDispatcher(),
     new RealtimeDispatcher(),
     new WebhooksDispatcher(),
+    new TimeTrackingDispatcher(),
 ];
 
 export function registerAllEventHandlers() {

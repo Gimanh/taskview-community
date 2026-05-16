@@ -26,6 +26,12 @@ export function mockApi(overrides: Record<string, Record<string, unknown>> = {})
     },
     graph: { fetchAllEdges: noop, addEdge: noop, deleteEdge: noop },
     notifications: { fetch: noop, markRead: noop, markAllRead: noop },
+    timeTracking: {
+      start: noop, stop: noop, getActive: noop, createManual: noop, update: noop, delete: noop,
+      fetchEntries: noop, summaryByTask: noop, summaryByGoal: noop,
+      reportByDay: noop, reportByUser: noop, reportByTask: noop, reportSummary: noop,
+      reportContributors: noop,
+    },
   }
 
   for (const [ns, methods] of Object.entries(overrides)) {

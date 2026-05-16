@@ -1,5 +1,15 @@
+import { and, eq, exists, inArray, or } from 'drizzle-orm';
+import {
+    CollaborationPermissionsToRoleSchema,
+    CollaborationRolesSchema,
+    CollaborationUsersSchema,
+    CollaborationUsersToGoalsSchema,
+    CollaborationUsersToRolesSchema,
+    GoalsSchema,
+    PermissionsSchema,
+} from 'taskview-db-schemas';
 import { Database } from '../modules/db';
-import type { GoalPermissionItemsFromDb } from '../types/auth.types';
+import type { FetchGoalIdsWithAnyPermissionParams, GoalPermissionItemsFromDb } from '../types/auth.types';
 import type { GoalItemInDb } from '../types/goal.type';
 import type { ListItemInDb } from '../types/lists.types';
 import type { TaskItemInDb } from '../types/tasks.types';
@@ -58,5 +68,58 @@ export class GoalPermissionsRepository {
             return result.rows[0].goal_id;
         }
         return null;
+    }
+
+    async fetchGoalIdsWithAnyPermission(params: FetchGoalIdsWithAnyPermissionParams): Promise<number[]> {
+        if (params.permissionNames.length === 0) return [];
+
+        const permissionSubquery = this.db.dbDrizzle
+            .select({ one: CollaborationUsersSchema.id })
+            .from(CollaborationUsersSchema)
+            .innerJoin(
+                CollaborationUsersToGoalsSchema,
+                and(
+                    eq(CollaborationUsersToGoalsSchema.userId, CollaborationUsersSchema.id),
+                    eq(CollaborationUsersToGoalsSchema.goalId, GoalsSchema.id),
+                ),
+            )
+            .innerJoin(
+                CollaborationUsersToRolesSchema,
+                eq(CollaborationUsersToRolesSchema.userId, CollaborationUsersSchema.id),
+            )
+            .innerJoin(
+                CollaborationRolesSchema,
+                and(
+                    eq(CollaborationRolesSchema.id, CollaborationUsersToRolesSchema.roleId),
+                    eq(CollaborationRolesSchema.goalId, GoalsSchema.id),
+                ),
+            )
+            .innerJoin(
+                CollaborationPermissionsToRoleSchema,
+                eq(CollaborationPermissionsToRoleSchema.roleId, CollaborationRolesSchema.id),
+            )
+            .innerJoin(
+                PermissionsSchema,
+                eq(PermissionsSchema.id, CollaborationPermissionsToRoleSchema.permissionId),
+            )
+            .where(
+                and(
+                    eq(CollaborationUsersSchema.email, params.email),
+                    inArray(PermissionsSchema.name, params.permissionNames),
+                ),
+            );
+
+        const result = await this.db.dbDrizzle
+            .select({ id: GoalsSchema.id })
+            .from(GoalsSchema)
+            .where(
+                and(
+                    eq(GoalsSchema.organizationId, params.organizationId),
+                    eq(GoalsSchema.archive, 0),
+                    or(eq(GoalsSchema.owner, params.userId), exists(permissionSubquery)),
+                ),
+            );
+
+        return result.map((r) => r.id).filter((id): id is number => Number.isInteger(id));
     }
 }

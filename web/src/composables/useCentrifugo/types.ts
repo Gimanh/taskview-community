@@ -1,4 +1,4 @@
-import type { Notification } from 'taskview-api'
+import type { Notification, TimeEntryItem } from 'taskview-api'
 
 export type RealtimeEventMap = {
   'notification': {
@@ -10,6 +10,29 @@ export type RealtimeEventMap = {
   'goals.changed': {
     event: 'goals.changed'
     goalId: number
+  }
+  'time-entry.started': {
+    event: 'time-entry.started'
+    entry: TimeEntryItem
+  }
+  'time-entry.stopped': {
+    event: 'time-entry.stopped'
+    entry: TimeEntryItem
+    durationSeconds: number
+  }
+  'time-entry.created': {
+    event: 'time-entry.created'
+    entry: TimeEntryItem
+  }
+  'time-entry.updated': {
+    event: 'time-entry.updated'
+    entry: TimeEntryItem
+    changes: Record<string, unknown>
+  }
+  'time-entry.deleted': {
+    event: 'time-entry.deleted'
+    entryId: number
+    taskId: number
   }
 }
 

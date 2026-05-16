@@ -13,6 +13,7 @@ import { OrganizationManager } from '../tv-modules/organizations/OrganizationMan
 import { SsoManager } from '../tv-modules/sso/SsoManager';
 import { AnalyticsManager } from '../tv-modules/analytics/AnalyticsManager';
 import { TasksManager } from '../tv-modules/tasks/TasksManager';
+import { TimeTrackingManager } from '../tv-modules/time-tracking/TimeTrackingManager';
 import type { UserDbRecord, UserJwtPayload } from '../types/auth.types';
 import { GoalPermissionsFetcher } from './GoalPermissionsFetcher';
 
@@ -39,6 +40,7 @@ export class AppUser {
     public readonly organizationManager: OrganizationManager;
     public readonly ssoManager: SsoManager;
     public readonly analyticsManager: AnalyticsManager;
+    public readonly timeTrackingManager: TimeTrackingManager;
 
     constructor(userData?: UserJwtPayload) {
         this.userData = userData;
@@ -58,6 +60,7 @@ export class AppUser {
         this.organizationManager = new OrganizationManager(this);
         this.ssoManager = new SsoManager(this);
         this.analyticsManager = new AnalyticsManager(this);
+        this.timeTrackingManager = new TimeTrackingManager(this);
     }
 
     getTokenId(): number | undefined {

@@ -31,6 +31,17 @@ describe('organizations integration', () => {
     createdOrgIds.push(org.id)
   })
 
+  it('creates an organization with custom slug', async () => {
+    const name = `Custom Slug Org ${ts()}`
+    const slug = `custom-slug-${ts()}`
+    const result = await call(tools, 'create_organization', { name, slug })
+    const org = parse(result)
+
+    expect(org.name).toBe(name)
+    expect(org.slug).toBe(slug)
+    createdOrgIds.push(org.id)
+  })
+
   it('lists organizations including the created one', async () => {
     const result = await call(tools, 'list_organizations')
     const orgs = parse(result)
@@ -59,6 +70,16 @@ describe('organizations integration', () => {
     expect(org.name).toBe(newName)
   })
 
+  it('updates organization logoUrl', async () => {
+    const logoUrl = `https://example.com/logo-${ts()}.png`
+    const result = await call(tools, 'update_organization', {
+      organizationId: createdOrgIds[0],
+      logoUrl,
+    })
+    const org = parse(result)
+    expect(org.logoUrl).toBe(logoUrl)
+  })
+
   it('adds a member to organization', async () => {
     const email = `member-${ts()}@test.com`
     const result = await call(tools, 'add_organization_member', {
@@ -70,6 +91,31 @@ describe('organizations integration', () => {
 
     expect(member.email).toBe(email)
     expect(member.role).toBe('member')
+  })
+
+  it('adds a member with admin role', async () => {
+    const email = `admin-${ts()}@test.com`
+    const result = await call(tools, 'add_organization_member', {
+      organizationId: createdOrgIds[0],
+      email,
+      role: 'admin',
+    })
+    const member = parse(result)
+
+    expect(member.email).toBe(email)
+    expect(member.role).toBe('admin')
+  })
+
+  it('cannot delete personal workspace', async () => {
+    const orgs = parse(await call(tools, 'list_organizations')) as Array<{ id: number; isPersonal?: number }>
+    const personal = orgs.find((o) => o.isPersonal === 1)
+    if (!personal) return
+
+    const result = await call(tools, 'delete_organization', { organizationId: personal.id })
+    if (!result.isError) {
+      const data = parse(result)
+      expect(data.deleted).toBe(false)
+    }
   })
 
   it('lists organization members', async () => {

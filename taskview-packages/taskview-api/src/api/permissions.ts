@@ -130,6 +130,23 @@ export const TvPermissions: Record<Uppercase<keyof GoalPermissions>, keyof GoalP
      * Can view analytics dashboards and KPIs for this goal
      */
     ANALYTICS_CAN_VIEW: 'analytics_can_view',
+
+    /**
+     * View all time entries on this project — both own and other members'.
+     * Does not grant logging or editing.
+     */
+    TIMETRACKING_CAN_VIEW: 'timetracking_can_view',
+    /**
+     * Start/stop timer and create/edit/delete OWN time entries on this project.
+     * Does not grant viewing the project log or managing others' entries.
+     */
+    TIMETRACKING_CAN_LOG: 'timetracking_can_log',
+    /**
+     * Full time-tracking access on this project: log own time, view all entries
+     * (own and other members'), and edit/delete entries of any project member.
+     * Implies both view and log permissions.
+     */
+    TIMETRACKING_CAN_MANAGE_ALL: 'timetracking_can_manage_all',
 } as const;
 
 export type GoalPermissions = {
@@ -174,4 +191,8 @@ export type GoalPermissions = {
     integrations_can_view?: true;
 
     analytics_can_view?: true;
+
+    timetracking_can_view?: true;
+    timetracking_can_log?: true;
+    timetracking_can_manage_all?: true;
 };

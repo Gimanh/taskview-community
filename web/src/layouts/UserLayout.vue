@@ -22,6 +22,7 @@
           >
             {{ t('main') }}
           </TvGoalLikeItem>
+          <ActiveTimerIndicator />
           <NotificationBell />
         </div>
 
@@ -42,6 +43,7 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useEventListener } from '@vueuse/core'
 import { App } from '@capacitor/app'
 import { CapacitorUpdater } from '@capgo/capacitor-updater'
 import { useDashboard } from '@/composables/useDashboard'
@@ -51,18 +53,30 @@ import { useI18n } from 'vue-i18n'
 import ConnectionStatusBanner from '@/components/ConnectionStatusBanner.vue'
 import ProjectsSidebar from '@/components/features/projects/ProjectsSidebar.vue'
 import NotificationBell from '@/components/NotificationBell.vue'
+import ActiveTimerIndicator from '@/components/ActiveTimerIndicator.vue'
 import { useCentrifugo } from '@/composables/useCentrifugo'
 import { usePushNotifications } from '@/composables/usePushNotifications'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useOrganizationStore } from '@/stores/organization.store'
+import { useTimeTrackingStore } from '@/stores/time-tracking.store'
 
 const { isSidebarOpen, isSidebarCollapsed } = useDashboard()
 const { connect: connectCentrifugo } = useCentrifugo()
 const { init: initPush } = usePushNotifications()
 const { t } = useI18n()
+const toast = useToast()
 const appStore = useAppStore()
 const goalsStore = useGoalsStore()
 const orgStore = useOrganizationStore()
+const timeTrackingStore = useTimeTrackingStore()
+
+watch(
+  () => timeTrackingStore.lastError,
+  (err) => {
+    if (!err) return
+    toast.add({ title: t(err.key), color: 'error' })
+  },
+)
 const route = useRoute()
 const router = useRouter()
 
@@ -124,6 +138,11 @@ onMounted(async () => {
   }
 
   await goalsStore.fetchGoals()
+  timeTrackingStore.fetchActive()
+
+  useEventListener(document, 'visibilitychange', () => {
+    if (!document.hidden) timeTrackingStore.fetchActive()
+  })
 
   await CapacitorUpdater.notifyAppReady()
   console.log('notifyAppReady', APP_VERSION)

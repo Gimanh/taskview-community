@@ -67,4 +67,32 @@ export class GoalPermissionsFetcher {
     async getCheckerForGoal(goalId: number): Promise<GoalPermissionsChecker> {
         return await this.getPermissionsForType(goalId, GoalPermissionsFetcher.PERMISSION_TYPE_FOR_GOAL);
     }
+
+    async getAccessibleGoalIds(organizationId: number, permissions: string[]): Promise<number[]> {
+        if (permissions.length === 0) return [];
+
+        const tokenPerms = this.user.getTokenPermissions();
+        const effectivePermissions = tokenPerms && tokenPerms.length > 0
+            ? permissions.filter((p) => tokenPerms.includes(p))
+            : permissions;
+
+        if (effectivePermissions.length === 0) return [];
+
+        const userData = this.user.getUserData();
+        if (!userData) return [];
+
+        let goalIds = await this.goalPermissionsRepository.fetchGoalIdsWithAnyPermission({
+            userId: userData.id,
+            email: userData.email,
+            organizationId,
+            permissionNames: effectivePermissions,
+        });
+
+        const allowedGoalIds = this.user.getAllowedGoalIds();
+        if (allowedGoalIds && allowedGoalIds.length > 0) {
+            goalIds = goalIds.filter((id) => allowedGoalIds.includes(id));
+        }
+
+        return goalIds;
+    }
 }

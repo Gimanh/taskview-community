@@ -85,6 +85,16 @@ const router = createRouter({
           component: () => import('./pages/user/analytics.vue'),
         },
         {
+          path: 'time-reports',
+          name: 'time-reports',
+          component: () => import('./pages/user/time-reports.vue'),
+        },
+        {
+          path: ':projectId/time-reports',
+          name: 'project-time-reports',
+          component: () => import('./pages/user/project-time-reports.vue'),
+        },
+        {
           path: ':projectId?/:listId?/:taskId?',
           name: 'user',
           component: () => import('./pages/user/index.vue'),
