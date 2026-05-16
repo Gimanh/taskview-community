@@ -41,7 +41,7 @@ export function usePushNotifications() {
       registered.value = true
     })
 
-    FirebaseMessaging.addListener('notificationReceived', (_notification) => {
+    FirebaseMessaging.addListener('notificationReceived', () => {
       const notificationsStore = useNotificationsStore()
       notificationsStore.fetchNotifications(true)
     })

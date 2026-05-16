@@ -27,24 +27,23 @@
           size="xs"
         />
         <div class="w-full flex justify-end gap-2">
-        <UButton
-          v-if="entry.endedAt && !editing && canEdit"
-          icon="i-lucide-pencil"
-          color="neutral"
-          variant="ghost"
-          size="xs"
-          @click="editing = true"
-        />
-        <UButton
-          v-if="entry.endedAt && !editing && canEdit"
-          icon="i-lucide-trash-2"
-          color="error"
-          variant="ghost"
-          size="xs"
-          @click="emit('delete', entry.id)"
-        />
+          <UButton
+            v-if="entry.endedAt && !editing && canEdit"
+            icon="i-lucide-pencil"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            @click="editing = true"
+          />
+          <UButton
+            v-if="entry.endedAt && !editing && canEdit"
+            icon="i-lucide-trash-2"
+            color="error"
+            variant="ghost"
+            size="xs"
+            @click="emit('delete', entry.id)"
+          />
         </div>
-        
       </div>
     </div>
 

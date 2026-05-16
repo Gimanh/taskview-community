@@ -1,7 +1,6 @@
 import { useGoalsStore } from '@/stores/goals.store'
-import type { RealtimeEventMap } from '../types'
 
-export function handleGoalsChanged(_data: RealtimeEventMap['goals.changed']) {
+export function handleGoalsChanged() {
   const goalsStore = useGoalsStore()
   goalsStore.fetchGoals()
 }

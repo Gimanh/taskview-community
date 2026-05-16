@@ -21,11 +21,21 @@
       <div class="text-3xl font-semibold">
         {{ formattedValue }}
       </div>
-      <div v-if="payload.delta" class="flex items-center gap-1 text-sm" :class="deltaClass">
-        <UIcon :name="deltaIcon" class="size-4" />
+      <div
+        v-if="payload.delta"
+        class="flex items-center gap-1 text-sm"
+        :class="deltaClass"
+      >
+        <UIcon
+          :name="deltaIcon"
+          class="size-4"
+        />
         <span>{{ payload.delta.value }}%</span>
       </div>
-      <div v-if="section.description" class="text-xs text-zinc-500 dark:text-zinc-400">
+      <div
+        v-if="section.description"
+        class="text-xs text-zinc-500 dark:text-zinc-400"
+      >
         {{ pick(section.description) }}
       </div>
     </div>
@@ -66,16 +76,16 @@ function onClick() {
 const formattedValue = computed(() => {
   const v = payload.value.value
   switch (payload.value.unit) {
-    case 'percent':
-      return `${v}%`
-    case 'days':
-      return `${v} ${t('analytics.units.days')}`
-    case 'hours':
-      return `${v} ${t('analytics.units.hours')}`
-    case 'currency':
-      return v.toLocaleString()
-    default:
-      return v.toLocaleString()
+  case 'percent':
+    return `${v}%`
+  case 'days':
+    return `${v} ${t('analytics.units.days')}`
+  case 'hours':
+    return `${v} ${t('analytics.units.hours')}`
+  case 'currency':
+    return v.toLocaleString()
+  default:
+    return v.toLocaleString()
   }
 })
 
@@ -88,12 +98,12 @@ const deltaClass = computed(() => {
 const deltaIcon = computed(() => {
   if (!payload.value.delta) return ''
   switch (payload.value.delta.direction) {
-    case 'up':
-      return 'i-lucide-trending-up'
-    case 'down':
-      return 'i-lucide-trending-down'
-    default:
-      return 'i-lucide-minus'
+  case 'up':
+    return 'i-lucide-trending-up'
+  case 'down':
+    return 'i-lucide-trending-down'
+  default:
+    return 'i-lucide-minus'
   }
 })
 </script>
