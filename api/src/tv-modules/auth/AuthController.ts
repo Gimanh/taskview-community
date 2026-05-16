@@ -507,48 +507,42 @@ export default class AuthController {
             return res.status(400).send();
         }
 
+        // Always respond 200 to avoid user-enumeration. SMTP send runs in background,
+        // so the response never races the browser preflight/timeout.
+        const respond = () => res.status(200).send({ sent: true });
+
         const userData = await req.appUser.authManager.repository.getUserByLogin(data.data.email, true);
-
-        if (!userData) {
-            return res.status(400).send();
-        }
-
-        if (!this.canSendRemindEmail(userData)) {
-            return res.status(400).send();
+        if (!userData || !this.canSendRemindEmail(userData)) {
+            return respond();
         }
 
         const code = generateString(18);
         const seconds = time();
 
         const result = await req.appUser.authManager.repository.setReminderCodeAndTime(userData.email, code, seconds);
-
         if (!result) {
-            $logger.error(`Can not set remind_code and time for user`);
-            return res.status(500).send();
+            $logger.error('Can not set remind_code and time for user');
+            return respond();
         }
 
         const remindPasswordUrl = `${process.env.APP_URL}/login/?resetCode=${code}&login=${userData.login}`;
-
         const remindPasswordBody = `<html>
                                     <body>
                                         <p><a href="${remindPasswordUrl}"> Reset password link! </a></p>
                                     </body>
                                     </html>`;
 
-        const sendResult = await Email.send({
+        Email.send({
             text: null,
-            to: userData.email, //'gimanhead@gmail.com',
+            to: userData.email,
             subject: 'Remind password!',
             from: process.env.SMTP_FROM_EMAIL as string,
             attachment: [{ data: remindPasswordBody, alternative: true }],
+        }).catch((err) => {
+            $logger.error({ err, to: userData.email }, 'Failed to send remind password email');
         });
-        // const sendResult = await Email.send('', 'Remind password', 'gimanhead@gmail.com', remindPasswordBody);
 
-        if (sendResult) {
-            return res.status(200).send({ sent: true });
-        }
-
-        return res.status(500).send();
+        return respond();
     };
 
     changeRemindedPassword = async (req: Request, res: Response) => {
@@ -579,6 +573,8 @@ export default class AuthController {
         if (!result) {
             return res.status(500).send();
         }
+
+        await req.appUser.authManager.repository.setReminderCodeAndTime(userData.email, null, null);
 
         return res.status(200).send({ reset: true });
     };

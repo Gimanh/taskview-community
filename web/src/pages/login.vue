@@ -43,6 +43,12 @@ async function loginByCode(code: string, email: string) {
 }
 
 onMounted(async () => {
+  // Handle password reset link from email (redirects to /reset-password preserving query)
+  if (route.query.resetCode) {
+    await router.replace({ path: '/reset-password', query: route.query })
+    return
+  }
+
   // If user already has a valid token, redirect to dashboard
   const existingToken = await $ls.getToken()
   if (existingToken) {
