@@ -244,6 +244,15 @@ const items = computed<DropdownMenuItem[][]>(() => [
             saveLocale('ru')
           },
         },
+        {
+          label: 'Deutsch',
+          type: 'checkbox',
+          checked: locale.value === 'de',
+          onSelect(e: Event) {
+            e.preventDefault()
+            saveLocale('de')
+          },
+        },
       ],
     },
     {
