@@ -139,7 +139,7 @@ export class OrganizationRepository {
         })
         .from(OrganizationMembersSchema)
         .innerJoin(OrganizationsSchema, eq(OrganizationMembersSchema.organizationId, OrganizationsSchema.id))
-        .where(eq(OrganizationMembersSchema.email, email))
+        .where(eq(OrganizationMembersSchema.email, email.toLowerCase()))
     )
 
     if (!result) return []
@@ -192,7 +192,7 @@ export class OrganizationRepository {
         .where(
           and(
             eq(OrganizationMembersSchema.organizationId, orgId),
-            eq(OrganizationMembersSchema.email, email),
+            eq(OrganizationMembersSchema.email, email.toLowerCase()),
           )
         )
     )
@@ -220,7 +220,7 @@ export class OrganizationRepository {
         .where(
           and(
             eq(OrganizationMembersSchema.organizationId, orgId),
-            eq(OrganizationMembersSchema.email, email),
+            eq(OrganizationMembersSchema.email, email.toLowerCase()),
           )
         )
     )

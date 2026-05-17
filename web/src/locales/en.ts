@@ -550,6 +550,8 @@ export default {
     roleUpdated: 'Role updated',
     close: 'Close',
     slugTaken: 'This slug is already taken',
+    personal: 'This is your personal workspace',
+    personalHint: 'Auto-created together with your account. It cannot be deleted.',
   },
   sso: {
     noConfig: 'SSO is not configured for this organization',

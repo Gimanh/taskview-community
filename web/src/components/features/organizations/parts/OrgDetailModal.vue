@@ -10,15 +10,25 @@
         :ui="{ root: 'flex flex-col flex-1 min-h-0', body: 'flex-1 min-h-0 overflow-y-auto' }"
       >
         <template #header>
-          <div class="flex items-center justify-between">
-            <h3 class="font-semibold">
-              {{ organization.name }}
-            </h3>
-            <UButton
-              icon="i-lucide-x"
-              variant="ghost"
-              color="neutral"
-              @click="open = false"
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold">
+                {{ organization.name }}
+              </h3>
+              <UButton
+                icon="i-lucide-x"
+                variant="ghost"
+                color="neutral"
+                @click="open = false"
+              />
+            </div>
+            <UAlert
+              v-if="organization.isPersonal"
+              :title="t('organizations.personal')"
+              :description="t('organizations.personalHint')"
+              icon="i-lucide-user"
+              color="info"
+              variant="subtle"
             />
           </div>
         </template>
@@ -69,7 +79,7 @@
         <template #footer>
           <div class="flex justify-between">
             <UButton
-              v-if="isOwner"
+              v-if="isOwner && !organization.isPersonal"
               :label="t('organizations.delete')"
               color="error"
               variant="ghost"
