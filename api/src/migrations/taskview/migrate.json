@@ -550,5 +550,16 @@
             "Updated descriptions of timetracking_can_view and timetracking_can_manage_all to document that these permissions also expose contributor emails through the time-entry log",
             "Tightened timetracking_can_log description: it grants only start/stop/createManual, NOT edit/delete (including own entries). Edit/delete now requires timetracking_can_manage_all — see can-access-time-entry middleware change."
         ]
+    },
+    "44": {
+        "version": "1.51.0",
+        "name": "Release 1.51.0",
+        "releaseDate": "20260517",
+        "scripts": [
+            "/1.51.0/0.tasks_to_tags_indexes.sql"
+        ],
+        "description": [
+            "Added btree indexes on tasks.tasks_to_tags(task_id) and (tag_id) — FK constraints do not create indexes in Postgres, so anti-joins (NOT EXISTS for untagged tasks) and inner joins from tasks were seq-scanning. Needed for tag-financial analytics charts."
+        ]
     }
 }

@@ -9,23 +9,30 @@ const palette: Record<AnalyticsColorToken, string> = {
   info: '#3b82f6',
 }
 
-const fallbackOrder: AnalyticsColorToken[] = [
-  'primary',
-  'info',
-  'warning',
-  'success',
-  'danger',
-  'neutral',
+// Distinct hues for datasets that have no semantic colorToken. Excludes green
+// and red so they don't visually collide with the success/danger semantics
+// used on other charts.
+const fallbackPalette: string[] = [
+  '#3b82f6', // blue
+  '#a855f7', // purple
+  '#ec4899', // pink
+  '#f59e0b', // amber
+  '#14b8a6', // teal
+  '#6366f1', // indigo
+  '#06b6d4', // cyan
+  '#f97316', // orange
+  '#8b5cf6', // violet
+  '#d946ef', // fuchsia
 ]
 
 export function useAnalyticsTheme() {
   function colorFor(token: AnalyticsColorToken | undefined, index = 0): string {
     if (token) return palette[token]
-    return palette[fallbackOrder[index % fallbackOrder.length]]
+    return fallbackPalette[index % fallbackPalette.length]
   }
 
   function paletteForCount(count: number): string[] {
-    return Array.from({ length: count }, (_, i) => palette[fallbackOrder[i % fallbackOrder.length]])
+    return Array.from({ length: count }, (_, i) => fallbackPalette[i % fallbackPalette.length])
   }
 
   function transparentize(hex: string, alpha: number): string {

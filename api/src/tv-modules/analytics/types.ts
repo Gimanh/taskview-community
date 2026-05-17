@@ -108,3 +108,20 @@ export type AnalyticsArgDrillDown = {
   range: AnalyticsRange
   arg: SectionDrillDownArg
 }
+
+export type FetchAmountPerTagMonthArgs = {
+  goalIds: number[]
+  range: AnalyticsRange
+  transactionType: 0 | 1
+}
+
+export type FetchAmountPerProjectMonthArgs = {
+  goalIds: number[]
+  range: AnalyticsRange
+  transactionType: 0 | 1
+}
+
+// Sentinel id used in tag-grouped analytics queries to represent tasks that
+// have no tags assigned. tasks.tags.id is GENERATED ALWAYS AS IDENTITY (positive
+// integers only), so -1 cannot collide with a real tag.
+export const UNTAGGED_TAG_ID = -1
