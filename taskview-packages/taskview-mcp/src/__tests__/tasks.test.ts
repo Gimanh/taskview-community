@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { ALL_TASKS_LIST_ID } from 'taskview-api'
 import { registerTasksTools } from '../tools/tasks.js'
 import { mockServer, mockApi, apiReturn, apiThrow, findTool, ts } from './setup.js'
 
@@ -41,7 +42,7 @@ describe('tasks tools', () => {
     expect(captured.searchText).toBe('test')
   })
 
-  it('list_tasks defaults componentId and page', async () => {
+  it('list_tasks applies defaults (all-tasks list, page 0, date sort ascending)', async () => {
     const { server, tools } = mockServer()
     let captured: Record<string, unknown> = {}
     const fetch = (params: Record<string, unknown>) => {
@@ -51,9 +52,76 @@ describe('tasks tools', () => {
     registerTasksTools(server, mockApi({ tasks: { fetch } }))
 
     await findTool(tools, 'list_tasks').cb({ goalId: 1 })
-    expect(captured.componentId).toBe(0)
-    expect(captured.page).toBe(1)
+    expect(captured.componentId).toBe(ALL_TASKS_LIST_ID)
+    expect(captured.page).toBe(0)
     expect(captured.showCompleted).toBe(0)
+    expect(captured.sortBy).toBe('date')
+    expect(captured.firstNew).toBe(0)
+  })
+
+  it('list_tasks exposes sortBy and descending in its schema', () => {
+    const { server, tools } = mockServer()
+    registerTasksTools(server, mockApi())
+
+    const schema = findTool(tools, 'list_tasks').config.inputSchema as Record<string, unknown>
+    expect(schema).toHaveProperty('sortBy')
+    expect(schema).toHaveProperty('descending')
+  })
+
+  it('list_tasks passes sortBy=priority with descending direction (firstNew=1)', async () => {
+    const { server, tools } = mockServer()
+    let captured: Record<string, unknown> = {}
+    const fetch = (params: Record<string, unknown>) => {
+      captured = params
+      return Promise.resolve({ response: [], rid: `rid-${ts()}` })
+    }
+    registerTasksTools(server, mockApi({ tasks: { fetch } }))
+
+    await findTool(tools, 'list_tasks').cb({ goalId: 1, sortBy: 'priority', descending: true })
+    expect(captured.sortBy).toBe('priority')
+    expect(captured.firstNew).toBe(1)
+  })
+
+  it('list_tasks maps descending=false to ascending direction (firstNew=0)', async () => {
+    const { server, tools } = mockServer()
+    let captured: Record<string, unknown> = {}
+    const fetch = (params: Record<string, unknown>) => {
+      captured = params
+      return Promise.resolve({ response: [], rid: `rid-${ts()}` })
+    }
+    registerTasksTools(server, mockApi({ tasks: { fetch } }))
+
+    await findTool(tools, 'list_tasks').cb({ goalId: 1, sortBy: 'priority', descending: false })
+    expect(captured.sortBy).toBe('priority')
+    expect(captured.firstNew).toBe(0)
+  })
+
+  it('list_tasks passes sortBy=date with descending direction (newest first, firstNew=1)', async () => {
+    const { server, tools } = mockServer()
+    let captured: Record<string, unknown> = {}
+    const fetch = (params: Record<string, unknown>) => {
+      captured = params
+      return Promise.resolve({ response: [], rid: `rid-${ts()}` })
+    }
+    registerTasksTools(server, mockApi({ tasks: { fetch } }))
+
+    await findTool(tools, 'list_tasks').cb({ goalId: 1, sortBy: 'date', descending: true })
+    expect(captured.sortBy).toBe('date')
+    expect(captured.firstNew).toBe(1)
+  })
+
+  it('list_tasks passes sortBy=date with ascending direction (oldest first, firstNew=0)', async () => {
+    const { server, tools } = mockServer()
+    let captured: Record<string, unknown> = {}
+    const fetch = (params: Record<string, unknown>) => {
+      captured = params
+      return Promise.resolve({ response: [], rid: `rid-${ts()}` })
+    }
+    registerTasksTools(server, mockApi({ tasks: { fetch } }))
+
+    await findTool(tools, 'list_tasks').cb({ goalId: 1, sortBy: 'date', descending: false })
+    expect(captured.sortBy).toBe('date')
+    expect(captured.firstNew).toBe(0)
   })
 
   it('get_task returns task', async () => {

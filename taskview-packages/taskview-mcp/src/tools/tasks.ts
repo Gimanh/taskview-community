@@ -14,16 +14,21 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
         page: z.coerce.number().optional().default(0).describe('Page number (0-based, default: 0)'),
         showCompleted: z.boolean().optional().default(false).describe('Include completed tasks'),
         searchText: z.string().optional().describe('Search text to filter tasks'),
+        sortBy: z.enum(['date', 'priority']).optional().default('date')
+          .describe('Sort field: "date" (creation order) or "priority"'),
+        descending: z.boolean().optional().default(false)
+          .describe('Sort descending: newest first for date, highest priority first for priority'),
       },
     },
-    async ({ goalId, componentId, page, showCompleted, searchText }) => {
+    async ({ goalId, componentId, page, showCompleted, searchText, sortBy, descending }) => {
       try {
         const tasks = await api.tasks.fetch({
           goalId,
           componentId: componentId ?? ALL_TASKS_LIST_ID,
           page: page ?? 0,
           showCompleted: showCompleted ? 1 : 0,
-          firstNew: 0,
+          firstNew: descending ? 1 : 0,
+          sortBy: sortBy ?? 'date',
           searchText,
         })
         return ok(tasks)

@@ -1,4 +1,4 @@
-import type { GoalItem, GoalListItem, Task, TaskFilters } from 'taskview-api'
+import type { GoalItem, GoalListItem, Task, TaskFilters, TaskSortBy } from 'taskview-api'
 
 export type TaskItem = Task;
 
@@ -19,6 +19,7 @@ export type TasksStoreState = {
         currentPage: number;
         searchText: string;
         firstNew: 1 | 0;
+        sortBy: TaskSortBy;
         filters: TaskFilters;
     };
     loading: boolean;

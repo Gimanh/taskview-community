@@ -603,7 +603,16 @@ export class TasksRepository {
             }
         }
 
-        const order = +data.firstNew === 1 ? desc(TasksSchema.id) : asc(TasksSchema.id);
+        const descending = +data.firstNew === 1;
+        const order =
+            data.sortBy === 'priority'
+                ? [
+                      descending
+                          ? sql`${TasksSchema.priorityId} DESC NULLS LAST`
+                          : sql`${TasksSchema.priorityId} ASC NULLS LAST`,
+                      desc(TasksSchema.id),
+                  ]
+                : [descending ? desc(TasksSchema.id) : asc(TasksSchema.id)];
 
         const limit = 30;
         const offset = (data.page ?? 0) * limit;
@@ -614,13 +623,13 @@ export class TasksRepository {
                 .select()
                 .from(TasksSchema)
                 .where(and(...conditions))
-                .orderBy(order);
+                .orderBy(...order);
         } else {
             dbv = this.db.dbDrizzle
                 .select()
                 .from(TasksSchema)
                 .where(and(...conditions))
-                .orderBy(order)
+                .orderBy(...order)
                 .limit(limit)
                 .offset(offset);
         }
