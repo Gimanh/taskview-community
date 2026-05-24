@@ -170,6 +170,13 @@ const items = computed<DropdownMenuItem[][]>(() => [
       },
     },
     {
+      label: t('userMenu.uiCustomization'),
+      icon: 'i-lucide-sliders-horizontal',
+      onSelect() {
+        router.push({ name: 'ui-customization' })
+      },
+    },
+    {
       label: t('userMenu.organizations'),
       icon: 'i-lucide-building-2',
       onSelect() {

@@ -5,6 +5,7 @@ export type Organization = {
   ownerId: number
   logoUrl: string | null
   plan: string
+  isPersonal: number
   createdAt: string
   updatedAt: string
   currentUserRole: 'owner' | 'admin' | 'member'

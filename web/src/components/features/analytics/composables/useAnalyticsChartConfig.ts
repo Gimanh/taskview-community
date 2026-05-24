@@ -138,7 +138,7 @@ export function useAnalyticsChartConfig() {
     stacked: boolean,
   ): AnyChartConfig {
     const labels = displayLabels(payload)
-    const useMultiColor = payload.datasets.length === 1 && labels.length > 1
+    const useMultiColor = payload.datasets.length === 1 && labels.length > 1 && payload.labelKind !== 'date'
 
     return {
       type: 'bar',
@@ -240,7 +240,7 @@ export function useAnalyticsChartConfig() {
       interaction: { mode: 'index' as const, intersect: false },
       plugins: {
         legend: {
-          display: payload.datasets.length > 1,
+          display: payload.datasets.length > 1 || payload.labelKind === 'date',
           position: 'bottom' as const,
         },
         tooltip: tooltipConfig(payload),

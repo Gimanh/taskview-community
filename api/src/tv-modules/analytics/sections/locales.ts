@@ -658,6 +658,166 @@ export const sectionLocales = {
     yAxisLabel: { ru: 'Сумма', en: 'Amount' },
   },
 
+  'chart.income_per_project_month': {
+    title: { ru: 'Доходы по проектам по месяцам', en: 'Income per project by month' },
+    description: {
+      ru: 'Линия дохода по каждому проекту в разрезе месяцев',
+      en: 'Income line per project broken down by month',
+    },
+    help: {
+      summary: {
+        ru: 'Доходы по проектам в каждом месяце периода',
+        en: 'Income per project in each month of the period',
+      },
+      details: {
+        ru: join([
+          'Что показывает:',
+          'Для каждого проекта — линия (или столбцы) с суммой доходов по месяцам. Берутся только завершённые задачи с типом «доход» и заполненной суммой.',
+          '',
+          'В отличие от «Доходы и расходы по проектам» (агрегат за весь период), здесь видно динамику: какой проект растёт по доходам, какой стагнирует, где был просадок.',
+          '',
+          'Что не попадает:',
+          '• Задачи без указанной суммы',
+          '• Задачи без типа транзакции',
+          '• Незавершённые задачи (плановые доходы)',
+          '• Проекты без единого доходного завершения за период',
+        ]),
+        en: join([
+          'What it shows:',
+          'For each project — a line (or bars) of monthly income totals. Only completed tasks with type "income" and a filled-in amount are counted.',
+          '',
+          'Unlike "Income and expense per project" (total over the whole period), this surfaces the trend: which project grows in revenue, which stagnates, where the dips were.',
+          '',
+          'What is NOT included:',
+          '• Tasks without an amount',
+          '• Tasks without a transaction type',
+          '• Open tasks (planned income)',
+          '• Projects with no completed income tasks in the period',
+        ]),
+      },
+    },
+    xAxisLabel: { ru: 'Месяц', en: 'Month' },
+    yAxisLabel: { ru: 'Доход', en: 'Income' },
+  },
+
+  'chart.expense_per_project_month': {
+    title: { ru: 'Расходы по проектам по месяцам', en: 'Expense per project by month' },
+    description: {
+      ru: 'Линия расхода по каждому проекту в разрезе месяцев',
+      en: 'Expense line per project broken down by month',
+    },
+    help: {
+      summary: {
+        ru: 'Расходы по проектам в каждом месяце периода',
+        en: 'Expense per project in each month of the period',
+      },
+      details: {
+        ru: join([
+          'Что показывает:',
+          'Для каждого проекта — линия (или столбцы) с суммой расходов по месяцам. Берутся только завершённые задачи с типом «расход» и заполненной суммой.',
+          '',
+          'В отличие от «Доходы и расходы по проектам» (агрегат за весь период), здесь видно динамику: какой проект разгоняет траты, в каком месяце был пик расходов, какой проект «остыл».',
+          '',
+          'Что не попадает:',
+          '• Задачи без указанной суммы',
+          '• Задачи без типа транзакции',
+          '• Незавершённые задачи (плановые расходы)',
+          '• Проекты без единого расходного завершения за период',
+        ]),
+        en: join([
+          'What it shows:',
+          'For each project — a line (or bars) of monthly expense totals. Only completed tasks with type "expense" and a filled-in amount are counted.',
+          '',
+          'Unlike "Income and expense per project" (total over the whole period), this surfaces the trend: which project is ramping up spend, where the peak month was, which project has cooled off.',
+          '',
+          'What is NOT included:',
+          '• Tasks without an amount',
+          '• Tasks without a transaction type',
+          '• Open tasks (planned expenses)',
+          '• Projects with no completed expense tasks in the period',
+        ]),
+      },
+    },
+    xAxisLabel: { ru: 'Месяц', en: 'Month' },
+    yAxisLabel: { ru: 'Расход', en: 'Expense' },
+  },
+
+  'chart.income_per_tag_month': {
+    title: { ru: 'Доходы по тегам по месяцам', en: 'Income per tag by month' },
+    description: {
+      ru: 'Линия дохода по каждому тегу в разрезе месяцев',
+      en: 'Income line per tag broken down by month',
+    },
+    help: {
+      summary: {
+        ru: 'Доходы по топ-тегам в каждом месяце периода',
+        en: 'Income for the top tags in each month of the period',
+      },
+      details: {
+        ru: join([
+          'Что показывает:',
+          'Для каждого тега — линия (или столбцы) с суммой доходов по месяцам. Берутся только завершённые задачи с типом «доход» и заполненной суммой.',
+          '',
+          'Как считаются задачи с несколькими тегами:',
+          'Сумма задачи учитывается полностью для каждого её тега. Поэтому суммирование по всем тегам обычно больше реальной выручки — это нормально.',
+          '',
+          'Категория «Без тегов»:',
+          'Задачи без единого тега показываются отдельной серией. Большая доля «Без тегов» = слабая категоризация финансов.',
+        ]),
+        en: join([
+          'What it shows:',
+          'For each tag — a line (or bars) of monthly income totals. Only completed tasks with type "income" and a filled-in amount are counted.',
+          '',
+          'How tasks with multiple tags are counted:',
+          'Each tag receives the full task amount. Summing across tags usually exceeds real revenue — that is expected.',
+          '',
+          'The "Untagged" category:',
+          'Tasks without any tag appear as a separate series. A large untagged share means weak financial categorization.',
+        ]),
+      },
+    },
+    xAxisLabel: { ru: 'Месяц', en: 'Month' },
+    yAxisLabel: { ru: 'Доход', en: 'Income' },
+  },
+
+  'chart.expense_per_tag_month': {
+    title: { ru: 'Расходы по тегам по месяцам', en: 'Expense per tag by month' },
+    description: {
+      ru: 'Линия расхода по каждому тегу в разрезе месяцев',
+      en: 'Expense line per tag broken down by month',
+    },
+    help: {
+      summary: {
+        ru: 'Расходы по топ-тегам в каждом месяце периода',
+        en: 'Expense for the top tags in each month of the period',
+      },
+      details: {
+        ru: join([
+          'Что показывает:',
+          'Для каждого тега — линия (или столбцы) с суммой расходов по месяцам. Берутся только завершённые задачи с типом «расход» и заполненной суммой.',
+          '',
+          'Как считаются задачи с несколькими тегами:',
+          'Сумма задачи учитывается полностью для каждого её тега. Поэтому суммирование по всем тегам обычно больше реальных затрат — это нормально.',
+          '',
+          'Категория «Без тегов»:',
+          'Задачи без единого тега показываются отдельной серией. Большая доля «Без тегов» = слабая категоризация расходов.',
+        ]),
+        en: join([
+          'What it shows:',
+          'For each tag — a line (or bars) of monthly expense totals. Only completed tasks with type "expense" and a filled-in amount are counted.',
+          '',
+          'How tasks with multiple tags are counted:',
+          'Each tag receives the full task amount. Summing across tags usually exceeds real spend — that is expected.',
+          '',
+          'The "Untagged" category:',
+          'Tasks without any tag appear as a separate series. A large untagged share means weak expense categorization.',
+        ]),
+      },
+    },
+    xAxisLabel: { ru: 'Месяц', en: 'Month' },
+    yAxisLabel: { ru: 'Расход', en: 'Expense' },
+  },
+
   'chart.top_projects_by_amount': {
     title: { ru: 'Топ проектов по сумме', en: 'Top projects by amount' },
     description: { ru: 'Суммарный доход и расход в каждом проекте', en: 'Total income and expense per project' },

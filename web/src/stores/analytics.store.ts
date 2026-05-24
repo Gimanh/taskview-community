@@ -37,6 +37,7 @@ export const useAnalyticsStore = defineStore('analytics', {
     customFrom: null,
     customTo: null,
     sections: [],
+    sectionsCatalog: [],
     failedSectionIds: [],
     availableGoals: [],
     range: null,
@@ -68,6 +69,15 @@ export const useAnalyticsStore = defineStore('analytics', {
     },
   },
   actions: {
+    async fetchSectionsCatalog(): Promise<void> {
+      try {
+        const result = await $tvApi.analytics.fetchSectionsCatalog()
+        this.sectionsCatalog = result ?? []
+      } catch {
+        this.sectionsCatalog = []
+      }
+    },
+
     setScope(scope: AnalyticsScope) {
       this.scope = scope
       return this.fetchSections()

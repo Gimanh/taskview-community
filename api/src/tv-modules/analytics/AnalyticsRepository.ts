@@ -7,6 +7,8 @@ import type {
   ActiveProjectsSectionRow,
   AgingOpenTasksSectionRow,
   AmountCoverageKpiRow,
+  AmountPerProjectMonthSectionRow,
+  AmountPerTagMonthSectionRow,
   BlockedByDependenciesSectionRow,
   CompletedTasksKpiRow,
   CreatedTasksKpiRow,
@@ -30,7 +32,8 @@ import type {
   TotalIncomeKpiRow,
   WorkloadByAssigneeSectionRow,
 } from './sections/row.types'
-import type { AnalyticsRange, DrillDownTaskRow } from './types'
+import { UNTAGGED_TAG_ID } from './types'
+import type { AnalyticsRange, DrillDownTaskRow, FetchAmountPerProjectMonthArgs, FetchAmountPerTagMonthArgs } from './types'
 
 type Bucket = 'day' | 'week' | 'month'
 
@@ -617,6 +620,118 @@ export class AnalyticsRepository {
       limit 20
     `)
     return result.rows as IncomeExpensePerProjectSectionRow[]
+  }
+
+  async fetchAmountPerTagMonth(args: FetchAmountPerTagMonthArgs): Promise<AmountPerTagMonthSectionRow[]> {
+    const { goalIds, range, transactionType } = args
+    const result = await this.db.dbDrizzle.execute<AmountPerTagMonthSectionRow>(sql`
+      with months as (
+        select generate_series(
+          date_trunc('month', ${range.from.toISOString()}::timestamp),
+          date_trunc('month', ${range.to.toISOString()}::timestamp - interval '1 microsecond'),
+          '1 month'::interval
+        ) as month
+      ),
+      period_tasks as (
+        select t.id,
+               coalesce(t.amount, 0)::float as amount,
+               date_trunc('month', t.date_complete) as month
+        from tasks.tasks t
+        where t.goal_id = any(${toIntArraySql(goalIds)})
+          and t.complete = true
+          and t.date_complete is not null
+          and t.amount is not null
+          and t.transaction_type = ${transactionType}
+          and t.date_complete >= ${range.from.toISOString()}
+          and t.date_complete < ${range.to.toISOString()}
+      ),
+      task_buckets as (
+        select pt.id, pt.amount, pt.month, tg.id as tag_id, tg.name as tag_name
+        from period_tasks pt
+        join tasks.tasks_to_tags tt on tt.task_id = pt.id
+        join tasks.tags tg on tg.id = tt.tag_id
+        union all
+        select pt.id, pt.amount, pt.month, ${UNTAGGED_TAG_ID} as tag_id, '' as tag_name
+        from period_tasks pt
+        where not exists (
+          select 1 from tasks.tasks_to_tags tt where tt.task_id = pt.id
+        )
+      ),
+      tag_totals as (
+        select tag_id, max(tag_name) as tag_name, sum(amount) as total
+        from task_buckets
+        group by tag_id
+        having sum(amount) > 0
+        order by total desc
+      ),
+      monthly as (
+        select tb.month, tb.tag_id, sum(tb.amount)::float as amount
+        from task_buckets tb
+        join tag_totals tt on tt.tag_id = tb.tag_id
+        group by tb.month, tb.tag_id
+      )
+      select
+        to_char(m.month, 'YYYY-MM') as month,
+        tt.tag_id::int as tag_id,
+        tt.tag_name as tag_name,
+        coalesce(mn.amount, 0)::float as amount
+      from months m
+      cross join tag_totals tt
+      left join monthly mn on mn.month = m.month and mn.tag_id = tt.tag_id
+      order by tt.total desc, m.month asc
+    `)
+    return result.rows as AmountPerTagMonthSectionRow[]
+  }
+
+  async fetchAmountPerProjectMonth(args: FetchAmountPerProjectMonthArgs): Promise<AmountPerProjectMonthSectionRow[]> {
+    const { goalIds, range, transactionType } = args
+    const result = await this.db.dbDrizzle.execute<AmountPerProjectMonthSectionRow>(sql`
+      with months as (
+        select generate_series(
+          date_trunc('month', ${range.from.toISOString()}::timestamp),
+          date_trunc('month', ${range.to.toISOString()}::timestamp - interval '1 microsecond'),
+          '1 month'::interval
+        ) as month
+      ),
+      filtered as (
+        select date_trunc('month', t.date_complete) as month,
+               g.id as goal_id,
+               g.name as goal_name,
+               t.amount::float as amount
+        from tasks.tasks t
+        join tasks.goals g on g.id = t.goal_id
+        where g.id = any(${toIntArraySql(goalIds)})
+          and t.complete = true
+          and t.date_complete is not null
+          and t.amount is not null
+          and t.transaction_type = ${transactionType}
+          and t.date_complete >= ${range.from.toISOString()}
+          and t.date_complete < ${range.to.toISOString()}
+      ),
+      project_totals as (
+        select goal_id, max(goal_name) as goal_name, sum(amount) as total
+        from filtered
+        group by goal_id
+        having sum(amount) > 0
+        order by total desc
+      ),
+      monthly as (
+        select f.month, f.goal_id, sum(f.amount)::float as amount
+        from filtered f
+        join project_totals pt on pt.goal_id = f.goal_id
+        group by f.month, f.goal_id
+      )
+      select
+        to_char(m.month, 'YYYY-MM') as month,
+        pt.goal_id::int as goal_id,
+        pt.goal_name as goal_name,
+        coalesce(mn.amount, 0)::float as amount
+      from months m
+      cross join project_totals pt
+      left join monthly mn on mn.month = m.month and mn.goal_id = pt.goal_id
+      order by pt.total desc, m.month asc
+    `)
+    return result.rows as AmountPerProjectMonthSectionRow[]
   }
 
   async fetchTopProjectsByAmount(goalIds: number[]): Promise<TopProjectsByAmountSectionRow[]> {

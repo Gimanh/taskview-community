@@ -144,5 +144,3 @@ watch(() => props.section, () => {
 watch(currentChartType, () => render())
 watch(locale, () => render())
 </script>
-
-

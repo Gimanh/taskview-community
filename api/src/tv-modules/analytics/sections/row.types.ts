@@ -128,3 +128,17 @@ export type TopProjectsByAmountSectionRow = {
   income: number
   expense: number
 }
+
+export type AmountPerTagMonthSectionRow = {
+  month: string
+  tag_id: number
+  tag_name: string
+  amount: number
+}
+
+export type AmountPerProjectMonthSectionRow = {
+  month: string
+  goal_id: number
+  goal_name: string
+  amount: number
+}

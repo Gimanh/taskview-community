@@ -40,90 +40,82 @@
         <span class="truncate underline underline-offset-2">{{ task.sourceUrl }}</span>
       </a>
 
-      <!-- Subtasks -->
-      <TaskSubtasks
-        :parent-task-id="task.id"
-        :goal-id="task.goalId"
-        :subtasks="task.subtasks"
-        class="pl-10"
-      />
-
-      <!-- Note -->
-      <NoteEditor
-        :key="task.id"
-        :content="task.note || ''"
-        :content-type="task.sourceUrl ? 'markdown' : 'html'"
-        :placeholder="t('tasks.addNote')"
-        @save="updateNote"
-      />
-    
-      <div class="flex flex-col-reverse @lg:flex-row gap-4">
-        <!-- Status -->
-        <TaskKanbanStatusSelect
-          :task-id="task.id"
-          :current-status-id="task.statusId"
-          class="flex-1 w-full @lg:max-w-1/2"
-        />
-
-        <!-- Priority -->
-        <TaskPrioritySelect
-          :model-value="task.priorityId"
-          class="flex-1 w-full @lg:max-w-1/2"
-          @update:model-value="updatePriority"
-        />
+      <div class="grid grid-cols-1 @lg:grid-cols-2 gap-4">
+        <template
+          v-for="fieldId in orderedFieldIds"
+          :key="fieldId"
+        >
+          <TaskSubtasks
+            v-if="fieldId === 'subtasks'"
+            :parent-task-id="task.id"
+            :goal-id="task.goalId"
+            :subtasks="task.subtasks"
+            :class="[colClass(fieldId), 'pl-10']"
+          />
+          <NoteEditor
+            v-else-if="fieldId === 'note'"
+            :key="task.id"
+            :content="task.note || ''"
+            :content-type="task.sourceUrl ? 'markdown' : 'html'"
+            :placeholder="t('tasks.addNote')"
+            :class="colClass(fieldId)"
+            @save="updateNote"
+          />
+          <TaskKanbanStatusSelect
+            v-else-if="fieldId === 'status'"
+            :task-id="task.id"
+            :current-status-id="task.statusId"
+            :class="colClass(fieldId)"
+          />
+          <TaskPrioritySelect
+            v-else-if="fieldId === 'priority'"
+            :model-value="task.priorityId"
+            :class="colClass(fieldId)"
+            @update:model-value="updatePriority"
+          />
+          <TaskAssigneeSelect
+            v-else-if="fieldId === 'assignees'"
+            :task-id="task.id"
+            :assigned-user-ids="task.assignedUsers"
+            :class="colClass(fieldId)"
+          />
+          <TaskListSelect
+            v-else-if="fieldId === 'list'"
+            :task-id="task.id"
+            :current-list-id="task.goalListId"
+            :class="colClass(fieldId)"
+          />
+          <TaskTagsManager
+            v-else-if="fieldId === 'tags'"
+            :task-id="task.id"
+            :task-tag-ids="task.tags"
+            :goal-id="projectId"
+            :class="colClass(fieldId)"
+          />
+          <TaskDeadline
+            v-else-if="fieldId === 'deadline'"
+            :task="task"
+            :class="[colClass(fieldId), 'h-fit']"
+          />
+          <TaskAmountEditor
+            v-else-if="fieldId === 'amount'"
+            :task-id="task.id"
+            :amount="task.amount"
+            :transaction-type="task.transactionType"
+            :class="colClass(fieldId)"
+          />
+          <TaskTimeTracking
+            v-else-if="fieldId === 'timeTracking'"
+            :task-id="task.id"
+            :class="colClass(fieldId)"
+          />
+          <TaskHistory
+            v-else-if="fieldId === 'history'"
+            :task-id="task.id"
+            :class="colClass(fieldId)"
+          />
+        </template>
       </div>
-
-      <!-- Assignees -->
-      <div class="flex flex-col @lg:flex-row gap-4">
-        <TaskAssigneeSelect
-          :task-id="task.id"
-          :assigned-user-ids="task.assignedUsers"
-          class="flex-1 w-full @lg:max-w-1/2"
-        />
-
-        <!-- List -->
-        <TaskListSelect
-          :task-id="task.id"
-          :current-list-id="task.goalListId"
-          class="flex-1 w-full @lg:max-w-1/2"
-        />
-      </div>
-
-      <div class="flex flex-col @lg:flex-row gap-4">
-        <!-- Tags -->
-        <TaskTagsManager
-          :task-id="task.id"
-          :task-tag-ids="task.tags"
-          :goal-id="projectId"
-          class="flex-1 w-full @lg:max-w-1/2"
-        />
-        <!-- Deadline -->
-        <TaskDeadline
-          :task="task"
-          class="flex-1 w-full @lg:max-w-1/2 h-fit"
-        />
-      </div>
-      
-      <!-- Amount -->
-      <TaskAmountEditor
-        :task-id="task.id"
-        :amount="task.amount"
-        :transaction-type="task.transactionType"
-        class="flex-1"
-      />
-
-      <!-- Time tracking -->
-      <TaskTimeTracking
-        v-if="canViewTimeTracking || canLogTime"
-        :task-id="task.id"
-        class="flex-1"
-      />
-
-      <!-- History -->
-      <TaskHistory
-        :task-id="task.id"
-        class="flex-1"
-      />
       <br />
     </template>
 
@@ -157,15 +149,37 @@ import TaskDeadline from '@/components/features/tasks/parts/TaskDeadline.vue'
 import TaskSubtasks from '@/components/features/tasks/parts/TaskSubtasks.vue'
 import type { TaskBase } from 'taskview-api'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
+import { useUiPreferences } from '@/composables/useUiPreferences'
+import { tasksSection } from '@/uiCustomization/sections/tasks'
 
 const { t } = useI18n()
 const toast = useToast()
 const tasksStore = useTasksStore()
 const {
   canEditTaskStatus,
-  canViewTimeTracking,
-  canLogTime,
 } = useGoalPermissions()
+
+const { catalogue: taskFieldsCatalogue } = tasksSection.useSection()
+
+const { resolved: resolvedTaskFields } = useUiPreferences(
+  tasksSection.id,
+  () => taskFieldsCatalogue.value,
+)
+const visibleFields = computed(() =>
+  resolvedTaskFields.value.filter(f => !f.hidden),
+)
+const orderedFieldIds = computed(() => visibleFields.value.map(f => f.id))
+const fieldWidthById = computed(() => {
+  const map = new Map<string, 'narrow' | 'wide'>()
+  for (const f of visibleFields.value) {
+    if (f.width) map.set(f.id, f.width)
+  }
+  return map
+})
+
+function colClass(id: string): string {
+  return fieldWidthById.value.get(id) === 'wide' ? '@lg:col-span-2' : 'w-full'
+}
 const task = computed(() => tasksStore.selectedTask ?? null)
 const projectId = computed(() => task.value?.goalId ?? 0)
 const titleValue = ref(task.value?.description ?? '')

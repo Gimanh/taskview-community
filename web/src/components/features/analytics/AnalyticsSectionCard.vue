@@ -1,5 +1,5 @@
 <template>
-  <UCard>
+  <UCard :ui="{ body: 'p-2 lg:p-4' }">
     <template #header>
       <div class="flex items-start justify-between gap-3">
         <div class="flex flex-col gap-1">
@@ -22,7 +22,7 @@
     </template>
 
     <div
-      v-if="section.payload.kind === 'series' && section.payload.datasets.length === 0"
+      v-if="isEmpty"
       class="py-12 text-center text-sm text-zinc-500"
     >
       {{ t('analytics.sectionCard.noData') }}
@@ -36,16 +36,28 @@
 </template>
 <script setup lang="ts">
 import type { AnalyticsSection } from 'taskview-api'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AnalyticsChart from './AnalyticsChart.vue'
 import AnalyticsHelpButton from './AnalyticsHelpButton.vue'
 import { useAnalyticsLocale } from './composables/useAnalyticsLocale'
 
-defineProps<{
+const props = defineProps<{
   section: AnalyticsSection
 }>()
 
 const { t } = useI18n()
+
+const isEmpty = computed(() => {
+  const p = props.section.payload
+  if (p.kind !== 'series') return false
+  if (p.datasets.length === 0) return true
+  if (p.labels.length === 0) return true
+  const allEmpty = p.datasets.every(d =>
+    d.values.length === 0 || d.values.every(v => v === null || v === 0),
+  )
+  return allEmpty
+})
 
 const emit = defineEmits<{
   (e: 'drill-down', payload: { sectionId: string; datasetId: string; bucket: string; index: number; meta?: Record<string, unknown> }): void
@@ -57,5 +69,3 @@ function onDrillDown(section: AnalyticsSection, payload: { datasetId: string; bu
   emit('drill-down', { sectionId: section.id, ...payload })
 }
 </script>
-
-

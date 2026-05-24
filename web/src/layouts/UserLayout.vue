@@ -59,6 +59,7 @@ import { usePushNotifications } from '@/composables/usePushNotifications'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useOrganizationStore } from '@/stores/organization.store'
 import { useTimeTrackingStore } from '@/stores/time-tracking.store'
+import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
 
 const { isSidebarOpen, isSidebarCollapsed } = useDashboard()
 const { connect: connectCentrifugo } = useCentrifugo()
@@ -69,6 +70,7 @@ const appStore = useAppStore()
 const goalsStore = useGoalsStore()
 const orgStore = useOrganizationStore()
 const timeTrackingStore = useTimeTrackingStore()
+const uiPrefsStore = useUiPreferencesStore()
 
 watch(
   () => timeTrackingStore.lastError,
@@ -139,6 +141,7 @@ onMounted(async () => {
 
   await goalsStore.fetchGoals()
   timeTrackingStore.fetchActive()
+  if (!uiPrefsStore.loaded) uiPrefsStore.fetch()
 
   useEventListener(document, 'visibilitychange', () => {
     if (!document.hidden) timeTrackingStore.fetchActive()
