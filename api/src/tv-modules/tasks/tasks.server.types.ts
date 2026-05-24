@@ -50,6 +50,7 @@ export const TaskArkTypeFetchTasksNew = type({
     page: TaskArkTypeNumberFromString,
     showCompleted: TaskArkTypeZeroOneToNumber,
     firstNew: TaskArkTypeZeroOneToNumber,
+    "sortBy?": "'date' | 'priority'",
     'searchText?': 'string',
     'filters?': type('object | string')
         .pipe((v) => {

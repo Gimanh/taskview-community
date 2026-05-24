@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-2">
-    <div class="flex items-center justify-end gap-2 p-2 bg-tv-ui-bg-elevated rounded-lg">
+    <div class="flex flex-wrap items-center justify-end gap-2 p-2 bg-tv-ui-bg-elevated rounded-lg">
       <!-- Filter -->
       <UTooltip :text="t('filters.title')">
         <UButton
@@ -25,18 +25,29 @@
         />
       </UTooltip>
 
-      <!-- Sort Order -->
-      <UTooltip :text="sortTooltip">
-        <UButton
-          :icon="firstNew ? 'i-lucide-arrow-down-narrow-wide' : 'i-lucide-arrow-up-narrow-wide'"
+      <!-- Sort -->
+      <UFieldGroup size="sm">
+        <USelect
+          v-model="sortBy"
+          :items="sortItems"
+          value-key="value"
+          icon="i-lucide-arrow-up-down"
           color="info"
-          variant="soft"
-          size="sm"
-          :loading="loading"
+          variant="subtle"
           :disabled="loading"
-          @click="toggleSort"
+          :ui="{ base: 'min-w-32' }"
         />
-      </UTooltip>
+        <UTooltip :text="sortTooltip">
+          <UButton
+            :icon="firstNew ? 'i-lucide-arrow-down-wide-narrow' : 'i-lucide-arrow-down-narrow-wide'"
+            color="info"
+            variant="subtle"
+            :loading="loading"
+            :disabled="loading"
+            @click="toggleSort"
+          />
+        </UTooltip>
+      </UFieldGroup>
 
       <!-- Reset All -->
       <UButton
@@ -107,6 +118,7 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import type { TaskSortBy } from 'taskview-api'
 import { useTasksStore } from '@/stores/tasks.store'
 import TasksFilterDrawer from './TasksFilterDrawer.vue'
 
@@ -133,13 +145,26 @@ const hasActiveFilters = computed(() => {
 const showCompleted = computed(() => fetchRules.value.showCompleted === 1)
 const firstNew = computed(() => fetchRules.value.firstNew === 1)
 
+const sortItems = computed(() => [
+  { label: t('tasks.sortByDate'), value: 'date' as const },
+  { label: t('tasks.sortByPriority'), value: 'priority' as const },
+])
+
+const sortBy = computed<TaskSortBy>({
+  get: () => fetchRules.value.sortBy,
+  set: (value) => applySort({ sortBy: value }),
+})
+
 const showCompletedTooltip = computed(() =>
   showCompleted.value ? t('tasks.hideCompleted') : t('tasks.showCompleted'),
 )
 
-const sortTooltip = computed(() =>
-  firstNew.value ? t('tasks.sortNewestFirst') : t('tasks.sortOldestFirst'),
-)
+const sortTooltip = computed(() => {
+  if (fetchRules.value.sortBy === 'priority') {
+    return firstNew.value ? t('tasks.sortHighestFirst') : t('tasks.sortLowestFirst')
+  }
+  return firstNew.value ? t('tasks.sortNewestFirst') : t('tasks.sortOldestFirst')
+})
 
 async function toggleCompleted() {
   if (loading.value) return
@@ -162,20 +187,24 @@ async function toggleCompleted() {
   loading.value = false
 }
 
-async function toggleSort() {
+async function applySort(rules: Partial<typeof fetchRules.value>) {
   if (loading.value) return
 
   loading.value = true
 
   tasksStore.resetTasks()
   tasksStore.updateFetchRules({
-    firstNew: firstNew.value ? 0 : 1,
+    ...rules,
     currentPage: 0,
     endOfTasks: false,
   })
 
   await tasksStore.fetchTasks()
   loading.value = false
+}
+
+function toggleSort() {
+  return applySort({ firstNew: firstNew.value ? 0 : 1 })
 }
 
 async function resetSearch() {

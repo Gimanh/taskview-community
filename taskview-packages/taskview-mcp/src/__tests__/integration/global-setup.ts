@@ -8,15 +8,28 @@ const TASKVIEW_TOKEN_PROVIDED = process.env.TASKVIEW_TOKEN
 let createdTokenId: number | null = null
 let createdToken: string | null = null
 
+async function loginWithRetry(attempts = 5) {
+  let lastError: unknown
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await axios.post(`${TASKVIEW_URL}/module/auth/login`, {
+        login: TASKVIEW_LOGIN,
+        password: TASKVIEW_PASSWORD,
+      })
+    } catch (e) {
+      lastError = e
+      await new Promise((r) => setTimeout(r, 500 * (i + 1)))
+    }
+  }
+  throw lastError
+}
+
 export async function setup() {
   if (!TASKVIEW_URL) return
   if (TASKVIEW_TOKEN_PROVIDED) return
   if (!TASKVIEW_LOGIN || !TASKVIEW_PASSWORD) return
 
-  const loginRes = await axios.post(`${TASKVIEW_URL}/module/auth/login`, {
-    login: TASKVIEW_LOGIN,
-    password: TASKVIEW_PASSWORD,
-  })
+  const loginRes = await loginWithRetry()
   const jwt = loginRes.data.access
   if (!jwt) throw new Error('Login succeeded but no access token returned')
 
@@ -45,5 +58,5 @@ export async function teardown() {
       data: { id: createdTokenId },
       headers: { Authorization: `Bearer ${jwt}` },
     })
-    .catch(() => {})
+    .catch(() => { })
 }

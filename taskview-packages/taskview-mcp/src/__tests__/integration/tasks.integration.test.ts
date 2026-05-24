@@ -188,6 +188,53 @@ describe('tasks integration', () => {
     await call(tools, 'delete_task', { taskId: created.id }).catch(() => {})
   })
 
+  it('lists tasks sorted by priority (desc highest-first, asc lowest-first)', async () => {
+    const sortGoalId = parse(await call(tools, 'create_goal', { name: `Sort Test ${ts()}` })).id
+    try {
+      // Create in an order where task id does NOT correlate with priority, so the
+      // assertions can only pass if the backend truly orders by priority (not by id).
+      const mid = parse(await call(tools, 'create_task', { goalId: sortGoalId, description: `mid ${ts()}`, priorityId: 2 }))
+      const low = parse(await call(tools, 'create_task', { goalId: sortGoalId, description: `low ${ts()}`, priorityId: 1 }))
+      const high = parse(await call(tools, 'create_task', { goalId: sortGoalId, description: `high ${ts()}`, priorityId: 3 }))
+
+      const descResult = await call(tools, 'list_tasks', { goalId: sortGoalId, sortBy: 'priority', descending: true, showCompleted: false })
+      if (descResult.isError) {
+        expect(descResult.content[0].text).toContain('403')
+        return
+      }
+      const descIds = (parse(descResult) as Array<{ id: number }>).map((t) => t.id)
+      expect(descIds).toEqual([high.id, mid.id, low.id])
+
+      const ascIds = (parse(await call(tools, 'list_tasks', { goalId: sortGoalId, sortBy: 'priority', descending: false, showCompleted: false })) as Array<{ id: number }>).map((t) => t.id)
+      expect(ascIds).toEqual([low.id, mid.id, high.id])
+    } finally {
+      await call(tools, 'delete_goal', { goalId: sortGoalId }).catch(() => {})
+    }
+  })
+
+  it('lists tasks sorted by date (desc newest-first, asc oldest-first)', async () => {
+    const sortGoalId = parse(await call(tools, 'create_goal', { name: `Date Sort Test ${ts()}` })).id
+    try {
+      // Created oldest -> newest, so creation order is also the ascending date order.
+      const first = parse(await call(tools, 'create_task', { goalId: sortGoalId, description: `first ${ts()}` }))
+      const second = parse(await call(tools, 'create_task', { goalId: sortGoalId, description: `second ${ts()}` }))
+      const third = parse(await call(tools, 'create_task', { goalId: sortGoalId, description: `third ${ts()}` }))
+
+      const descResult = await call(tools, 'list_tasks', { goalId: sortGoalId, sortBy: 'date', descending: true, showCompleted: false })
+      if (descResult.isError) {
+        expect(descResult.content[0].text).toContain('403')
+        return
+      }
+      const descIds = (parse(descResult) as Array<{ id: number }>).map((t) => t.id)
+      expect(descIds).toEqual([third.id, second.id, first.id])
+
+      const ascIds = (parse(await call(tools, 'list_tasks', { goalId: sortGoalId, sortBy: 'date', descending: false, showCompleted: false })) as Array<{ id: number }>).map((t) => t.id)
+      expect(ascIds).toEqual([first.id, second.id, third.id])
+    } finally {
+      await call(tools, 'delete_goal', { goalId: sortGoalId }).catch(() => {})
+    }
+  })
+
   it('lists tasks filtered by componentId (list)', async () => {
     const list = parse(await call(tools, 'create_list', { goalId, name: `Filter List ${ts()}` }))
     const inList = parse(await call(tools, 'create_task', { goalId, goalListId: list.id, description: `In-list ${ts()}` }))

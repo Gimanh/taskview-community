@@ -45,7 +45,7 @@ export function registerGoalsTools(server: McpServer, api: TvApi) {
     {
       description: 'Update a project (goal) — name, description, color',
       inputSchema: {
-        id: z.coerce.number().describe('Goal ID'),
+        id: z.coerce.number().describe('Project (goal) ID'),
         name: z.string().optional().describe('New name'),
         description: z.string().optional().describe('New description'),
         color: z.string().optional().describe('New color (hex)'),
@@ -66,7 +66,7 @@ export function registerGoalsTools(server: McpServer, api: TvApi) {
     {
       description: 'Delete a project (goal)',
       inputSchema: {
-        goalId: z.coerce.number().describe('Goal ID to delete'),
+        goalId: z.coerce.number().describe('Project (goal) ID to delete'),
       },
     },
     async ({ goalId }) => {

@@ -67,12 +67,15 @@ export type TaskFilters = {
     selectedTags?: Record<string, true>;
 };
 
+export type TaskSortBy = 'date' | 'priority';
+
 export type TaskArgFetch = {
     goalId: number;
     componentId: number | typeof ALL_TASKS_LIST_ID;
     page: number;
     showCompleted: 0 | 1;
     firstNew: 0 | 1;
+    sortBy?: TaskSortBy;
     searchText?: string;
     filters?: TaskFilters;
     unlimited?: boolean;
