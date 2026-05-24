@@ -6,6 +6,11 @@ import { parseDrillDownMeta, resolveRange } from './helpers'
 import { AnalyticsDrillDownArkType, AnalyticsFetchSectionsArkType } from './types'
 
 export class AnalyticsController {
+  fetchCatalog = async (req: Request, res: Response) => {
+    const catalog = req.appUser.analyticsManager.getCatalog()
+    return res.tvJson(catalog)
+  }
+
   fetchSections = async (req: Request, res: Response, next: NextFunction) => {
     const out = AnalyticsFetchSectionsArkType(req.query)
     if (out instanceof type.errors) {

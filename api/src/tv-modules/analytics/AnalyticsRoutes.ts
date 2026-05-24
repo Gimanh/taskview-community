@@ -22,6 +22,7 @@ export default class AnalyticsRoutes implements Routable {
   initRoutes() {
     const guards = [IsLoggedIn, RejectApiTokenAuth, CanAccessAnalytics]
     this.router.get('/sections', guards, this.controller.fetchSections)
+    this.router.get('/sections-catalog', [IsLoggedIn], this.controller.fetchCatalog)
     this.router.get('/drilldown/:sectionId', guards, this.controller.fetchDrillDown)
   }
 }

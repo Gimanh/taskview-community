@@ -4,6 +4,7 @@ import type {
   AnalyticsFetchDrillDownArg,
   AnalyticsDrillDownResponse,
   AnalyticsFetchSectionsArg,
+  AnalyticsSectionCatalogEntry,
   AnalyticsSectionsResponse,
   AnalyticsScope,
 } from './analytics.types'
@@ -19,6 +20,14 @@ function scopeToParams(scope: AnalyticsScope): Record<string, string> {
 
 export default class TvAnalyticsApi extends TvApiBase {
   protected moduleUrl = '/module/analytics'
+
+  public async fetchSectionsCatalog() {
+    return this.request(
+      this.$axios.get<AppResponse<AnalyticsSectionCatalogEntry[]>>(
+        `${this.moduleUrl}/sections-catalog`,
+      ),
+    )
+  }
 
   public async fetchSections(arg: AnalyticsFetchSectionsArg, signal?: AbortSignal) {
     const params: Record<string, string> = {

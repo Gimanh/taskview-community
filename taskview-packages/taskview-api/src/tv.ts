@@ -15,6 +15,7 @@ import TvOrganizationsApi from "./api/organizations";
 import TvSsoApi from "./api/sso";
 import TvAnalyticsApi from "./api/analytics";
 import TvTimeTrackingApi from "./api/time-tracking";
+import TvUiPreferencesApi from "./api/ui-preferences";
 
 export class TvApi {
 
@@ -52,6 +53,8 @@ export class TvApi {
 
     public timeTracking: TvTimeTrackingApi;
 
+    public uiPreferences: TvUiPreferencesApi;
+
     constructor($axios: AxiosInstance) {
         this.$axios = $axios;
 
@@ -86,6 +89,8 @@ export class TvApi {
         this.analytics = new TvAnalyticsApi(this.$axios);
 
         this.timeTracking = new TvTimeTrackingApi(this.$axios);
+
+        this.uiPreferences = new TvUiPreferencesApi(this.$axios);
     }
 
     public setBaseUrl(baseUrl: string) {

@@ -14,6 +14,7 @@ import { SsoManager } from '../tv-modules/sso/SsoManager';
 import { AnalyticsManager } from '../tv-modules/analytics/AnalyticsManager';
 import { TasksManager } from '../tv-modules/tasks/TasksManager';
 import { TimeTrackingManager } from '../tv-modules/time-tracking/TimeTrackingManager';
+import { UiPreferencesManager } from '../tv-modules/ui-preferences/UiPreferencesManager';
 import type { UserDbRecord, UserJwtPayload } from '../types/auth.types';
 import { GoalPermissionsFetcher } from './GoalPermissionsFetcher';
 
@@ -41,6 +42,7 @@ export class AppUser {
     public readonly ssoManager: SsoManager;
     public readonly analyticsManager: AnalyticsManager;
     public readonly timeTrackingManager: TimeTrackingManager;
+    public readonly uiPreferencesManager: UiPreferencesManager;
 
     constructor(userData?: UserJwtPayload) {
         this.userData = userData;
@@ -61,6 +63,7 @@ export class AppUser {
         this.ssoManager = new SsoManager(this);
         this.analyticsManager = new AnalyticsManager(this);
         this.timeTrackingManager = new TimeTrackingManager(this);
+        this.uiPreferencesManager = new UiPreferencesManager(this);
     }
 
     getTokenId(): number | undefined {

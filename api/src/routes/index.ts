@@ -18,6 +18,7 @@ import SsoRoutes from '../tv-modules/sso/SsoRoutes';
 import ScimRoutes from '../tv-modules/scim/ScimRoutes';
 import AnalyticsRoutes from '../tv-modules/analytics/AnalyticsRoutes';
 import TimeTrackingRoutes from '../tv-modules/time-tracking/TimeTrackingRoutes';
+import UiPreferencesRoutes from '../tv-modules/ui-preferences/UiPreferencesRoutes';
 import type { Routable } from '../types/routable.type';
 
 type RoutableConstructor = new (...args: any[]) => Routable;
@@ -42,6 +43,7 @@ const routes: Record<string, RoutableConstructor> = {
     '/module/sso': SsoRoutes,
     '/module/analytics': AnalyticsRoutes,
     '/module/time-tracking': TimeTrackingRoutes,
+    '/module/ui-preferences': UiPreferencesRoutes,
     '/scim/v2': ScimRoutes,
 };
 

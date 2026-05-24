@@ -4,12 +4,7 @@ import { sectionLocales } from '../locales'
 
 type StatusKey = 'active' | 'fading' | 'dead' | 'empty'
 
-const COLOR_BY_STATUS: Record<StatusKey, 'success' | 'warning' | 'danger' | 'neutral'> = {
-  active: 'success',
-  fading: 'warning',
-  dead: 'danger',
-  empty: 'neutral',
-}
+const STATUS_ORDER: readonly StatusKey[] = ['active', 'fading', 'dead', 'empty']
 
 export class ActiveProjectsSection implements SectionBuilder {
   readonly id = 'chart.active_projects'
@@ -27,7 +22,8 @@ export class ActiveProjectsSection implements SectionBuilder {
 
     const rows = await ctx.repository.fetchActiveProjects(ctx.accessibleGoalIds)
     const loc = this.loc
-    const labelTexts = rows.map(r => loc.labels![r.status_key])
+    const countByStatus = new Map(rows.map(r => [r.status_key, Number(r.count)]))
+    const labelTexts = STATUS_ORDER.map(key => loc.labels![key])
 
     const payload: AnalyticsSeriesPayload = {
       kind: 'series',
@@ -38,17 +34,12 @@ export class ActiveProjectsSection implements SectionBuilder {
         {
           id: 'count',
           label: loc.datasets!.count,
-          values: rows.map(r => Number(r.count)),
-          meta: { statusKeys: rows.map(r => r.status_key) },
+          values: STATUS_ORDER.map(key => countByStatus.get(key) ?? 0),
+          meta: { statusKeys: STATUS_ORDER },
         },
       ],
       unit: 'count',
       yAxisLabel: loc.yAxisLabel,
-    }
-
-    const firstRow = rows[0]
-    if (firstRow) {
-      payload.datasets[0].colorToken = COLOR_BY_STATUS[firstRow.status_key] ?? 'primary'
     }
 
     return {

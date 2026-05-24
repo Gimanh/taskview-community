@@ -85,6 +85,11 @@ const router = createRouter({
           component: () => import('./pages/user/analytics.vue'),
         },
         {
+          path: 'ui-customization',
+          name: 'ui-customization',
+          component: () => import('./pages/user/ui-customization.vue'),
+        },
+        {
           path: 'time-reports',
           name: 'time-reports',
           component: () => import('./pages/user/time-reports.vue'),

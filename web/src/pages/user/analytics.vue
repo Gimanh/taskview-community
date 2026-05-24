@@ -31,11 +31,11 @@
 
         <template v-else-if="analyticsStore.sections.length > 0">
           <div
-            v-if="analyticsStore.kpiSections.length > 0"
+            v-if="visibleKpis.length > 0"
             class="grid grid-cols-2 gap-3 lg:grid-cols-4"
           >
             <AnalyticsKpiCard
-              v-for="kpi in analyticsStore.kpiSections"
+              v-for="kpi in visibleKpis"
               :key="kpi.id"
               :section="kpi"
               @drill-down="onDrillDown"
@@ -44,7 +44,7 @@
 
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <AnalyticsSectionCard
-              v-for="section in analyticsStore.chartSections"
+              v-for="section in visibleCharts"
               :key="section.id"
               :section="section"
               @drill-down="onDrillDown"
@@ -83,6 +83,7 @@ import { useAnalyticsLocale } from '@/components/features/analytics/composables/
 import { useAnalyticsStore } from '@/stores/analytics.store'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useOrganizationStore } from '@/stores/organization.store'
+import { useUiPreferences } from '@/composables/useUiPreferences'
 
 const { t } = useI18n()
 const { pick } = useAnalyticsLocale()
@@ -91,6 +92,28 @@ const goalsStore = useGoalsStore()
 const orgStore = useOrganizationStore()
 const route = useRoute()
 const router = useRouter()
+
+const kpiCatalogue = computed(() =>
+  analyticsStore.kpiSections.map(s => ({ id: s.id, label: pick(s.title) })),
+)
+const chartsCatalogue = computed(() =>
+  analyticsStore.chartSections.map(s => ({ id: s.id, label: pick(s.title) })),
+)
+const { isVisible: isKpiVisible, orderOf: kpiOrder } =
+  useUiPreferences('analyticsIndicators', () => kpiCatalogue.value)
+const { isVisible: isChartVisible, orderOf: chartOrder } =
+  useUiPreferences('analyticsCharts', () => chartsCatalogue.value)
+
+const visibleKpis = computed(() =>
+  analyticsStore.kpiSections
+    .filter(s => isKpiVisible(s.id))
+    .sort((a, b) => kpiOrder(a.id) - kpiOrder(b.id)),
+)
+const visibleCharts = computed(() =>
+  analyticsStore.chartSections
+    .filter(s => isChartVisible(s.id))
+    .sort((a, b) => chartOrder(a.id) - chartOrder(b.id)),
+)
 
 const errorMessage = computed(() => {
   const e = analyticsStore.error

@@ -19,3 +19,4 @@ export * from './schemas/organizations.schema';
 export * from './schemas/sso.schema';
 export * from './schemas/time-entries.schema';
 export * from './schemas/time-entries-history.schema';
+export * from './schemas/ui-preferences.schema';

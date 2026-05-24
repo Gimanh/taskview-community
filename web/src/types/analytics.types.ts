@@ -4,6 +4,7 @@ import type {
   AnalyticsPeriod,
   AnalyticsScope,
   AnalyticsSection,
+  AnalyticsSectionCatalogEntry,
   AnalyticsSectionsResponse,
 } from 'taskview-api'
 
@@ -31,6 +32,7 @@ export type AnalyticsState = {
   customFrom: string | null
   customTo: string | null
   sections: AnalyticsSection[]
+  sectionsCatalog: AnalyticsSectionCatalogEntry[]
   failedSectionIds: string[]
   availableGoals: AnalyticsAvailableGoal[]
   range: AnalyticsSectionsResponse['range'] | null

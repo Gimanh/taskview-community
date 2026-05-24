@@ -3,6 +3,7 @@ import type {
   AnalyticsDrillDownResponse,
   AnalyticsScope,
   AnalyticsSection,
+  AnalyticsSectionCatalogEntry,
   AnalyticsSectionsResponse,
 } from 'taskview-api'
 import type { AppUser } from '../../core/AppUser'
@@ -26,6 +27,10 @@ export class AnalyticsManager {
     this.user = user
     this.repository = new AnalyticsRepository()
     this.registry = new SectionRegistry()
+  }
+
+  getCatalog(): AnalyticsSectionCatalogEntry[] {
+    return this.registry.catalog()
   }
 
   async getAccessibleGoalIds(organizationId: number): Promise<number[]> {

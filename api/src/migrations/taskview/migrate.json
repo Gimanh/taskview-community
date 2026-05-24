@@ -561,5 +561,16 @@
         "description": [
             "Added btree indexes on tasks.tasks_to_tags(task_id) and (tag_id) — FK constraints do not create indexes in Postgres, so anti-joins (NOT EXISTS for untagged tasks) and inner joins from tasks were seq-scanning. Needed for tag-financial analytics charts."
         ]
+    },
+    "45": {
+        "version": "1.52.0",
+        "name": "Release 1.52.0",
+        "releaseDate": "20260517",
+        "scripts": [
+            "/1.52.0/0.ui_preferences.sql"
+        ],
+        "description": [
+            "Added tv_auth.ui_preferences table: per-user JSONB storage of UI customization choices (which analytics charts and task detail fields are shown and in what order). One row per user keyed by user_id."
+        ]
     }
 }

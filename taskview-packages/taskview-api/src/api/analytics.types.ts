@@ -116,6 +116,13 @@ export type AnalyticsAvailableGoal = {
   name: string
 }
 
+export type AnalyticsSectionCatalogEntry = {
+  id: string
+  group: AnalyticsSectionGroup
+  payloadKind: 'kpi' | 'series'
+  title: LocalizedText
+}
+
 export type AnalyticsSectionsResponse = {
   scope: AnalyticsScope
   period: AnalyticsPeriod
