@@ -1,8 +1,17 @@
 {
   "name": "taskview-api",
   "private": false,
-  "version": "1.42.5",
+  "version": "1.44.0",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gimanh/taskview-community.git",
+    "directory": "taskview-packages/taskview-api"
+  },
+  "homepage": "https://github.com/Gimanh/taskview-community/tree/main/taskview-packages/taskview-api#readme",
+  "bugs": {
+    "url": "https://github.com/Gimanh/taskview-community/issues"
+  },
   "main": "./dist/taskview-api.umd.js",
   "module": "./dist/taskview-api.es.js",
   "types": "./dist/index.d.ts",
