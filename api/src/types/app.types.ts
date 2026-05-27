@@ -14,13 +14,13 @@ export const AppEnvSchema = z.object({
     ACCESS_LIFE_TIME: z.string(),
     REFRESH_LIFE_TIME: z.string(),
 
-    SMTP_HOST: z.string(),
-    SMTP_PORT: z.string(),
-    SMTP_USERNAME: z.string(),
-    SMTP_PASSWORD: z.string(),
-    SMTP_ENCRYPTION: z.string(),
-    SMTP_FROM_NAME: z.string(),
-    SMTP_FROM_EMAIL: z.string(),
+    SMTP_HOST: z.string().optional(),
+    SMTP_PORT: z.string().optional(),
+    SMTP_USERNAME: z.string().optional(),
+    SMTP_PASSWORD: z.string().optional(),
+    SMTP_ENCRYPTION: z.string().optional(),
+    SMTP_FROM_NAME: z.string().optional(),
+    SMTP_FROM_EMAIL: z.string().optional(),
     APP_URL: z.string(),
 });
 

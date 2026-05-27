@@ -7,8 +7,10 @@ config({ override: true });
 
 const valid = AppEnvSchema.safeParse(process.env);
 if (!valid.success) {
-    console.log(valid);
-    console.log(valid.error);
+    const details = valid.error.issues
+        .map((issue) => `  - ${issue.path.join('.') || '(root)'}: ${issue.message}`)
+        .join('\n');
+    console.error(`Invalid environment variables:\n${details}`);
     throw new Error('Invalid environment variables');
 }
 

@@ -3,6 +3,11 @@ import { $logger } from '../modules/logget';
 
 export class Email {
     static async send(data: Message | MessageHeaders): Promise<boolean> {
+        if (!process.env.SMTP_HOST) {
+            $logger.warn('SMTP is not configured — skipping email send');
+            return false;
+        }
+
         try {
             const client = new SMTPClient({
                 user: process.env.SMTP_USERNAME,
