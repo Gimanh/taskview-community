@@ -58,6 +58,7 @@ import TvCollapseSidebarDesktop from '@/components/features/base/TvCollapseSideb
 import TvTaskDetailOverlay from '@/components/features/tasks/TvTaskDetailOverlay.vue'
 import TvKanbanFilters from '@/components/features/base/TvKanbanFilters.vue'
 import { useAppRouteInfo } from '@/composables/useAppRouteInfo'
+import { useFiltersFromQuery } from '@/composables/useFiltersFromQuery'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useProjectDataLoader } from '@/composables/useProjectDataLoader'
 
@@ -66,9 +67,8 @@ const { projectId } = useAppRouteInfo()
 const goalsStore = useGoalsStore()
 const projectName = computed(() => goalsStore.goalMap.get(projectId.value)?.name ?? '')
 
-const showFilters = ref(false)
-const selectedListIds = ref<number[]>([])
-const selectedAssigneeIds = ref<number[]>([])
+const { selectedListIds, selectedAssigneeIds, hasActiveFilters } = useFiltersFromQuery()
+const showFilters = ref(hasActiveFilters.value)
 
 useProjectDataLoader(projectId)
 </script>

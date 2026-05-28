@@ -60,6 +60,7 @@ import TvCollapseSidebarDesktop from '@/components/features/base/TvCollapseSideb
 import TvTaskDetailOverlay from '@/components/features/tasks/TvTaskDetailOverlay.vue'
 import TvKanbanFilters from '@/components/features/base/TvKanbanFilters.vue'
 import { useAppRouteInfo } from '@/composables/useAppRouteInfo'
+import { useFiltersFromQuery } from '@/composables/useFiltersFromQuery'
 import { useProjectDataLoader } from '@/composables/useProjectDataLoader'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useKanbanStore } from '@/stores/kanban.store'
@@ -70,13 +71,12 @@ const goalsStore = useGoalsStore()
 const kanbanStore = useKanbanStore()
 const projectName = computed(() => goalsStore.goalMap.get(projectId.value)?.name ?? '')
 
-const showFilters = ref(false)
-const selectedListIds = ref<number[]>([])
-const selectedAssigneeIds = ref<number[]>([])
+const { selectedListIds, selectedAssigneeIds, hasActiveFilters } = useFiltersFromQuery()
+const showFilters = ref(hasActiveFilters.value)
 
 watch([selectedListIds, selectedAssigneeIds], ([listIds, assigneeIds]) => {
   kanbanStore.setFilters({ listIds, assigneeIds })
-})
+}, { immediate: true })
 
 useProjectDataLoader(projectId)
 </script>

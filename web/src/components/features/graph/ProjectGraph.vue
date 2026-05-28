@@ -166,7 +166,7 @@ watch(
   (id) => {
     if (!id) return
     store.fetchAllTasksAndLists(id).then(() => {
-      layoutGraph(layoutDirection.value)
+      applyFilters()
     })
   },
   { immediate: true },
