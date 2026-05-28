@@ -124,7 +124,8 @@ const initLoadTasksForEachColumn = async () => {
 }
 
 watch(goalId, (lGoalId) => {
-  kanbanStore.$reset()
+  kanbanStore.statuses = []
+  kanbanStore.tasksData = {}
   if (lGoalId) {
     kanbanStore.goalId = +lGoalId
   }
