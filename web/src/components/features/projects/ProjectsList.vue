@@ -13,14 +13,14 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import ProjectListBase from '@/components/features/projects/parts/ProjectListBase.vue'
-import type { Project } from '@/components/features/projects/types'
+import type { Project, ProjectSaveData } from '@/components/features/projects/types'
 
 defineProps<{
   projects: Project[]
 }>()
 
 const emit = defineEmits<{
-  save: [project: Project, data: { name: string; description: string }]
+  save: [project: Project, data: ProjectSaveData]
   delete: [project: Project]
   archive: [project: Project]
   add: [name: string]
@@ -30,7 +30,7 @@ const { t } = useI18n()
 
 const open = defineModel<boolean>('open', { required: false, default: true })
 
-function handleSave(project: Project, data: { name: string; description: string }) {
+function handleSave(project: Project, data: ProjectSaveData) {
   emit('save', project, data)
 }
 

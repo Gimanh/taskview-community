@@ -27,6 +27,10 @@ export function useGoalPermissionsFor(goalRef: Ref<GoalItem | null>) {
     canViewIntegrations: computed(() => hasPermission(goalRef.value, 'INTEGRATIONS_CAN_VIEW') || hasPermission(goalRef.value, 'INTEGRATIONS_CAN_MANAGE')),
     canManageIntegrations: computed(() => hasPermission(goalRef.value, 'INTEGRATIONS_CAN_MANAGE')),
     canViewTimeTracking: computed(() => hasPermission(goalRef.value, 'TIMETRACKING_CAN_VIEW') || hasPermission(goalRef.value, 'TIMETRACKING_CAN_MANAGE_ALL')),
+    canViewSprints: can('SPRINT_CAN_VIEW'),
+    canManageSprints: can('SPRINT_CAN_MANAGE'),
+    canAssignSprintTasks: can('SPRINT_CAN_ASSIGN_TASKS'),
+    canViewSprintAnalytics: can('SPRINT_CAN_VIEW_ANALYTICS'),
   }
 }
 
@@ -85,6 +89,11 @@ export const useGoalPermissions = () => {
   const canLogTime = computed(() => permissions.TIMETRACKING_CAN_LOG || permissions.TIMETRACKING_CAN_MANAGE_ALL)
   const canManageAllTime = computed(() => permissions.TIMETRACKING_CAN_MANAGE_ALL)
 
+  const canViewSprints = computed(() => permissions.SPRINT_CAN_VIEW)
+  const canManageSprints = computed(() => permissions.SPRINT_CAN_MANAGE)
+  const canAssignSprintTasks = computed(() => permissions.SPRINT_CAN_ASSIGN_TASKS)
+  const canViewSprintAnalytics = computed(() => permissions.SPRINT_CAN_VIEW_ANALYTICS)
+
   return {
     permissions,
     canDeleteGoal,
@@ -122,5 +131,9 @@ export const useGoalPermissions = () => {
     canViewTimeTracking,
     canLogTime,
     canManageAllTime,
+    canViewSprints,
+    canManageSprints,
+    canAssignSprintTasks,
+    canViewSprintAnalytics,
   }
 }

@@ -4,12 +4,14 @@ import { NotificationDispatcher } from '../tv-modules/notifications/Notification
 import { RealtimeDispatcher } from '../tv-modules/realtime/RealtimeDispatcher';
 import { WebhooksDispatcher } from '../tv-modules/webhooks/WebhooksDispatcher';
 import { TimeTrackingDispatcher } from '../tv-modules/time-tracking/TimeTrackingDispatcher';
+import { SprintsDispatcher } from '../tv-modules/sprints/SprintsDispatcher';
 
 const dispatchers: Dispatcher[] = [
     new NotificationDispatcher(),
     new RealtimeDispatcher(),
     new WebhooksDispatcher(),
     new TimeTrackingDispatcher(),
+    new SprintsDispatcher(),
 ];
 
 export function registerAllEventHandlers() {

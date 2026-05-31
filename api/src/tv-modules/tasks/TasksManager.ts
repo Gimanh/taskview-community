@@ -34,14 +34,13 @@ import {
     type TaskArgFetchTasksNew,
     type TaskArgRestoreTaskHistory,
     type TaskArgUpdate,
-    type TaskFieldPermissionsForEditOrCreation,
     TaskFieldPermissionsForWatching,
     type TaskForClientNew,
     type TasksArgToggleTaskUsers,
 } from './tasks.server.types';
 import type { KanbanArgFetchTasksForColumn, KanbanArgFilters } from '../kanban/types';
 
-type TaskFieldPermissionKey = keyof typeof TaskFieldPermissionsForEditOrCreation & keyof TasksSchemaTypeForSelect;
+type TaskFieldPermissionKey = keyof typeof TaskFieldPermissionsForWatching & keyof TasksSchemaTypeForSelect;
 
 export class TasksManager {
     public readonly repository: TasksRepository;

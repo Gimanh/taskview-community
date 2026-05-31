@@ -17,6 +17,8 @@
               <TvKanbanFilters
                 v-model:list-ids="selectedListIds"
                 v-model:assignee-ids="selectedAssigneeIds"
+                v-model:sprint-id="selectedSprintId"
+                :goal-id="projectId"
                 show-reset-label
               />
             </div>
@@ -40,6 +42,8 @@
           <TvKanbanFilters
             v-model:list-ids="selectedListIds"
             v-model:assignee-ids="selectedAssigneeIds"
+            v-model:sprint-id="selectedSprintId"
+            :goal-id="projectId"
           />
         </div>
       </div>
@@ -71,12 +75,12 @@ const goalsStore = useGoalsStore()
 const kanbanStore = useKanbanStore()
 const projectName = computed(() => goalsStore.goalMap.get(projectId.value)?.name ?? '')
 
-const { selectedListIds, selectedAssigneeIds, hasActiveFilters } = useFiltersFromQuery()
+const { selectedListIds, selectedAssigneeIds, selectedSprintId, hasActiveFilters } = useFiltersFromQuery()
 const showFilters = ref(hasActiveFilters.value)
 
-watch([selectedListIds, selectedAssigneeIds], ([listIds, assigneeIds]) => {
-  kanbanStore.setFilters({ listIds, assigneeIds })
-}, { immediate: true })
+watch([selectedListIds, selectedAssigneeIds, selectedSprintId], ([listIds, assigneeIds, sprintId]) => {
+  kanbanStore.setFilters({ listIds, assigneeIds, sprintId: sprintId ?? undefined })
+}, { immediate: true, deep: true })
 
 useProjectDataLoader(projectId)
 </script>

@@ -20,3 +20,8 @@ export * from './schemas/sso.schema';
 export * from './schemas/time-entries.schema';
 export * from './schemas/time-entries-history.schema';
 export * from './schemas/ui-preferences.schema';
+export * from './schemas/sprints.schema';
+export * from './schemas/sprint-task-outcomes.schema';
+export * from './schemas/sprint-user-capacity.schema';
+export * from './schemas/sprint-retros.schema';
+export * from './schemas/sprint-cadence.schema';

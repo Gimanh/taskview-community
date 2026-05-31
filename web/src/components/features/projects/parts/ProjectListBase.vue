@@ -74,6 +74,17 @@
         :to="{ name: 'graph', params: { projectId: selectedProject?.id } }"
         @click="contextMenu?.close()"
       />
+      <!-- Sprints -->
+      <UButton
+        v-if="canViewSprints"
+        :label="t('contextMenu.sprints')"
+        icon="i-lucide-rocket"
+        variant="ghost"
+        color="neutral"
+        class="w-full justify-start"
+        :to="{ name: 'sprints', params: { projectId: selectedProject?.id } }"
+        @click="contextMenu?.close()"
+      />
       <!-- Collaboration -->
       <UButton
         v-if="canManageUsers"
@@ -195,7 +206,7 @@ import TvContextMenu from '@/components/features/base/TvContextMenu.vue'
 import ProjectEditModal from '@/components/features/projects/parts/ProjectEditModal.vue'
 import ProjectDeleteDialog from '@/components/features/projects/parts/ProjectDeleteDialog.vue'
 import ProjectAddInput from '@/components/features/projects/parts/ProjectAddInput.vue'
-import type { Project } from '@/components/features/projects/types'
+import type { Project, ProjectSaveData } from '@/components/features/projects/types'
 import { useGoalPermissionsFor } from '@/composables/useGoalPermissions'
 import { useI18n } from 'vue-i18n'
 
@@ -214,7 +225,7 @@ withDefaults(
 )
 
 const emit = defineEmits<{
-  save: [project: Project, data: { name: string; description: string }]
+  save: [project: Project, data: ProjectSaveData]
   delete: [project: Project]
   archive: [project: Project]
   restore: [project: Project]
@@ -237,6 +248,7 @@ const {
   canManageUsers,
   canEditGoal,
   canDeleteGoal,
+  canViewSprints,
 } = useGoalPermissionsFor(selectedProject)
 
 const isEditModalOpen = ref(false)
@@ -253,7 +265,7 @@ function openEditModal() {
   isEditModalOpen.value = true
 }
 
-function handleSave(data: { name: string; description: string }) {
+function handleSave(data: ProjectSaveData) {
   if (selectedProject.value) {
     emit('save', selectedProject.value, data)
   }

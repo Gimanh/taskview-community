@@ -11,6 +11,7 @@ export const DEFAULT_GOAL_ITEM: GoalItem = {
   archive: 0,
   dateCreation: null,
   organizationId: null,
+  estimateUnit: 'points',
 }
 
 export const AllGoalPermissions = TvPermissions

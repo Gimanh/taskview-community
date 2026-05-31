@@ -549,5 +549,26 @@ export const useTasksStore = defineStore('tasks', {
         Object.assign(this.selectedTask, task)
       }
     },
+
+    async updateTaskEstimate(data: TaskArgUpdate) {
+      this.loading = true
+      const task = await $tvApi.tasks
+        .updateTask(data)
+        .catch(logError)
+        .finally(() => {
+          this.loading = false
+        })
+
+      if (!task) return
+
+      const localTask = this.tasks.find(({ id }) => id === task.id)
+
+      if (localTask) {
+        Object.assign(localTask, task)
+        this.updateSelectedTask(task)
+      } else if (this.selectedTask?.id === task.id) {
+        Object.assign(this.selectedTask, task)
+      }
+    },
   },
 })
