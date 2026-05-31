@@ -16,6 +16,7 @@ export const GoalsArkTypeUpdate = type({
     'name?': 'string | null',
     'description?': 'string | null',
     'color?': 'string | null',
+    "estimateUnit?": "'hours' | 'points'",
 });
 
 export type GoalsArgUpdate = typeof GoalsArkTypeUpdate.infer;

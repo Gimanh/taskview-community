@@ -104,6 +104,20 @@
             :transaction-type="task.transactionType"
             :class="colClass(fieldId)"
           />
+          <TaskSprintSelect
+            v-else-if="fieldId === 'sprint'"
+            :task-id="task.id"
+            :goal-id="task.goalId"
+            :current-sprint-id="task.sprintId"
+            :class="colClass(fieldId)"
+          />
+          <TaskEstimateInput
+            v-else-if="fieldId === 'estimate'"
+            :task-id="task.id"
+            :goal-id="task.goalId"
+            :estimate-value="task.estimateValue"
+            :class="colClass(fieldId)"
+          />
           <TaskTimeTracking
             v-else-if="fieldId === 'timeTracking'"
             :task-id="task.id"
@@ -147,6 +161,8 @@ import TaskTimeTracking from '@/components/features/tasks/parts/TaskTimeTracking
 import TaskHistory from '@/components/features/tasks/parts/TaskHistory.vue'
 import TaskDeadline from '@/components/features/tasks/parts/TaskDeadline.vue'
 import TaskSubtasks from '@/components/features/tasks/parts/TaskSubtasks.vue'
+import TaskSprintSelect from '@/components/features/tasks/parts/TaskSprintSelect.vue'
+import TaskEstimateInput from '@/components/features/tasks/parts/TaskEstimateInput.vue'
 import type { TaskBase } from 'taskview-api'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useUiPreferences } from '@/composables/useUiPreferences'

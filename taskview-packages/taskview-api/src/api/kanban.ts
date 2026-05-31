@@ -15,6 +15,9 @@ export default class TvKanban extends TvApiBase {
             if (filters.assigneeIds && filters.assigneeIds.length > 0) {
                 params.set('assigneeIds', filters.assigneeIds.join(','));
             }
+            if (filters.sprintId !== undefined && filters.sprintId !== null) {
+                params.set('sprintId', String(filters.sprintId));
+            }
         }
         const query = params.toString();
         const url = `${this.moduleUrl}/tasks/${goalId}/${columnId}/${cursor}${query ? `?${query}` : ''}`;

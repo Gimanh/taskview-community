@@ -69,9 +69,15 @@ const NumberArrayFromCommaSeparatedString = type('string|undefined').pipe((v) =>
     return v.split(',').map(Number).filter((n) => !isNaN(n));
 });
 
+const SprintFilterFromString = type('string|number').pipe((v) => {
+    const n = Number(v);
+    return isNaN(n) ? undefined : n;
+});
+
 export const KanbanArkTypeFilters = type({
     'listIds?': NumberArrayFromCommaSeparatedString,
     'assigneeIds?': NumberArrayFromCommaSeparatedString,
+    'sprintId?': SprintFilterFromString,
 });
 
 export type KanbanArgFilters = typeof KanbanArkTypeFilters.infer;

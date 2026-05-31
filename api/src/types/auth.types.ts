@@ -132,6 +132,11 @@ export const GoalPermissions = {
     TIMETRACKING_CAN_VIEW: 'timetracking_can_view',
     TIMETRACKING_CAN_LOG: 'timetracking_can_log',
     TIMETRACKING_CAN_MANAGE_ALL: 'timetracking_can_manage_all',
+
+    SPRINT_CAN_VIEW: 'sprint_can_view',
+    SPRINT_CAN_MANAGE: 'sprint_can_manage',
+    SPRINT_CAN_ASSIGN_TASKS: 'sprint_can_assign_tasks',
+    SPRINT_CAN_VIEW_ANALYTICS: 'sprint_can_view_analytics',
 } as const;
 
 export type PermissionsEntityType =

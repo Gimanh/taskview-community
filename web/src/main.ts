@@ -55,6 +55,11 @@ const router = createRouter({
           component: () => import('./pages/user/graph.vue'),
         },
         {
+          path: ':projectId/sprints',
+          name: 'sprints',
+          component: () => import('./pages/user/sprints.vue'),
+        },
+        {
           path: ':projectId/collaboration',
           name: 'collaboration',
           component: () => import('./pages/user/collaboration.vue'),

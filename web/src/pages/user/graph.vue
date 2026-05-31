@@ -35,6 +35,8 @@
             <TvKanbanFilters
               v-model:list-ids="selectedListIds"
               v-model:assignee-ids="selectedAssigneeIds"
+              v-model:sprint-id="selectedSprintId"
+              :goal-id="projectId"
               show-reset-label
             />
           </div>
@@ -42,6 +44,7 @@
         <ProjectGraph
           v-model:list-ids="selectedListIds"
           v-model:assignee-ids="selectedAssigneeIds"
+          v-model:sprint-id="selectedSprintId"
           class="h-full w-full"
         />
       </div>
@@ -67,7 +70,7 @@ const { projectId } = useAppRouteInfo()
 const goalsStore = useGoalsStore()
 const projectName = computed(() => goalsStore.goalMap.get(projectId.value)?.name ?? '')
 
-const { selectedListIds, selectedAssigneeIds, hasActiveFilters } = useFiltersFromQuery()
+const { selectedListIds, selectedAssigneeIds, selectedSprintId, hasActiveFilters } = useFiltersFromQuery()
 const showFilters = ref(hasActiveFilters.value)
 
 useProjectDataLoader(projectId)

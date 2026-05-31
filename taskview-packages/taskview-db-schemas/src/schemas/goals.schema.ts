@@ -15,6 +15,7 @@ export const GoalsSchema = pgSchema('tasks').table('goals', {
     archive: integer().notNull().default(0),
     backlogVersion: integer('backlog_version').default(1),
     organizationId: integer('organization_id').references(() => OrganizationsSchema.id, { onDelete: 'cascade' }),
+    estimateUnit: varchar('estimate_unit', { length: 10 }).$type<'hours' | 'points'>().notNull().default('points'),
 });
 
 export type GoalsSchemaTypeForSelect = typeof GoalsSchema.$inferSelect;

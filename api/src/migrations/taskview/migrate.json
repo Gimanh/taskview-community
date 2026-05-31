@@ -572,5 +572,33 @@
         "description": [
             "Added tv_auth.ui_preferences table: per-user JSONB storage of UI customization choices (which analytics charts and task detail fields are shown and in what order). One row per user keyed by user_id."
         ]
+    },
+    "46": {
+        "version": "1.53.0",
+        "name": "Release 1.53.0",
+        "releaseDate": "20260528",
+        "scripts": [
+            "/1.53.0/0.create-sprints.sql",
+            "/1.53.0/1.create-sprint-task-outcomes.sql",
+            "/1.53.0/2.create-sprint-user-capacity.sql",
+            "/1.53.0/3.create-sprint-retros.sql",
+            "/1.53.0/4.alter-tasks-add-sprint.sql",
+            "/1.53.0/5.alter-notifications-add-sprint-id.sql",
+            "/1.53.0/6.add-sprint-permissions.sql",
+            "/1.53.0/7.alter-goals-add-estimate-unit.sql",
+            "/1.53.0/8.alter-sprint-task-outcomes-add-estimate.sql",
+            "/1.53.0/9.create-sprint-cadence.sql",
+            "/1.53.0/all-triggers.sql"
+        ],
+        "description": [
+            "Added tasks.goals.estimate_unit ('hours' | 'points', default 'points') — per-project unit for sprint estimates & capacity display.",
+            "Sprints feature. tasks.sprints: sprint container with lifecycle draft/planned/active/review/completed; one active-or-review sprint per project enforced by a partial unique index.",
+            "tasks.sprint_task_outcomes: per-task result decided at close (accepted/carried-over/dropped/incomplete). tasks.sprint_user_capacity: per-user capacity. tasks.sprint_retros: went well/bad/action items. Sprint capacity column is `capacity` (story points, unitless).",
+            "Extended tasks.tasks with sprint_id (FK SET NULL) and estimate_value (task estimate in story points, unitless), and tasks.notifications with sprint_id. Sprint availability is governed by the sprint_can_view permission (RBAC), not a per-project flag. Sprint burndown reuses the existing trigger-maintained tasks.date_complete column (no new completion column added).",
+            "Added permission group 5 'sprints' and permissions sprint_can_view, sprint_can_manage, sprint_can_assign_tasks, sprint_can_view_analytics; backfilled grants for existing projects' editor/executor roles.",
+            "all-triggers.sql: re-applies all triggers idempotently (drop+create) and updates tasks.add_roles_and_permissions() so NEW projects grant sprint permissions to editor (all four) and executor (view + assign).",
+            "Added tasks.sprint_task_outcomes.estimate_value — story-points snapshot captured at sprint close so a closed sprint's velocity is frozen (unaffected by later estimate edits or moving the task to another sprint).",
+            "Added tasks.sprint_cadence — per-project sprint auto-generation config (Linear-style): enabled, length_days, start_date anchor, lookahead, name_template, last_generated_date. A background job keeps current + lookahead future sprints created."
+        ]
     }
 }

@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { TasksSchema } from 'taskview-db-schemas';
+import { SprintsSchema, TasksSchema } from 'taskview-db-schemas';
 import { eventBus, type AppEvents } from '../../core/EventBus';
 import { getJobQueue } from '../../core/JobQueue';
 import { decrypt } from '../../utils/crypto';
@@ -28,6 +28,15 @@ export class WebhooksDispatcher implements Dispatcher {
         eventBus.on('time-entry.created', (data) => this.dispatch('time-entry.created', data.entry.goalId, data));
         eventBus.on('time-entry.updated', (data) => this.dispatch('time-entry.updated', data.entry.goalId, data));
         eventBus.on('time-entry.deleted', (data) => this.dispatch('time-entry.deleted', data.goalId, data));
+        eventBus.on('sprint.created', (data) => this.dispatch('sprint.created', data.sprint.goalId, data));
+        eventBus.on('sprint.updated', (data) => this.dispatch('sprint.updated', data.sprint.goalId, data));
+        eventBus.on('sprint.activated', (data) => this.dispatchSprintLifecycle('sprint.activated', data));
+        eventBus.on('sprint.reviewStarted', (data) => this.dispatchSprintLifecycle('sprint.reviewStarted', data));
+        eventBus.on('sprint.completed', (data) => this.dispatchSprintLifecycle('sprint.completed', data));
+        eventBus.on('sprint.paused', (data) => this.dispatchSprintLifecycle('sprint.paused', data));
+        eventBus.on('sprint.resumed', (data) => this.dispatchSprintLifecycle('sprint.resumed', data));
+        eventBus.on('sprint.deleted', (data) => this.dispatch('sprint.deleted', data.goalId, data));
+        eventBus.on('task.assignedToSprint', (data) => this.dispatch('task.assignedToSprint', data.goalId, data));
     }
 
     async registerWorkers(): Promise<void> {
@@ -54,6 +63,15 @@ export class WebhooksDispatcher implements Dispatcher {
         const task = await db.dbDrizzle.select().from(TasksSchema).where(eq(TasksSchema.id, data.taskId)).limit(1);
         if (!task[0]) return;
         await this.dispatch('task.assigneesChanged', task[0].goalId, data);
+    }
+
+    private async dispatchSprintLifecycle(
+        event: string,
+        data: { sprintId: number; goalId: number; initiatorId: number | null },
+    ): Promise<void> {
+        const db = Database.getInstance();
+        const sprint = await db.dbDrizzle.select().from(SprintsSchema).where(eq(SprintsSchema.id, data.sprintId)).limit(1);
+        await this.dispatch(event, data.goalId, { ...data, sprint: sprint[0] ?? null });
     }
 
     private async enqueueDelivery(webhookId: number, url: string, secretEncrypted: string, event: string, payload: object): Promise<void> {

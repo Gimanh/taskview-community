@@ -3,6 +3,8 @@ import type { Task } from "./tasks.api.types";
 export type KanbanFilters = {
     listIds?: number[];
     assigneeIds?: number[];
+    /** Filter to a sprint by id. */
+    sprintId?: number;
 };
 
 export type KanbanColumnItem = {
