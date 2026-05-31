@@ -880,6 +880,10 @@ export default {
       goalAchieved: 'Sprint goal achieved',
       carryTo: 'Carry over to',
       backlogOption: 'Backlog',
+      warningTitle: 'This finalizes the sprint',
+      warning: 'Once closed, the sprint is marked completed and counts toward velocity. Unfinished tasks are carried over or dropped per the choices below.',
+      confirmTitle: 'Close this sprint?',
+      confirmMessage: 'The sprint will be marked completed and its tasks moved according to the chosen outcomes. Continue?',
     },
     outcomes: {
       accepted: 'Accepted',

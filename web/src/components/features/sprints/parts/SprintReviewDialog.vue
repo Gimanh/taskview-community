@@ -25,6 +25,14 @@
             {{ t('sprints.review.hint') }}
           </p>
 
+          <UAlert
+            icon="i-lucide-triangle-alert"
+            color="warning"
+            variant="subtle"
+            :title="t('sprints.review.warningTitle')"
+            :description="t('sprints.review.warning')"
+          />
+
           <p
             v-if="!tasks.length"
             class="py-4 text-center text-sm text-dimmed"
@@ -109,7 +117,43 @@
               :label="t('sprints.actions.close')"
               color="primary"
               :loading="loading"
-              @click="submit"
+              @click="confirmOpen = true"
+            />
+          </div>
+        </template>
+      </UCard>
+    </template>
+  </UModal>
+
+  <UModal
+    v-model:open="confirmOpen"
+    :fullscreen="isMobile"
+  >
+    <template #content>
+      <UCard>
+        <template #header>
+          <h3 class="font-semibold">
+            {{ t('sprints.review.confirmTitle') }}
+          </h3>
+        </template>
+
+        <p class="text-sm text-muted">
+          {{ t('sprints.review.confirmMessage') }}
+        </p>
+
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <UButton
+              :label="t('common.no')"
+              color="neutral"
+              variant="ghost"
+              @click="confirmOpen = false"
+            />
+            <UButton
+              :label="t('common.yes')"
+              color="primary"
+              :loading="loading"
+              @click="performClose"
             />
           </div>
         </template>
@@ -149,6 +193,7 @@ const { formatPoints, toNumber, unitLabel } = useSprintFormat()
 const unit = computed(() => goalsStore.goalMap.get(props.sprint.goalId)?.estimateUnit ?? 'points')
 
 const loading = ref(false)
+const confirmOpen = ref(false)
 const goalAchieved = ref(false)
 const outcomes = ref<Record<number, SprintOutcome>>({})
 // Target sprint per carried-over task. The BACKLOG sentinel (0) means "no sprint"
@@ -193,7 +238,7 @@ watch(open, (value) => {
   }
 })
 
-async function submit() {
+async function performClose() {
   loading.value = true
   try {
     // Lifecycle is active -> review -> completed. If review hasn't been started
@@ -230,6 +275,9 @@ async function submit() {
     }
   } finally {
     loading.value = false
+    // The confirm step is consumed either way: on success both dialogs close,
+    // on failure the toast is shown and the user stays in the review dialog.
+    confirmOpen.value = false
   }
 }
 </script>

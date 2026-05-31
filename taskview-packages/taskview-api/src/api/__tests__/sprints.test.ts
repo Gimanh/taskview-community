@@ -206,12 +206,15 @@ describe('Sprints', () => {
       expect(conflict).toBeFalsy()
     })
 
-    it('rejects deleting an active sprint', async () => {
+    it('deletes a sprint of any status, including active', async () => {
       const id = await createPlanned()
       await $api.sprints.activate(id)
 
-      const result = await $api.sprints.remove(id).catch(() => null)
-      expect(result).toBeFalsy()
+      const result = await $api.sprints.remove(id).catch(console.error)
+      expect(result).toBe(true)
+
+      const gone = await $api.sprints.getById(id).catch(() => null)
+      expect(gone).toBeNull()
     })
 
     it('pauses and resumes an active sprint', async () => {
@@ -277,7 +280,7 @@ describe('Sprints', () => {
       expect(result).toBeFalsy()
     })
 
-    it('treats a completed sprint as read-only and undeletable', async () => {
+    it('treats a completed sprint as read-only but still deletable', async () => {
       const id = await createPlanned()
       await $api.sprints.activate(id)
       await $api.sprints.startReview(id)
@@ -286,8 +289,12 @@ describe('Sprints', () => {
       const update = await $api.sprints.update({ sprintId: id, name: 'nope' }).catch(() => null)
       expect(update).toBeFalsy()
 
-      const remove = await $api.sprints.remove(id).catch(() => null)
-      expect(remove).toBeFalsy()
+      // A completed sprint can be deleted (e.g. to undo an accidental close).
+      const remove = await $api.sprints.remove(id).catch(console.error)
+      expect(remove).toBe(true)
+
+      const gone = await $api.sprints.getById(id).catch(() => null)
+      expect(gone).toBeNull()
     })
   })
 

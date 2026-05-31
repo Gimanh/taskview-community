@@ -135,20 +135,22 @@
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-sm text-dimmed">{{ formatRange(sprint) }}</span>
-                <template v-if="canManage && (sprint.status === 'draft' || sprint.status === 'planned')">
-                  <UButton
-                    icon="i-lucide-play"
-                    :label="t('sprints.actions.activate')"
-                    size="xs"
-                    @click.stop="activate(sprint)"
-                  />
-                  <UButton
-                    icon="i-lucide-pencil"
-                    color="neutral"
-                    variant="ghost"
-                    size="xs"
-                    @click.stop="openEdit(sprint)"
-                  />
+                <template v-if="canManage">
+                  <template v-if="sprint.status === 'draft' || sprint.status === 'planned'">
+                    <UButton
+                      icon="i-lucide-play"
+                      :label="t('sprints.actions.activate')"
+                      size="xs"
+                      @click.stop="activate(sprint)"
+                    />
+                    <UButton
+                      icon="i-lucide-pencil"
+                      color="neutral"
+                      variant="ghost"
+                      size="xs"
+                      @click.stop="openEdit(sprint)"
+                    />
+                  </template>
                   <UButton
                     icon="i-lucide-trash-2"
                     color="error"

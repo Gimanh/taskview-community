@@ -172,9 +172,9 @@ export class SprintsManager {
     async deleteSprint(sprintId: number): Promise<SprintResult<true>> {
         const sprint = await this.repository.getById(sprintId);
         if (!sprint) return fail('not_found');
-        if (sprint.status !== 'draft' && sprint.status !== 'planned') {
-            return fail('conflict', 'only draft or planned sprints can be deleted; close active sprints first');
-        }
+        // A sprint of any status can be deleted (including completed) — useful for
+        // cleaning up an accidentally closed sprint. The DB FK sets tasks.sprint_id
+        // to NULL (tasks return to the backlog) and cascades outcomes/retros/capacity.
         const deleted = await this.repository.delete(sprintId);
         if (!deleted) return fail('invalid_state');
         eventBus.emit('sprint.deleted', { sprintId, goalId: sprint.goalId, initiatorId: this.initiatorId });
