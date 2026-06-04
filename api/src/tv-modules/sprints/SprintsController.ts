@@ -33,7 +33,9 @@ export default class SprintsController {
     }
 
     listForGoal = async (req: Request, res: Response) => {
-        const data = SprintArkTypeListQuery({ ...req.params, ...req.query });
+        // Route params win over query: the goalId authorized by the middleware must
+        // be the one operated on (a query-supplied goalId must not override it).
+        const data = SprintArkTypeListQuery({ ...req.query, ...req.params });
         if (data instanceof type.errors) return res.status(400).send(data.summary);
 
         const statuses = data.status
@@ -56,7 +58,7 @@ export default class SprintsController {
     };
 
     update = async (req: Request, res: Response) => {
-        const data = SprintArkTypeUpdate({ sprintId: Number(req.params.sprintId), ...req.body });
+        const data = SprintArkTypeUpdate({ ...req.body, sprintId: Number(req.params.sprintId) });
         if (data instanceof type.errors) return res.status(400).send(data.summary);
         return this.sendResult(res, await req.appUser.sprintsManager.updateSprint(data));
     };
@@ -74,7 +76,7 @@ export default class SprintsController {
     };
 
     close = async (req: Request, res: Response) => {
-        const data = SprintArkTypeClose({ sprintId: Number(req.params.sprintId), ...req.body });
+        const data = SprintArkTypeClose({ ...req.body, sprintId: Number(req.params.sprintId) });
         if (data instanceof type.errors) return res.status(400).send(data.summary);
         return this.sendResult(res, await req.appUser.sprintsManager.closeSprint(data));
     };
@@ -98,7 +100,7 @@ export default class SprintsController {
     };
 
     saveRetro = async (req: Request, res: Response) => {
-        const data = SprintArkTypeSaveRetro({ sprintId: Number(req.params.sprintId), ...req.body });
+        const data = SprintArkTypeSaveRetro({ ...req.body, sprintId: Number(req.params.sprintId) });
         if (data instanceof type.errors) return res.status(400).send(data.summary);
         return this.sendResult(res, await req.appUser.sprintsManager.saveRetro(data));
     };
@@ -116,7 +118,7 @@ export default class SprintsController {
     };
 
     planning = async (req: Request, res: Response) => {
-        const data = SprintArkTypePlanningQuery({ ...req.params, ...req.query });
+        const data = SprintArkTypePlanningQuery({ ...req.query, ...req.params });
         if (data instanceof type.errors) return res.status(400).send(data.summary);
         return res.tvJson(
             await req.appUser.sprintsManager
@@ -131,7 +133,7 @@ export default class SprintsController {
     };
 
     velocity = async (req: Request, res: Response) => {
-        const data = SprintArkTypeVelocityQuery({ ...req.params, ...req.query });
+        const data = SprintArkTypeVelocityQuery({ ...req.query, ...req.params });
         if (data instanceof type.errors) return res.status(400).send(data.summary);
         return res.tvJson(
             await req.appUser.sprintsManager.getVelocity({ goalId: data.goalId, lastN: data.lastN ?? 6 }).catch(logError)
@@ -145,7 +147,7 @@ export default class SprintsController {
     };
 
     setCadence = async (req: Request, res: Response) => {
-        const data = SprintArkTypeSetCadence({ goalId: Number(req.params.goalId), ...req.body });
+        const data = SprintArkTypeSetCadence({ ...req.body, goalId: Number(req.params.goalId) });
         if (data instanceof type.errors) return res.status(400).send(data.summary);
         return this.sendResult(res, await req.appUser.sprintsManager.setCadence(data));
     };
