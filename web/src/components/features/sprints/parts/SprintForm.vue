@@ -35,6 +35,7 @@
             <UCalendar
               v-model="startDateModel"
               :max-value="endDateModel"
+              :week-starts-on="weekStart"
               class="p-2"
             />
           </template>
@@ -57,6 +58,7 @@
             <UCalendar
               v-model="endDateModel"
               :min-value="startDateModel"
+              :week-starts-on="weekStart"
               class="p-2"
             />
           </template>
@@ -102,7 +104,10 @@ import { useI18n } from 'vue-i18n'
 import { useDateFormat } from '@vueuse/core'
 import { CalendarDate } from '@internationalized/date'
 import { useSprintFormat, type EstimateUnit } from '../composables/useSprintFormat'
+import { useWeekStart } from '@/composables/useWeekStart'
 import type { SprintFormValue } from '@/types/sprints.types'
+
+const weekStart = useWeekStart()
 
 const model = defineModel<SprintFormValue>({ required: true })
 

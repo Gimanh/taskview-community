@@ -36,8 +36,22 @@ const UiPreferencesSectionArkType = UiPreferencesItemArkType.array().narrow((arr
   return true
 })
 
+export const UI_SETTINGS_KEY = '__settings__'
+
+const firstDayOfWeekArkType = type('number.integer').narrow((v, ctx) =>
+  v >= 0 && v <= 6 ? true : ctx.mustBe('an integer 0..6 (0=Sunday)'),
+)
+
+export const UiSettingsArkType = type({
+  'firstDayOfWeek?': firstDayOfWeekArkType,
+})
+
+export type UiSettings = typeof UiSettingsArkType.infer
+
+const SectionOrSettingsArkType = UiPreferencesSectionArkType.or(UiSettingsArkType)
+
 export const UiPreferencesArkType = type({
-  '[string]': UiPreferencesSectionArkType,
+  '[string]': SectionOrSettingsArkType,
 }).narrow((obj, ctx) => {
   const keys = Object.keys(obj)
   if (keys.length > MAX_SECTIONS) {
@@ -49,6 +63,14 @@ export const UiPreferencesArkType = type({
     }
     if (!ID_PATTERN.test(key)) {
       return ctx.mustBe(`section key matching [a-zA-Z0-9_.\\-:]+ (got "${key}")`)
+    }
+    const value = (obj as Record<string, unknown>)[key]
+    if (key === UI_SETTINGS_KEY) {
+      if (Array.isArray(value)) {
+        return ctx.mustBe(`"${UI_SETTINGS_KEY}" to be a settings object, not an array`)
+      }
+    } else if (!Array.isArray(value)) {
+      return ctx.mustBe(`section "${key}" to be an array of items`)
     }
   }
   return true

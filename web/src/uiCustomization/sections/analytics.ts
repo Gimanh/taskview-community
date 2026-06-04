@@ -12,6 +12,7 @@ type AnalyticsSubsectionArgs = {
 function buildAnalyticsSection(args: AnalyticsSubsectionArgs): UiCustomizationSectionDef {
   const { id, labelKey, payloadKind } = args
   return {
+    kind: 'list',
     id,
     labelKey,
     useSection() {

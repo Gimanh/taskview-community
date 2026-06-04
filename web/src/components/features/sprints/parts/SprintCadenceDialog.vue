@@ -53,6 +53,7 @@
                 <template #content>
                   <UCalendar
                     v-model="startDateModel"
+                    :week-starts-on="weekStart"
                     class="p-2"
                   />
                 </template>
@@ -112,7 +113,10 @@ import { useDateFormat } from '@vueuse/core'
 import { CalendarDate } from '@internationalized/date'
 import { useTaskView } from '@/composables/useTaskView'
 import { useSprintsStore } from '@/stores/sprints.store'
+import { useWeekStart } from '@/composables/useWeekStart'
 import type { SprintCadenceFormValue } from '@/types/sprints.types'
+
+const weekStart = useWeekStart()
 
 const open = defineModel<boolean>('open', { default: false })
 

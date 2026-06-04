@@ -15,6 +15,7 @@
             <UCalendar
               v-model="startDate"
               :max-value="endDate"
+              :week-starts-on="weekStart"
             />
             <UInputTime
               v-model="startTime"
@@ -38,6 +39,7 @@
             <UCalendar
               v-model="endDate"
               :min-value="startDate"
+              :week-starts-on="weekStart"
             />
             <UInputTime
               v-model="endTime"
@@ -85,6 +87,9 @@ import { computed, ref, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDateFormat } from '@vueuse/core'
 import { CalendarDate, Time } from '@internationalized/date'
+import { useWeekStart } from '@/composables/useWeekStart'
+
+const weekStart = useWeekStart()
 
 export type TimeEntryFormPayload = {
   startedAt: string

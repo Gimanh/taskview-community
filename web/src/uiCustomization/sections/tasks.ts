@@ -1,9 +1,12 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { UiCustomizationSectionDef } from '../types'
+import type { UiCustomizationListTabDef } from '../types'
 import { TASK_DETAIL_FIELDS } from './tasks.types'
 
-export const tasksSection: UiCustomizationSectionDef = {
+// Typed as the list variant (not the union) so consumers like TaskDetailPanel
+// can call `tasksSection.useSection()` directly without narrowing.
+export const tasksSection: UiCustomizationListTabDef = {
+  kind: 'list',
   id: 'tasks',
   labelKey: 'uiCustomization.sections.tasks',
   useSection() {
