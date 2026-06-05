@@ -1,4 +1,4 @@
-import { integer, numeric, pgSchema, varchar, boolean, date, time, jsonb } from "drizzle-orm/pg-core";
+import { integer, numeric, pgSchema, varchar, boolean, date, time, jsonb, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from 'drizzle-arktype';
 import { UsersSchema } from "./users.schema";
 
@@ -24,6 +24,9 @@ export const TasksSchema = pgSchema('tasks').table('tasks', {
     transactionType: integer('transaction_type').$type<1 | 0 | null>(),
     nodeGraphPosition: jsonb('node_graph_position'),
     sourceUrl: varchar('source_url', { length: 500 }),
+    sprintId: integer('sprint_id'),
+    estimateValue: numeric('estimate_value', { precision: 10, scale: 2 }),
+    dateComplete: timestamp('date_complete'),
 });
 
 export type TasksSchemaTypeForSelect = typeof TasksSchema.$inferSelect;

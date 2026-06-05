@@ -43,13 +43,14 @@ export type GoalItem = {
     archive: 1 | 0;
     dateCreation: string | null;
     organizationId: number | null;
+    estimateUnit: 'hours' | 'points';
 };
 
 export type GoalArgItemAdd = Pick<GoalItem, 'name'> & Partial<Pick<GoalItem, 'description' | 'color' | 'organizationId'>>;
 
 export type GoalResponseAdd = GoalItem | null;
 
-export type GoalArgItemUpdate = Pick<GoalItem, 'id'> & Partial<Pick<GoalItem, 'name' | 'description' | 'color' | 'archive'>>;
+export type GoalArgItemUpdate = Pick<GoalItem, 'id'> & Partial<Pick<GoalItem, 'name' | 'description' | 'color' | 'archive' | 'estimateUnit'>>;
 
 export type GoalResponseUpdate = GoalItem | null;
 

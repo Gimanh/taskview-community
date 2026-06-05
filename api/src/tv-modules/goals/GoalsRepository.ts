@@ -156,6 +156,7 @@ export class GoalsRepository {
                     archive: GoalsSchema.archive,
                     backlogVersion: GoalsSchema.backlogVersion,
                     organizationId: GoalsSchema.organizationId,
+                    estimateUnit: GoalsSchema.estimateUnit,
                 })
                 .from(GoalsSchema)
                 .leftJoin(CollaborationUsersToGoalsSchema, eq(GoalsSchema.id, CollaborationUsersToGoalsSchema.goalId))

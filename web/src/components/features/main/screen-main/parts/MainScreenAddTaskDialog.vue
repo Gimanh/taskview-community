@@ -58,6 +58,7 @@
               <template #content>
                 <UCalendar
                   v-model="(deadline as any)"
+                  :week-starts-on="weekStart"
                   class="p-2"
                 />
               </template>
@@ -104,6 +105,9 @@ import { useGoalsStore } from '@/stores/goals.store'
 import { useBaseScreenStore } from '@/stores/base-screen.store'
 import { $ls, $tvApi } from '@/plugins/axios'
 import { useTaskView } from '@/composables/useTaskView'
+import { useWeekStart } from '@/composables/useWeekStart'
+
+const weekStart = useWeekStart()
 
 const LAST_SELECTED_PROJECT_KEY = 'lastSelectedProjectId'
 

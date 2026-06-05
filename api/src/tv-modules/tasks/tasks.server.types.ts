@@ -26,6 +26,7 @@ export const TaskArkTypeUpdate = type({
     'amount?': 'string|null',
     'transactionType?': '1|0|null',
     'nodeGraphPosition?': 'object|null',
+    'estimateValue?': 'number|null',
 });
 
 export const TaskArkTypeNumberFromString = type('string | number').pipe((v) => Number(v));
@@ -42,6 +43,7 @@ export const TaskArkTypeFetchTasksNewFilters = type({
     'selectedUser?': TaskArkTypeNumberFromString,
     'priority?': TaskArkTypePriorityToNumber,
     'selectedTags?': TaskArkTypeSelectedTagsToNumber,
+    'sprintId?': TaskArkTypeNumberFromString,
 });
 
 export const TaskArkTypeFetchTasksNew = type({
@@ -97,6 +99,7 @@ export const TaskArkTypeAdd = type({
     amount: type('number | null').optional(),
     transactionType: type('0 | 1 | null').optional(),
     nodeGraphPosition: type('object | null').optional(),
+    estimateValue: type('number | null').optional(),
 });
 
 export type TaskArgAdd = typeof TaskArkTypeAdd.infer;
@@ -118,8 +121,9 @@ export const TaskFieldPermissionsForEditOrCreation = {
     taskOrder: GoalPermissions.TASKS_CAN_DELETE,
     kanbanOrder: GoalPermissions.TASKS_CAN_DELETE,
     amount: GoalPermissions.TASKS_CAN_DELETE,
-    transactionType: GoalPermissions.TASKS_CAN_DELETE, 
+    transactionType: GoalPermissions.TASKS_CAN_DELETE,
     nodeGraphPosition: GoalPermissions.TASKS_CAN_DELETE,
+    estimateValue: GoalPermissions.TASKS_CAN_EDIT_PRIORITY,
 };
 
 export const TaskFieldPermissionsForWatching = {

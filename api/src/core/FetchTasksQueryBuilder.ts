@@ -45,6 +45,11 @@ export class FetchTasksQueryBuilder {
             args.push(this.data.filters.priority);
         }
 
+        if (this.data.filters.sprintId !== undefined) {
+            query += ` AND t.sprint_id = $${args.length + 1}`;
+            args.push(this.data.filters.sprintId);
+        }
+
         if (this.limit !== null) {
             if (this.data.showCompleted === 0) {
                 query += ` AND t.complete = $${args.length + 1}`;

@@ -12,6 +12,8 @@ export const TASK_DETAIL_FIELDS = [
   { id: 'priority', width: 'narrow' },
   { id: 'assignees', width: 'narrow' },
   { id: 'list', width: 'narrow' },
+  { id: 'sprint', width: 'narrow' },
+  { id: 'estimate', width: 'narrow' },
   { id: 'tags', width: 'narrow' },
   { id: 'deadline', width: 'narrow' },
   { id: 'amount', width: 'wide' },

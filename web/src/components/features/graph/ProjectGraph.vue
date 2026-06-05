@@ -100,6 +100,7 @@ import TaskNode from './TaskNode.vue'
 
 const listIds = defineModel<number[]>('listIds', { default: () => [] })
 const assigneeIds = defineModel<number[]>('assigneeIds', { default: () => [] })
+const sprintId = defineModel<number | null>('sprintId', { default: null })
 
 const applyFilters = () => {
   let filtered = [...store.allNodes]
@@ -111,6 +112,9 @@ const applyFilters = () => {
       n.data.task.assignedUsers?.some((id: number) => assigneeIds.value.includes(id)),
     )
   }
+  if (sprintId.value != null) {
+    filtered = filtered.filter((n) => n.data.task.sprintId === sprintId.value)
+  }
   const nodeIds = new Set(filtered.map((n) => n.id))
   store.nodes = filtered
   store.edges = store.allEdges.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target))
@@ -119,6 +123,7 @@ const applyFilters = () => {
 
 watch(listIds, applyFilters, { deep: true })
 watch(assigneeIds, applyFilters, { deep: true })
+watch(sprintId, applyFilters)
 
 const {
   fitView,

@@ -209,6 +209,7 @@ export class TasksRepository {
     async updateTaskComplete(taskId: number, complete: boolean): Promise<TaskItemInDb | false> {
         const queryData = updateQuery({
             table: 'tasks.tasks',
+            // date_complete is maintained by the tasks.update_date_complete DB trigger.
             data: { complete: Number(complete) },
             where: { id: taskId },
         });
@@ -555,6 +556,11 @@ export class TasksRepository {
             conditions.push(eq(TasksSchema.priorityId, data.filters.priority as 1 | 2 | 3));
         }
 
+        // sprint
+        if (data.filters?.sprintId !== undefined) {
+            conditions.push(eq(TasksSchema.sprintId, data.filters.sprintId));
+        }
+
         // search
         if (data.searchText) {
             conditions.push(ilike(TasksSchema.description, `%${data.searchText}%`));
@@ -662,6 +668,9 @@ export class TasksRepository {
         ];
         if (cursor !== null) {
             conditions.push(gt(TasksSchema.kanbanOrder, cursor));
+        }
+        if (filters?.sprintId !== undefined) {
+            conditions.push(eq(TasksSchema.sprintId, filters.sprintId));
         }
         if (filters?.listIds && filters.listIds.length > 0) {
             conditions.push(inArray(TasksSchema.goalListId, filters.listIds));

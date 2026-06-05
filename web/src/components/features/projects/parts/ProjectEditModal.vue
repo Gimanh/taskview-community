@@ -24,6 +24,14 @@
             class="w-full"
           />
         </UFormField>
+        <UFormField :label="t('projects.estimateUnit')">
+          <USelect
+            v-model="form.estimateUnit"
+            :items="estimateUnitItems"
+            class="w-full"
+            data-testid="project-edit-estimate-unit"
+          />
+        </UFormField>
       </div>
     </template>
 
@@ -48,9 +56,9 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { Project } from '@/components/features/projects/types'
+import type { Project, ProjectSaveData } from '@/components/features/projects/types'
 
 const props = defineProps<{
   project: Project | null
@@ -59,15 +67,21 @@ const props = defineProps<{
 const isOpen = defineModel<boolean>('open', { required: true })
 
 const emit = defineEmits<{
-  save: [data: { name: string; description: string }]
+  save: [data: ProjectSaveData]
 }>()
 
 const { t } = useI18n()
 
-const form = reactive({
+const form = reactive<ProjectSaveData>({
   name: '',
   description: '',
+  estimateUnit: 'points',
 })
+
+const estimateUnitItems = computed(() => [
+  { label: t('projects.estimateUnitPoints'), value: 'points' as const },
+  { label: t('projects.estimateUnitHours'), value: 'hours' as const },
+])
 
 watch(
   () => props.project,
@@ -75,6 +89,7 @@ watch(
     if (project) {
       form.name = project.name
       form.description = project.description || ''
+      form.estimateUnit = project.estimateUnit ?? 'points'
     }
   },
   { immediate: true },
@@ -85,7 +100,7 @@ function close() {
 }
 
 function save() {
-  emit('save', { name: form.name, description: form.description })
+  emit('save', { name: form.name, description: form.description, estimateUnit: form.estimateUnit })
   close()
 }
 </script>

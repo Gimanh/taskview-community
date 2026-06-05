@@ -49,7 +49,7 @@ export type CollaborationArgDeleteRoleFromGoal = {
 export type CollaborationResponseDeleteRoleFromGoal = boolean;
 
 //FIXME describe each group differently
-export type PermissionGroupsIds = 1 | 2 | 3 | 4;
+export type PermissionGroupsIds = 1 | 2 | 3 | 4 | 5;
 
 export type CollaborationPermission = {
     id: number;

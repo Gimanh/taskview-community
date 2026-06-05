@@ -24,7 +24,7 @@ import { useGoalsStore } from '@/stores/goals.store'
 import { useOrganizationStore } from '@/stores/organization.store'
 import ProjectsList from '@/components/features/projects/ProjectsList.vue'
 import ArchiveList from '@/components/features/projects/ArchiveList.vue'
-import type { Project } from '@/components/features/projects/types'
+import type { Project, ProjectSaveData } from '@/components/features/projects/types'
 import { ALL_TASKS_LIST_ID } from 'taskview-api'
 
 const router = useRouter()
@@ -42,11 +42,12 @@ watch(() => orgStore.currentOrg, async () => {
   await goalsStore.fetchGoals()
 })
 
-async function handleSave(project: Project, data: { name: string; description: string }) {
+async function handleSave(project: Project, data: ProjectSaveData) {
   await goalsStore.updateGoal({
     id: project.id,
     name: data.name,
     description: data.description,
+    estimateUnit: data.estimateUnit,
   })
 }
 

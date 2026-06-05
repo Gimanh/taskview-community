@@ -147,6 +147,23 @@ export const TvPermissions: Record<Uppercase<keyof GoalPermissions>, keyof GoalP
      * Implies both view and log permissions.
      */
     TIMETRACKING_CAN_MANAGE_ALL: 'timetracking_can_manage_all',
+
+    /**
+     * Can view the project's sprints
+     */
+    SPRINT_CAN_VIEW: 'sprint_can_view',
+    /**
+     * Can create/edit/activate/close sprints and manage sprint cadence
+     */
+    SPRINT_CAN_MANAGE: 'sprint_can_manage',
+    /**
+     * Can move tasks in and out of sprints
+     */
+    SPRINT_CAN_ASSIGN_TASKS: 'sprint_can_assign_tasks',
+    /**
+     * Can view sprint analytics (burndown, velocity)
+     */
+    SPRINT_CAN_VIEW_ANALYTICS: 'sprint_can_view_analytics',
 } as const;
 
 export type GoalPermissions = {
@@ -195,4 +212,9 @@ export type GoalPermissions = {
     timetracking_can_view?: true;
     timetracking_can_log?: true;
     timetracking_can_manage_all?: true;
+
+    sprint_can_view?: true;
+    sprint_can_manage?: true;
+    sprint_can_assign_tasks?: true;
+    sprint_can_view_analytics?: true;
 };

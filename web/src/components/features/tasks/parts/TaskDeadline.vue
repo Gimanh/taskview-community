@@ -22,6 +22,7 @@
               v-model="startDateModel"
               :placeholder="startCalendarDefaultValue"
               :max-value="endDateModel"
+              :week-starts-on="weekStart"
             />
             <UCheckbox
               v-model="showStartTime"
@@ -69,6 +70,7 @@
               v-model="endDateModel"
               :placeholder="endCalendarDefaultValue"
               :min-value="startDateModel"
+              :week-starts-on="weekStart"
             />
             <UCheckbox
               v-model="showEndTime"
@@ -168,6 +170,9 @@ import { CalendarDate, Time } from '@internationalized/date'
 import { useTasksStore } from '@/stores/tasks.store'
 import { useColor } from '@/composables/useColotMode'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
+import { useWeekStart } from '@/composables/useWeekStart'
+
+const weekStart = useWeekStart()
 
 type QuickAction = 'today' | 'tomorrow' | 'yesterday' | 'week' | 'month' | 'clear' | null
 

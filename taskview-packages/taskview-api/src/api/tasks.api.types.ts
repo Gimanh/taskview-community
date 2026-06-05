@@ -31,6 +31,9 @@ export interface TaskBase {
     nodeGraphPosition: Record<'x' | 'y', number> | null;
     creatorId: number | null;
     sourceUrl: string | null;
+
+    sprintId: number | null;
+    estimateValue: number | string | null;
 }
 
 export interface Task extends TaskBase {
@@ -40,7 +43,8 @@ export interface Task extends TaskBase {
 };
 
 // we can not update defined fields
-type NotAllowedToUpdate = 'id' | 'goalId' | 'owner' | 'dateCreation' | 'dateComplete' | 'historyId';
+// sprintId is managed via the sprints module; dateComplete is trigger-maintained.
+type NotAllowedToUpdate = 'id' | 'goalId' | 'owner' | 'dateCreation' | 'dateComplete' | 'historyId' | 'sprintId';
 
 export type TaskArgUpdate = Pick<Task, 'id'> & Partial<Omit<Task, NotAllowedToUpdate>>;
 export type TaskResponseUpdate = (Task & { syncFailed?: boolean }) | null;

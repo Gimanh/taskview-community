@@ -15,6 +15,7 @@
           <UCalendar
             v-model="fromDate"
             :max-value="toDate"
+            :week-starts-on="weekStart"
           />
         </div>
       </template>
@@ -37,6 +38,7 @@
           <UCalendar
             v-model="toDate"
             :min-value="fromDate"
+            :week-starts-on="weekStart"
           />
         </div>
       </template>
@@ -90,6 +92,9 @@ import { useDateFormat } from '@vueuse/core'
 import { CalendarDate } from '@internationalized/date'
 import type { GoalItem } from 'taskview-api'
 import { useTimeReportsStore } from '@/stores/time-reports.store'
+import { useWeekStart } from '@/composables/useWeekStart'
+
+const weekStart = useWeekStart()
 
 const props = defineProps<{
   availableProjects: GoalItem[]

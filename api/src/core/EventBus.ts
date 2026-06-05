@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import type { TasksSchemaTypeForSelect } from 'taskview-db-schemas';
+import type { SprintsSchemaTypeForSelect, TasksSchemaTypeForSelect } from 'taskview-db-schemas';
 import type { TimeEntryWithUser } from '../tv-modules/time-tracking/types';
 import { $logger } from '../modules/logget';
 
@@ -16,6 +16,21 @@ export interface AppEvents {
     'time-entry.created': { entry: TimeEntryWithUser; initiatorId: number };
     'time-entry.updated': { entry: TimeEntryWithUser; changes: Record<string, unknown>; initiatorId: number };
     'time-entry.deleted': { entryId: number; taskId: number; goalId: number; userId: number; initiatorId: number };
+    'sprint.created': { sprint: SprintsSchemaTypeForSelect; initiatorId: number };
+    'sprint.updated': { sprint: SprintsSchemaTypeForSelect; changes: Record<string, unknown>; initiatorId: number };
+    'sprint.activated': { sprintId: number; goalId: number; initiatorId: number | null };
+    'sprint.reviewStarted': { sprintId: number; goalId: number; initiatorId: number };
+    'sprint.completed': { sprintId: number; goalId: number; initiatorId: number };
+    'sprint.paused': { sprintId: number; goalId: number; initiatorId: number };
+    'sprint.resumed': { sprintId: number; goalId: number; initiatorId: number };
+    'sprint.deleted': { sprintId: number; goalId: number; initiatorId: number };
+    'task.assignedToSprint': {
+        taskId: number;
+        sprintId: number | null;
+        prevSprintId: number | null;
+        goalId: number;
+        initiatorId: number;
+    };
 }
 
 type EventName = keyof AppEvents;

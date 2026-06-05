@@ -1,6 +1,7 @@
 import { integer, pgSchema, varchar, boolean, timestamp } from "drizzle-orm/pg-core";
 import { TasksSchema } from "./tasks.schema";
 import { UsersSchema } from "./users.schema";
+import { SprintsSchema } from "./sprints.schema";
 
 export const NotificationsSchema = pgSchema('tasks').table('notifications', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -11,6 +12,7 @@ export const NotificationsSchema = pgSchema('tasks').table('notifications', {
     body: varchar({ length: 1000 }),
     read: boolean().notNull().default(false),
     createdAt: timestamp('created_at').notNull().defaultNow(),
+    sprintId: integer('sprint_id').references(() => SprintsSchema.id, { onDelete: 'cascade' }),
 });
 
 export type NotificationsSchemaTypeForSelect = typeof NotificationsSchema.$inferSelect;
