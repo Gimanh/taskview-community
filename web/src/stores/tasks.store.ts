@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia'
 import {
   ALL_TASKS_LIST_ID,
+  type RecurrenceCreateArgs,
+  type RecurrenceRule,
+  type RecurrenceRuleDetails,
+  type RecurrenceUpdateArgs,
   type TagItemArgToggle,
   type Task,
   type TaskArgAdd,
@@ -569,6 +573,75 @@ export const useTasksStore = defineStore('tasks', {
       } else if (this.selectedTask?.id === task.id) {
         Object.assign(this.selectedTask, task)
       }
+    },
+
+    setLocalTaskRecurrence(data: { taskId: number; ruleId: number | null }) {
+      const localTask = this.tasks.find(({ id }) => id === data.taskId)
+      if (localTask) localTask.recurrenceRuleId = data.ruleId
+      if (this.selectedTask?.id === data.taskId) {
+        this.selectedTask.recurrenceRuleId = data.ruleId
+      }
+    },
+
+    async fetchRecurrenceForTask(taskId: number): Promise<RecurrenceRuleDetails | null> {
+      return await $tvApi.recurrence.getForTask(taskId).catch(() => null) ?? null
+    },
+
+    async createRecurrence(args: RecurrenceCreateArgs): Promise<RecurrenceRule | null> {
+      const rule = await $tvApi.recurrence.create(args).catch(logError)
+      if (!rule) return null
+      this.setLocalTaskRecurrence({ taskId: args.taskId, ruleId: rule.id })
+      return rule
+    },
+
+    async updateRecurrence(args: RecurrenceUpdateArgs): Promise<RecurrenceRule | null> {
+      return await $tvApi.recurrence.update(args).catch(logError) || null
+    },
+
+    async pauseRecurrence(ruleId: number): Promise<RecurrenceRule | null> {
+      return await $tvApi.recurrence.pause(ruleId).catch(logError) || null
+    },
+
+    async resumeRecurrence(ruleId: number): Promise<RecurrenceRule | null> {
+      return await $tvApi.recurrence.resume(ruleId).catch(logError) || null
+    },
+
+    /** The current occurrence is removed and the card jumps to the next date. */
+    async skipRecurrence(args: { ruleId: number; taskId: number }): Promise<RecurrenceRuleDetails | null> {
+      const details = await $tvApi.recurrence.skip(args.ruleId).catch(logError)
+      if (!details) return null
+
+      this.tasks = this.tasks.filter(({ id }) => id !== args.taskId)
+      if (details.openInstance) {
+        this.handleRecurrenceInstanceCreated(details.openInstance)
+        if (this.selectedTask?.id === args.taskId) {
+          this.selectedTask = details.openInstance
+        }
+      } else if (this.selectedTask?.id === args.taskId) {
+        this.selectedTask = null
+      }
+      return details
+    },
+
+    async deleteRecurrence(args: { ruleId: number; taskId: number }): Promise<boolean> {
+      const result = await $tvApi.recurrence.remove(args.ruleId).catch(logError)
+      if (!result) return false
+      this.setLocalTaskRecurrence({ taskId: args.taskId, ruleId: null })
+      return true
+    },
+
+    /** Realtime: the next instance of a series was materialized on the server. */
+    handleRecurrenceInstanceCreated(task: Task) {
+      if (this.tasks.some(({ id }) => id === task.id)) return
+      if (Number(this.fetchRules.goalId) !== task.goalId) return
+      // Raw realtime payload may carry no relations — normalize to the client Task shape.
+      this.tasks.unshift({
+        ...task,
+        tags: task.tags ?? [],
+        assignedUsers: task.assignedUsers ?? [],
+        subtasks: task.subtasks ?? [],
+        historyId: task.historyId ?? null,
+      })
     },
   },
 })

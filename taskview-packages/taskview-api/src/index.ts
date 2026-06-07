@@ -20,3 +20,4 @@ export * from '@/api/analytics.types';
 export * from '@/api/time-tracking.types';
 export * from '@/api/ui-preferences.types';
 export * from '@/api/sprints.types';
+export * from '@/api/recurrence.types';

@@ -10,6 +10,7 @@ import { NotificationMessages } from './NotificationMessages';
 import { NotificationsRepository } from './repositories/NotificationsRepository';
 import { DeviceTokensRepository } from './repositories/DeviceTokensRepository';
 import { DeadlineScheduler } from './schedulers/DeadlineScheduler';
+import { RecurrenceRepository } from '../recurrence/RecurrenceRepository';
 import { NotificationType } from './types';
 import { parseUtcTime } from './utils';
 import type { Dispatcher } from '../../core/Dispatcher';
@@ -44,9 +45,14 @@ export class NotificationDispatcher implements Dispatcher {
     }
 
     private async onTaskCreated(data: AppEvents['task.created']): Promise<void> {
-        if (data.task.endDate) {
-            await this.deadlineScheduler.schedule(data.task, data.initiatorId);
+        if (!data.task.endDate) return;
+        // Recurring instances remind about their deadline only when the series
+        // opted in — otherwise a daily series becomes a daily notification.
+        if (data.task.recurrenceRuleId) {
+            const rule = await new RecurrenceRepository().getById(data.task.recurrenceRuleId);
+            if (rule && !rule.notifyOnOccurrence) return;
         }
+        await this.deadlineScheduler.schedule(data.task, data.initiatorId);
     }
 
     private async onTaskUpdated(data: AppEvents['task.updated']): Promise<void> {

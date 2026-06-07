@@ -1,4 +1,4 @@
-import type { Notification, TimeEntryItem } from 'taskview-api'
+import type { Notification, Task, TimeEntryItem } from 'taskview-api'
 
 export type RealtimeEventMap = {
   'notification': {
@@ -33,6 +33,12 @@ export type RealtimeEventMap = {
     event: 'time-entry.deleted'
     entryId: number
     taskId: number
+  }
+  'recurrence.instanceCreated': {
+    event: 'recurrence.instanceCreated'
+    goalId: number
+    ruleId: number
+    task: Task
   }
 }
 

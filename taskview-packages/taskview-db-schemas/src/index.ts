@@ -25,3 +25,7 @@ export * from './schemas/sprint-task-outcomes.schema';
 export * from './schemas/sprint-user-capacity.schema';
 export * from './schemas/sprint-retros.schema';
 export * from './schemas/sprint-cadence.schema';
+export * from './schemas/recurrence-rules.schema';
+export * from './schemas/recurrence-skip-dates.schema';
+export * from './schemas/recurrence-template-assignees.schema';
+export * from './schemas/recurrence-template-tags.schema';

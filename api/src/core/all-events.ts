@@ -5,6 +5,7 @@ import { RealtimeDispatcher } from '../tv-modules/realtime/RealtimeDispatcher';
 import { WebhooksDispatcher } from '../tv-modules/webhooks/WebhooksDispatcher';
 import { TimeTrackingDispatcher } from '../tv-modules/time-tracking/TimeTrackingDispatcher';
 import { SprintsDispatcher } from '../tv-modules/sprints/SprintsDispatcher';
+import { RecurrenceDispatcher } from '../tv-modules/recurrence/RecurrenceDispatcher';
 
 const dispatchers: Dispatcher[] = [
     new NotificationDispatcher(),
@@ -12,6 +13,7 @@ const dispatchers: Dispatcher[] = [
     new WebhooksDispatcher(),
     new TimeTrackingDispatcher(),
     new SprintsDispatcher(),
+    new RecurrenceDispatcher(),
 ];
 
 export function registerAllEventHandlers() {

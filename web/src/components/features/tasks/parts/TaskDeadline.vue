@@ -158,6 +158,9 @@
         @click="clearAllDates"
       />
     </div>
+
+    <!-- Third row: recurrence -->
+    <TaskRecurrence :task="task" />
   </div>
 </template>
 
@@ -167,6 +170,7 @@ import { useDateFormat } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import type { Task } from 'taskview-api'
 import { CalendarDate, Time } from '@internationalized/date'
+import TaskRecurrence from './TaskRecurrence.vue'
 import { useTasksStore } from '@/stores/tasks.store'
 import { useColor } from '@/composables/useColotMode'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'

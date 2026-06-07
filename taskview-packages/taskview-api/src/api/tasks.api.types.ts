@@ -34,6 +34,9 @@ export interface TaskBase {
 
     sprintId: number | null;
     estimateValue: number | string | null;
+
+    recurrenceRuleId: number | null;
+    recurrenceInstanceDate: string | null;
 }
 
 export interface Task extends TaskBase {
@@ -44,7 +47,8 @@ export interface Task extends TaskBase {
 
 // we can not update defined fields
 // sprintId is managed via the sprints module; dateComplete is trigger-maintained.
-type NotAllowedToUpdate = 'id' | 'goalId' | 'owner' | 'dateCreation' | 'dateComplete' | 'historyId' | 'sprintId';
+// recurrence fields are managed via the recurrence module.
+type NotAllowedToUpdate = 'id' | 'goalId' | 'owner' | 'dateCreation' | 'dateComplete' | 'historyId' | 'sprintId' | 'recurrenceRuleId' | 'recurrenceInstanceDate';
 
 export type TaskArgUpdate = Pick<Task, 'id'> & Partial<Omit<Task, NotAllowedToUpdate>>;
 export type TaskResponseUpdate = (Task & { syncFailed?: boolean }) | null;

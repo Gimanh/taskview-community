@@ -20,6 +20,7 @@ import AnalyticsRoutes from '../tv-modules/analytics/AnalyticsRoutes';
 import TimeTrackingRoutes from '../tv-modules/time-tracking/TimeTrackingRoutes';
 import UiPreferencesRoutes from '../tv-modules/ui-preferences/UiPreferencesRoutes';
 import SprintsRoutes from '../tv-modules/sprints/SprintsRoutes';
+import RecurrenceRoutes from '../tv-modules/recurrence/RecurrenceRoutes';
 import type { Routable } from '../types/routable.type';
 
 type RoutableConstructor = new (...args: any[]) => Routable;
@@ -46,6 +47,7 @@ const routes: Record<string, RoutableConstructor> = {
     '/module/time-tracking': TimeTrackingRoutes,
     '/module/ui-preferences': UiPreferencesRoutes,
     '/module/sprints': SprintsRoutes,
+    '/module/recurrence': RecurrenceRoutes,
     '/scim/v2': ScimRoutes,
 };
 
