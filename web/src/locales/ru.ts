@@ -213,6 +213,7 @@ export default {
     pause: 'Пауза',
     resume: 'Продолжить',
     deleteSeries: 'Удалить серию',
+    selectTime: 'Выбрать время',
     notifyOnOccurrence: 'Напоминать о каждом повторении',
     preview: 'Ближайшие повторения',
     frequency: {

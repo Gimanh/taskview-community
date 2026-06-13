@@ -76,6 +76,7 @@ const summary = computed(() => {
     rrule: rule.rrule,
     dtstart: new Date(`${rule.dtstart.replace(' ', 'T')}Z`),
     notifyOnOccurrence: rule.notifyOnOccurrence,
+    hasTime: rule.hasTime,
   })
 
   const unit = t(`recurrence.units.${form.frequency}`)

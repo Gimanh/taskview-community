@@ -90,16 +90,17 @@ export class RecurrenceDispatcher implements Dispatcher {
             const memberIds = await this.resolveGoalMemberIds(data.task.goalId);
             if (memberIds.length === 0) return;
             const centrifugo = getCentrifugoClient();
-            // The broadcast goes to every goal member, while notes are gated by a
-            // separate per-role permission — never put them on the wire here.
-            // Clients with note access get it when they open the task.
-            const task = { ...data.task, note: null };
+            // Task fields are gated per role (TaskFieldPermissionsForWatching),
+            // and recipients have different roles — so the broadcast carries ids
+            // only, never content (same thin-event convention as goals.changed).
+            // Each client fetches the task through REST, where fields are
+            // cleaned for that user (fail closed).
             await Promise.all(
                 memberIds.map((userId) =>
                     centrifugo.publishToUser(userId, RECURRENCE_RT_EVENT, {
                         goalId: data.task.goalId,
                         ruleId: data.task.recurrenceRuleId,
-                        task,
+                        taskId: data.task.id,
                     })
                 )
             );

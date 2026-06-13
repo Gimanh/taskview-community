@@ -178,6 +178,7 @@ export class RecurrenceGenerator {
         const window = RecurrenceParser.instanceWindowUtc({
             occurrenceDate: instanceDate,
             dtstart: rule.dtstart,
+            hasTime: rule.hasTime,
             timezone: rule.timezone,
             durationMinutes: rule.templateDurationMinutes,
         });

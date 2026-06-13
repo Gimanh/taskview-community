@@ -618,5 +618,27 @@
             "Extended tasks.tasks with recurrence_rule_id (FK SET NULL — instances survive rule deletion) and recurrence_instance_date. Partial unique index on (recurrence_rule_id, recurrence_instance_date) makes instance materialization idempotent under concurrent triggers/reconciliation.",
             "Exactly one open instance per series exists at any time: completing it materializes the next occurrence (event-driven, O(1)); a nightly pg-boss reconcile job re-creates the open instance only for series stalled by a crash. No new permissions — recurrence editing is gated by existing task_can_edit_deadline."
         ]
+    },
+    "48": {
+        "version": "1.54.1",
+        "name": "Release 1.54.1",
+        "releaseDate": "20260613",
+        "scripts": [
+            "/1.54.1/0.add-recurrence-template-task-unique.sql"
+        ],
+        "description": [
+            "Partial unique index on tasks.recurrence_rules(template_task_id) WHERE state != 'ended' — one live series per origin task. DB-level backstop for the createRule race where two concurrent POSTs both pass the recurrenceRuleId == null check and create two rules for the same task (the orphaned rule would materialize a duplicate card via the nightly reconcile job)."
+        ]
+    },
+    "49": {
+        "version": "1.54.2",
+        "name": "Release 1.54.2",
+        "releaseDate": "20260613",
+        "scripts": [
+            "/1.54.2/0.add-recurrence-has-time.sql"
+        ],
+        "description": [
+            "Added tasks.recurrence_rules.has_time — explicit flag for whether a series is anchored to a wall-clock time or is date-only. Previously the code inferred 'no time' from a midnight dtstart, which silently collapsed an explicit 00:00 series into date-only. Backfill (has_time = dtstart::time <> '00:00:00') reproduces the old inference so existing series keep their behavior; new series carry the flag through from the origin task's start_time (null = date-only, set = timed, including midnight)."
+        ]
     }
 }

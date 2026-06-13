@@ -16,6 +16,8 @@ export type RecurrenceRule = {
     rrule: string;
     /** Floating wall-clock 'YYYY-MM-DDTHH:mm:ss' anchor of the series. */
     dtstart: string;
+    /** Whether the series is anchored to a wall-clock time (incl. 00:00) or is date-only. */
+    hasTime: boolean;
     /** IANA timezone name, e.g. 'Europe/Moscow'. */
     timezone: string;
     state: RecurrenceState;
@@ -36,6 +38,7 @@ export type RecurrenceRuleDetails = {
 export type RecurrenceCreateArgs = {
     taskId: number;
     rrule: string;
+    /** 'YYYY-MM-DD' for a date-only series, 'YYYY-MM-DDTHH:mm:ss' for a timed one (incl. 00:00). */
     dtstart: string;
     timezone: string;
     notifyOnOccurrence?: boolean;

@@ -9,7 +9,7 @@ import {
     PermissionsSchema,
 } from 'taskview-db-schemas';
 import { Database } from '../modules/db';
-import type { FetchGoalIdsWithAnyPermissionParams, GoalPermissionItemsFromDb } from '../types/auth.types';
+import type { FetchGoalIdsWithAnyPermissionParams, FetchPermissionsForGoalByUserParams, GoalPermissionItemsFromDb } from '../types/auth.types';
 import type { GoalItemInDb } from '../types/goal.type';
 import type { ListItemInDb } from '../types/lists.types';
 import type { TaskItemInDb } from '../types/tasks.types';
@@ -33,7 +33,18 @@ export class GoalPermissionsRepository {
     }
 
     async fetchPermissionsForGoal(goalId: number, user: AppUser): Promise<GoalPermissionItemsFromDb> {
-        const goalInfo = await this.db.query<GoalItemInDb>('select * from tasks.goals where id = $1', [goalId]);
+        const userData = user.getUserData();
+        if (!userData) return [];
+        return this.fetchPermissionsForGoalByUser({ goalId, userId: userData.id, email: userData.email });
+    }
+
+    /**
+     * Permission set of an arbitrary user for a goal, without an AppUser/request
+     * context — used by background workers (e.g. deadline notifications) that
+     * must gate content per recipient.
+     */
+    async fetchPermissionsForGoalByUser(params: FetchPermissionsForGoalByUserParams): Promise<GoalPermissionItemsFromDb> {
+        const goalInfo = await this.db.query<GoalItemInDb>('select * from tasks.goals where id = $1', [params.goalId]);
 
         if (goalInfo.rows.length === 0) {
             return [];
@@ -42,7 +53,7 @@ export class GoalPermissionsRepository {
         let query = '';
         let args: any = [];
 
-        if (goalInfo.rows[0].owner === user.getUserData()?.id) {
+        if (goalInfo.rows[0].owner === params.userId) {
             query = `select name as "permissionName", id as "permissionId" from tv_auth.permissions;`;
         } else {
             query = `select p.name as "permissionName", p.id as "permissionId"
@@ -54,7 +65,7 @@ export class GoalPermissionsRepository {
                                 left join collaboration.permissions_to_role ptr on rol.id = ptr.role_id
                                 left join tv_auth.permissions p on ptr.permission_id = p.id
                         where email = $1 and tg.id = $2 and p.name is not null and p.id is not null;`;
-            args = [user.getUserData()?.email, goalId];
+            args = [params.email, params.goalId];
         }
 
         const result = await this.db.query<GoalPermissionItemsFromDb[number]>(query, args);

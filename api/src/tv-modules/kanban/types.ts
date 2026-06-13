@@ -33,6 +33,8 @@ export type KanbanArgUpdateStatus = typeof KanbanArkTypeStatusUpdate.infer;
 
 export type KanbanArgFetchAllStatuses = typeof KanbanArkTypeFetchAllStatuses.infer;
 
+export type StatusBelongsToGoalArgs = { statusId: number; goalId: number };
+
 export type KanbanStatusInDb = {
     id: number;
     goal_id: number;

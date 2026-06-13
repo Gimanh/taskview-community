@@ -613,7 +613,7 @@ export const useTasksStore = defineStore('tasks', {
 
       this.tasks = this.tasks.filter(({ id }) => id !== args.taskId)
       if (details.openInstance) {
-        this.handleRecurrenceInstanceCreated(details.openInstance)
+        this.insertRecurrenceInstance(details.openInstance)
         if (this.selectedTask?.id === args.taskId) {
           this.selectedTask = details.openInstance
         }
@@ -630,11 +630,18 @@ export const useTasksStore = defineStore('tasks', {
       return true
     },
 
-    /** Realtime: the next instance of a series was materialized on the server. */
-    handleRecurrenceInstanceCreated(task: Task) {
+    async handleRecurrenceInstanceCreated(data: { goalId: number; taskId: number }) {
+      if (Number(this.fetchRules.goalId) !== data.goalId) return
+      if (this.tasks.some(({ id }) => id === data.taskId)) return
+      const task = await $tvApi.tasks.fetchTaskById(data.taskId).catch(() => null)
+      if (!task) return
+      this.insertRecurrenceInstance(task)
+    },
+
+    insertRecurrenceInstance(task: Task) {
       if (this.tasks.some(({ id }) => id === task.id)) return
       if (Number(this.fetchRules.goalId) !== task.goalId) return
-      // Raw realtime payload may carry no relations — normalize to the client Task shape.
+      // Normalize to the client Task shape in case relations are missing.
       this.tasks.unshift({
         ...task,
         tags: task.tags ?? [],

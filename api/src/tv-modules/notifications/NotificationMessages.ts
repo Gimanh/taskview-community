@@ -3,7 +3,8 @@ import { parseUtcTime } from './utils';
 
 export class NotificationMessages {
     static deadline(description: string | null, endDate: string, endTime: string | null, timezone: string): NotificationMessage {
-        const title = `Task: ${description || 'Task'}`;
+        // description is null for recipients without COMPONENT_CAN_WATCH_CONTENT
+        const title = description ? `Task: ${description}` : 'Task deadline';
 
         if (endTime) {
             const deadline = parseUtcTime(endDate, endTime);

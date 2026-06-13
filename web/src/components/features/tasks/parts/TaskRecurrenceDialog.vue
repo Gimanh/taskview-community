@@ -28,6 +28,7 @@
           <div class="flex flex-wrap items-center gap-2">
             <template v-if="rule">
               <UButton
+                v-if="canDeleteTask"
                 :label="t('recurrence.skip')"
                 icon="i-lucide-skip-forward"
                 color="neutral"
@@ -71,8 +72,9 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { RecurrenceRule, Task } from 'taskview-api'
 import TaskRecurrenceForm from './TaskRecurrenceForm.vue'
-import { buildRruleString, defaultRecurrenceForm, dtstartForTask, parseRruleToForm } from '@/helpers/recurrence'
+import { buildDtstartIso, buildRruleString, defaultRecurrenceForm, dtstartForTask, parseRruleToForm } from '@/helpers/recurrence'
 import { useTaskView } from '@/composables/useTaskView'
+import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useTasksStore } from '@/stores/tasks.store'
 import type { RecurrenceFormValue } from '@/types/recurrence.types'
 
@@ -92,6 +94,8 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const toast = useToast()
 const { isMobile } = useTaskView()
+// Skip deletes the open instance, so the server requires TASK_CAN_DELETE for it.
+const { canDeleteTask } = useGoalPermissions()
 const tasksStore = useTasksStore()
 
 const actionLoading = ref<DialogAction>(null)
@@ -109,9 +113,10 @@ function initialForm(): RecurrenceFormValue {
       rrule: props.rule.rrule,
       dtstart: dtstart.value.date,
       notifyOnOccurrence: props.rule.notifyOnOccurrence,
+      hasTime: props.rule.hasTime,
     })
   }
-  return defaultRecurrenceForm(dtstart.value.date)
+  return defaultRecurrenceForm(dtstart.value.date, !!props.task.startTime)
 }
 
 const form = ref<RecurrenceFormValue>(initialForm())
@@ -128,17 +133,21 @@ async function save() {
     // user's wall clock, so editing a rule after relocation re-anchors it
     // ("9:00" stays 9:00 wherever the user lives now).
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+    // The form's time (incl. 00:00, or none) drives the dtstart anchor; the
+    // start day stays whatever the series was anchored to.
+    const dtstartIso = buildDtstartIso({ dateStr: dtstart.value.iso.slice(0, 10), time: form.value.time })
     const result = props.rule
       ? await tasksStore.updateRecurrence({
         ruleId: props.rule.id,
         rrule,
+        dtstart: dtstartIso,
         timezone,
         notifyOnOccurrence: form.value.notifyOnOccurrence,
       })
       : await tasksStore.createRecurrence({
         taskId: props.task.id,
         rrule,
-        dtstart: dtstart.value.iso,
+        dtstart: dtstartIso,
         timezone,
         notifyOnOccurrence: form.value.notifyOnOccurrence,
       })

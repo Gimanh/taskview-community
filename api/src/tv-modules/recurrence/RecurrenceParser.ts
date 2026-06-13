@@ -81,13 +81,16 @@ export class RecurrenceParser {
         return today.isValid ? (today.toISODate() as string) : (DateTime.utc().toISODate() as string);
     }
 
-    /** 'HH:mm:ss' wall-clock time of day of the series, or null when the series carries no time (midnight dtstart). */
-    static timeOfDay(dtstart: Date): string | null {
-        const hours = dtstart.getUTCHours();
-        const minutes = dtstart.getUTCMinutes();
-        if (hours === 0 && minutes === 0) return null;
+    /**
+     * 'HH:mm:ss' wall-clock time of day of the series, or null for a date-only
+     * series. The distinction is carried explicitly by `hasTime` (rule column)
+     * — never inferred from a midnight dtstart, otherwise an explicit 00:00
+     * series would be indistinguishable from "no time".
+     */
+    static timeOfDay(args: { dtstart: Date; hasTime: boolean }): string | null {
+        if (!args.hasTime) return null;
         const pad = (n: number) => String(n).padStart(2, '0');
-        return `${pad(hours)}:${pad(minutes)}:00`;
+        return `${pad(args.dtstart.getUTCHours())}:${pad(args.dtstart.getUTCMinutes())}:00`;
     }
 
     static isValidTimezone(timezone: string): boolean {
@@ -104,7 +107,7 @@ export class RecurrenceParser {
      * days are pushed forward by luxon to the nearest valid time.
      */
     static instanceWindowUtc(args: InstanceWindowArgs): InstanceWindow {
-        const wallTime = RecurrenceParser.timeOfDay(args.dtstart);
+        const wallTime = RecurrenceParser.timeOfDay({ dtstart: args.dtstart, hasTime: args.hasTime });
 
         // Date-only series: calendar dates pass through untouched (no instant semantics).
         if (!wallTime) {
@@ -142,11 +145,17 @@ export class RecurrenceParser {
         return window;
     }
 
-    /** Floating wall-clock 'YYYY-MM-DDTHH:mm:ss' string → Date with the same UTC components. */
-    static parseDtstart(dtstart: string): Date {
-        const date = new Date(`${dtstart}Z`);
+    /**
+     * dtstart in RFC 5545 DATE or DATE-TIME shape → Date (+ whether a time was
+     * given). `YYYY-MM-DD` is date-only (`hasTime: false`); `YYYY-MM-DDTHH:mm:ss`
+     * carries a wall-clock time (`hasTime: true`), including an explicit
+     * `T00:00:00`. Either way the Date holds floating wall-clock UTC components.
+     */
+    static parseDtstart(dtstart: string): { date: Date; hasTime: boolean } {
+        const hasTime = dtstart.includes('T');
+        const date = new Date(`${hasTime ? dtstart : `${dtstart}T00:00:00`}Z`);
         if (Number.isNaN(date.getTime())) throw new Error('Invalid dtstart');
-        return date;
+        return { date, hasTime };
     }
 
     static toIsoDate(date: Date): string {

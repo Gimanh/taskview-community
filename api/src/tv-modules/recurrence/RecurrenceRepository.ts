@@ -1,7 +1,6 @@
 import { and, eq, inArray, isNotNull, ne, notExists, sql } from 'drizzle-orm';
 import {
     RecurrenceRulesSchema,
-    type RecurrenceRulesSchemaTypeForInsert,
     type RecurrenceRulesSchemaTypeForSelect,
     RecurrenceSkipDatesSchema,
     RecurrenceTemplateAssigneesSchema,
@@ -12,27 +11,23 @@ import {
     TasksToTagsSchema,
 } from 'taskview-db-schemas';
 import { Database } from '../../modules/db';
+import { $logger } from '../../modules/logget';
 import { callWithCatch } from '../../utils/helpers';
 import type {
     AddSkipDateArgs,
-    ApplyInstanceWindowArgs,
-    AttachTaskToRuleArgs,
+    CreateRuleWithOriginArgs,
+    CreateRuleWithOriginResult,
     RecurrenceRulePatchArgs,
     RemoveTemplateAssigneeFromGoalArgs,
-    SetTemplateAssigneesArgs,
-    SetTemplateTagsArgs,
 } from './types';
+
+const PG_UNIQUE_VIOLATION = '23505';
 
 export class RecurrenceRepository {
     private readonly db: Database;
 
     constructor() {
         this.db = Database.getInstance();
-    }
-
-    async create(data: RecurrenceRulesSchemaTypeForInsert): Promise<RecurrenceRulesSchemaTypeForSelect | null> {
-        const result = await callWithCatch(() => this.db.dbDrizzle.insert(RecurrenceRulesSchema).values(data).returning());
-        return result?.[0] ?? null;
     }
 
     async getById(ruleId: number): Promise<RecurrenceRulesSchemaTypeForSelect | null> {
@@ -91,54 +86,6 @@ export class RecurrenceRepository {
         );
     }
 
-    async getTemplateAssignees(ruleId: number): Promise<number[]> {
-        const result = await callWithCatch(() =>
-            this.db.dbDrizzle
-                .select({ collabUserId: RecurrenceTemplateAssigneesSchema.collabUserId })
-                .from(RecurrenceTemplateAssigneesSchema)
-                .where(eq(RecurrenceTemplateAssigneesSchema.ruleId, ruleId))
-        );
-        return result?.map((r) => r.collabUserId) ?? [];
-    }
-
-    async getTemplateTags(ruleId: number): Promise<number[]> {
-        const result = await callWithCatch(() =>
-            this.db.dbDrizzle
-                .select({ tagId: RecurrenceTemplateTagsSchema.tagId })
-                .from(RecurrenceTemplateTagsSchema)
-                .where(eq(RecurrenceTemplateTagsSchema.ruleId, ruleId))
-        );
-        return result?.map((r) => r.tagId) ?? [];
-    }
-
-    async setTemplateAssignees(args: SetTemplateAssigneesArgs): Promise<void> {
-        await callWithCatch(() =>
-            this.db.dbDrizzle.transaction(async (tx) => {
-                await tx.delete(RecurrenceTemplateAssigneesSchema).where(eq(RecurrenceTemplateAssigneesSchema.ruleId, args.ruleId));
-                if (args.collabUserIds.length > 0) {
-                    await tx
-                        .insert(RecurrenceTemplateAssigneesSchema)
-                        .values(args.collabUserIds.map((collabUserId) => ({ ruleId: args.ruleId, collabUserId })))
-                        .onConflictDoNothing();
-                }
-            })
-        );
-    }
-
-    async setTemplateTags(args: SetTemplateTagsArgs): Promise<void> {
-        await callWithCatch(() =>
-            this.db.dbDrizzle.transaction(async (tx) => {
-                await tx.delete(RecurrenceTemplateTagsSchema).where(eq(RecurrenceTemplateTagsSchema.ruleId, args.ruleId));
-                if (args.tagIds.length > 0) {
-                    await tx
-                        .insert(RecurrenceTemplateTagsSchema)
-                        .values(args.tagIds.map((tagId) => ({ ruleId: args.ruleId, tagId })))
-                        .onConflictDoNothing();
-                }
-            })
-        );
-    }
-
     /** Drops an ex-collaborator from the assignee snapshot of every rule in the goal. */
     async removeTemplateAssigneeFromGoal(args: RemoveTemplateAssigneeFromGoalArgs): Promise<void> {
         const goalRules = this.db.dbDrizzle
@@ -157,26 +104,6 @@ export class RecurrenceRepository {
         );
     }
 
-    async getTaskAssignees(taskId: number): Promise<number[]> {
-        const result = await callWithCatch(() =>
-            this.db.dbDrizzle
-                .select({ collabUserId: TasksAssigneeSchema.collabUserId })
-                .from(TasksAssigneeSchema)
-                .where(eq(TasksAssigneeSchema.taskId, taskId))
-        );
-        return result?.map((r) => r.collabUserId) ?? [];
-    }
-
-    async getTaskTags(taskId: number): Promise<number[]> {
-        const result = await callWithCatch(() =>
-            this.db.dbDrizzle
-                .select({ tagId: TasksToTagsSchema.tagId })
-                .from(TasksToTagsSchema)
-                .where(eq(TasksToTagsSchema.taskId, taskId))
-        );
-        return result?.map((r) => r.tagId) ?? [];
-    }
-
     async getTaskById(taskId: number): Promise<TasksSchemaTypeForSelect | null> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.select().from(TasksSchema).where(eq(TasksSchema.id, taskId)).limit(1)
@@ -184,29 +111,75 @@ export class RecurrenceRepository {
         return result?.[0] ?? null;
     }
 
-    async attachTaskToRule(args: AttachTaskToRuleArgs): Promise<boolean> {
-        const result = await callWithCatch(() =>
-            this.db.dbDrizzle
-                .update(TasksSchema)
-                .set({ recurrenceRuleId: args.ruleId, recurrenceInstanceDate: args.instanceDate })
-                .where(eq(TasksSchema.id, args.taskId))
-        );
-        return !!result?.rowCount;
-    }
+    /**
+     * Atomic series creation. The origin task row is locked FOR UPDATE, so
+     * concurrent creates on the same task serialize: the loser waits on the
+     * lock, then sees recurrenceRuleId already set and reports a conflict.
+     * The partial unique index uniq_recurrence_rules_template_task backs this
+     * up on the DB level. Everything — rule insert, origin attachment (with
+     * the window normalized to the series frame) and the assignee/tag
+     * snapshot — commits or rolls back together.
+     */
+    async createWithOriginTask(args: CreateRuleWithOriginArgs): Promise<CreateRuleWithOriginResult> {
+        try {
+            return await this.db.dbDrizzle.transaction(async (tx) => {
+                const taskRows = await tx
+                    .select({ recurrenceRuleId: TasksSchema.recurrenceRuleId })
+                    .from(TasksSchema)
+                    .where(eq(TasksSchema.id, args.originTaskId))
+                    .for('update')
+                    .limit(1);
+                const task = taskRows[0];
+                if (!task) return { error: 'not_found' as const };
+                if (task.recurrenceRuleId) return { error: 'conflict' as const };
 
-    /** Aligns a task's start/end window with the series frame (used to normalize the origin instance). */
-    async applyInstanceWindow(args: ApplyInstanceWindowArgs): Promise<void> {
-        await callWithCatch(() =>
-            this.db.dbDrizzle
-                .update(TasksSchema)
-                .set({
-                    startDate: args.window.startDate,
-                    startTime: args.window.startTime,
-                    endDate: args.window.endDate,
-                    endTime: args.window.endTime,
-                })
-                .where(eq(TasksSchema.id, args.taskId))
-        );
+                const ruleRows = await tx.insert(RecurrenceRulesSchema).values(args.rule).returning();
+                const rule = ruleRows[0];
+
+                await tx
+                    .update(TasksSchema)
+                    .set({
+                        recurrenceRuleId: rule.id,
+                        recurrenceInstanceDate: args.originInstanceDate,
+                        startDate: args.window.startDate,
+                        startTime: args.window.startTime,
+                        endDate: args.window.endDate,
+                        endTime: args.window.endTime,
+                    })
+                    .where(eq(TasksSchema.id, args.originTaskId));
+
+                const [assignees, tags] = await Promise.all([
+                    tx
+                        .select({ collabUserId: TasksAssigneeSchema.collabUserId })
+                        .from(TasksAssigneeSchema)
+                        .where(eq(TasksAssigneeSchema.taskId, args.originTaskId)),
+                    tx
+                        .select({ tagId: TasksToTagsSchema.tagId })
+                        .from(TasksToTagsSchema)
+                        .where(eq(TasksToTagsSchema.taskId, args.originTaskId)),
+                ]);
+                if (assignees.length > 0) {
+                    await tx
+                        .insert(RecurrenceTemplateAssigneesSchema)
+                        .values(assignees.map((a) => ({ ruleId: rule.id, collabUserId: a.collabUserId })))
+                        .onConflictDoNothing();
+                }
+                if (tags.length > 0) {
+                    await tx
+                        .insert(RecurrenceTemplateTagsSchema)
+                        .values(tags.map((t) => ({ ruleId: rule.id, tagId: t.tagId })))
+                        .onConflictDoNothing();
+                }
+
+                return { rule };
+            });
+        } catch (error) {
+            if ((error as { code?: string } | null)?.code === PG_UNIQUE_VIOLATION) {
+                return { error: 'conflict' };
+            }
+            $logger.error(error, '[RecurrenceRepository] createWithOriginTask failed');
+            return { error: 'failed' };
+        }
     }
 
     /** The single not-completed instance of the rule (the lazy model keeps at most one). */

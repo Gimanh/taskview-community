@@ -35,7 +35,10 @@ export default class RecurrenceRoutes implements Routable {
         this.router.patch('/:ruleId', [IsLoggedIn, requireRecurrencePermission(GoalPermissions.TASKS_CAN_EDIT_DEADLINE, goalIdFromRuleParam)], this.controller.update);
         this.router.post('/:ruleId/pause', [IsLoggedIn, requireRecurrencePermission(GoalPermissions.TASKS_CAN_EDIT_DEADLINE, goalIdFromRuleParam)], this.controller.pause);
         this.router.post('/:ruleId/resume', [IsLoggedIn, requireRecurrencePermission(GoalPermissions.TASKS_CAN_EDIT_DEADLINE, goalIdFromRuleParam)], this.controller.resume);
-        this.router.post('/:ruleId/skip', [IsLoggedIn, requireRecurrencePermission(GoalPermissions.TASKS_CAN_EDIT_DEADLINE, goalIdFromRuleParam)], this.controller.skip);
+        // Skip is the one schedule operation that physically deletes the open
+        // instance (with its subtasks and tracked time) — so on top of the
+        // schedule permission it requires the same right as DELETE /tasks.
+        this.router.post('/:ruleId/skip', [IsLoggedIn, requireRecurrencePermission([GoalPermissions.TASKS_CAN_EDIT_DEADLINE, GoalPermissions.TASKS_CAN_DELETE], goalIdFromRuleParam)], this.controller.skip);
         this.router.delete('/:ruleId', [IsLoggedIn, requireRecurrencePermission(GoalPermissions.TASKS_CAN_EDIT_DEADLINE, goalIdFromRuleParam)], this.controller.remove);
     }
 }

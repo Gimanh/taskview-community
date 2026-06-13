@@ -71,6 +71,20 @@
       </UPopover>
     </div>
 
+    <div class="flex flex-col gap-2">
+      <UCheckbox
+        v-model="showTime"
+        :label="t('recurrence.selectTime')"
+        :ui="{ root: 'items-center' }"
+      />
+      <UInputTime
+        v-if="showTime"
+        v-model="timeModel"
+        :hour-cycle="24"
+        class="self-start"
+      />
+    </div>
+
     <UCheckbox
       v-model="form.notifyOnOccurrence"
       :label="t('recurrence.notifyOnOccurrence')"
@@ -94,10 +108,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, shallowRef, watch } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDateFormat } from '@vueuse/core'
-import { CalendarDate } from '@internationalized/date'
+import { CalendarDate, Time } from '@internationalized/date'
 import { buildRruleString, previewOccurrences } from '@/helpers/recurrence'
 import { useWeekStart } from '@/composables/useWeekStart'
 import type { RecurrenceFormValue } from '@/types/recurrence.types'
@@ -161,6 +175,41 @@ function parseCalendarDate(date: string): CalendarDate {
   const [year, month, day] = date.split('-').map(Number)
   return new CalendarDate(year, month, day)
 }
+
+const pad = (n: number) => String(n).padStart(2, '0')
+const timeToString = (time: Time | undefined): string | null => (time ? `${pad(time.hour)}:${pad(time.minute)}` : null)
+const timeFromString = (value: string | null): Time | undefined => {
+  if (!value) return undefined
+  const [hour, minute] = value.split(':').map(Number)
+  return new Time(hour, minute)
+}
+
+const showTime = ref(form.value.time !== null)
+const timeModel = shallowRef<Time | undefined>(timeFromString(form.value.time))
+
+// External resets (dialog re-inits the form on open) → local state.
+watch(() => form.value.time, (value) => {
+  if (timeToString(timeModel.value) === value && showTime.value === (value !== null)) return
+  showTime.value = value !== null
+  timeModel.value = timeFromString(value)
+})
+
+watch(showTime, (on) => {
+  if (!on) {
+    timeModel.value = undefined
+    if (form.value.time !== null) form.value.time = null
+    return
+  }
+  if (!timeModel.value) timeModel.value = new Time(9, 0)
+  const next = timeToString(timeModel.value)
+  if (form.value.time !== next) form.value.time = next
+})
+
+watch(timeModel, (time) => {
+  if (!showTime.value) return
+  const next = timeToString(time)
+  if (form.value.time !== next) form.value.time = next
+})
 
 const preview = computed(() => {
   const rrule = buildRruleString({ form: form.value, dtstart: props.dtstart })

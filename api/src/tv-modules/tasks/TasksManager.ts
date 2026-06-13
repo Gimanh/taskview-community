@@ -307,7 +307,8 @@ export class TasksManager {
         return extendedTask[0] ?? null;
     }
 
-    private async cleanTaskFieldsRegardPermissions(task: TasksSchemaTypeForSelect): Promise<TasksSchemaTypeForSelect> {
+    /** Public: other modules returning task rows (e.g. recurrence) gate fields through the same cleaner. */
+    async cleanTaskFieldsRegardPermissions(task: TasksSchemaTypeForSelect): Promise<TasksSchemaTypeForSelect> {
         const permissions = await this.user.permissionsFetcher.getCheckerForGoal(task.goalId);
         (Object.keys(TaskFieldPermissionsForWatching) as TaskFieldPermissionKey[]).forEach((key) => {
             if (!permissions.hasPermissions(TaskFieldPermissionsForWatching[key])) {

@@ -150,3 +150,9 @@ export type FetchGoalIdsWithAnyPermissionParams = {
     organizationId: number;
     permissionNames: string[];
 };
+
+export type FetchPermissionsForGoalByUserParams = {
+    goalId: number;
+    userId: number;
+    email: string;
+};

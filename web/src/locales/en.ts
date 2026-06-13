@@ -213,6 +213,7 @@ export default {
     pause: 'Pause',
     resume: 'Resume',
     deleteSeries: 'Delete series',
+    selectTime: 'Select time',
     notifyOnOccurrence: 'Remind about each occurrence',
     preview: 'Next occurrences',
     frequency: {

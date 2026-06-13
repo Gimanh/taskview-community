@@ -1,4 +1,4 @@
-import type { Notification, Task, TimeEntryItem } from 'taskview-api'
+import type { Notification, TimeEntryItem } from 'taskview-api'
 
 export type RealtimeEventMap = {
   'notification': {
@@ -34,11 +34,13 @@ export type RealtimeEventMap = {
     entryId: number
     taskId: number
   }
+  // Ids only: task fields are permission-gated per role, so the payload never
+  // carries content — the client fetches the task through REST.
   'recurrence.instanceCreated': {
     event: 'recurrence.instanceCreated'
     goalId: number
     ruleId: number
-    task: Task
+    taskId: number
   }
 }
 

@@ -20,7 +20,13 @@ export function jsDayToRruleWeekday(jsDay: number): number {
   return (jsDay + 6) % 7
 }
 
-export function defaultRecurrenceForm(dtstart: Date): RecurrenceFormValue {
+/** 'HH:mm' wall-clock time from a floating dtstart Date (UTC components = wall clock). */
+function timeFromDtstart(dtstart: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(dtstart.getUTCHours())}:${pad(dtstart.getUTCMinutes())}`
+}
+
+export function defaultRecurrenceForm(dtstart: Date, hasTime: boolean): RecurrenceFormValue {
   return {
     frequency: 'weekly',
     interval: 1,
@@ -29,6 +35,7 @@ export function defaultRecurrenceForm(dtstart: Date): RecurrenceFormValue {
     ends: 'never',
     count: 10,
     untilDate: null,
+    time: hasTime ? timeFromDtstart(dtstart) : null,
     notifyOnOccurrence: false,
   }
 }
@@ -54,8 +61,8 @@ export function buildRruleString(args: { form: RecurrenceFormValue; dtstart: Dat
   return RRule.optionsToString({ ...new RRule(options).origOptions }).replace(/^RRULE:/, '')
 }
 
-export function parseRruleToForm(args: { rrule: string; dtstart: Date; notifyOnOccurrence: boolean }): RecurrenceFormValue {
-  const form = defaultRecurrenceForm(args.dtstart)
+export function parseRruleToForm(args: { rrule: string; dtstart: Date; notifyOnOccurrence: boolean; hasTime: boolean }): RecurrenceFormValue {
+  const form = defaultRecurrenceForm(args.dtstart, args.hasTime)
   form.notifyOnOccurrence = args.notifyOnOccurrence
   const options = RRule.parseString(args.rrule)
   if (options.freq !== undefined && RRULE_TO_FREQ[options.freq]) {
@@ -99,18 +106,28 @@ export function previewOccurrences(args: { rrule: string; dtstart: Date; limit: 
  * Timed values are stored in UTC, while the series is anchored to the user's
  * wall clock (the browser timezone is what gets sent as the rule timezone) —
  * so the stored instant is converted to local components first.
+ *
+ * The series inherits "has time" from the task: a task with a start time
+ * (incl. midnight) yields a 'YYYY-MM-DDTHH:mm:ss' iso (timed series); a task
+ * without one yields a date-only 'YYYY-MM-DD' iso so the backend keeps it
+ * date-only instead of treating a midnight anchor as a real 00:00 deadline.
  */
 export function dtstartForTask(args: { startDate: string | null; startTime: string | null }): { date: Date; iso: string } {
-  let iso: string
   if (args.startDate && args.startTime?.match(/^\d{2}:\d{2}/)) {
     const instant = new Date(`${args.startDate}T${args.startTime.slice(0, 5)}:00Z`)
-    iso = `${formatLocalDate(instant)}T${formatLocalTime(instant)}`
-  } else if (args.startDate) {
-    iso = `${args.startDate}T00:00:00`
-  } else {
-    iso = `${formatLocalDate(new Date())}T00:00:00`
+    const iso = `${formatLocalDate(instant)}T${formatLocalTime(instant)}`
+    return { date: new Date(`${iso}Z`), iso }
   }
-  return { date: new Date(`${iso}Z`), iso }
+  const dateOnly = args.startDate ?? formatLocalDate(new Date())
+  return { date: new Date(`${dateOnly}T00:00:00Z`), iso: dateOnly }
+}
+
+/**
+ * dtstart string to send: 'YYYY-MM-DDTHH:mm:ss' when a wall-clock time is set
+ * (incl. 00:00), or date-only 'YYYY-MM-DD' otherwise. `time` is 'HH:mm'.
+ */
+export function buildDtstartIso(args: { dateStr: string; time: string | null }): string {
+  return args.time ? `${args.dateStr}T${args.time}:00` : args.dateStr
 }
 
 function formatLocalDate(date: Date): string {

@@ -12,5 +12,7 @@ export type RecurrenceFormValue = {
   count: number
   /** 'YYYY-MM-DD', used when ends is 'onDate'. */
   untilDate: string | null
+  /** 'HH:mm' wall-clock time of the series, or null for a date-only series. */
+  time: string | null
   notifyOnOccurrence: boolean
 }

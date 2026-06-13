@@ -9,6 +9,7 @@ import {
 import axios, { type AxiosInstance } from 'axios'
 import { initApi, API_URL, DEFAULT_USER, DEFAULT_USER_2, DEFAULT_PASSWORD } from './init-api'
 import { ymd } from './test-helpers'
+import { TvPermissions } from '@/api/permissions'
 import type { RecurrenceRuleDetails } from '@/api/recurrence.types'
 
 /**
@@ -23,15 +24,18 @@ import type { RecurrenceRuleDetails } from '@/api/recurrence.types'
  */
 describe('Recurrence', () => {
   let $api: TvApi
+  let $apiUser2: TvApi
   let raw: AxiosInstance
   let goalId: number
 
   const MSK_TIME = 'T10:45:00'
   const UTC_TIME = '07:45:00'
+  const USER2_EMAIL = 'user2@test.com'
 
   beforeAll(async () => {
-    const { $tvApi } = await initApi()
+    const { $tvApi, $tvApiForSecondUser } = await initApi()
     $api = $tvApi
+    $apiUser2 = $tvApiForSecondUser
 
     // Raw axios with validateStatus:true to assert error statuses directly.
     const auth = await axios.post(`${API_URL}/module/auth/login`, {
@@ -375,14 +379,15 @@ describe('Recurrence', () => {
       expect(next.openInstance?.recurrenceInstanceDate).toBe(secondEnd)
     })
 
-    it('a date-only series gets deadline = occurrence date (shows up in Today/Upcoming)', async () => {
+    it('a date-only series (date-only dtstart) gets deadline = occurrence date (shows up in Today/Upcoming)', async () => {
       const task = await $api.tasks.createTask({ goalId, description: 'No-end daily', startDate: ymd(3) })
       const rule = await $api.recurrence.create({
         taskId: task!.id,
         rrule: 'FREQ=DAILY',
-        dtstart: `${ymd(3)}T00:00:00`,
+        dtstart: ymd(3), // date-only: no wall-clock time
         timezone: 'Europe/Moscow',
       })
+      expect(rule!.hasTime).toBe(false)
 
       // the origin window is normalized the same way
       const origin = await $api.tasks.fetchTaskById(task!.id)
@@ -395,6 +400,23 @@ describe('Recurrence', () => {
       expect(details.openInstance?.endDate).toBe(ymd(4))
       expect(details.openInstance?.startTime).toBeNull()
       expect(details.openInstance?.endTime).toBeNull()
+    })
+
+    it('an explicit midnight series (T00:00:00 dtstart) is timed, not date-only', async () => {
+      const task = await $api.tasks.createTask({ goalId, description: 'Midnight daily', startDate: ymd(3) })
+      const rule = await $api.recurrence.create({
+        taskId: task!.id,
+        rrule: 'FREQ=DAILY',
+        dtstart: `${ymd(3)}T00:00:00`, // explicit midnight wall-clock in MSK
+        timezone: 'Europe/Moscow',
+      })
+      expect(rule!.hasTime).toBe(true)
+
+      await $api.tasks.updateTask({ id: task!.id, complete: true })
+      const details = await waitFor(rule.id, (d) => !!d.openInstance && d.openInstance.id !== task!.id)
+      // 00:00 MSK = 21:00 UTC the previous calendar day — a real time, not null.
+      expect(details.openInstance?.startTime).toBe('21:00:00')
+      expect(details.openInstance?.startDate).toBe(ymd(3))
     })
 
     it('a timed series without duration is due at the occurrence moment', async () => {
@@ -522,6 +544,150 @@ describe('Recurrence', () => {
 
       const intact = await $api.recurrence.getById(victimRuleId)
       expect(intact?.rule.state).toBe('active')
+    })
+  })
+
+  describe('has_time flag', () => {
+    it('a rule created from a timed dtstart carries has_time=true', async () => {
+      const task = await createTask('Timed origin')
+      const rule = await createRule(task.id, 'FREQ=DAILY') // dtstart includes MSK_TIME
+      expect(rule.hasTime).toBe(true)
+    })
+
+    it('updating dtstart toggles has_time both ways', async () => {
+      const task = await $api.tasks.createTask({ goalId, description: 'Toggle time', startDate: ymd(3) })
+      const rule = await $api.recurrence.create({
+        taskId: task!.id, rrule: 'FREQ=DAILY', dtstart: ymd(3), timezone: 'Europe/Moscow',
+      })
+      expect(rule.hasTime).toBe(false)
+
+      const timed = await $api.recurrence.update({ ruleId: rule.id, dtstart: `${ymd(3)}T09:00:00` })
+      expect(timed.hasTime).toBe(true)
+
+      const back = await $api.recurrence.update({ ruleId: rule.id, dtstart: ymd(3) })
+      expect(back.hasTime).toBe(false)
+    })
+  })
+
+  describe('rule edit validation', () => {
+    let ruleId: number
+    beforeAll(async () => {
+      const task = await createTask('Edit validation target')
+      ruleId = (await createRule(task.id, 'FREQ=DAILY')).id
+    })
+
+    it('rejects a templateOverrides.statusId not belonging to the goal', async () => {
+      const res = await raw.patch(`/module/recurrence/${ruleId}`, { templateOverrides: { statusId: 99999999 } })
+      expect(res.status).toBe(422)
+    })
+
+    it('rejects a templateOverrides.goalListId not belonging to the goal', async () => {
+      const res = await raw.patch(`/module/recurrence/${ruleId}`, { templateOverrides: { goalListId: 99999999 } })
+      expect(res.status).toBe(422)
+    })
+
+    it('allows clearing overrides with null', async () => {
+      const res = await raw.patch(`/module/recurrence/${ruleId}`, { templateOverrides: { statusId: null, goalListId: null } })
+      expect(res.status).toBe(200)
+    })
+
+    it('rejects an impossible rule on update (no occurrences — UNTIL in the past)', async () => {
+      const res = await raw.patch(`/module/recurrence/${ruleId}`, { rrule: 'FREQ=DAILY;UNTIL=20000101T000000Z' })
+      expect(res.status).toBe(422)
+    })
+  })
+
+  describe('concurrent creation (race)', () => {
+    it('two parallel creates on the same task yield exactly one rule', async () => {
+      const task = await createTask('Race target')
+      const body = { taskId: task.id, rrule: 'FREQ=DAILY', dtstart: `${ymd(3)}${MSK_TIME}`, timezone: 'Europe/Moscow' }
+      const [a, b] = await Promise.all([
+        raw.post('/module/recurrence', body),
+        raw.post('/module/recurrence', body),
+      ])
+      // exactly one wins (200), the other is rejected as a conflict (409) —
+      // guaranteed by the FOR UPDATE transaction + partial unique index.
+      expect([a.status, b.status].sort()).toEqual([200, 409])
+    })
+  })
+
+  describe('permission gating', () => {
+    let gateGoalId: number
+    let user2Raw: AxiosInstance
+    let collabId: number
+    let roleSeq = 0
+
+    beforeAll(async () => {
+      const goal = await $api.goals.createGoal({ name: `Gating project-${Date.now()}` })
+      gateGoalId = goal!.id!
+      await $api.collaboration.inviteUserToGoal({ goalId: gateGoalId, email: USER2_EMAIL })
+      const users = await $api.collaboration.fetchUsersForGoal(gateGoalId)
+      collabId = users!.find((u) => u.email === USER2_EMAIL)!.id
+
+      const auth = await axios.post(`${API_URL}/module/auth/login`, { login: DEFAULT_USER_2, password: DEFAULT_PASSWORD })
+      user2Raw = axios.create({
+        baseURL: API_URL,
+        headers: { Authorization: `Bearer ${auth.data.access}` },
+        validateStatus: () => true,
+      })
+    })
+
+    afterAll(async () => {
+      await $api.goals.deleteGoal(gateGoalId).catch(() => {})
+    })
+
+    /** Replace user2's role set with a single fresh role holding exactly `permissionNames`. */
+    async function grantUser2(permissionNames: string[]) {
+      const role = await $api.collaboration.createRoleForGoal({ goalId: gateGoalId, roleName: `r-${Date.now()}-${roleSeq++}` })
+      const allPerms = await $api.collaboration.fetchAllPermissions()
+      for (const name of permissionNames) {
+        const perm = allPerms!.find((p) => p.name === name)!
+        await $api.collaboration.toggleRolePermission({ roleId: role!.id, permissionId: perm.id })
+      }
+      await $api.collaboration.toggleUserRoles({ userId: collabId, goalId: gateGoalId, roles: [role!.id] })
+    }
+
+    async function createGateRule(description: string, note: string) {
+      const task = await $api.tasks.createTask({ goalId: gateGoalId, description, note, startDate: ymd(3), startTime: UTC_TIME })
+      const rule = await $api.recurrence.create({ taskId: task!.id, rrule: 'FREQ=DAILY', dtstart: `${ymd(3)}${MSK_TIME}`, timezone: 'Europe/Moscow' })
+      return { taskId: task!.id, rule }
+    }
+
+    it('owner sees templateNote; a member without note permission gets it stripped', async () => {
+      const { rule } = await createGateRule('Secret standup', 'confidential note')
+
+      const ownerView = await $api.recurrence.getById(rule.id)
+      expect(ownerView?.rule.templateNote).toBe('confidential note')
+
+      // content-watch + deadline-edit, but NOT note-watch
+      await grantUser2([TvPermissions.COMPONENT_CAN_WATCH_CONTENT, TvPermissions.TASK_CAN_EDIT_DEADLINE])
+      const memberView = await $apiUser2.recurrence.getById(rule.id)
+      expect(memberView?.rule.templateNote).toBeNull()
+      if (memberView?.openInstance) expect(memberView.openInstance.note).toBeNull()
+    })
+
+    it('the note is stripped from mutation responses too (pause)', async () => {
+      const { rule } = await createGateRule('Secret pausable', 'hidden note')
+      await grantUser2([TvPermissions.COMPONENT_CAN_WATCH_CONTENT, TvPermissions.TASK_CAN_EDIT_DEADLINE])
+      const paused = await $apiUser2.recurrence.pause(rule.id)
+      expect(paused.templateNote).toBeNull()
+    })
+
+    it('skip requires task-delete permission on top of deadline-edit', async () => {
+      const { rule } = await createGateRule('Skippable gated', 'note')
+
+      // deadline-edit only: pause is allowed, but skip (which deletes the instance) is forbidden
+      await grantUser2([TvPermissions.COMPONENT_CAN_WATCH_CONTENT, TvPermissions.TASK_CAN_EDIT_DEADLINE])
+      const skipForbidden = await user2Raw.post(`/module/recurrence/${rule.id}/skip`, {})
+      expect(skipForbidden.status).toBe(403)
+      const pauseOk = await user2Raw.post(`/module/recurrence/${rule.id}/pause`, {})
+      expect(pauseOk.status).toBe(200)
+      await user2Raw.post(`/module/recurrence/${rule.id}/resume`, {}) // restore active state
+
+      // grant delete: skip now allowed
+      await grantUser2([TvPermissions.COMPONENT_CAN_WATCH_CONTENT, TvPermissions.TASK_CAN_EDIT_DEADLINE, TvPermissions.TASK_CAN_DELETE])
+      const skipOk = await user2Raw.post(`/module/recurrence/${rule.id}/skip`, {})
+      expect(skipOk.status).toBe(200)
     })
   })
 })

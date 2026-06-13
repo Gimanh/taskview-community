@@ -1,5 +1,9 @@
 import { type } from 'arktype';
-import type { RecurrenceRulesSchemaTypeForSelect, TasksSchemaTypeForSelect } from 'taskview-db-schemas';
+import type {
+    RecurrenceRulesSchemaTypeForInsert,
+    RecurrenceRulesSchemaTypeForSelect,
+    TasksSchemaTypeForSelect,
+} from 'taskview-db-schemas';
 
 /** Request validators (ArkType) */
 
@@ -63,6 +67,8 @@ export type InstanceWindowArgs = {
     /** 'YYYY-MM-DD' wall-clock occurrence date in the rule's timezone. */
     occurrenceDate: string;
     dtstart: Date;
+    /** False → date-only occurrence (no start/end time). */
+    hasTime: boolean;
     timezone: string;
     durationMinutes: number | null;
 };
@@ -80,6 +86,7 @@ export type RecurrenceRulePatchArgs = {
     patch: Partial<{
         rrule: string;
         dtstart: Date;
+        hasTime: boolean;
         timezone: string;
         state: 'active' | 'paused' | 'ended';
         lastInstanceDate: string;
@@ -95,12 +102,24 @@ export type RecurrenceRulePatchArgs = {
     }>;
 };
 
-export type AttachTaskToRuleArgs = { taskId: number; ruleId: number; instanceDate: string };
 export type AddSkipDateArgs = { ruleId: number; skipDate: string };
-export type SetTemplateAssigneesArgs = { ruleId: number; collabUserIds: number[] };
-export type SetTemplateTagsArgs = { ruleId: number; tagIds: number[] };
 export type RemoveTemplateAssigneeFromGoalArgs = { goalId: number; collabUserId: number };
-export type ApplyInstanceWindowArgs = { taskId: number; window: InstanceWindow };
+
+/**
+ * Atomic series creation: rule insert + origin task attachment (with its
+ * window normalized to the series frame) + assignee/tag snapshot — one
+ * transaction with the origin task row locked FOR UPDATE, so concurrent
+ * creates on the same task serialize instead of producing two rules.
+ */
+export type CreateRuleWithOriginArgs = {
+    rule: RecurrenceRulesSchemaTypeForInsert;
+    originTaskId: number;
+    originInstanceDate: string;
+    window: InstanceWindow;
+};
+export type CreateRuleWithOriginResult =
+    | { rule: RecurrenceRulesSchemaTypeForSelect }
+    | { error: 'not_found' | 'conflict' | 'failed' };
 
 /** Detail shape returned by GET endpoints */
 

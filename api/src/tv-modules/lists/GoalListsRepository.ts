@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import type { GoalsListSchemaTypeForSelect } from 'taskview-db-schemas';
 import { GoalsListSchema } from 'taskview-db-schemas';
 import type { AppUser } from '../../core/AppUser';
@@ -7,7 +7,7 @@ import type { GoalListInDb } from '../../types/goal-list.types';
 import { logError } from '../../utils/api';
 import { updateQuery } from '../../utils/db-helper';
 import { callWithCatch } from '../../utils/helpers';
-import type { GoalListArgAdd, GoalListArgDelete, GoalListArgFetch, GoalListArgUpdate } from './list.types';
+import type { GoalListArgAdd, GoalListArgDelete, GoalListArgFetch, GoalListArgUpdate, ListBelongsToGoalArgs } from './list.types';
 
 export class GoalListsRepository {
     private readonly db: Database;
@@ -144,5 +144,17 @@ export class GoalListsRepository {
         }
 
         return !!(result.rowCount && result.rowCount > 0);
+    }
+
+    /** Validates payload references to a list from other modules (recurrence templates, etc.). */
+    async listBelongsToGoal(args: ListBelongsToGoalArgs): Promise<boolean> {
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({ id: GoalsListSchema.id })
+                .from(GoalsListSchema)
+                .where(and(eq(GoalsListSchema.id, args.listId), eq(GoalsListSchema.goalId, args.goalId)))
+                .limit(1)
+        );
+        return !!result?.[0];
     }
 }

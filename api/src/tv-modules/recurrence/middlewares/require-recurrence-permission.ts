@@ -31,7 +31,9 @@ export const goalIdFromTaskParam: GoalIdResolver = async (req) => {
     return task?.goalId ?? null;
 };
 
-export function requireRecurrencePermission(permission: GoalPermissionType, resolveGoalId: GoalIdResolver) {
+/** A single permission or a list — the caller must hold ALL of them. */
+export function requireRecurrencePermission(permission: GoalPermissionType | GoalPermissionType[], resolveGoalId: GoalIdResolver) {
+    const required = Array.isArray(permission) ? permission : [permission];
     return async (req: Request, res: Response, next: NextFunction) => {
         const goalId = await resolveGoalId(req);
         if (!goalId) return res.status(404).end();
@@ -45,7 +47,7 @@ export function requireRecurrencePermission(permission: GoalPermissionType, reso
             return res.status(500).end();
         }
 
-        if (permissions.hasPermissions(permission)) return next();
+        if (required.every((p) => permissions.hasPermissions(p))) return next();
         return res.status(403).end();
     };
 }
