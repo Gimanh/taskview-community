@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import type { SprintsSchemaTypeForSelect, TasksSchemaTypeForSelect } from 'taskview-db-schemas';
+import type { RecurrenceRulesSchemaTypeForSelect, SprintsSchemaTypeForSelect, TasksSchemaTypeForSelect } from 'taskview-db-schemas';
 import type { TimeEntryWithUser } from '../tv-modules/time-tracking/types';
 import { $logger } from '../modules/logget';
 
@@ -31,6 +31,13 @@ export interface AppEvents {
         goalId: number;
         initiatorId: number;
     };
+    'recurrence.created': { rule: RecurrenceRulesSchemaTypeForSelect; initiatorId: number };
+    'recurrence.updated': { rule: RecurrenceRulesSchemaTypeForSelect; changes: Record<string, unknown>; initiatorId: number };
+    'recurrence.paused': { ruleId: number; goalId: number; initiatorId: number };
+    'recurrence.resumed': { ruleId: number; goalId: number; initiatorId: number };
+    'recurrence.ended': { ruleId: number; goalId: number; initiatorId: number };
+    'recurrence.deleted': { ruleId: number; goalId: number; initiatorId: number };
+    'recurrence.instanceSkipped': { ruleId: number; goalId: number; date: string; initiatorId: number };
 }
 
 type EventName = keyof AppEvents;

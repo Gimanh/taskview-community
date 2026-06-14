@@ -3,7 +3,7 @@ import { Database } from '../../modules/db';
 import type { GoalItemInDb } from '../../types/goal.type';
 import { logError } from '../../utils/api';
 import { updateQuery } from '../../utils/db-helper';
-import type { KanbanStatusItemInDb } from './types';
+import type { KanbanStatusItemInDb, StatusBelongsToGoalArgs } from './types';
 import { callWithCatch } from '../../utils/helpers';
 import { and, asc, eq, gt, gte, isNull, lt, lte, sql } from 'drizzle-orm';
 import type { TaskItemInDb } from '../../types/tasks.types';
@@ -217,5 +217,15 @@ export class KanbanRepository {
             .where(eq(TasksStatusesSchema.id, columnId)));
 
         return result?.[0]?.columnVersion ?? null;
+    }
+
+    /** Validates payload references to a kanban column from other modules (recurrence templates, etc.). */
+    async statusBelongsToGoal(args: StatusBelongsToGoalArgs): Promise<boolean> {
+        const result = await callWithCatch(() => this.db.dbDrizzle
+            .select({ id: TasksStatusesSchema.id })
+            .from(TasksStatusesSchema)
+            .where(and(eq(TasksStatusesSchema.id, args.statusId), eq(TasksStatusesSchema.goalId, args.goalId)))
+            .limit(1));
+        return !!result?.[0];
     }
 }

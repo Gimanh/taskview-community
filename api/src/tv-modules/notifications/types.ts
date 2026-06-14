@@ -122,3 +122,8 @@ export interface TaskWithDeadline {
     endDate: string | null;
     endTime: string | null;
 }
+
+export interface DeadlineRecipient {
+    userId: number;
+    email: string;
+}

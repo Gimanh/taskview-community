@@ -1,4 +1,4 @@
-export const API_URL = 'http://localhost:11401';
+export const API_URL = process.env.TASKVIEW_TEST_URL || 'http://localhost:11401';
 export const DEFAULT_USER = 'user';
 export const DEFAULT_USER_2 = 'user2';
 export const DEFAULT_PASSWORD = 'user1!#Q';

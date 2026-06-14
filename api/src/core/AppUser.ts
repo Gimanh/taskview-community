@@ -16,6 +16,7 @@ import { TasksManager } from '../tv-modules/tasks/TasksManager';
 import { TimeTrackingManager } from '../tv-modules/time-tracking/TimeTrackingManager';
 import { UiPreferencesManager } from '../tv-modules/ui-preferences/UiPreferencesManager';
 import { SprintsManager } from '../tv-modules/sprints/SprintsManager';
+import { RecurrenceManager } from '../tv-modules/recurrence/RecurrenceManager';
 import type { UserDbRecord, UserJwtPayload } from '../types/auth.types';
 import { GoalPermissionsFetcher } from './GoalPermissionsFetcher';
 
@@ -45,6 +46,7 @@ export class AppUser {
     public readonly timeTrackingManager: TimeTrackingManager;
     public readonly uiPreferencesManager: UiPreferencesManager;
     public readonly sprintsManager: SprintsManager;
+    public readonly recurrenceManager: RecurrenceManager;
 
     constructor(userData?: UserJwtPayload) {
         this.userData = userData;
@@ -67,6 +69,7 @@ export class AppUser {
         this.timeTrackingManager = new TimeTrackingManager(this);
         this.uiPreferencesManager = new UiPreferencesManager(this);
         this.sprintsManager = new SprintsManager(this);
+        this.recurrenceManager = new RecurrenceManager(this);
     }
 
     getTokenId(): number | undefined {

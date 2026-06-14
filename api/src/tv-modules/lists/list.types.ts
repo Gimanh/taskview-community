@@ -27,3 +27,5 @@ export const GoalListArkTypeFetch = type({
 });
 
 export type GoalListArgFetch = typeof GoalListArkTypeFetch.infer;
+
+export type ListBelongsToGoalArgs = { listId: number; goalId: number };

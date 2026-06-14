@@ -27,6 +27,8 @@ export const TasksSchema = pgSchema('tasks').table('tasks', {
     sprintId: integer('sprint_id'),
     estimateValue: numeric('estimate_value', { precision: 10, scale: 2 }),
     dateComplete: timestamp('date_complete'),
+    recurrenceRuleId: integer('recurrence_rule_id'),
+    recurrenceInstanceDate: date('recurrence_instance_date'),
 });
 
 export type TasksSchemaTypeForSelect = typeof TasksSchema.$inferSelect;

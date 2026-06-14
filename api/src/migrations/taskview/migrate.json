@@ -600,5 +600,45 @@
             "Added tasks.sprint_task_outcomes.estimate_value — story-points snapshot captured at sprint close so a closed sprint's velocity is frozen (unaffected by later estimate edits or moving the task to another sprint).",
             "Added tasks.sprint_cadence — per-project sprint auto-generation config (Linear-style): enabled, length_days, start_date anchor, lookahead, name_template, last_generated_date. A background job keeps current + lookahead future sprints created."
         ]
+    },
+    "47": {
+        "version": "1.54.0",
+        "name": "Release 1.54.0",
+        "releaseDate": "20260605",
+        "scripts": [
+            "/1.54.0/0.create-recurrence-rules.sql",
+            "/1.54.0/1.create-recurrence-skip-dates.sql",
+            "/1.54.0/2.create-recurrence-template-assignees.sql",
+            "/1.54.0/3.create-recurrence-template-tags.sql",
+            "/1.54.0/4.alter-tasks-add-recurrence.sql"
+        ],
+        "description": [
+            "Recurring tasks (lazy materialization, Todoist-like UX). tasks.recurrence_rules: one row per series — RFC 5545 RRULE string, floating wall-clock dtstart, IANA timezone, state active/paused/ended, last_instance_date + instances_created drive next-occurrence computation. Template snapshot columns (description/note/priority/status/list/duration) let the series outlive its origin task.",
+            "tasks.recurrence_skip_dates: per-rule skipped occurrence dates. tasks.recurrence_template_assignees / recurrence_template_tags: snapshot of assignees (collaboration.users) and tags copied onto each materialized instance.",
+            "Extended tasks.tasks with recurrence_rule_id (FK SET NULL — instances survive rule deletion) and recurrence_instance_date. Partial unique index on (recurrence_rule_id, recurrence_instance_date) makes instance materialization idempotent under concurrent triggers/reconciliation.",
+            "Exactly one open instance per series exists at any time: completing it materializes the next occurrence (event-driven, O(1)); a nightly pg-boss reconcile job re-creates the open instance only for series stalled by a crash. No new permissions — recurrence editing is gated by existing task_can_edit_deadline."
+        ]
+    },
+    "48": {
+        "version": "1.54.1",
+        "name": "Release 1.54.1",
+        "releaseDate": "20260613",
+        "scripts": [
+            "/1.54.1/0.add-recurrence-template-task-unique.sql"
+        ],
+        "description": [
+            "Partial unique index on tasks.recurrence_rules(template_task_id) WHERE state != 'ended' — one live series per origin task. DB-level backstop for the createRule race where two concurrent POSTs both pass the recurrenceRuleId == null check and create two rules for the same task (the orphaned rule would materialize a duplicate card via the nightly reconcile job)."
+        ]
+    },
+    "49": {
+        "version": "1.54.2",
+        "name": "Release 1.54.2",
+        "releaseDate": "20260613",
+        "scripts": [
+            "/1.54.2/0.add-recurrence-has-time.sql"
+        ],
+        "description": [
+            "Added tasks.recurrence_rules.has_time — explicit flag for whether a series is anchored to a wall-clock time or is date-only. Previously the code inferred 'no time' from a midnight dtstart, which silently collapsed an explicit 00:00 series into date-only. Backfill (has_time = dtstart::time <> '00:00:00') reproduces the old inference so existing series keep their behavior; new series carry the flag through from the origin task's start_time (null = date-only, set = timed, including midnight)."
+        ]
     }
 }

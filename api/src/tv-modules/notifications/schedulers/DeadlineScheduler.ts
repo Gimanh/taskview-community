@@ -1,13 +1,16 @@
-import { eq, and, or, isNull } from 'drizzle-orm';
+import { eq, and, or, isNull, inArray } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { TasksSchema, TasksAssigneeSchema, GoalsSchema, CollaborationUsersSchema, UsersSchema } from 'taskview-db-schemas';
 import { getJobQueue, cancelJobBySingletonKey } from '../../../core/JobQueue';
+import { GoalPermissionsChecker } from '../../../core/GoalPermissionsChecker';
+import { GoalPermissionsRepository } from '../../../core/GoalPermissionsRepository';
 import { Database } from '../../../modules/db';
 import { $logger } from '../../../modules/logget';
+import { GoalPermissions } from '../../../types/auth.types';
 import { getNotificationService } from '../NotificationService';
 import { NotificationMessages } from '../NotificationMessages';
 import { DeviceTokensRepository } from '../repositories/DeviceTokensRepository';
-import { NotificationType, type DeadlineJobData, type TaskWithDeadline } from '../types';
+import { NotificationType, type DeadlineJobData, type DeadlineRecipient, type TaskWithDeadline } from '../types';
 import { parseUtcTime, localHourToUtc } from '../utils';
 
 const DEADLINE_JOB = 'deadline-notification';
@@ -86,31 +89,36 @@ export class DeadlineScheduler {
                 return;
             }
 
-            const recipientIds = await this.resolveRecipients(db, taskId, goalId, task[0].owner);
-            if (!recipientIds || recipientIds.length === 0) {
+            let recipients = await this.resolveRecipients(db, taskId, goalId, task[0].owner);
+            if (!recipients || recipients.length === 0) {
                 $logger.info(`[DeadlineScheduler] Task ${taskId}: no recipients`);
                 return;
             }
 
             if (immediate && initiatorId) {
-                const idx = recipientIds.indexOf(initiatorId);
-                if (idx !== -1) recipientIds.splice(idx, 1);
+                recipients = recipients.filter((r) => r.userId !== initiatorId);
             }
 
-            if (recipientIds.length === 0) return;
+            if (recipients.length === 0) return;
 
-            $logger.info(`[DeadlineScheduler] Task ${taskId}: sending to [${recipientIds.join(',')}]`);
+            // Description rides in the notification title, but it is gated by
+            // COMPONENT_CAN_WATCH_CONTENT — split recipients so those without
+            // the permission get a generic title (no leak over push).
+            const { canWatch, cannotWatch } = await this.splitByContentPermission(goalId, recipients);
+
+            $logger.info(`[DeadlineScheduler] Task ${taskId}: sending to content=[${canWatch.join(',')}] generic=[${cannotWatch.join(',')}]`);
 
             const tz = task[0].owner ? await this.deviceTokensRepo.getTimezoneByUserId(task[0].owner) : 'UTC';
-            const message = NotificationMessages.deadline(description, endDate, endTime, tz);
+            const meta = { goalId, goalListId, organizationId: organizationId ?? null };
 
-            await getNotificationService().notifyMany(
-                recipientIds,
-                NotificationType.DEADLINE,
-                message,
-                { goalId, goalListId, organizationId: organizationId ?? null },
-                taskId,
-            );
+            if (canWatch.length > 0) {
+                const message = NotificationMessages.deadline(description, endDate, endTime, tz);
+                await getNotificationService().notifyMany(canWatch, NotificationType.DEADLINE, message, meta, taskId);
+            }
+            if (cannotWatch.length > 0) {
+                const message = NotificationMessages.deadline(null, endDate, endTime, tz);
+                await getNotificationService().notifyMany(cannotWatch, NotificationType.DEADLINE, message, meta, taskId);
+            }
         });
     }
 
@@ -127,7 +135,7 @@ export class DeadlineScheduler {
         return result[0]?.organizationId ?? null;
     }
 
-    private async resolveRecipients(db: Database, taskId: number, goalId: number, taskOwner: number | null): Promise<number[] | null> {
+    private async resolveRecipients(db: Database, taskId: number, goalId: number, taskOwner: number | null): Promise<DeadlineRecipient[] | null> {
         const authUsers = alias(UsersSchema, 'auth_users');
 
         try {
@@ -146,13 +154,46 @@ export class DeadlineScheduler {
 
             const ids = new Set<number>();
             if (taskOwner) ids.add(taskOwner);
-            assignees.forEach((r) => ids.add(r.userId));
+            for (const r of assignees) ids.add(r.userId);
             if (goal[0]) ids.add(goal[0].owner);
+            if (ids.size === 0) return [];
 
-            return [...ids];
+            // Emails are needed to resolve per-recipient goal permissions (role join keys on email).
+            return await db.dbDrizzle
+                .select({ userId: UsersSchema.id, email: UsersSchema.email })
+                .from(UsersSchema)
+                .where(inArray(UsersSchema.id, [...ids]));
         } catch (err) {
             $logger.error(err, '[DeadlineScheduler] Failed to resolve recipients');
             return null;
         }
+    }
+
+    /** Partition recipients into those allowed to see task content and those who are not. */
+    private async splitByContentPermission(goalId: number,recipients: DeadlineRecipient[]): Promise<{ canWatch: number[]; cannotWatch: number[] }> {
+        const permissionsRepo = new GoalPermissionsRepository();
+        const canWatch: number[] = [];
+        const cannotWatch: number[] = [];
+
+        await Promise.all(
+            recipients.map(async (recipient) => {
+                // Fail closed per-recipient: a permission-fetch error drops this
+                // recipient to the generic message, never aborts the whole job.
+                const permissions = await permissionsRepo
+                    .fetchPermissionsForGoalByUser({ goalId, userId: recipient.userId, email: recipient.email })
+                    .catch((err) => {
+                        $logger.error(err, `[DeadlineScheduler] permission check failed for user=${recipient.userId}`);
+                        return [];
+                    });
+                const checker = new GoalPermissionsChecker(permissions);
+                if (checker.hasPermissions(GoalPermissions.COMPONENT_CAN_WATCH_CONTENT)) {
+                    canWatch.push(recipient.userId);
+                } else {
+                    cannotWatch.push(recipient.userId);
+                }
+            }),
+        );
+
+        return { canWatch, cannotWatch };
     }
 }

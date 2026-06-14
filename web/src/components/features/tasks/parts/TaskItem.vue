@@ -44,6 +44,17 @@
             variant="subtle"
             size="md"
           />
+
+          <!-- Recurring series -->
+          <UBadge
+            v-if="task.recurrenceRuleId"
+            icon="i-lucide-repeat"
+            color="neutral"
+            class="bg-elevated text-muted"
+            :ui="{ leadingIcon: 'size-3' }"
+            variant="subtle"
+            size="md"
+          />
           
           <!-- Project -->
           <UBadge
@@ -252,6 +263,7 @@ const hasAdditionalInfo = computed(() => {
     listName.value ||
     props.task.endDate ||
     props.task.amount ||
+    props.task.recurrenceRuleId ||
     assigneeEmails.value.length > 0 ||
     taskTags.value.length > 0
 })
