@@ -65,6 +65,7 @@ import { saveLocale } from '@/plugins/i18n'
 import { useUpdater } from '@/composables/useUpdater'
 import { useUserStore } from '@/stores/user.store'
 import { useOrganizationStore } from '@/stores/organization.store'
+import { useOrgSwitcher } from '@/composables/useOrgSwitcher'
 import { $ls } from '@/plugins/axios'
 import avatarImg from '@/assets/images/avatar-1.jpeg'
 
@@ -79,6 +80,7 @@ const router = useRouter()
 const toast = useToast()
 const userStore = useUserStore()
 const orgStore = useOrganizationStore()
+const { switchOrg } = useOrgSwitcher()
 
 const prodOrDev = ref<'prod' | 'dev'>('prod')
 let counter = 0
@@ -155,8 +157,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
         icon: org.id === orgStore.currentOrg?.id ? 'i-lucide-check' : undefined,
         onSelect(e: Event) {
           e.preventDefault()
-          orgStore.setCurrentOrg(org)
-          router.push({ name: 'user', params: { orgSlug: org.slug } })
+          switchOrg(org)
         },
       })),
     },
@@ -284,6 +285,32 @@ const items = computed<DropdownMenuItem[][]>(() => [
           onSelect(e: Event) {
             e.preventDefault()
             appStore.setTaskDetailDisplayMode('modal')
+          },
+        },
+      ],
+    },
+    {
+      label: t('userMenu.sidebarView'),
+      icon: 'i-lucide-panel-left',
+      children: [
+        {
+          label: t('userMenu.sidebarViewSecond'),
+          icon: 'i-lucide-layout-list',
+          type: 'checkbox',
+          checked: appStore.sidebarView === 'second',
+          onSelect(e: Event) {
+            e.preventDefault()
+            appStore.setSidebarView('second')
+          },
+        },
+        {
+          label: t('userMenu.sidebarViewFirst'),
+          icon: 'i-lucide-panel-left',
+          type: 'checkbox',
+          checked: appStore.sidebarView === 'first',
+          onSelect(e: Event) {
+            e.preventDefault()
+            appStore.setSidebarView('first')
           },
         },
       ],

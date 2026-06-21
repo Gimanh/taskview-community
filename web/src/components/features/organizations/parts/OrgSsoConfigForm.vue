@@ -5,6 +5,7 @@
         v-model="form.protocol"
         :items="protocolOptions"
         class="w-full"
+        variant="soft"
         size="xl"
       />
     </UFormField>
@@ -39,15 +40,16 @@
       :has-secrets="hasSecrets"
     />
 
-    <div class="flex gap-2">
+    <div class="flex justify-end gap-2">
       <UButton
         :label="isEditing ? t('sso.save') : t('sso.create')"
         :loading="saving"
+        variant="soft"
         @click="$emit('save')"
       />
       <UButton
         :label="t('sso.cancel')"
-        variant="ghost"
+        variant="soft"
         color="neutral"
         @click="$emit('cancel')"
       />

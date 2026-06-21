@@ -24,13 +24,14 @@
           <div class="flex justify-end gap-2">
             <UButton
               color="neutral"
-              variant="outline"
+              variant="soft"
               @click="model = false"
             >
               {{ t('common.cancel') }}
             </UButton>
             <UButton
               color="error"
+              variant="soft"
               @click="confirmDelete"
             >
               {{ t('common.delete') }}

@@ -30,8 +30,18 @@ export default defineConfig({
     vue(),
     ui({
       ui: {
+        // Nuxt UI reads `ui.tv` at runtime (createTV) but omits it from the AppConfigUI type.
+        // Teach tailwind-merge our custom radius scale so `rounded-10`/`rounded-14` are
+        // recognized and properly dedupe the component default radius inside `:ui` overrides
+        // (no `!` needed). See main.css @theme --radius-10 / --radius-14.
+        ...({
+          tv: { twMergeConfig: { extend: { theme: { radius: ['10', '14'] } } } },
+        } as object),
         inputTime: {
-          slots: { base: 'text-base!' }
+          slots: { base: 'text-base! rounded-10' },
+          defaultVariants: {
+            variant: 'soft'
+          }
         },
         drawer: {
           slots: {
@@ -56,13 +66,21 @@ export default defineConfig({
             fullscreen: {
               true: {
                 content: 'py-safe',
+              },
+              false: {
+                content: 'rounded-3xl ring-0',
               }
             }
+          },
+        },
+        popover: {
+          slots: {
+            content: 'rounded-2xl'
           }
         },
         dashboardSearchButton: {
           slots: {
-            base: 'rounded-lg',
+            base: 'rounded-xl',
           },
         },
         dashboardSearch: {
@@ -82,19 +100,47 @@ export default defineConfig({
         },
         button: {
           slots: {
-            base: 'cursor-pointer',
+            base: 'cursor-pointer rounded-14',
           },
           defaultVariants: {
             size: 'xl',
           },
+          variants: {
+            size: {
+              xl: {
+                leadingIcon: 'size-4.5',
+              },
+              lg: {
+                leadingIcon: 'size-4',
+              },
+              md: {
+                leadingIcon: 'size-3.5',
+              }
+            }
+          }
+        },
+        inputNumber: {
+          defaultVariants: {
+            variant: 'soft'
+          }
         },
         input: {
           slots: {
-            base: 'rounded-lg',
+            base: 'rounded-xl',
           },
           defaultVariants: {
             size: 'xl',
+            variant: 'soft',
           },
+          variants: {
+            size: {
+              xl: {
+                base: 'px-3.5',
+                leadingIcon: 'size-4.5',
+                leading: 'ps-3.5'
+              },
+            }
+          }
         },
         textarea: {
           defaultVariants: {
@@ -110,7 +156,15 @@ export default defineConfig({
             content: 'p-2',
           },
         },
+        card: {
+          slots: {
+            root: 'rounded-3xl'
+          }
+        },
         pageCard: {
+          slots: {
+            container: 'sm:p-4'
+          },
           variants: {
             variant: {
               taskview: {
@@ -121,9 +175,30 @@ export default defineConfig({
 
           },
         },
+        select: {
+          defaultVariants: {
+            size: 'xl'
+          },
+          slots: {
+            content: 'rounded-2xl',
+            item: 'before:rounded-xl',
+            base: 'rounded-xl'
+          }
+        },
+        selectMenu: {
+          slots: {
+            content: 'rounded-2xl',
+            item: 'rounded-xl hover:bg-accented/40 before:rounded-xl',
+            base: 'rounded-xl'
+          },
+          defaultVariants: {
+            variant: 'soft',
+          },
+        },
         checkbox: {
           slots: {
-            base: 'ring-2 cursor-pointer',
+            base: 'ring-2',
+            root: 'cursor-pointer'
           },
           variants: {
             size: {
@@ -131,6 +206,9 @@ export default defineConfig({
                 base: 'size-5',
                 container: 'h-5',
               },
+              lg: {
+                base: 'size-4',
+              }
             },
           },
           defaultVariants: {

@@ -1,14 +1,15 @@
 <template>
-  <div class="flex flex-col gap-2 pt-2">
+  <div class="flex flex-col gap-3">
     <div class="flex gap-2">
-      <UPopover v-model:open="startOpen">
+      <UPopover v-model:open="startOpen" :ui="{ content: 'rounded-16' }">
         <UButton
           :label="formattedStart"
           icon="i-lucide-calendar"
           color="neutral"
           variant="outline"
-          size="sm"
-          class="flex-1 justify-start"
+          size="lg"
+          class="flex-1"
+          :ui="{ base: 'rounded-xl justify-start' }"
         />
         <template #content>
           <div class="p-2 flex flex-col gap-2">
@@ -20,6 +21,7 @@
             <UInputTime
               v-model="startTime"
               :hour-cycle="24"
+              :ui="{ base: 'justify-center' }"
             />
           </div>
         </template>
@@ -31,8 +33,9 @@
           icon="i-lucide-calendar-check"
           color="neutral"
           variant="outline"
-          size="sm"
-          class="flex-1 justify-start"
+          size="lg"
+          class="flex-1"
+          :ui="{ base: 'rounded-xl justify-start' }"
         />
         <template #content>
           <div class="p-2 flex flex-col gap-2">
@@ -44,6 +47,7 @@
             <UInputTime
               v-model="endTime"
               :hour-cycle="24"
+              :ui="{ base: 'justify-center' }"
             />
           </div>
         </template>
@@ -53,14 +57,17 @@
     <UFormField :label="t('timeTracking.description')">
       <UInput
         v-model="description"
-        size="sm"
+        size="lg"
+        variant="outline"
         class="w-full"
+        :ui="{ base: 'rounded-xl' }"
       />
     </UFormField>
 
     <UCheckbox
       v-model="billable"
       :label="t('timeTracking.billable')"
+      size="lg"
     />
 
     <div class="flex justify-end gap-2">
@@ -68,13 +75,11 @@
         :label="t('timeTracking.cancel')"
         color="neutral"
         variant="ghost"
-        size="sm"
         @click="emit('cancel')"
       />
       <UButton
         :label="submitLabel ?? t('timeTracking.save')"
         color="primary"
-        size="sm"
         :disabled="!isValid"
         @click="onSubmit"
       />

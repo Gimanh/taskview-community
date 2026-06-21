@@ -2,15 +2,15 @@
   <div class="flex flex-col gap-6 p-1 lg:p-6 w-full max-w-full lg:max-w-2xl m-0 lg:mx-auto">
     <NotificationSettings />
 
-    <UPageCard class="w-full">
+    <UPageCard class="w-full rounded-3xl">
       <SessionsPanel />
     </UPageCard>
 
-    <UPageCard class="w-full">
+    <UPageCard class="w-full rounded-3xl">
       <ApiTokensPanel />
     </UPageCard>
 
-    <UPageCard class="w-full">
+    <UPageCard class="w-full rounded-3xl">
       <div class="flex flex-col gap-4">
         <h2 class="text-lg font-semibold">
           {{ t('account.management') }}

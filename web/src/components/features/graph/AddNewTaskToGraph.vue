@@ -29,14 +29,14 @@
           <div class="flex justify-end gap-2">
             <UButton
               color="neutral"
-              variant="outline"
+              variant="soft"
               @click="close"
             >
               {{ t('common.cancel') }}
             </UButton>
             <UButton
               :disabled="!taskName.trim()"
-              variant="outline"
+              variant="soft"
               @click="addTask"
             >
               {{ t('tasks.add') }}

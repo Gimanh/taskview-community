@@ -18,7 +18,7 @@
     </template>
         
     <template #body>
-      <UCard>
+      <!-- <UCard> -->
         <div class="flex flex-col gap-4">
           <UFormField :label="t('tasks.description')">
             <UInput
@@ -51,7 +51,7 @@
                 :label="formattedDeadline || t('tasks.addDueDate')"
                 icon="i-lucide-calendar"
                 color="neutral"
-                variant="outline"
+                variant="soft"
                 class="w-full justify-start"
                 :ui="{leadingIcon: 'size-4.5'}"
               />
@@ -65,7 +65,7 @@
             </UPopover>
           </UFormField>
         </div>
-      </UCard>
+      <!-- </UCard> -->
     </template>
 
     <template #default="slotProps">
@@ -79,7 +79,7 @@
       <div class="flex justify-end gap-2 w-full">
         <UButton
           color="neutral"
-          variant="outline"
+          variant="soft"
           @click="close"
         >
           {{ t('common.cancel') }}
@@ -87,7 +87,7 @@
         <UButton
           :disabled="!canAdd"
           :loading="loading"
-          variant="outline"
+          variant="soft"
           @click="addTask"
         >
           {{ t('tasks.add') }}

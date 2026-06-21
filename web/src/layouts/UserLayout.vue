@@ -6,32 +6,8 @@
       storage="local"
       class="UDashboardGroup-test"
     >
-      <UDashboardSidebar
-        id="default"
-        v-model:open="isSidebarOpen"
-        :default-size="20"
-        class="bg-elevated/25"
-        :class="isSidebarCollapsed ? 'overflow-hidden min-w-0 w-0 transition-[width] duration-200 linear' : 'transition-[width] duration-200 linear'"
-        :ui="{ footer: 'lg:border-t lg:border-default' }"
-      >
-        <div class="flex items-center justify-between px-1 gap-2">
-          <TvGoalLikeItem
-            :to="{ name: 'user' }"
-            variant="taskview"
-            class="flex-1"
-          >
-            {{ t('main') }}
-          </TvGoalLikeItem>
-          <ActiveTimerIndicator />
-          <NotificationBell />
-        </div>
-
-        <ProjectsSidebar />
-
-        <template #footer="{ collapsed }">
-          <UserMenu :collapsed="collapsed" />
-        </template>
-      </UDashboardSidebar>
+      <DashboardSidebarFirst v-if="appStore.sidebarView === 'first'" />
+      <DashboardSidebarSecond v-else />
 
       <RouterView />
     </UDashboardGroup>
@@ -46,14 +22,12 @@ import { useRoute, useRouter } from 'vue-router'
 import { useEventListener } from '@vueuse/core'
 import { App } from '@capacitor/app'
 import { CapacitorUpdater } from '@capgo/capacitor-updater'
-import { useDashboard } from '@/composables/useDashboard'
 import { useUpdater } from '@/composables/useUpdater'
 import { useAppStore } from '@/stores/app.store'
 import { useI18n } from 'vue-i18n'
 import ConnectionStatusBanner from '@/components/ConnectionStatusBanner.vue'
-import ProjectsSidebar from '@/components/features/projects/ProjectsSidebar.vue'
-import NotificationBell from '@/components/NotificationBell.vue'
-import ActiveTimerIndicator from '@/components/ActiveTimerIndicator.vue'
+import DashboardSidebarFirst from '@/components/sidebars/DashboardSidebarFirst.vue'
+import DashboardSidebarSecond from '@/components/sidebars/DashboardSidebarSecond.vue'
 import { useCentrifugo } from '@/composables/useCentrifugo'
 import { usePushNotifications } from '@/composables/usePushNotifications'
 import { useGoalsStore } from '@/stores/goals.store'
@@ -61,7 +35,6 @@ import { useOrganizationStore } from '@/stores/organization.store'
 import { useTimeTrackingStore } from '@/stores/time-tracking.store'
 import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
 
-const { isSidebarOpen, isSidebarCollapsed } = useDashboard()
 const { connect: connectCentrifugo } = useCentrifugo()
 const { init: initPush } = usePushNotifications()
 const { t } = useI18n()
@@ -119,6 +92,7 @@ App.addListener('appStateChange', async ({ isActive }) => {
 onMounted(async () => {
   console.log('-------------------------------- onMounted push notifications --------------------------------')
   appStore.initTaskDetailDisplayMode()
+  appStore.initSidebarView()
   connectCentrifugo()
   initPush()
 

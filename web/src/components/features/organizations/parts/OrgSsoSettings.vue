@@ -6,6 +6,7 @@
         <UButton
           :label="t('sso.configure')"
           class="mt-3"
+          variant="soft"
           @click="showForm = true"
         />
       </div>

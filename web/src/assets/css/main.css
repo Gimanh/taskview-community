@@ -9,6 +9,8 @@
 @theme {
   --tv-ui-bg-elevated: #fff;
   --color-tv-ui-bg-elevated: var(--tv-ui-bg-elevated);
+  --radius-10: 10px;
+  --radius-14: 14px;
 }
 
 /* Safe area utilities */

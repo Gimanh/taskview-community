@@ -1,31 +1,29 @@
 <template>
-  <div class="shadow-sm rounded-lg p-2 dark:bg-tv-ui-bg-elevated">
-    <div
-      class="flex items-center justify-between"
+  <div class="flex flex-col gap-2">
+    <UButton
+      icon="i-lucide-history"
+      color="neutral"
+      variant="soft"
+      size="xl"
+      block
+      :trailing-icon="isExpanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+      :ui="activatorUi('text-muted')"
       @click="toggleExpand"
     >
-      <label class="text-base text-muted">{{ t('history.title') }}</label>
-      <UButton
-        v-if="!isExpanded"
-        :label="t('history.show')"
-        icon="i-lucide-history"
+      <span class="flex-1 text-left">{{ t('history.title') }}</span>
+      <UBadge
+        v-if="changes.length > 0"
+        :label="String(changes.length)"
         color="neutral"
-        variant="ghost"
-        size="md"
+        variant="subtle"
+        size="sm"
+        :ui="{ base: 'rounded-full' }"
       />
-      <UButton
-        v-else
-        :label="t('history.hide')"
-        icon="i-lucide-chevron-up"
-        color="neutral"
-        variant="ghost"
-        size="md"
-      />
-    </div>
+    </UButton>
 
     <div
       v-if="loading"
-      class="flex items-center justify-center py-4"
+      class="flex items-center justify-center py-6"
     >
       <UIcon
         name="i-lucide-loader-2"
@@ -35,19 +33,17 @@
 
     <div
       v-else-if="isExpanded && changes.length > 0 && canAccessTaskHistory"
-      class="space-y-2 max-h-64 overflow-y-auto mt-2"
+      class="flex flex-col gap-1 rounded-2xl bg-elevated p-2 max-h-64 overflow-y-auto"
     >
       <div
         v-for="(item, index) in changes"
         :key="index"
-        class="flex items-center justify-between p-2 rounded-lg border border-default hover:bg-elevated transition-colors"
+        class="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-default shadow-xs"
       >
-        <div class="flex-1 min-w-0">
-          <p class="text-sm truncate">
-            {{ item.description }}
-          </p>
-        </div>
-        <div class="flex items-center gap-1">
+        <p class="flex-1 min-w-0 text-sm truncate">
+          {{ item.description }}
+        </p>
+        <div class="flex items-center gap-0.5 shrink-0">
           <UButton
             :disabled="!canAccessTaskHistory"
             icon="i-lucide-info"
@@ -72,38 +68,27 @@
 
     <div
       v-else-if="isExpanded && changes.length === 0"
-      class="flex flex-col items-center justify-center py-4 text-muted"
+      class="flex flex-col items-center justify-center gap-2 rounded-2xl bg-elevated py-8 text-muted"
     >
       <UIcon
         name="i-lucide-history"
-        class="size-8 mb-2"
+        class="size-8"
       />
       <p class="text-sm">
         {{ t('history.empty') }}
       </p>
     </div>
 
-    <UModal v-model:open="isDetailModalOpen">
-      <template #content>
-        <UCard>
-          <template #header>
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-medium">
-                {{ t('history.details') }}
-              </h3>
-              <UButton
-                icon="i-lucide-x"
-                color="neutral"
-                variant="ghost"
-                size="xs"
-                @click="isDetailModalOpen = false"
-              />
-            </div>
-          </template>
-          <p class="text-sm whitespace-pre-wrap break-words">
-            {{ selectedChange?.description }}
-          </p>
-        </UCard>
+    <UModal
+      v-model:open="isDetailModalOpen"
+      :fullscreen="isMobile"
+      :title="t('history.details')"
+      :ui="{ content: 'sm:max-w-md' }"
+    >
+      <template #body>
+        <p class="text-sm whitespace-pre-wrap break-words">
+          {{ selectedChange?.description }}
+        </p>
       </template>
     </UModal>
   </div>
@@ -116,6 +101,8 @@ import { storeToRefs } from 'pinia'
 import { useTaskHistory } from '@/stores/task-history.store'
 import type { TaskItem } from '@/types/tasks.types'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
+import { useNuxtUiTaskItemStyles } from '@/composables/useNuxtUiTaskItemStyles'
+import { useTaskView } from '@/composables/useTaskView'
 
 type HistoryChange = {
   historyId: number | null
@@ -129,6 +116,8 @@ const props = defineProps<{
 const { t } = useI18n()
 const taskHistoryStore = useTaskHistory()
 const { canAccessTaskHistory, canRecoveryTaskHistory } = useGoalPermissions()
+const { activatorUi } = useNuxtUiTaskItemStyles()
+const { isMobile } = useTaskView()
 const { history } = storeToRefs(taskHistoryStore)
 
 const isExpanded = ref(false)

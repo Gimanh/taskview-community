@@ -2,7 +2,7 @@
   <div class="shadow-sm rounded-lg">
     <UInput
       v-model="projectName"
-      :placeholder="t('projects.addPlaceholder')"
+      :placeholder="placeholder ?? t('projects.addPlaceholder')"
       size="xl"
       variant="soft"
       class="w-full"
@@ -35,6 +35,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+
+defineProps<{
+  placeholder?: string
+}>()
 
 const emit = defineEmits<{
   add: [name: string]

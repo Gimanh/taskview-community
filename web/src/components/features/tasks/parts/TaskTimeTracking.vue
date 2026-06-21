@@ -1,49 +1,55 @@
 <template>
   <div
     v-if="canViewTimeTracking || canLogTime"
-    class="flex flex-col gap-3 p-3 rounded-lg border border-default"
+    class="flex flex-col gap-3 rounded-2xl bg-accented/20 p-3.5"
   >
     <div class="flex items-center justify-between gap-2">
       <div class="flex items-center gap-2">
         <UIcon
           name="i-lucide-timer"
-          class="size-5 text-muted"
+          class="size-4.5 text-muted"
         />
-        <span class="font-medium">{{ t('timeTracking.title') }}</span>
+        <span class="text-[15px] font-semibold text-highlighted">{{ t('timeTracking.title') }}</span>
         <UBadge
           v-if="totalSeconds > 0"
           :label="formatDuration(totalSeconds)"
           color="neutral"
           variant="subtle"
           size="sm"
+          :ui="{ base: 'rounded-full' }"
         />
       </div>
 
-      <div class="flex items-center gap-2">
-        <span
-          v-if="isActiveOnThisTask"
-          class="font-mono text-sm tabular-nums text-primary"
-        >
-          {{ elapsedFormatted }}
-        </span>
-        <UButton
-          v-if="canLogTime && !isActiveOnThisTask"
-          :label="t('timeTracking.start')"
-          icon="i-lucide-play"
-          color="primary"
-          size="sm"
-          @click="onStart"
-        />
-        <UButton
-          v-else-if="canLogTime"
-          :label="t('timeTracking.stop')"
-          icon="i-lucide-square"
-          color="error"
-          size="sm"
-          @click="store.stop()"
-        />
-      </div>
+      <span
+        v-if="isActiveOnThisTask"
+        class="font-mono text-sm tabular-nums text-primary"
+      >
+        {{ elapsedFormatted }}
+      </span>
     </div>
+
+    <UButton
+      v-if="canLogTime && !isActiveOnThisTask"
+      :label="t('timeTracking.start')"
+      icon="i-lucide-play"
+      color="primary"
+      variant="soft"
+      size="lg"
+      block
+      :ui="{ base: 'rounded-xl justify-center' }"
+      @click="onStart"
+    />
+    <UButton
+      v-else-if="canLogTime"
+      :label="t('timeTracking.stop')"
+      icon="i-lucide-square"
+      color="error"
+      variant="soft"
+      size="lg"
+      block
+      :ui="{ base: 'rounded-xl justify-center' }"
+      @click="store.stop()"
+    />
 
     <div
       v-if="canLogTime && otherActiveWarning"
@@ -59,7 +65,7 @@
     <template v-if="canViewTimeTracking">
       <div
         v-if="entries.length > 0"
-        class="flex flex-col gap-2 max-h-80 overflow-y-auto pr-1"
+        class="flex flex-col gap-1 rounded-2xl bg-elevated p-2 max-h-80 overflow-y-auto"
       >
         <TaskTimeTrackingEntry
           v-for="entry in entries"
@@ -71,28 +77,26 @@
       </div>
       <div
         v-else
-        class="flex flex-col items-center gap-1 py-3 text-xs text-muted"
+        class="flex flex-col items-center gap-2 rounded-2xl bg-elevated py-6 text-muted"
       >
         <UIcon
           name="i-lucide-inbox"
-          class="size-5"
+          class="size-6"
         />
-        <span>{{ t('timeTracking.empty') }}</span>
+        <span class="text-sm">{{ t('timeTracking.empty') }}</span>
       </div>
     </template>
 
-    <div
-      v-if="canLogTime"
-      class="flex flex-col gap-2 pt-2 border-t border-default"
-    >
+    <div v-if="canLogTime">
       <UButton
         v-if="!manualOpen"
         :label="t('timeTracking.addManual')"
         icon="i-lucide-plus"
         color="neutral"
-        variant="ghost"
-        size="sm"
+        variant="soft"
+        size="lg"
         block
+        :ui="{ base: 'rounded-xl justify-start' }"
         @click="manualOpen = true"
       />
       <TaskTimeTrackingForm

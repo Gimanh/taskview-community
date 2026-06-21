@@ -1,7 +1,7 @@
 <template>
   <UPageCard
     v-bind="{ ...props }"
-    class="shadow-sm"
+    class="shadow-sm rounded-xl"
     :class="{ 'bg-primary/10 border border-primary/30': active }"
   >
     <div class="flex items-center justify-between">

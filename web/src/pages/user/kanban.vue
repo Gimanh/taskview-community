@@ -66,6 +66,7 @@ import TvKanbanFilters from '@/components/features/base/TvKanbanFilters.vue'
 import { useAppRouteInfo } from '@/composables/useAppRouteInfo'
 import { useFiltersFromQuery } from '@/composables/useFiltersFromQuery'
 import { useProjectDataLoader } from '@/composables/useProjectDataLoader'
+import { useTaskView } from '@/composables/useTaskView'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useKanbanStore } from '@/stores/kanban.store'
 
@@ -75,12 +76,20 @@ const goalsStore = useGoalsStore()
 const kanbanStore = useKanbanStore()
 const projectName = computed(() => goalsStore.goalMap.get(projectId.value)?.name ?? '')
 
+const { isDesktop } = useTaskView()
 const { selectedListIds, selectedAssigneeIds, selectedSprintId, hasActiveFilters } = useFiltersFromQuery()
-const showFilters = ref(hasActiveFilters.value)
+const showFilters = ref(isDesktop.value || hasActiveFilters.value)
+
+kanbanStore.setFilters({
+  listIds: selectedListIds.value,
+  assigneeIds: selectedAssigneeIds.value,
+  sprintId: selectedSprintId.value ?? undefined,
+})
 
 watch([selectedListIds, selectedAssigneeIds, selectedSprintId], ([listIds, assigneeIds, sprintId]) => {
   kanbanStore.setFilters({ listIds, assigneeIds, sprintId: sprintId ?? undefined })
-}, { immediate: true, deep: true })
+  kanbanStore.reloadColumns()
+}, { deep: true })
 
 useProjectDataLoader(projectId)
 </script>

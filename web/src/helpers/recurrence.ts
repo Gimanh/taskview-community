@@ -112,6 +112,16 @@ export function previewOccurrences(args: { rrule: string; dtstart: Date; limit: 
  * without one yields a date-only 'YYYY-MM-DD' iso so the backend keeps it
  * date-only instead of treating a midnight anchor as a real 00:00 deadline.
  */
+/**
+ * Parse a rule's stored dtstart into a Date whose UTC components are the wall
+ * clock. The value can arrive as a DB timestamp ('YYYY-MM-DD HH:mm:ss') or as
+ * an ISO string with a trailing 'Z' — both must be read as floating wall-clock.
+ */
+export function parseRuleDtstart(value: string): Date {
+  const iso = value.replace(' ', 'T')
+  return new Date(/[zZ]$/.test(iso) ? iso : `${iso}Z`)
+}
+
 export function dtstartForTask(args: { startDate: string | null; startTime: string | null }): { date: Date; iso: string } {
   if (args.startDate && args.startTime?.match(/^\d{2}:\d{2}/)) {
     const instant = new Date(`${args.startDate}T${args.startTime.slice(0, 5)}:00Z`)

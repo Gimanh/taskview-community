@@ -32,7 +32,7 @@
       :fullscreen="isMobile"
       :ui="{
         overlay: 'sm:items-center sm:justify-center ',
-        content: 'sm:max-w-[1100px] sm:max-h-[80vh] sm:rounded-lg sm:m-auto w-full',
+        content: 'sm:max-w-[1100px] sm:max-h-[80vh] sm:m-auto w-full',
         body: 'p-4!',
         footer: 'p-4!',
       }"

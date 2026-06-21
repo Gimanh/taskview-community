@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full h-fit shadow-sm rounded-lg p-2 dark:bg-tv-ui-bg-elevated">
+  <div class="w-full h-fit">
     <!-- <label class="text-sm text-muted mb-2 block">{{ t('tasks.amount') }}</label> -->
 
     <div class="flex gap-2">
@@ -13,6 +13,7 @@
           size="xl"
           :placeholder="t('tasks.enterAmount')"
           class="flex-1"
+          :ui="{base: 'rounded-14! h-13'}"
           :variant="isDark ? 'subtle' : 'soft'"
           @update:model-value="handleAmountInput"
           @focus="editing = true"
@@ -33,10 +34,11 @@
           :items="tabItems"
           :content="false"
           variant="pill"
-          size="md"
+          size="xl"
           color="success"
           :class="{'pointer-events-none': !canDeleteTask}"
-          class="shrink-0 shadow-sm rounded-lg border border-accented flex-1"
+          class="shrink-0 shadow-sm rounded-lg border border-accented"
+          :ui="{root: 'border-none rounded-14! shadow-none!', list:'rounded-14! grow', indicator: 'rounded-10!'}"
           @update:model-value="handleTabChange"
         />
       </div>
@@ -49,7 +51,9 @@
         icon="i-lucide-x"
         color="info"
         variant="soft"
-        size="sm"
+        class="items-center justify-center"
+        size="xl"
+        :ui="{base: 'rounded-14! size-13'}"
         @click="clearAmount"
       />
     </div>

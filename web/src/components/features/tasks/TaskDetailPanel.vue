@@ -2,7 +2,7 @@
   <div class="h-full relative flex flex-col gap-4 @container">
     <template v-if="task">
       <!-- Title & Checkbox -->
-      <div class="flex items-start gap-3 shadow-sm rounded-lg dark:bg-tv-ui-bg-elevated">
+      <div class="flex items-start gap-3 shadow-sm rounded-2xl dark:bg-tv-ui-bg-elevated">
         <div class="flex-1">
           <UTextarea
             v-model="titleValue"
@@ -11,6 +11,7 @@
             :autoresize="true"
             class="w-full"
             :class="{ 'text-muted': task.complete }"
+            :ui="{ base: 'rounded-2xl' }"
           >
             <template #leading>
               <div class="h-full">
@@ -61,15 +62,17 @@
             :class="colClass(fieldId)"
             @save="updateNote"
           />
-          <TaskKanbanStatusSelect
-            v-else-if="fieldId === 'status'"
-            :task-id="task.id"
-            :current-status-id="task.statusId"
+          <TvKanbanStatusSelect
+            v-else-if="fieldId === 'status' && canViewKanban"
+            :model-value="task.statusId"
+            :disabled="!canManageKanban"
             :class="colClass(fieldId)"
+            @update:model-value="updateStatus"
           />
-          <TaskPrioritySelect
-            v-else-if="fieldId === 'priority'"
+          <TvPriority
+            v-else-if="fieldId === 'priority' && canViewTaskPriority"
             :model-value="task.priorityId"
+            :disabled="!canEditTaskPriority"
             :class="colClass(fieldId)"
             @update:model-value="updatePriority"
           />
@@ -79,11 +82,11 @@
             :assigned-user-ids="task.assignedUsers"
             :class="colClass(fieldId)"
           />
-          <TaskListSelect
-            v-else-if="fieldId === 'list'"
-            :task-id="task.id"
-            :current-list-id="task.goalListId"
+          <TvListSelect
+            v-else-if="fieldId === 'list' && canViewLists"
+            :model-value="task.goalListId"
             :class="colClass(fieldId)"
+            @update:model-value="updateList"
           />
           <TaskTagsManager
             v-else-if="fieldId === 'tags'"
@@ -92,11 +95,16 @@
             :goal-id="projectId"
             :class="colClass(fieldId)"
           />
-          <TaskDeadline
-            v-else-if="fieldId === 'deadline'"
-            :task="task"
-            :class="[colClass(fieldId), 'h-fit']"
-          />
+          <template v-else-if="fieldId === 'deadline'">
+            <TvDeadlineSelect
+              :task="task"
+              :class="[colClass(fieldId), 'h-fit']"
+            />
+            <TaskRecurrence
+              :task="task"
+              :class="colClass(fieldId)"
+            />
+          </template>
           <TaskAmountEditor
             v-else-if="fieldId === 'amount'"
             :task-id="task.id"
@@ -104,7 +112,7 @@
             :transaction-type="task.transactionType"
             :class="colClass(fieldId)"
           />
-          <TaskSprintSelect
+          <TvSprintSelect
             v-else-if="fieldId === 'sprint'"
             :task-id="task.id"
             :goal-id="task.goalId"
@@ -151,19 +159,22 @@ import { useDebounceFn } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { useTasksStore } from '@/stores/tasks.store'
 import NoteEditor from '@/components/features/tasks/parts/NoteEditor.vue'
-import TaskPrioritySelect from '@/components/features/tasks/parts/TaskPrioritySelect.vue'
+import TvPriority from '@/components/features/base/TvPriority.vue'
 import TaskTagsManager from '@/components/features/tasks/parts/tags/TaskTagsManager.vue'
 import TaskAssigneeSelect from '@/components/features/tasks/parts/TaskAssigneeSelect.vue'
-import TaskListSelect from '@/components/features/tasks/parts/TaskListSelect.vue'
-import TaskKanbanStatusSelect from '@/components/features/tasks/parts/TaskKanbanStatusSelect.vue'
+import TvListSelect from '@/components/features/base/TvListSelect.vue'
+import TvKanbanStatusSelect from '@/components/features/base/TvKanbanStatusSelect.vue'
 import TaskAmountEditor from '@/components/features/tasks/parts/TaskAmountEditor.vue'
 import TaskTimeTracking from '@/components/features/tasks/parts/TaskTimeTracking.vue'
 import TaskHistory from '@/components/features/tasks/parts/TaskHistory.vue'
-import TaskDeadline from '@/components/features/tasks/parts/TaskDeadline.vue'
+import TvDeadlineSelect from '@/components/features/base/TvDeadlineSelect.vue'
+import TaskRecurrence from '@/components/features/tasks/parts/TaskRecurrence.vue'
 import TaskSubtasks from '@/components/features/tasks/parts/TaskSubtasks.vue'
-import TaskSprintSelect from '@/components/features/tasks/parts/TaskSprintSelect.vue'
+import TvSprintSelect from '@/components/features/base/TvSprintSelect.vue'
 import TaskEstimateInput from '@/components/features/tasks/parts/TaskEstimateInput.vue'
-import type { TaskBase } from 'taskview-api'
+import type { PriorityValue } from '@/composables/usePriorityOptions'
+import type { ListValue } from '@/composables/useGoalListOptions'
+import type { StatusValue } from '@/composables/useKanbanStatusOptions'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useUiPreferences } from '@/composables/useUiPreferences'
 import { tasksSection } from '@/uiCustomization/sections/tasks'
@@ -173,6 +184,11 @@ const toast = useToast()
 const tasksStore = useTasksStore()
 const {
   canEditTaskStatus,
+  canViewTaskPriority,
+  canEditTaskPriority,
+  canViewLists,
+  canViewKanban,
+  canManageKanban,
 } = useGoalPermissions()
 
 const { catalogue: taskFieldsCatalogue } = tasksSection.useSection()
@@ -253,11 +269,27 @@ async function updateNote(note: string) {
   }
 }
 
-async function updatePriority(priorityId: TaskBase['priorityId']) {
-  if (!task.value) return
+async function updatePriority(priorityId: PriorityValue) {
+  if (!task.value || priorityId == null) return
   await tasksStore.udpatePriority({
     id: task.value.id,
     priorityId,
+  })
+}
+
+async function updateList(goalListId: ListValue | undefined) {
+  if (!task.value || goalListId === undefined || goalListId === task.value.goalListId) return
+  await tasksStore.moveTaskToAnotherList({
+    id: task.value.id,
+    goalListId,
+  })
+}
+
+async function updateStatus(statusId: StatusValue | undefined) {
+  if (!task.value || statusId === undefined || statusId === task.value.statusId) return
+  await tasksStore.updateTaskStatusId({
+    id: task.value.id,
+    statusId,
   })
 }
 

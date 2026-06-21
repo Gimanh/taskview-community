@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-2">
-    <div class="flex flex-wrap items-center justify-end gap-2 p-2 bg-tv-ui-bg-elevated rounded-lg">
+    <div class="flex flex-wrap items-center justify-end gap-2 p-2 bg-tv-ui-bg-elevated rounded-3xl">
       <!-- Filter -->
       <UTooltip :text="t('filters.title')">
         <UButton

@@ -12,7 +12,9 @@
           <UInput
             v-model="form.name"
             :placeholder="t('projects.namePlaceholder')"
+            variant="soft"
             class="w-full"
+            :ui="{ base: 'rounded-xl' }"
             data-testid="project-edit-name"
           />
         </UFormField>
@@ -21,13 +23,16 @@
             v-model="form.description"
             :placeholder="t('projects.descriptionPlaceholder')"
             :rows="3"
+            variant="soft"
             class="w-full"
+            :ui="{ base: 'rounded-xl' }"
           />
         </UFormField>
         <UFormField :label="t('projects.estimateUnit')">
           <USelect
             v-model="form.estimateUnit"
             :items="estimateUnitItems"
+            variant="soft"
             class="w-full"
             data-testid="project-edit-estimate-unit"
           />
@@ -40,13 +45,13 @@
         <UButton
           :label="t('common.cancel')"
           color="neutral"
-          variant="outline"
+          variant="soft"
           @click="close"
         />
         <UButton
           :label="t('common.save')"
           color="primary"
-          variant="outline"
+          variant="soft"
           data-testid="project-edit-save"
           @click="save"
         />

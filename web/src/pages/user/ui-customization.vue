@@ -18,7 +18,7 @@
           :items="tabs"
           :orientation="isMobile ? 'vertical' : 'horizontal'"
           class="w-full"
-          :ui="{ root: 'flex-col', list: 'w-full' }"
+          :ui="{ root: 'flex-col', list: 'w-full rounded-xl', trigger: 'rounded-lg', indicator: 'rounded-lg' }"
         >
           <template
             v-for="s in sections"

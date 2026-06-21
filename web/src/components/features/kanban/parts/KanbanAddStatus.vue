@@ -6,7 +6,8 @@
         :placeholder="t('kanban.addColumn')"
         icon="i-lucide-plus"
         size="xl"
-        class="h-full max-w-[340px] min-w-[272px] bg-neutral-800 flex flex-col w-[91.666667%] rounded-lg"
+        variant="soft"
+        class="h-full max-w-[340px] min-w-[272px] flex flex-col w-[91.666667%] rounded-lg"
       />
 
       <UButton

@@ -12,6 +12,8 @@
           v-model="code"
           :placeholder="t('account.enterCode')"
           spellcheck="false"
+          variant="soft"
+          :ui="{ base: 'rounded-xl' }"
         />
 
         <div class="flex justify-end gap-2">

@@ -168,12 +168,15 @@ export const useKanbanStore = defineStore('kanban', {
       }
     },
 
-    async setFilters(filters: KanbanFilters) {
+    setFilters(filters: KanbanFilters) {
       this.filters = filters
+    },
+
+    async reloadColumns() {
       this.tasksData = {}
-      for (const status of this.statuses) {
-        await this.fetchTasksForColumn(this.goalId, status.id === DEFAULT_ID ? null : status.id, null)
-      }
+      await Promise.all(this.statuses.map((status) =>
+        this.fetchTasksForColumn(this.goalId, status.id === DEFAULT_ID ? null : status.id, null),
+      ))
     },
 
     async deleteStatus(data: KanbanArgDeleteColumn) {

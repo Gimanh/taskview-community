@@ -3,8 +3,9 @@
     <UDashboardSearchButton
       :label="t('admin.search')"
       :disabled="!hasActiveGoals"
-      class="w-full"
-      variant="subtle"
+      class="w-full "
+      variant="soft"
+      size="xl"
     />
 
     <UDashboardSearch

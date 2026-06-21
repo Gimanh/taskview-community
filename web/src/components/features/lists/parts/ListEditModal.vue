@@ -10,7 +10,9 @@
           <UInput
             v-model="formData.name"
             :placeholder="t('lists.namePlaceholder')"
+            variant="soft"
             class="w-full"
+            :ui="{ base: 'rounded-xl' }"
           />
         </UFormField>
       </div>
