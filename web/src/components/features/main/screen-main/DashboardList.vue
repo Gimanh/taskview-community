@@ -1,7 +1,9 @@
 <template>
   <div class="overflow-auto flex flex-col">
     <div class="sticky top-0 p-2 lg:p-5 z-10 bg-default">
-      <SearchAll />
+      <div class="w-full max-w-3xl mx-auto">
+        <SearchAll />
+      </div>
     </div>
 
     <div class="flex flex-col p-2 md:p-5 md:pt-0 w-full max-w-3xl mx-auto gap-5">
