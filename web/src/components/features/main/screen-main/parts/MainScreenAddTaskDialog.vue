@@ -19,52 +19,52 @@
         
     <template #body>
       <!-- <UCard> -->
-        <div class="flex flex-col gap-4">
-          <UFormField :label="t('tasks.description')">
-            <UInput
-              v-model="taskDescription"
-              :placeholder="t('tasks.addPlaceholder')"
-              class="w-full"
-              @keyup.enter="addTask"
-            />
-          </UFormField>
+      <div class="flex flex-col gap-4">
+        <UFormField :label="t('tasks.description')">
+          <UInput
+            v-model="taskDescription"
+            :placeholder="t('tasks.addPlaceholder')"
+            class="w-full"
+            @keyup.enter="addTask"
+          />
+        </UFormField>
 
-          <UFormField :label="t('projects.project')">
-            <USelectMenu
-              v-model="selectedGoalId"
-              :items="goalOptions"
-              :placeholder="t('projects.selectProject')"
-              :search-input="false"
-              size="xl"
-              value-key="value"
-              option-key="value"
-              class="w-full"
-            />
-          </UFormField>
+        <UFormField :label="t('projects.project')">
+          <USelectMenu
+            v-model="selectedGoalId"
+            :items="goalOptions"
+            :placeholder="t('projects.selectProject')"
+            :search-input="false"
+            size="xl"
+            value-key="value"
+            option-key="value"
+            class="w-full"
+          />
+        </UFormField>
 
-          <UFormField
-            v-if="!noDates"
-            :label="t('tasks.deadline')"
-          >
-            <UPopover>
-              <UButton
-                :label="formattedDeadline || t('tasks.addDueDate')"
-                icon="i-lucide-calendar"
-                color="neutral"
-                variant="soft"
-                class="w-full justify-start"
-                :ui="{leadingIcon: 'size-4.5'}"
+        <UFormField
+          v-if="!noDates"
+          :label="t('tasks.deadline')"
+        >
+          <UPopover>
+            <UButton
+              :label="formattedDeadline || t('tasks.addDueDate')"
+              icon="i-lucide-calendar"
+              color="neutral"
+              variant="soft"
+              class="w-full justify-start"
+              :ui="{leadingIcon: 'size-4.5'}"
+            />
+            <template #content>
+              <UCalendar
+                v-model="(deadline as any)"
+                :week-starts-on="weekStart"
+                class="p-2"
               />
-              <template #content>
-                <UCalendar
-                  v-model="(deadline as any)"
-                  :week-starts-on="weekStart"
-                  class="p-2"
-                />
-              </template>
-            </UPopover>
-          </UFormField>
-        </div>
+            </template>
+          </UPopover>
+        </UFormField>
+      </div>
       <!-- </UCard> -->
     </template>
 
@@ -98,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { CalendarDate } from '@internationalized/date'
 import { useGoalsStore } from '@/stores/goals.store'
@@ -141,14 +141,6 @@ const taskDescription = ref(props.taskName)
 const selectedGoalId = ref<number | undefined>(undefined)
 const deadline = ref<CalendarDate | null>(null)
 const loading = ref(false)
-const lastSavedProjectId = ref<number | undefined>(undefined)
-
-onMounted(async () => {
-  const saved = await $ls.getValue(LAST_SELECTED_PROJECT_KEY)
-  if (saved) {
-    lastSavedProjectId.value = Number(saved)
-  }
-})
 
 watch(() => props.taskName, (newVal) => {
   taskDescription.value = newVal
@@ -169,16 +161,15 @@ watch(model, async (isOpen) => {
       )
     }
 
-    // Set default goal from localStorage or first available
+    // Pre-select the last used project. Read fresh from storage on every open so
+    // it stays in sync across the multiple dialog instances on the screen.
     const activeGoals = goalsStore.goals.filter(g => !g.archive)
+    const saved = await $ls.getValue(LAST_SELECTED_PROJECT_KEY)
+    const savedId = saved ? Number(saved) : undefined
+    const savedGoal = savedId ? activeGoals.find(g => g.id === savedId) : undefined
 
-    if (lastSavedProjectId.value) {
-      const savedGoal = activeGoals.find(g => g.id === lastSavedProjectId.value)
-      if (savedGoal) {
-        selectedGoalId.value = savedGoal.id
-      } else if (activeGoals.length === 1) {
-        selectedGoalId.value = activeGoals[0].id
-      }
+    if (savedGoal) {
+      selectedGoalId.value = savedGoal.id
     } else if (activeGoals.length === 1) {
       selectedGoalId.value = activeGoals[0].id
     }
@@ -214,9 +205,8 @@ async function addTask() {
   loading.value = true
 
   try {
-    // Save selected project to localStorage
+    // Remember the chosen project for the next time the dialog is opened.
     await $ls.setValue(LAST_SELECTED_PROJECT_KEY, selectedGoalId.value.toString())
-    lastSavedProjectId.value = selectedGoalId.value
 
     const endDate = deadline.value
       ? `${deadline.value.year}-${String(deadline.value.month).padStart(2, '0')}-${String(deadline.value.day).padStart(2, '0')}`

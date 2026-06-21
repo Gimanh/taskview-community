@@ -49,12 +49,21 @@
           :loading="actionLoading === 'delete'"
           @click="removeSeries"
         />
-        <UButton
-          :label="t('common.save')"
-          class="ml-auto"
-          :loading="actionLoading === 'save'"
-          @click="save"
-        />
+        <div class="flex items-center justify-end gap-2 w-full">
+          <UButton
+            :label="t('common.cancel')"
+            color="neutral"
+            variant="soft"
+            @click="open = false"
+          />
+          <UButton
+            :label="t('common.save')"
+            class="ml-auto"
+            :loading="actionLoading === 'save'"
+            @click="save"
+          />
+        </div>
+        
       </div>
     </template>
   </UModal>

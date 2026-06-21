@@ -62,6 +62,9 @@ export default defineConfig({
           },
         },
         modal: {
+          slots: {
+            header: 'relative'
+          },
           variants: {
             fullscreen: {
               true: {
