@@ -58,7 +58,14 @@ export default defineConfig({
         },
         dashboardPanel: {
           slots: {
-            body: 'p-2! pb-[calc(var(--tv-safe-area-inset-bottom)+var(--tv-safe-area-inset-top)+64px)]! lg:pb-0!'
+            // iPad
+            body: 'p-2! pb-[calc(var(--tv-safe-area-inset-bottom)+var(--tv-safe-area-inset-top)+64px)]! lg:pb-[calc(var(--tv-safe-area-inset-bottom)+8px)]!'
+          },
+        },
+        dashboardSidebar: {
+          slots: {
+            // iPad
+            footer: 'lg:pb-[calc(var(--tv-safe-area-inset-bottom)+8px)]',
           },
         },
         modal: {

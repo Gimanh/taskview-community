@@ -1,9 +1,9 @@
 <template>
   <UModal
     v-model:open="open"
-    :fullscreen="isMobile"
+    :fullscreen="isFullscreenModal"
     :title="t('recurrence.title')"
-    :ui="{ content: 'sm:max-w-md' }"
+    :ui="{ content: isFullscreenModal ? '' : 'sm:max-w-md' }"
   >
     <template #body>
       <div class="flex flex-col gap-5">
@@ -91,7 +91,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const toast = useToast()
-const { isMobile } = useTaskView()
+const { isFullscreenModal } = useTaskView()
 
 const { canDeleteTask } = useGoalPermissions()
 const tasksStore = useTasksStore()

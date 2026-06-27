@@ -29,10 +29,10 @@
     <UModal
       v-else
       v-model:open="isOpen"
-      :fullscreen="isMobile"
+      :fullscreen="isFullscreenModal"
       :ui="{
         overlay: 'sm:items-center sm:justify-center ',
-        content: 'sm:max-w-[1100px] sm:max-h-[80vh] sm:m-auto w-full',
+        content: isFullscreenModal ? 'w-full' : 'sm:max-w-[1100px] sm:max-h-[80vh] sm:m-auto w-full',
         body: 'p-4!',
         footer: 'p-4!',
       }"
@@ -102,7 +102,7 @@ const { t } = useI18n()
 const tasksStore = useTasksStore()
 const goalsStore = useGoalsStore()
 const appStore = useAppStore()
-const { isMobile } = useTaskView()
+const { isFullscreenModal } = useTaskView()
 const { isOpen, closeTask } = useTaskDetailPanel()
 const { broadcastRemoval } = useSelectedTaskSync()
 

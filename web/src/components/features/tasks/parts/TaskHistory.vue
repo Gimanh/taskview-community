@@ -81,9 +81,9 @@
 
     <UModal
       v-model:open="isDetailModalOpen"
-      :fullscreen="isMobile"
+      :fullscreen="isFullscreenModal"
       :title="t('history.details')"
-      :ui="{ content: 'sm:max-w-md' }"
+      :ui="{ content: isFullscreenModal ? '' : 'sm:max-w-md' }"
     >
       <template #body>
         <p class="text-sm whitespace-pre-wrap break-words">
@@ -117,7 +117,7 @@ const { t } = useI18n()
 const taskHistoryStore = useTaskHistory()
 const { canAccessTaskHistory, canRecoveryTaskHistory } = useGoalPermissions()
 const { activatorUi } = useNuxtUiTaskItemStyles()
-const { isMobile } = useTaskView()
+const { isFullscreenModal } = useTaskView()
 const { history } = storeToRefs(taskHistoryStore)
 
 const isExpanded = ref(false)

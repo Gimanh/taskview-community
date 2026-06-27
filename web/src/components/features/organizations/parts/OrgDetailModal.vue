@@ -1,8 +1,8 @@
 <template>
   <UModal
     v-model:open="open"
-    :fullscreen="isMobile"
-    :ui="{ content: 'max-w-lg max-h-[90vh] flex flex-col' }"
+    :fullscreen="isFullscreenModal"
+    :ui="{ content: isFullscreenModal ? 'flex flex-col' : 'max-w-lg max-h-[90vh] flex flex-col' }"
   >
     <template #content>
       <UCard
@@ -119,7 +119,7 @@ const props = defineProps<{
 
 const { t } = useI18n()
 const toast = useToast()
-const { isMobile } = useTaskView()
+const { isFullscreenModal } = useTaskView()
 const orgStore = useOrganizationStore()
 const { isAdmin, isOwner } = useOrgPermissions(() => props.organization)
 

@@ -1,8 +1,8 @@
 <template>
   <UModal
     v-model:open="isOpen"
-    :fullscreen="isMobile"
-    :ui="{ content: 'sm:max-w-3xl' }"
+    :fullscreen="isFullscreenModal"
+    :ui="{ content: isFullscreenModal ? '' : 'sm:max-w-3xl' }"
   >
     <template #header>
       <h3 class="text-lg font-semibold">
@@ -44,7 +44,7 @@ const props = defineProps<{
 const isOpen = defineModel<boolean>('open', { default: false })
 
 const { t } = useI18n()
-const { isMobile } = useTaskView()
+const { isFullscreenModal } = useTaskView()
 const { copy } = useClipboard()
 
 const formattedPayload = computed(() => JSON.stringify(props.payload, null, 2))
