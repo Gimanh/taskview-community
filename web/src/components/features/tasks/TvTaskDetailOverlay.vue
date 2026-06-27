@@ -60,13 +60,13 @@
           <UButton
             :label="t('common.delete')"
             color="error"
-            variant="outline"
+            variant="soft"
             @click="openDeleteDialog"
           />
           <UButton
             :label="t('common.close')"
             color="neutral"
-            variant="outline"
+            variant="soft"
             @click="closeTask"
           />
         </div>

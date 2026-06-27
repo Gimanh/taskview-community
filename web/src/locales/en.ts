@@ -102,8 +102,10 @@ export default {
     addPlaceholder: 'Enter project name',
     createNew: 'Create new project',
     add: 'Add project',
+    empty: 'No projects yet',
   },
   contextMenu: {
+    tasks: 'Tasks',
     kanban: 'Kanban',
     graph: 'Graph',
     sprints: 'Sprints',
@@ -177,6 +179,9 @@ export default {
     addTask: 'Add task',
     addTaskToToday: 'Add task for today',
     addTaskToUpcoming: 'Add upcoming task',
+    groupByDate: 'Group by date',
+    showAsList: 'Show as list',
+    noDeadline: 'No date',
     addFirstProject: 'Add your first project',
     today: 'Today',
     lastAddedTasks: 'Added',
@@ -221,6 +226,7 @@ export default {
     notifyOnOccurrence: 'Remind about each occurrence',
     preview: 'Next occurrences',
     repeatEvery: 'Repeat every',
+    startDate: 'Start date',
     specifyTime: 'Specify time',
     occurrenceTime: 'Occurrence time',
     datesCount: '{n} dates',
@@ -586,11 +592,13 @@ export default {
     },
     filters: {
       periods: {
+        month: 'This month',
         '7d': '7 days',
         '30d': '30 days',
         '90d': '90 days',
         '180d': 'Quarter',
         '365d': 'Year',
+        custom: 'Custom range',
       },
       scopes: {
         org: 'Whole organization',

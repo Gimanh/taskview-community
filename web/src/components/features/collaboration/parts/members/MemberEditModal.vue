@@ -46,13 +46,13 @@
         <UButton
           :label="t('common.cancel')"
           color="neutral"
-          variant="outline"
+          variant="soft"
           @click="isOpen = false"
         />
         <UButton
           :label="t('common.save')"
           color="primary"
-          variant="outline"
+          variant="soft"
           @click="handleSave"
         />
       </div>

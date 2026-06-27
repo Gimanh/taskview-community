@@ -36,6 +36,7 @@ export class TaskItemForClient {
     amount: number | null;
     transactionType: 1 | 0 | null;
     nodeGraphPosition: Record<string, unknown> | null;
+    recurrenceRuleId: number | null;
 
     constructor(task: TaskItemInDb, tags: number[] = [], historyId: number | null = null, assignees: number[] = []) {
         this.id = task.id;
@@ -69,5 +70,6 @@ export class TaskItemForClient {
         this.amount = task.amount;
         this.transactionType = task.transaction_type;
         this.nodeGraphPosition = task.node_graph_position;
+        this.recurrenceRuleId = task.recurrence_rule_id;
     }
 }

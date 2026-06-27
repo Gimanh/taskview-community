@@ -1,6 +1,6 @@
 <template>
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-    <UCard>
+    <UCard :ui="{ root: 'rounded-2xl' }" variant="soft">
       <div class="text-xs text-muted">
         {{ t('timeTracking.reports.kpiTotal') }}
       </div>
@@ -8,7 +8,7 @@
         {{ totalLabel }}
       </div>
     </UCard>
-    <UCard>
+    <UCard :ui="{ root: 'rounded-2xl' }" variant="soft">
       <div class="text-xs text-muted">
         {{ t('timeTracking.reports.kpiBillable') }}
       </div>
@@ -16,7 +16,7 @@
         {{ billableLabel }}
       </div>
     </UCard>
-    <UCard>
+    <UCard :ui="{ root: 'rounded-2xl' }" variant="soft">
       <div class="text-xs text-muted">
         {{ t('timeTracking.reports.kpiEntries') }}
       </div>

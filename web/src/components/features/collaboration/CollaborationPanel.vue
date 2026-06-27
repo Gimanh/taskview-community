@@ -16,6 +16,7 @@
         v-model="activeTab"
         :items="tabs"
         class="w-full"
+        :ui="{ list: 'rounded-2xl', trigger: 'rounded-xl', indicator: 'rounded-xl' }"
       >
         <template #members>
           <MembersList

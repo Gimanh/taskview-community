@@ -81,7 +81,7 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'update_task',
     {
-      description: 'Update an existing task (description, status, priority, dates, etc.)',
+      description: 'Update an existing task (description, status, priority, dates, cost, etc.)',
       inputSchema: {
         id: z.coerce.number().describe('Task ID to update'),
         description: z.string().optional().describe('New task description'),
@@ -93,6 +93,10 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
         startDate: z.string().optional().nullable().describe('Start date (ISO format)'),
         endDate: z.string().optional().nullable().describe('End/due date (ISO format)'),
         statusId: z.coerce.number().optional().nullable().describe('Kanban column status ID'),
+        amount: z.coerce.string().optional().nullable()
+          .describe('Cost/value of the task (decimal as string, e.g. "1500.00"). Pass null to clear.'),
+        transactionType: z.union([z.literal(1), z.literal(0)]).optional().nullable()
+          .describe('Cost type: 1=income, 0=expense, null=none'),
       },
     },
     async (params) => {

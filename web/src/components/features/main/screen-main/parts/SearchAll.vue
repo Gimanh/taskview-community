@@ -1,13 +1,5 @@
 <template>
   <div>
-    <UDashboardSearchButton
-      :label="t('admin.search')"
-      :disabled="!hasActiveGoals"
-      class="w-full "
-      variant="soft"
-      size="xl"
-    />
-
     <UDashboardSearch
       v-model:search-term="searchTerm"
       v-model:open="isOpen"
@@ -81,7 +73,6 @@ import { useI18n } from 'vue-i18n'
 import { refDebounced } from '@vueuse/core'
 import MainScreenAddTaskDialog from './MainScreenAddTaskDialog.vue'
 import { useBaseScreenStore } from '@/stores/base-screen.store'
-import { useGoalsStore } from '@/stores/goals.store'
 import { ALL_TASKS_LIST_ID } from 'taskview-api'
 import type { TaskItem } from '@/types/tasks.types'
 import { useTaskView } from '@/composables/useTaskView'
@@ -95,9 +86,6 @@ const isOpen = ref(false)
 const baseScreenStore = useBaseScreenStore()
 const tasks = ref<TaskItem[]>([])
 const addTaskDialogModel = ref(false)
-const goalsStore = useGoalsStore()
-
-const hasActiveGoals = computed(() => goalsStore.goals.length > 0)
 
 watch(searchTermDebounced, async (term) => {
   if (!term) {

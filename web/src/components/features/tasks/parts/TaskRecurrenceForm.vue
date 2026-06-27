@@ -18,6 +18,28 @@
     </div>
 
     <div class="flex items-center justify-between gap-3">
+      <span class="text-base font-medium text-highlighted">{{ t('recurrence.startDate') }}</span>
+      <UPopover>
+        <UButton
+          icon="i-lucide-calendar"
+          :label="startDateLabel"
+          color="neutral"
+          variant="soft"
+          size="md"
+          class="rounded-xl"
+        />
+        <template #content>
+          <UCalendar
+            :model-value="startDateModel"
+            class="p-2"
+            :week-starts-on="weekStart"
+            @update:model-value="onStartDateSelect"
+          />
+        </template>
+      </UPopover>
+    </div>
+
+    <div class="flex items-center justify-between gap-3">
       <span class="text-base font-medium text-highlighted">{{ t('recurrence.repeatEvery') }}</span>
       <UInputNumber
         v-model="form.interval"
@@ -27,6 +49,7 @@
         size="md"
         class="w-27"
         variant="soft"
+        :ui="{ base: 'text-base' }"
       />
     </div>
 
@@ -123,6 +146,11 @@
       />
     </div>
 
+    <div class="flex items-center justify-between gap-3">
+      <span class="text-base font-medium text-highlighted">{{ t('recurrence.notifyOnOccurrence') }}</span>
+      <USwitch v-model="form.notifyOnOccurrence" />
+    </div>
+
     <div
       v-if="preview.length"
       class="flex flex-col gap-3 p-3.5 rounded-2xl bg-elevated"
@@ -160,6 +188,7 @@
 import { computed, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { CalendarDate, Time } from '@internationalized/date'
+import type { DateValue } from '@internationalized/date'
 import { buildRruleString, jsDayToRruleWeekday, previewOccurrences } from '@/helpers/recurrence'
 import { useWeekStart } from '@/composables/useWeekStart'
 import TaskRecurrenceWeekdays from './TaskRecurrenceWeekdays.vue'
@@ -169,12 +198,12 @@ const PREVIEW_LIMIT = 5
 
 const form = defineModel<RecurrenceFormValue>({ required: true })
 
-const props = defineProps<{
-  dtstart: Date
-}>()
-
 const { t, locale } = useI18n()
 const weekStart = useWeekStart()
+
+// The series start date is part of the form now; its UTC components are the
+// wall-clock date (matches how the rest of the form reads dtstart).
+const startDateObj = computed(() => new Date(`${form.value.startDate}T00:00:00Z`))
 
 const frequencyItems = computed<{ label: string; value: RecurrenceFrequency }[]>(() => [
   { label: t('recurrence.freqShort.daily'), value: 'daily' },
@@ -184,7 +213,7 @@ const frequencyItems = computed<{ label: string; value: RecurrenceFrequency }[]>
 ])
 
 const monthlyModeItems = computed(() => [
-  { label: t('recurrence.monthly.dayOfMonth', { day: props.dtstart.getUTCDate() }), value: 'dayOfMonth' },
+  { label: t('recurrence.monthly.dayOfMonth', { day: startDateObj.value.getUTCDate() }), value: 'dayOfMonth' },
   { label: t('recurrence.monthly.lastDay'), value: 'lastDay' },
 ])
 
@@ -194,7 +223,35 @@ const endsItems = computed<{ label: string; value: RecurrenceEndsMode }[]>(() =>
   { label: t('recurrence.ends.after'), value: 'after' },
 ])
 
-const startWeekday = computed(() => jsDayToRruleWeekday(props.dtstart.getUTCDay()))
+const startWeekday = computed(() => jsDayToRruleWeekday(startDateObj.value.getUTCDay()))
+
+const startDateLabel = computed(() =>
+  capitalize(new Intl.DateTimeFormat(locale.value, {
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+  }).format(startDateObj.value)),
+)
+
+const startDateModel = shallowRef<CalendarDate>(parseCalendarDate(form.value.startDate))
+
+// External resets (dialog re-inits the form on open) → keep the calendar in sync,
+// but DON'T touch the weekday selection (that would clobber a saved rule).
+watch(() => form.value.startDate, (value) => {
+  if (value !== startDateModel.value?.toString()) startDateModel.value = parseCalendarDate(value)
+})
+
+// User picked a date: re-anchor the series. A weekly rule whose selected day no
+// longer covers the new start day would silently jump to the next matching day,
+// so move the anchor to the picked weekday in that case.
+type CalendarSelection = DateValue | DateValue[] | { start?: DateValue; end?: DateValue } | null | undefined
+
+function onStartDateSelect(value: CalendarSelection): void {
+  if (!value || Array.isArray(value) || !('day' in value)) return
+  const picked = new CalendarDate(value.year, value.month, value.day)
+  startDateModel.value = picked
+  form.value.startDate = picked.toString()
+  const weekday = jsDayToRruleWeekday(new Date(`${picked.toString()}T00:00:00Z`).getUTCDay())
+  if (!form.value.weekdays.includes(weekday)) form.value.weekdays = [weekday]
+}
 
 const untilDateModel = shallowRef<CalendarDate | undefined>(
   form.value.untilDate ? parseCalendarDate(form.value.untilDate) : undefined,
@@ -250,8 +307,8 @@ watch(timeModel, (time) => {
 })
 
 const preview = computed(() => {
-  const rrule = buildRruleString({ form: form.value, dtstart: props.dtstart })
-  return previewOccurrences({ rrule, dtstart: props.dtstart, limit: PREVIEW_LIMIT })
+  const rrule = buildRruleString({ form: form.value, dtstart: startDateObj.value })
+  return previewOccurrences({ rrule, dtstart: startDateObj.value, limit: PREVIEW_LIMIT })
 })
 
 function capitalize(value: string): string {

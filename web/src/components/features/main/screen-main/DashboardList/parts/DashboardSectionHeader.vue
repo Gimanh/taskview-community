@@ -39,6 +39,15 @@
             />
           </div>
         </template>
+        <UButton
+          v-if="groupable"
+          :icon="grouped ? 'i-lucide-list' : 'i-lucide-calendar-days'"
+          :aria-label="grouped ? t('msg.showAsList') : t('msg.groupByDate')"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          @click.stop="$emit('toggle-group')"
+        />
         <DashboardAddTask
           compact
           :title="addTitle"
@@ -52,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import DashboardAddTask from './DashboardAddTask.vue'
 
 defineProps<{
@@ -68,5 +78,13 @@ defineProps<{
   addDisabled?: boolean
   upcomingTask?: boolean
   noDates?: boolean
+  groupable?: boolean
+  grouped?: boolean
 }>()
+
+defineEmits<{
+  'toggle-group': []
+}>()
+
+const { t } = useI18n()
 </script>

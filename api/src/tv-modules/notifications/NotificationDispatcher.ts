@@ -28,6 +28,8 @@ export class NotificationDispatcher implements Dispatcher {
         eventBus.on('task.updated', (data) => this.onTaskUpdated(data));
         eventBus.on('task.assigneesChanged', (data) => this.onAssigneesChanged(data));
         eventBus.on('task.deleted', (data) => this.onTaskDeleted(data));
+        eventBus.on('recurrence.created', (data) => this.onRecurrenceScheduled(data));
+        eventBus.on('recurrence.updated', (data) => this.onRecurrenceScheduled(data));
     }
 
     async registerWorkers(): Promise<void> {
@@ -76,6 +78,19 @@ export class NotificationDispatcher implements Dispatcher {
             await this.deadlineScheduler.schedule(data.task, data.initiatorId);
         } else {
             await this.deadlineScheduler.cancel(data.task.id);
+        }
+    }
+
+    private async onRecurrenceScheduled(data: AppEvents['recurrence.created'] | AppEvents['recurrence.updated']): Promise<void> {
+        const instance = await new RecurrenceRepository().findOpenInstance(data.rule.id);
+        if (!instance) return;
+
+        this.notificationsRepo.deleteByTaskAndType(instance.id, NotificationType.DEADLINE);
+        await this.deadlineScheduler.cancel(instance.id);
+
+        if (data.rule.notifyOnOccurrence && instance.endDate) {
+            $logger.info(`[NotificationDispatcher] Scheduling occurrence deadline for task=${instance.id}, rule=${data.rule.id}`);
+            await this.deadlineScheduler.schedule(instance, data.initiatorId);
         }
     }
 

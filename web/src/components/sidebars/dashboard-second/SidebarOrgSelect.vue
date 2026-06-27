@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-2">
+  <div class="flex flex-col gap-3">
     <UPopover
       v-model:open="open"
       :content="{ align: 'start' }"
@@ -51,7 +51,7 @@
 
     <div
       v-if="currentOrg"
-      class="flex items-center justify-center gap-2"
+      class="flex items-center justify-center gap-2 mb-3"
     >
       <UButton
         icon="i-lucide-user-plus"

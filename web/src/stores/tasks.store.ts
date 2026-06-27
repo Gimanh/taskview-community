@@ -53,6 +53,14 @@ export const useTasksStore = defineStore('tasks', {
       }
     },
 
+    async refreshTask(taskId: TaskBase['id']) {
+      const task = await $tvApi.tasks.fetchTaskById(taskId).catch(logError)
+      if (!task) return
+      this.updateSelectedTask(task)
+      const localTask = this.tasks.find((t) => t.id === taskId)
+      if (localTask) Object.assign(localTask, task)
+    },
+
     async fetchTaskById(taskId: TaskBase['id']) {
       if (taskId === this.selectedTask?.id) return
 

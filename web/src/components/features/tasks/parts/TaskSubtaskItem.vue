@@ -8,7 +8,7 @@
       v-model="localDescription"
       type="text"
       class="flex-1 text-sm border-none outline-none focus:ring-0 p-1 rounded-14 hover:bg-muted/10 focus:bg-muted/10 shadow-sm dark:bg-tv-ui-bg-elevated!"
-      :class="{ 'line-through text-muted': subtask.complete }"
+      :class="{ 'text-muted': subtask.complete }"
       :rows="1"
       :autoresize="true"
       :ui="{ base: 'rounded-xl' }"

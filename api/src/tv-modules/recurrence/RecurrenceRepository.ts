@@ -19,6 +19,7 @@ import type {
     CreateRuleWithOriginResult,
     RecurrenceRulePatchArgs,
     RemoveTemplateAssigneeFromGoalArgs,
+    UpdateInstanceWindowArgs,
 } from './types';
 
 const PG_UNIQUE_VIOLATION = '23505';
@@ -192,6 +193,21 @@ export class RecurrenceRepository {
                 .limit(1)
         );
         return result?.[0] ?? null;
+    }
+
+    /** Re-stamp an open instance's deadline window after the series time/timezone changed. */
+    async updateInstanceWindow(args: UpdateInstanceWindowArgs): Promise<void> {
+        await callWithCatch(() =>
+            this.db.dbDrizzle
+                .update(TasksSchema)
+                .set({
+                    startDate: args.window.startDate,
+                    startTime: args.window.startTime,
+                    endDate: args.window.endDate,
+                    endTime: args.window.endTime,
+                })
+                .where(eq(TasksSchema.id, args.taskId))
+        );
     }
 
     /** Active rules with no open instance — the reconcile sweep input. Empty in normal operation. */

@@ -123,6 +123,9 @@ export default defineConfig({
           }
         },
         inputNumber: {
+          slots: {
+            base: 'text-base',
+          },
           defaultVariants: {
             variant: 'soft'
           }
@@ -192,7 +195,8 @@ export default defineConfig({
           slots: {
             content: 'rounded-2xl',
             item: 'rounded-xl hover:bg-accented/40 before:rounded-xl',
-            base: 'rounded-xl'
+            base: 'rounded-xl',
+            input: 'text-base'
           },
           defaultVariants: {
             variant: 'soft',

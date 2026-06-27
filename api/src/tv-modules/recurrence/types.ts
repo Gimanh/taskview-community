@@ -81,6 +81,11 @@ export type InstanceWindow = {
 
 /** Repository args */
 
+export type UpdateInstanceWindowArgs = {
+    taskId: number;
+    window: InstanceWindow;
+};
+
 export type RecurrenceRulePatchArgs = {
     ruleId: number;
     patch: Partial<{

@@ -25,6 +25,7 @@
             value-key="value"
             :placeholder="t('webhooks.selectEvents')"
             class="w-full"
+            size="xl"
           />
         </UFormField>
       </div>
@@ -34,11 +35,13 @@
         <UButton
           :label="t('common.cancel')"
           variant="ghost"
+          color="neutral"
           @click="isOpen = false"
         />
         <UButton
           :label="t('common.add')"
           color="primary"
+          variant="soft"
           :disabled="!url || selectedEvents.length === 0"
           :loading="saving"
           @click="handleCreate"

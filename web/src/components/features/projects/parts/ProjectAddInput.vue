@@ -1,5 +1,4 @@
 <template>
-  <div class="shadow-sm rounded-lg">
     <UInput
       v-model="projectName"
       :placeholder="placeholder ?? t('projects.addPlaceholder')"
@@ -7,9 +6,7 @@
       variant="soft"
       class="w-full"
       data-testid="project-add-input"
-      :ui="{
-        base: 'bg-tv-ui-bg-elevated',
-      }"
+     
       @keydown.enter="addProject"
     >
       <template #trailing>
@@ -29,7 +26,6 @@
         />
       </template>
     </UInput>
-  </div>
 </template>
 
 <script setup lang="ts">

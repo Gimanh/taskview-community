@@ -10,6 +10,7 @@ import type { AppUser } from '../../core/AppUser'
 import { $logger } from '../../modules/logget'
 import { GoalPermissions } from '../../types/auth.types'
 import { AnalyticsRepository } from './AnalyticsRepository'
+import { formatDateInZone } from './helpers'
 import { SectionRegistry } from './sections/SectionRegistry'
 import type {
   AnalyticsArgBuildSections,
@@ -45,7 +46,7 @@ export class AnalyticsManager {
   }
 
   async buildSections(params: AnalyticsArgBuildSections): Promise<AnalyticsSectionsResponse> {
-    const { scope, organizationId, period, range, sectionIds } = params
+    const { scope, organizationId, period, range, timezone, sectionIds } = params
 
     const allAccessible = await this.getAccessibleGoalIds(organizationId)
     const accessibleGoalIds = this.narrowToScope(allAccessible, scope)
@@ -86,7 +87,7 @@ export class AnalyticsManager {
     return {
       scope,
       period,
-      range: { from: range.from.toISOString(), to: range.to.toISOString() },
+      range: { from: formatDateInZone(range.from, timezone), to: formatDateInZone(range.to, timezone) },
       sections,
       availableGoals,
       failedSectionIds,

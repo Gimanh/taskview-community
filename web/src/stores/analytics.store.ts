@@ -33,7 +33,7 @@ function classifyError(e: unknown): AnalyticsError {
 export const useAnalyticsStore = defineStore('analytics', {
   state: (): AnalyticsState => ({
     scope: { kind: 'org' },
-    period: '30d',
+    period: 'month',
     customFrom: null,
     customTo: null,
     sections: [],
@@ -113,6 +113,7 @@ export const useAnalyticsStore = defineStore('analytics', {
           scope: this.scope,
           organizationId,
           period: this.period,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           from: this.customFrom ?? undefined,
           to: this.customTo ?? undefined,
         }, controller.signal)
@@ -172,6 +173,7 @@ export const useAnalyticsStore = defineStore('analytics', {
           scope: this.scope,
           organizationId,
           period: this.period,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           from: this.customFrom ?? undefined,
           to: this.customTo ?? undefined,
           bucket: args.bucket,

@@ -7,10 +7,7 @@
   >
     <template #body>
       <div class="flex flex-col gap-5">
-        <TaskRecurrenceForm
-          v-model="form"
-          :dtstart="dtstart.date"
-        />
+        <TaskRecurrenceForm v-model="form" />
 
         <div
           v-if="rule"
@@ -63,7 +60,6 @@
             @click="save"
           />
         </div>
-        
       </div>
     </template>
   </UModal>
@@ -130,11 +126,12 @@ watch(open, (value) => {
 async function save() {
   actionLoading.value = 'save'
   try {
-    const rrule = buildRruleString({ form: form.value, dtstart: dtstart.value.date })
-    
+    const startDateObj = new Date(`${form.value.startDate}T00:00:00Z`)
+    const rrule = buildRruleString({ form: form.value, dtstart: startDateObj })
+
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
-    
-    const dtstartIso = buildDtstartIso({ dateStr: dtstart.value.iso.slice(0, 10), time: form.value.time })
+
+    const dtstartIso = buildDtstartIso({ dateStr: form.value.startDate, time: form.value.time })
     const result = props.rule
       ? await tasksStore.updateRecurrence({
         ruleId: props.rule.id,
@@ -152,6 +149,7 @@ async function save() {
       })
 
     if (result) {
+      await tasksStore.refreshTask(props.task.id)
       toast.add({ title: t('recurrence.toasts.saved'), color: 'success' })
       emit('changed')
       open.value = false

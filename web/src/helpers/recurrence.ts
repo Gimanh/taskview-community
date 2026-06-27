@@ -28,7 +28,8 @@ function timeFromDtstart(dtstart: Date): string {
 
 export function defaultRecurrenceForm(dtstart: Date, hasTime: boolean): RecurrenceFormValue {
   return {
-    frequency: 'weekly',
+    frequency: 'daily',
+    startDate: formatUtcDate(dtstart),
     interval: 1,
     weekdays: [jsDayToRruleWeekday(dtstart.getUTCDay())],
     monthlyMode: 'dayOfMonth',
@@ -143,6 +144,12 @@ export function buildDtstartIso(args: { dateStr: string; time: string | null }):
 function formatLocalDate(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+/** 'YYYY-MM-DD' from the date's UTC components (the floating wall-clock date). */
+export function formatUtcDate(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`
 }
 
 function formatLocalTime(date: Date): string {

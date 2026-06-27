@@ -1,7 +1,7 @@
 # TaskView™
 
 <p align="center">
-  <img src="./assets/taskview-logo.png" alt="TaskView logo" width="320">
+  <img src="./assets/taskview/kanban-dark.png" alt="TaskView logo" width="320">
 </p>
 
 <p align="center">
@@ -12,6 +12,35 @@
   TaskView combines task management, custom workflows, developer integrations,
   analytics, and AI-assisted automation in a platform you can run on your own infrastructure.
 </p>
+
+<details>
+  <summary><strong>View more screenshots</strong></summary>
+
+  <br>
+
+  <img src="./assets/taskview/main-light.png" alt="Main dashboard (light theme)" width="100%">
+  <img src="./assets/taskview/main-dark.png" alt="Main dashboard (dark theme)" width="100%">
+  <img src="./assets/taskview/main-collapsed-light.png" alt="Main dashboard with collapsed sidebar (light theme)" width="100%">
+  <img src="./assets/taskview/main-collapsed-dark.png" alt="Main dashboard with collapsed sidebar (dark theme)" width="100%">
+  <img src="./assets/taskview/kanban-light.png" alt="Kanban board (light theme)" width="100%">
+  <img src="./assets/taskview/kanban-dark.png" alt="Kanban board (dark theme)" width="100%">
+  <img src="./assets/taskview/tasks-light.png" alt="Task list view (light theme)" width="100%">
+  <img src="./assets/taskview/tasks-dark.png" alt="Task list view (dark theme)" width="100%">
+  <img src="./assets/taskview/recent-tasks.png" alt="Recent tasks overview" width="100%">
+  <img src="./assets/taskview/sprints.png" alt="Sprint planning" width="100%">
+  <img src="./assets/taskview/time-tracking.png" alt="Time tracking" width="100%">
+  <img src="./assets/taskview/analytics.png" alt="Analytics dashboard" width="100%">
+  <img src="./assets/taskview/members.png" alt="Organization members management" width="100%">
+  <img src="./assets/taskview/permissions-light.png" alt="Role permissions (light theme)" width="100%">
+  <img src="./assets/taskview/permissions-dark.png" alt="Role permissions (dark theme)" width="100%">
+  <img src="./assets/taskview/sso.png" alt="Single Sign-On (SSO) configuration" width="100%">
+  <img src="./assets/taskview/api-tokens.png" alt="API tokens management" width="100%">
+  <img src="./assets/taskview/webhooks.png" alt="Webhooks configuration" width="100%">
+  <img src="./assets/taskview/integrations.png" alt="Integrations" width="100%">
+  <img src="./assets/taskview/ui-customization.png" alt="UI customization" width="100%">
+  <img src="./assets/taskview/settings.png" alt="Settings" width="100%">
+
+</details>
 
 <p align="center">
   <a href="https://app.taskview.tech"><strong>TaskView Cloud</strong></a>

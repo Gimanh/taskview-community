@@ -100,6 +100,7 @@ export default {
     add: 'Projekt hinzufügen',
   },
   contextMenu: {
+    tasks: 'Liste',
     kanban: 'Kanban',
     graph: 'Graph',
     collaboration: 'Zusammenarbeit',
@@ -484,11 +485,13 @@ export default {
     },
     filters: {
       periods: {
+        month: 'Aktueller Monat',
         '7d': '7 Tage',
         '30d': '30 Tage',
         '90d': '90 Tage',
         '180d': 'Quartal',
         '365d': 'Jahr',
+        custom: 'Benutzerdefiniert',
       },
       scopes: {
         org: 'Gesamte Organisation',

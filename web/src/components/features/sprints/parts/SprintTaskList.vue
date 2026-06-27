@@ -40,7 +40,7 @@
           />
           <span
             class="truncate"
-            :class="{ 'line-through text-dimmed': task.complete }"
+            :class="{ 'text-dimmed': task.complete }"
           >
             {{ task.description }}
           </span>

@@ -26,7 +26,7 @@
     :fullscreen="isMobile"
     :ui="{
       overlay: 'sm:items-center sm:justify-center',
-      content: 'sm:max-w-lg sm:max-h-[80vh] sm:rounded-lg sm:m-auto w-full',
+      content: 'sm:max-w-lg sm:max-h-[80vh] sm:m-auto w-full',
       body: 'p-0!',
       footer: 'p-4!',
     }"
@@ -91,7 +91,7 @@
         >
           <UButton
             :label="t('notifications.loadMore')"
-            variant="ghost"
+            variant="soft"
             color="neutral"
             size="xs"
             block
@@ -107,7 +107,7 @@
         <UButton
           :label="t('common.close')"
           color="neutral"
-          variant="outline"
+          variant="soft"
           @click="isOpen = false"
         />
       </div>

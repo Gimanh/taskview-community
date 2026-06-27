@@ -26,6 +26,7 @@ export type TaskItemInDb = {
     amount: number | null;
     transaction_type: 1 | 0 | null;
     node_graph_position: Record<string, unknown> | null;
+    recurrence_rule_id: number | null;
     // history_id?: number | null;
 };
 

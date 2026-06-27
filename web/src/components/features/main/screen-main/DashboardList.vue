@@ -2,7 +2,7 @@
   <div class="overflow-auto flex flex-col">
     <div class="sticky top-0 p-2 lg:p-5 z-10 bg-default">
       <div class="w-full max-w-3xl mx-auto">
-        <SearchAll />
+        <SearchActivator />
       </div>
     </div>
 
@@ -15,6 +15,7 @@
         :add-title="t('msg.addTaskToToday')"
         :tasks="todayPending"
         :completed-tasks="todayCompleted"
+        section-key="today"
         @toggle="(task) => toggle(task, 'tasksToday')"
       />
 
@@ -27,6 +28,8 @@
         :tasks="upcomingPending"
         :completed-tasks="upcomingCompleted"
         upcoming-task
+        groupable
+        section-key="upcoming"
         @toggle="(task) => toggle(task, 'tasksUpcoming')"
       />
 
@@ -40,6 +43,7 @@
         :completed-tasks="recentCompleted"
         no-dates
         tabbed
+        section-key="recent"
         :show-progress="false"
         @toggle="toggleRecent"
       />
@@ -50,7 +54,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import SearchAll from './parts/SearchAll.vue'
+import SearchActivator from './parts/SearchActivator.vue'
 import DashboardSection from './DashboardList/parts/DashboardSection.vue'
 import type { TaskItem } from '@/types/tasks.types'
 import { useBaseScreenStore } from '@/stores/base-screen.store'

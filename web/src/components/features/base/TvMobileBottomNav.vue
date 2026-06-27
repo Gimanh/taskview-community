@@ -27,6 +27,7 @@ import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDashboard } from '@/composables/useDashboard'
 import { useAppRouteInfo } from '@/composables/useAppRouteInfo'
+import { ALL_TASKS_LIST_ID } from 'taskview-api'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useGoalPermissionsFor } from '@/composables/useGoalPermissions'
 
@@ -66,7 +67,7 @@ const navItems = computed<NavItem[]>(() => {
     {
       key: 'projects',
       label: t('projects.title'),
-      icon: 'i-lucide-folder',
+      icon: 'i-lucide-panel-left',
       active: () => isSidebarOpen.value,
       onClick: () => { isSidebarOpen.value = !isSidebarOpen.value },
     },
@@ -91,15 +92,26 @@ const navItems = computed<NavItem[]>(() => {
         active: () => route.name === 'graph',
       })
     }
+    items.push({
+      key: 'list',
+      label: t('contextMenu.tasks'),
+      icon: 'i-lucide-list',
+      to: { name: 'user', params: { projectId: projectId.value, listId: ALL_TASKS_LIST_ID } },
+      active: () => isUserRoute.value && hasProject.value,
+    })
   }
 
-  items.push({
-    key: 'account',
-    label: t('account.nav'),
-    icon: 'i-lucide-settings',
-    to: { name: 'account' },
-    active: () => isAccountRoute.value,
-  })
+  // Inside a project the bar fills up with project shortcuts (List/Kanban/Graph),
+  // so drop Settings there — it stays reachable from the global tabs.
+  if (!hasProject.value) {
+    items.push({
+      key: 'account',
+      label: t('account.nav'),
+      icon: 'i-lucide-settings',
+      to: { name: 'account' },
+      active: () => isAccountRoute.value,
+    })
+  }
 
   return items
 })

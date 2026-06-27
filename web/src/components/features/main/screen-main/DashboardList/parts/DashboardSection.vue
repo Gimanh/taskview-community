@@ -21,6 +21,9 @@
         :add-disabled="!hasActiveGoals"
         :upcoming-task="upcomingTask"
         :no-dates="noDates"
+        :groupable="groupable"
+        :grouped="grouped"
+        @toggle-group="grouped = !grouped"
       />
 
       <template #content>
@@ -79,7 +82,32 @@
           class="flex flex-col gap-3 pt-3"
         >
           <div
-            v-if="tasks.length"
+            v-if="groupable && grouped && tasks.length"
+            class="flex flex-col gap-4"
+          >
+            <div
+              v-for="group in taskGroups"
+              :key="group.key"
+              class="flex flex-col gap-2"
+            >
+              <div class="flex items-center gap-3 px-1">
+                <span class="text-sm text-highlighted opacity-80 font-medium">
+                  {{ group.label }}
+                </span>
+                <span class="text-xs text-muted">{{ group.tasks.length }}</span>
+                <div class="flex-1 h-px bg-default" />
+              </div>
+              <TaskItem
+                v-for="task in group.tasks"
+                :key="task.id"
+                :task="task"
+                @toggle="$emit('toggle', $event, 'pending')"
+              />
+            </div>
+          </div>
+
+          <div
+            v-else-if="tasks.length"
             class="flex flex-col gap-2"
           >
             <TaskItem
@@ -126,6 +154,7 @@ import { useI18n } from 'vue-i18n'
 import type { TabsItem } from '@nuxt/ui'
 import type { TaskItem as TaskItemType } from '@/types/tasks.types'
 import { useTaskView } from '@/composables/useTaskView'
+import { useLsRef } from '@/composables/useLsRef'
 import TaskItem from '@/components/features/tasks/parts/TaskItem.vue'
 import DashboardAddTask from './DashboardAddTask.vue'
 import DashboardSectionHeader from './DashboardSectionHeader.vue'
@@ -145,6 +174,8 @@ const props = withDefaults(defineProps<{
   noDates?: boolean
   showProgress?: boolean
   tabbed?: boolean
+  groupable?: boolean
+  sectionKey: string
 }>(), {
   showProgress: true,
 })
@@ -153,8 +184,38 @@ defineEmits<{
   toggle: [task: TaskItemType, bucket: TaskBucket]
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { hasActiveGoals } = useTaskView()
+
+const grouped = useLsRef(`taskview:dashboard:${props.sectionKey}:grouped`, true)
+
+const NO_DATE_KEY = '~'
+
+function dateKey(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+function groupLabel(key: string): string {
+  const date = new Date(`${key}T00:00:00`)
+  const day = new Intl.DateTimeFormat(locale.value, { day: 'numeric' }).format(date)
+  const month = new Intl.DateTimeFormat(locale.value, { month: 'short' }).format(date)
+  const weekday = new Intl.DateTimeFormat(locale.value, { weekday: 'long' }).format(date)
+  const formatted = `${day} ${month} ${weekday}`
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
+}
+
+const taskGroups = computed(() => {
+  const groups = new Map<string, TaskItemType[]>()
+  for (const task of props.tasks) {
+    const key = task.endDate ? dateKey(new Date(task.endDate)) : NO_DATE_KEY
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(task)
+  }
+  return [...groups.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, tasks]) => ({ key, label: key === NO_DATE_KEY ? t('msg.noDeadline') : groupLabel(key), tasks }))
+})
 
 const ACCENTS: Record<Accent, { bg: string; icon: string; bar: string }> = {
   indigo: { bg: 'bg-indigo-500/15', icon: 'text-indigo-500', bar: 'bg-indigo-500' },
@@ -164,7 +225,7 @@ const ACCENTS: Record<Accent, { bg: string; icon: string; bar: string }> = {
 
 const accentClasses = computed(() => ACCENTS[props.accent])
 
-const expanded = ref(true)
+const expanded = useLsRef(`taskview:dashboard:${props.sectionKey}:expanded`, true)
 
 const activeTab = ref('active')
 const tabItems = computed<TabsItem[]>(() => [

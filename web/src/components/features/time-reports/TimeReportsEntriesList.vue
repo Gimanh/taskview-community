@@ -16,10 +16,10 @@
       <div
         v-for="entry in entries"
         :key="entry.id"
-        class="flex items-center justify-between gap-2 px-2 py-1.5 rounded bg-elevated/50 text-sm"
+        class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-elevated/50 text-sm"
       >
         <div class="flex flex-col min-w-0 flex-1">
-          <div class="flex items-center gap-2 text-xs text-muted">
+          <div class="flex items-center gap-2 text-sm text-muted">
             <span class="font-mono">{{ formatDate(entry.startedAt) }}</span>
             <span class="truncate">· {{ entry.userEmail ?? `#${entry.userId}` }}</span>
           </div>
@@ -31,8 +31,9 @@
         <UBadge
           :label="formatDuration(entry.durationSeconds ?? 0)"
           color="neutral"
-          variant="subtle"
-          size="xs"
+          variant="soft"
+          size="md"
+          class="rounded-lg"
         />
       </div>
     </div>

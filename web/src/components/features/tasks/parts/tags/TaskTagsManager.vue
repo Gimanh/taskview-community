@@ -144,6 +144,7 @@ import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useProjectContext } from '@/composables/useProjectContext'
 import { useTaskView } from '@/composables/useTaskView'
 import { useNuxtUiTaskItemStyles } from '@/composables/useNuxtUiTaskItemStyles'
+import { useLsRef } from '@/composables/useLsRef'
 
 const props = defineProps<{
   taskId: number
@@ -165,7 +166,7 @@ onMounted(async () => {
   }
 })
 
-const isExpanded = ref(false)
+const isExpanded = useLsRef('taskview:task:tagsExpanded', false)
 const isEditMode = ref(false)
 const isEditDialogOpen = ref(false)
 const isDeleteDialogOpen = ref(false)

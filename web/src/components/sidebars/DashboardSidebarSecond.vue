@@ -13,6 +13,7 @@
           :to="{ name: 'user' }"
           variant="taskview"
           class="flex-1"
+          :ui="{ container: 'px-4 py-3' }"
         >
           {{ t('main') }}
         </TvGoalLikeItem>
@@ -20,7 +21,7 @@
         <NotificationBell />
       </div>
 
-      <SearchAll />
+      <SearchActivator />
       <SidebarProjectSelect />
       <SidebarTools />
       <ProjectAddInput
@@ -46,7 +47,7 @@ import { ALL_TASKS_LIST_ID } from 'taskview-api'
 import { useDashboard } from '@/composables/useDashboard'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useOrganizationStore } from '@/stores/organization.store'
-import SearchAll from '@/components/features/main/screen-main/parts/SearchAll.vue'
+import SearchActivator from '@/components/features/main/screen-main/parts/SearchActivator.vue'
 import ProjectAddInput from '@/components/features/projects/parts/ProjectAddInput.vue'
 import UserMenu from '@/components/UserMenu.vue'
 import TvGoalLikeItem from '@/components/features/base/TvGoalLikeItem.vue'

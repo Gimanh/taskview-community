@@ -39,7 +39,7 @@
         <UButton
           :label="t('common.done')"
           color="primary"
-          variant="outline"
+          variant="soft"
           @click="isOpen = false"
         />
       </div>

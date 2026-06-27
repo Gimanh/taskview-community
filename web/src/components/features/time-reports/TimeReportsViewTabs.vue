@@ -3,6 +3,7 @@
     v-model="active"
     :items="items"
     class="w-full"
+    :ui="{ list: 'rounded-2xl', trigger: 'rounded-xl', indicator: 'rounded-xl' }"
   >
     <template #by-task>
       <TimeReportsByTaskTable />

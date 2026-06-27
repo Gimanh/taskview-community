@@ -10,6 +10,9 @@
       <DashboardSidebarSecond v-else />
 
       <RouterView />
+
+      <!-- Single global search palette; activators (SearchActivator) trigger it. -->
+      <SearchAll />
     </UDashboardGroup>
 
     <TvMobileBottomNav />
@@ -28,6 +31,7 @@ import { useI18n } from 'vue-i18n'
 import ConnectionStatusBanner from '@/components/ConnectionStatusBanner.vue'
 import DashboardSidebarFirst from '@/components/sidebars/DashboardSidebarFirst.vue'
 import DashboardSidebarSecond from '@/components/sidebars/DashboardSidebarSecond.vue'
+import SearchAll from '@/components/features/main/screen-main/parts/SearchAll.vue'
 import { useCentrifugo } from '@/composables/useCentrifugo'
 import { usePushNotifications } from '@/composables/usePushNotifications'
 import { useGoalsStore } from '@/stores/goals.store'

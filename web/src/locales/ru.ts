@@ -102,8 +102,10 @@ export default {
     addPlaceholder: 'Введите название проекта',
     createNew: 'Создать новый проект',
     add: 'Добавить проект',
+    empty: 'Пока нет проектов',
   },
   contextMenu: {
+    tasks: 'Список',
     kanban: 'Канбан',
     graph: 'Граф',
     sprints: 'Спринты',
@@ -177,6 +179,9 @@ export default {
     addTask: 'Добавить задачу',
     addTaskToToday: 'Добавить задачу на сегодня',
     addTaskToUpcoming: 'Добавить предстоящую задачу',
+    groupByDate: 'Группировать по дате',
+    showAsList: 'Показать списком',
+    noDeadline: 'Без даты',
     addFirstProject: 'Добавьте свой первый проект',
     today: 'Сегодня',
     lastAddedTasks: 'Добавленные',
@@ -221,6 +226,7 @@ export default {
     notifyOnOccurrence: 'Напоминать о каждом повторении',
     preview: 'Ближайшие повторения',
     repeatEvery: 'Повторять каждые',
+    startDate: 'Дата начала',
     specifyTime: 'Указать время',
     occurrenceTime: 'Время повторения',
     datesCount: '{n} дат',
@@ -559,11 +565,13 @@ export default {
     },
     filters: {
       periods: {
+        month: 'Текущий месяц',
         '7d': '7 дней',
         '30d': '30 дней',
         '90d': '90 дней',
         '180d': 'Квартал',
         '365d': 'Год',
+        custom: 'Произвольный период',
       },
       scopes: {
         org: 'Вся организация',
