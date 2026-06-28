@@ -5,6 +5,8 @@ ReleasesBuilds/*
 iconcreator
 *.prod.*
 .DS_Store
+.cursor
+.claude
 node_modules
 __APP_BUILD__
 ssl-create

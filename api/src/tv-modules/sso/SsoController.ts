@@ -6,6 +6,7 @@ import { $logger } from '../../modules/logget'
 import { logError } from '../../utils/api'
 import { generateString, isEmail } from '../../utils/helpers'
 import AuthModel from '../auth/AuthModel'
+import { GoalsRepository } from '../goals/GoalsRepository'
 import { OrganizationRepository } from '../organizations/OrganizationRepository'
 import { createSsoProvider } from './providers/provider-factory'
 import { SsoRepository } from './SsoRepository'
@@ -17,6 +18,7 @@ export class SsoController {
   private readonly ssoRepo = new SsoRepository()
   private readonly authModel = new AuthModel()
   private readonly orgRepo = new OrganizationRepository()
+  private readonly goalsRepo = new GoalsRepository()
 
   initiateLogin = async (req: Request, res: Response) => {
     const configId = Number(req.params.configId)
@@ -75,6 +77,7 @@ export class SsoController {
         const personalOrg = await this.orgRepo.create({ name: `${login}'s workspace`, slug: personalOrgSlug }, id, true)
         if (personalOrg) {
           await this.orgRepo.addMember(personalOrg.id, ssoResult.email, 'owner')
+          await this.goalsRepo.createInboxGoal({ ownerId: id, organizationId: personalOrg.id })
         }
 
         userData = await this.authModel.getUserByLogin(ssoResult.email, isEmail(ssoResult.email))

@@ -182,7 +182,7 @@ export default defineConfig({
             variant: {
               taskview: {
                 root: 'cursor-pointer shadow-sm bg-tv-ui-bg-elevated',
-                container: 'sm:p-2 sm:px-4',
+                container: 'p-2 px-4 sm:p-2 sm:px-4',
               },
             },
 

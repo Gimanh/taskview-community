@@ -103,6 +103,7 @@ export default {
     createNew: 'Создать новый проект',
     add: 'Добавить проект',
     empty: 'Пока нет проектов',
+    inbox: 'Входящие',
   },
   contextMenu: {
     tasks: 'Список',

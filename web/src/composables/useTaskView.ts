@@ -13,7 +13,7 @@ export const useTaskView = () => {
   const isFullscreenModal = bp.smallerOrEqual('fullscreenModalMax')
 
   return {
-    hasActiveGoals: computed(() => goalsStore.goals.length > 0),
+    hasActiveGoals: computed(() => goalsStore.goals.some(g => !g.isInbox)),
     isMobile,
     isDesktop,
     isFullscreenModal,

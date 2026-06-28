@@ -20,6 +20,7 @@ import RuEmailTemplate from './mail/confirm-email-ru';
 import LoginCodeEmailTemplate from './mail/login-code-en';
 import type { ExternalAuthUser } from './strategies/external-auth.types';
 import { OrganizationRepository } from '../organizations/OrganizationRepository';
+import { GoalsRepository } from '../goals/GoalsRepository';
 
 const LOGIN_CODE_TTL_MS = 5 * 60 * 1000;
 
@@ -30,12 +31,14 @@ export default class AuthController {
 
     private readonly refreshTokenCookieName: string = 'taskview-refresh';
     private readonly orgRepository: OrganizationRepository = new OrganizationRepository();
+    private readonly goalsRepository: GoalsRepository = new GoalsRepository();
 
     private async createPersonalWorkspace(userId: number, email: string, login: string) {
         const slug = `org-${crypto.randomUUID().slice(0, 8)}`
         const org = await this.orgRepository.create({ name: `${login}'s workspace`, slug }, userId, true)
         if (org) {
             await this.orgRepository.addMember(org.id, email, 'owner')
+            await this.goalsRepository.createInboxGoal({ ownerId: userId, organizationId: org.id })
         }
     }
 

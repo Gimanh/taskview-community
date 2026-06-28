@@ -1,0 +1,24 @@
+{
+  "name": "taskview",
+  "displayName": "TaskView",
+  "version": "0.1.0",
+  "description": "Manage TaskView projects and tasks from Claude Code — browse projects, view and create tasks, and log your work without leaving the terminal. Bundles the TaskView MCP server.",
+  "author": {
+    "name": "Nikolai Giman"
+  },
+  "userConfig": {
+    "taskview_url": {
+      "type": "string",
+      "title": "TaskView API URL",
+      "description": "TaskView Cloud is https://api.taskview.tech — or your own self-hosted instance URL (e.g. https://taskview.yourcompany.com).",
+      "required": true
+    },
+    "taskview_token": {
+      "type": "string",
+      "title": "TaskView API token",
+      "description": "An API token (tvk_...) generated in your TaskView account settings. Scope it to the minimum permissions and projects the assistant should be able to reach.",
+      "sensitive": true,
+      "required": true
+    }
+  }
+}

@@ -103,6 +103,7 @@ export default {
     createNew: 'Crear nuevo proyecto',
     add: 'Añadir proyecto',
     empty: 'Aún no hay proyectos',
+    inbox: 'Bandeja de entrada',
   },
   contextMenu: {
     tasks: 'Lista',

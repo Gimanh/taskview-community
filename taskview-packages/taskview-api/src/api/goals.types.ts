@@ -44,6 +44,7 @@ export type GoalItem = {
     dateCreation: string | null;
     organizationId: number | null;
     estimateUnit: 'hours' | 'points';
+    isInbox: boolean;
 };
 
 export type GoalArgItemAdd = Pick<GoalItem, 'name'> & Partial<Pick<GoalItem, 'description' | 'color' | 'organizationId'>>;

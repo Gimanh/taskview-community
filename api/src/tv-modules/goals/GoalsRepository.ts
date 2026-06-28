@@ -12,7 +12,7 @@ import type { AddGoalToDbArg, GoalItemInDb, GoalItemsInDb, UpdateGoalDbArg } fro
 import { logError } from '../../utils/api';
 import { updateQuery } from '../../utils/db-helper';
 import { callWithCatch } from '../../utils/helpers';
-import type { GoalsArgAdd, GoalsArgDelete, GoalsArgUpdate } from './types';
+import type { GoalsArgAdd, GoalsArgCreateInbox, GoalsArgDelete, GoalsArgUpdate } from './types';
 
 export class GoalsRepository {
     private readonly db: Database;
@@ -157,6 +157,7 @@ export class GoalsRepository {
                     backlogVersion: GoalsSchema.backlogVersion,
                     organizationId: GoalsSchema.organizationId,
                     estimateUnit: GoalsSchema.estimateUnit,
+                    isInbox: GoalsSchema.isInbox,
                 })
                 .from(GoalsSchema)
                 .leftJoin(CollaborationUsersToGoalsSchema, eq(GoalsSchema.id, CollaborationUsersToGoalsSchema.goalId))
@@ -232,9 +233,56 @@ export class GoalsRepository {
         return result[0];
     }
 
-    async updateGoalNew(goalData: GoalsArgUpdate): Promise<GoalsSchemaTypeForSelect | false> {
+    async findInboxGoal(organizationId: number): Promise<GoalsSchemaTypeForSelect | false> {
         const result = await callWithCatch(() =>
-            this.db.dbDrizzle.update(GoalsSchema).set(goalData).where(eq(GoalsSchema.id, goalData.id)).returning()
+            this.db.dbDrizzle
+                .select()
+                .from(GoalsSchema)
+                .where(and(eq(GoalsSchema.organizationId, organizationId), eq(GoalsSchema.isInbox, true)))
+        );
+        if (!result || result.length === 0) return false;
+        return result[0];
+    }
+
+    async createInboxGoal(args: GoalsArgCreateInbox): Promise<GoalsSchemaTypeForSelect | false> {
+        const existing = await this.findInboxGoal(args.organizationId);
+        if (existing) {
+            return existing;
+        }
+
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .insert(GoalsSchema)
+                .values({
+                    name: 'Inbox',
+                    owner: args.ownerId,
+                    organizationId: args.organizationId,
+                    isInbox: true,
+                })
+                .returning()
+        );
+
+        if (!result) {
+            return false;
+        }
+
+        return result[0];
+    }
+
+    async updateGoalNew(goalData: GoalsArgUpdate): Promise<GoalsSchemaTypeForSelect | false> {
+        const updates: Partial<typeof GoalsSchema.$inferInsert> = {};
+        if (goalData.name !== undefined) updates.name = goalData.name;
+        if (goalData.description !== undefined) updates.description = goalData.description;
+        if (goalData.color !== undefined) updates.color = goalData.color;
+        if (goalData.estimateUnit !== undefined) updates.estimateUnit = goalData.estimateUnit;
+        if (goalData.archive !== undefined) updates.archive = goalData.archive;
+
+        if (Object.keys(updates).length === 0) {
+            return this.findGoalById(goalData.id);
+        }
+
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle.update(GoalsSchema).set(updates).where(eq(GoalsSchema.id, goalData.id)).returning()
         );
         if (!result) {
             return false;
