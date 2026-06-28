@@ -1,6 +1,6 @@
 {
   "name": "taskview-ce-api-server",
-  "version": "1.48.3",
+  "version": "1.48.4",
   "scripts": {
     "dev": "bun run --watch ./server.ts",
     "start": "NODE_ENV=production node ./dist/taskview-server.js",
