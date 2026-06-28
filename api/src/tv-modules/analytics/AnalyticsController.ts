@@ -28,7 +28,7 @@ export class AnalyticsController {
       scope = { kind: out.scope }
     }
 
-    const range = resolveRange(out.period, out.from, out.to)
+    const range = resolveRange({ period: out.period, timezone: out.timezone, from: out.from, to: out.to })
     if (!range) return res.status(400).send('invalid range')
 
     const sectionIds = out.sections
@@ -41,6 +41,7 @@ export class AnalyticsController {
         organizationId: out.organizationId,
         period: out.period,
         range,
+        timezone: out.timezone,
         sectionIds,
       })
       return res.tvJson(data)
@@ -76,7 +77,7 @@ export class AnalyticsController {
       scope = { kind: out.scope }
     }
 
-    const range = resolveRange(out.period, out.from, out.to)
+    const range = resolveRange({ period: out.period, timezone: out.timezone, from: out.from, to: out.to })
     if (!range) return res.status(400).send('invalid range')
 
     const meta = parseDrillDownMeta(out.meta)

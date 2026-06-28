@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-1 px-2 py-1.5 rounded bg-elevated/50 text-sm">
+  <div class="flex flex-col gap-1 px-3 py-2 rounded-xl bg-default shadow-xs text-sm">
     <div class="flex lg:items-center flex-col lg:flex-row justify-between gap-2">
       <div class="flex flex-col min-w-0 flex-1">
         <div class="flex items-center gap-2 text-xs text-muted">

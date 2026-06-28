@@ -13,7 +13,7 @@ export type AnalyticsScope =
   | { kind: 'org' }
   | { kind: 'project'; goalId: number }
 
-export type AnalyticsPeriod = '7d' | '30d' | '90d' | '180d' | '365d' | 'custom'
+export type AnalyticsPeriod = 'month' | '7d' | '30d' | '90d' | '180d' | '365d' | 'custom'
 
 export type AnalyticsRange = {
   from: string
@@ -136,6 +136,8 @@ export type AnalyticsFetchSectionsArg = {
   scope: AnalyticsScope
   organizationId: number
   period: AnalyticsPeriod
+  /** IANA timezone of the viewer; period boundaries are resolved in it. */
+  timezone?: string
   from?: string
   to?: string
   sections?: string[]
@@ -165,6 +167,8 @@ export type AnalyticsFetchDrillDownArg = {
   scope: AnalyticsScope
   organizationId: number
   period: AnalyticsPeriod
+  /** IANA timezone of the viewer; period boundaries are resolved in it. */
+  timezone?: string
   from?: string
   to?: string
   bucket?: string

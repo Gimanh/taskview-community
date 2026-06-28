@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex flex-col gap-3 p-3 rounded-lg border border-default hover:bg-elevated transition-colors cursor-pointer"
+    class="flex flex-col gap-3 p-3.5 rounded-2xl hover:bg-elevated bg-accented/20 transition-colors cursor-pointer"
     :data-testid="`task-item-${task.id}`"
     @click="handleOpenTask"
   >
@@ -22,8 +22,8 @@
 
       <div class="flex-1 min-w-0 self-start flex flex-col gap-1">
         <p
-          class="text-base break-all"
-          :class="{ 'line-through text-muted': localComplete }"
+          class="text-base wrap-break-word"
+          :class="{ 'text-muted': localComplete }"
         >
           {{ task.description }}
         </p>
@@ -39,7 +39,7 @@
             icon="i-lucide-calendar"
             :color="isOverdue ? 'error' : 'neutral'"
             :class="isOverdue ? '' : 'bg-elevated text-muted'"
-            :ui="{ leadingIcon: 'size-3' }"
+            :ui="{ base: 'rounded-md', leadingIcon: 'size-3' }"
             class="max-w-full"
             variant="subtle"
             size="md"
@@ -51,7 +51,7 @@
             icon="i-lucide-repeat"
             color="neutral"
             class="bg-elevated text-muted"
-            :ui="{ leadingIcon: 'size-3' }"
+            :ui="{ base: 'rounded-md', leadingIcon: 'size-3' }"
             variant="subtle"
             size="md"
           />
@@ -63,7 +63,7 @@
             icon="i-lucide-folder"
             color="neutral"
             class="bg-elevated text-muted max-w-full"
-            :ui="{ leadingIcon: 'size-3' }"
+            :ui="{ base: 'rounded-md', leadingIcon: 'size-3' }"
             variant="subtle"
             size="md"
           />
@@ -75,7 +75,7 @@
             icon="i-lucide-list"
             color="neutral"
             class="bg-elevated text-muted max-w-full"
-            :ui="{ leadingIcon: 'size-3' }"
+            :ui="{ base: 'rounded-md', leadingIcon: 'size-3' }"
             variant="subtle"
             size="md"
           />
@@ -86,7 +86,7 @@
             :label="formattedAmount"
             :icon="transactionIcon"
             :color="transactionColor"
-            :ui="{ leadingIcon: 'size-3' }"
+            :ui="{ base: 'rounded-md', leadingIcon: 'size-3' }"
             variant="subtle"
             size="md"
             class="max-w-full"
@@ -100,7 +100,7 @@
             icon="i-lucide-user"
             color="info"
             class="bg-elevated text-muted max-w-full"
-            :ui="{ leadingIcon: 'size-3',}"
+            :ui="{ base: 'rounded-md', leadingIcon: 'size-3' }"
             variant="subtle"
             size="md"
           />
@@ -114,7 +114,7 @@
               :label="tag.name"
               :style="{ backgroundColor: tag.color + '20', color: tag.color }"
               variant="subtle"
-              :ui="{ leadingIcon: 'size-3' }"
+              :ui="{ base: 'rounded-md', leadingIcon: 'size-3' }"
               icon="i-lucide-tag"
               size="md"
               class="max-w-full"

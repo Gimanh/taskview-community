@@ -15,12 +15,13 @@
         <UButton
           :label="t('common.cancel')"
           color="neutral"
-          variant="outline"
+          variant="soft"
           @click="isOpen = false"
         />
         <UButton
           :label="t('common.delete')"
           color="error"
+          variant="soft"
           @click="confirmDelete"
         />
       </div>

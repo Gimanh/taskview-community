@@ -1,7 +1,7 @@
 {
   "name": "taskview-api",
   "private": false,
-  "version": "1.45.0",
+  "version": "1.48.3",
   "type": "module",
   "repository": {
     "type": "git",

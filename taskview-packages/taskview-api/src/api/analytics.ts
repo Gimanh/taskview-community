@@ -35,6 +35,7 @@ export default class TvAnalyticsApi extends TvApiBase {
       organizationId: String(arg.organizationId),
       period: arg.period,
     }
+    if (arg.timezone) params.timezone = arg.timezone
     if (arg.from) params.from = arg.from
     if (arg.to) params.to = arg.to
     if (arg.sections?.length) params.sections = arg.sections.join(',')
@@ -53,6 +54,7 @@ export default class TvAnalyticsApi extends TvApiBase {
       organizationId: String(arg.organizationId),
       period: arg.period,
     }
+    if (arg.timezone) params.timezone = arg.timezone
     if (arg.from) params.from = arg.from
     if (arg.to) params.to = arg.to
     if (arg.bucket) params.bucket = arg.bucket

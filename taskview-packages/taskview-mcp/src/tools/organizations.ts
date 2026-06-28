@@ -107,7 +107,7 @@ export function registerOrganizationsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'add_organization_member',
     {
-      description: 'Add a member to an organization by email. Requires admin or owner role.',
+      description: 'Add a member to an organization by email. Requires admin or owner role. NOTE: organization membership alone does NOT grant access to any project — the user will not see a project until they are also added to it via invite_collaborator. After adding the member, invite them to the relevant project(s).',
       inputSchema: {
         organizationId: z.coerce.number().describe('Organization ID'),
         email: z.string().describe('Email of the user to add'),

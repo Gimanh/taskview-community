@@ -1,5 +1,5 @@
 <template>
-  <div class="note-editor border border-default rounded-lg dark:bg-tv-ui-bg-elevated!">
+  <div class="note-editor border border-default rounded-2xl overflow-hidden dark:bg-tv-ui-bg-elevated!">
     <UEditor
       v-if="canViewTaskNote"
       #default="{ editor }"
@@ -15,6 +15,7 @@
         :editor="editor"
         :items="toolbarItems"
         class="border-b border-default overflow-x-auto"
+        :ui="{base: 'p-2'}"
       />
       <!-- <UEditorDragHandle :editor="editor" /> -->
     </UEditor>

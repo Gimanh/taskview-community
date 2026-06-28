@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-between p-4 border border-default rounded-lg">
+  <UCard variant="soft" :ui="{body:'w-full flex items-center justify-between p-4', root:'rounded-2xl'}">
     <div class="flex items-center gap-3 min-w-0">
       <UIcon
         name="i-lucide-key-round"
@@ -32,10 +32,10 @@
       icon="i-lucide-trash-2"
       variant="ghost"
       color="error"
-      size="md"
+      size="xl"
       @click="showDeleteConfirm = true"
     />
-  </div>
+  </UCard>
 
   <UModal
     v-model:open="showDeleteConfirm"

@@ -4,6 +4,8 @@ export type RecurrenceMonthlyMode = 'dayOfMonth' | 'lastDay'
 
 export type RecurrenceFormValue = {
   frequency: RecurrenceFrequency
+  /** 'YYYY-MM-DD' wall-clock start date of the series. */
+  startDate: string
   interval: number
   /** rrule weekday numbers: 0=Mon … 6=Sun. Used when frequency is 'weekly'. */
   weekdays: number[]

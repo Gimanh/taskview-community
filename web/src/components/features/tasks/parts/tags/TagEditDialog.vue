@@ -1,38 +1,62 @@
 <template>
   <UModal
     v-model:open="isOpen"
+    :fullscreen="isMobile"
     :title="isNewTag ? t('tags.createTag') : t('tags.editTag')"
+    :ui="{ content: 'sm:max-w-md' }"
   >
     <template #body>
-      <div class="space-y-4 flex flex-col items-center">
-        <UFormField
-          :label="t('tags.name')"
-          class="w-full"
-        >
+      <div
+        class="space-y-5"
+        data-testid="tag-edit-dialog"
+      >
+        <UFormField :label="t('tags.name')">
           <UInput
             v-model="tagName"
             :placeholder="t('tags.namePlaceholder')"
-            :autofocus="false"
-            variant="subtle"
+            size="xl"
+            variant="soft"
             class="w-full"
+            :ui="{ base: 'rounded-xl' }"
+            data-testid="tag-edit-dialog-name"
           />
         </UFormField>
 
-        <UFormField
-          :label="t('tags.color')"
-          class="w-full"
-        >
-          <UColorPicker
-            v-model="tagColor"
-            :presets="colorPresets"
-            :ui="{selector:'w-full', picker:'w-full', root:'w-full'}"
-          />
+        <UFormField :label="t('tags.color')">
+          <div class="space-y-3">
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="preset in colorPresets"
+                :key="preset"
+                type="button"
+                class="size-7 rounded-full flex items-center justify-center ring-2 ring-offset-2 ring-offset-white dark:ring-offset-neutral-900 transition-shadow"
+                :class="isPreset(preset) ? 'ring-primary' : 'ring-transparent'"
+                :style="{ backgroundColor: preset }"
+                @click="tagColor = preset"
+              >
+                <UIcon
+                  v-if="isPreset(preset)"
+                  name="i-lucide-check"
+                  class="size-4"
+                  :style="{ color: getContrastColor(preset) }"
+                />
+              </button>
+            </div>
+
+            <UColorPicker
+              v-model="tagColor"
+              :ui="{ root: 'w-full', picker: 'w-full', selector: 'w-full' }"
+              data-testid="tag-edit-dialog-color"
+            />
+          </div>
         </UFormField>
 
-        <div class="flex gap-2 w-full">
-          <span class="text-sm text-muted">{{ t('tags.preview') }}:</span>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-muted">{{ t('tags.preview') }}</span>
           <UBadge
             :label="tagName || t('tags.tagName')"
+            size="lg"
+            :ui="{ base: 'rounded-10' }"
             :style="{ backgroundColor: tagColor, color: getContrastColor(tagColor) }"
           >
             <template #leading>
@@ -54,6 +78,7 @@
           color="error"
           variant="ghost"
           icon="i-lucide-trash-2"
+          data-testid="tag-edit-dialog-delete"
           @click="handleDelete"
         />
         <div class="flex gap-2 ml-auto">
@@ -66,7 +91,8 @@
           <UButton
             :label="t('common.save')"
             :disabled="!tagName.trim()"
-            variant="outline"
+            color="primary"
+            data-testid="tag-edit-dialog-save"
             @click="handleSave"
           />
         </div>
@@ -79,6 +105,7 @@
 import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { TagItem } from 'taskview-api'
+import { useTaskView } from '@/composables/useTaskView'
 
 const props = defineProps<{
   tag?: TagItem | null
@@ -91,6 +118,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { isMobile } = useTaskView()
 
 const isOpen = defineModel<boolean>('open', { required: true })
 
@@ -117,6 +145,10 @@ watch(isOpen, (open) => {
     }
   }
 })
+
+function isPreset(preset: string): boolean {
+  return tagColor.value.toLowerCase() === preset.toLowerCase()
+}
 
 function getContrastColor(hexColor: string): string {
   const hex = hexColor.replace('#', '')

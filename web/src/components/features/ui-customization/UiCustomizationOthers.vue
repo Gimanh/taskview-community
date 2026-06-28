@@ -1,11 +1,18 @@
 <template>
   <div class="flex flex-col gap-4">
-    <UFormField :label="t('uiCustomization.others.weekStart')"
-                :description="t('uiCustomization.others.weekStartHint')">
-      <USelectMenu v-model="weekStart"
-                   :items="weekStartItems"
-                   value-key="value"
-                   class="w-full lg:w-72" />
+    <UFormField
+      :label="t('uiCustomization.others.weekStart')"
+      :description="t('uiCustomization.others.weekStartHint')"
+    >
+      <USelectMenu
+        v-model="weekStart"
+        :items="weekStartItems"
+        value-key="value"
+        variant="soft"
+        class="w-full lg:w-72"
+        size="xl"
+        :ui="{ base: 'rounded-xl' }"
+      />
     </UFormField>
   </div>
 </template>

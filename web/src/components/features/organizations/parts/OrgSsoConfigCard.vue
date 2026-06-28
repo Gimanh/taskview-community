@@ -16,13 +16,13 @@
         <UButton
           icon="i-lucide-pencil"
           size="xs"
-          variant="ghost"
+          variant="soft"
           @click="$emit('edit')"
         />
         <UButton
           icon="i-lucide-trash-2"
           size="xs"
-          variant="ghost"
+          variant="soft"
           color="error"
           @click="$emit('delete')"
         />
@@ -38,7 +38,7 @@
         <UButton
           icon="i-lucide-copy"
           size="xs"
-          variant="ghost"
+          variant="soft"
           @click="copyToClipboard(callbackUrl)"
         />
       </div>

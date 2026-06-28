@@ -1,8 +1,8 @@
 <template>
   <UModal
     v-model:open="isOpen"
-    :fullscreen="isMobile"
-    :ui="{ content: 'sm:max-w-3xl', body: 'p-0!' }"
+    :fullscreen="isFullscreenModal"
+    :ui="{ content: isFullscreenModal ? '' : 'sm:max-w-3xl', body: 'p-0!' }"
   >
     <template #header>
       <div class="flex items-center justify-between w-full gap-3">
@@ -120,7 +120,7 @@ const props = defineProps<{
 const isOpen = defineModel<boolean>('open', { default: false })
 
 const { t } = useI18n()
-const { isMobile } = useTaskView()
+const { isFullscreenModal } = useTaskView()
 const webhooksStore = useWebhooksStore()
 
 const retrying = ref<number | null>(null)

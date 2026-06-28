@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-between p-3 rounded-lg border border-default hover:bg-elevated transition-colors">
+  <div class="flex items-center justify-between p-3 rounded-2xl border border-default hover:bg-elevated transition-colors">
     <div class="flex items-center gap-3">
       <UAvatar
         :alt="member.email"

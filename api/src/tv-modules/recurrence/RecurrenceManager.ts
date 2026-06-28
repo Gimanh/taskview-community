@@ -230,6 +230,22 @@ export class RecurrenceManager {
         const updated = await this.repository.patch({ ruleId: args.ruleId, patch });
         if (!updated) return fail('invalid_state');
 
+        if (patch.dtstart !== undefined || patch.timezone !== undefined || patch.rrule !== undefined) {
+            const openInstance = await this.repository.findOpenInstance(args.ruleId);
+            if (openInstance?.recurrenceInstanceDate) {
+                await this.repository.updateInstanceWindow({
+                    taskId: openInstance.id,
+                    window: RecurrenceParser.instanceWindowUtc({
+                        occurrenceDate: openInstance.recurrenceInstanceDate,
+                        dtstart: updated.dtstart,
+                        hasTime: updated.hasTime,
+                        timezone: updated.timezone,
+                        durationMinutes: updated.templateDurationMinutes,
+                    }),
+                });
+            }
+        }
+
         eventBus.emit('recurrence.updated', { rule: updated, changes: patch, initiatorId: this.initiatorId });
         return ok(await this.cleanRuleFieldsRegardPermissions(updated));
     }

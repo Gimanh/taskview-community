@@ -5,7 +5,10 @@ export type AppResponse<S> = {
 
 export type TaskDetailDisplayMode = 'slideover' | 'modal';
 
+export type SidebarView = 'first' | 'second';
+
 export type AppStoreState = {
     drawer: boolean;
     taskDetailDisplayMode: TaskDetailDisplayMode;
+    sidebarView: SidebarView;
 };

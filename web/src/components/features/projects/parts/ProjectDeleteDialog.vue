@@ -17,13 +17,14 @@
         <UButton
           :label="t('common.no')"
           color="neutral"
-          variant="outline"
+          variant="soft"
           @click="close"
         />
         <UButton
           :label="t('common.yes')"
           color="error"
           class="min-w-12"
+          variant="soft"
           :ui="{base: 'justify-center'}"
           data-testid="confirm-delete-button"
           @click="confirm"

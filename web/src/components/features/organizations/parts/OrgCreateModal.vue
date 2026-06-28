@@ -35,6 +35,7 @@
             <UButton
               :label="t('organizations.save')"
               :loading="loading"
+              variant="soft"
               @click="create"
             />
           </div>

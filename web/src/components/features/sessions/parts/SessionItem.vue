@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-between p-4 border border-default rounded-lg">
+  <UCard variant="soft" :ui="{body:'w-full flex items-center justify-between p-4', root:'rounded-2xl'}" class=" ">
     <div class="flex items-start gap-3 min-w-0">
       <UIcon
         :name="deviceIcon"
@@ -28,15 +28,16 @@
         </div>
       </div>
     </div>
+    
     <UButton
       v-if="!session.isCurrent"
       icon="i-lucide-log-out"
       variant="ghost"
       color="error"
-      size="md"
+      size="xl"
       @click="showDeleteConfirm = true"
     />
-  </div>
+  </UCard>
 
   <UModal
     v-model:open="showDeleteConfirm"

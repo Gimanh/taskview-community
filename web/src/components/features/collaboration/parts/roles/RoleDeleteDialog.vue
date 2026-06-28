@@ -14,13 +14,13 @@
         <UButton
           :label="t('common.cancel')"
           color="neutral"
-          variant="outline"
+          variant="soft"
           @click="isOpen = false"
         />
         <UButton
           :label="t('contextMenu.delete')"
           color="error"
-          variant="outline"
+          variant="soft"
           @click="handleDelete"
         />
       </div>

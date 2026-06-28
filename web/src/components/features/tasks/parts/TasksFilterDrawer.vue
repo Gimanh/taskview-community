@@ -2,7 +2,7 @@
   <UDrawer
     v-model:open="isOpen"
     :title="t('filters.title')"
-    :ui="{header: 'flex flex-col gap-2', content: 'items-center w-full lg:w-1/2 mx-auto max-w-2xl' }"
+    :ui="{header: 'flex flex-col gap-2', content: 'items-center w-full lg:w-1/2 mx-auto max-w-2xl rounded-3xl' }"
   >
     <template #header>
       <h2 class="text-highlighted font-semibold">
@@ -23,9 +23,10 @@
             :placeholder="t('filters.selectAssignee')"
             :search-input="false"
             value-key="value"
+            variant="soft"
             class="w-full"
             size="xl"
-            :ui="{ base: 'w-full' }"
+            :ui="{ base: 'w-full rounded-xl' }"
           />
         </UFormField>
 
@@ -43,13 +44,13 @@
               :key="tag.id"
               :label="tag.name"
               icon="i-lucide-tag"
-              size="xl"
+              size="lg"
               :style="{
                 backgroundColor: isTagSelected(tag.id) ? tag.color : undefined,
                 borderColor: isTagSelected(tag.id) ? tag.color : undefined,
                 color: isTagSelected(tag.id) ? getContrastColor(tag.color) : undefined,
               }"
-              :ui="{ label: 'text-base', base:'gap-2', leadingIcon: 'size-4' }"
+              :ui="{ label: 'text-base', base:'gap-2 rounded-lg ring-0 bg-accented/40', leadingIcon: 'size-3.5' }"
               :color="isTagSelected(tag.id) ? 'primary' : 'neutral'"
               :variant="isTagSelected(tag.id) ? 'soft' : 'outline'"
               class="cursor-pointer transition-colors min-h-9"
@@ -75,7 +76,7 @@
               :key="priority.value"
               :label="priority.label"
               :color="filters.priority === priority.value ? 'primary' : 'neutral'"
-              :variant="filters.priority === priority.value ? 'outline' : 'outline'"
+              :variant="filters.priority === priority.value ? 'solid' : 'soft'"
               size="lg"
               @click="togglePriority(priority.value)"
             />
@@ -90,13 +91,12 @@
         <UButton
           :label="t('filters.reset')"
           color="neutral"
-          variant="outline"
+          variant="soft"
           @click="resetFilters"
         />
         <UButton
           :label="t('filters.apply')"
           color="primary"
-          variant="outline"
           @click="applyFilters"
         />
       </div>
@@ -133,7 +133,7 @@ const filters = reactive<TaskFilters>({
   priority: undefined,
 })
 
-const sectionClasses = 'shadow-md bg-elevated/30 p-2 rounded-lg'
+const sectionClasses = 'bg-elevated/40 p-3 rounded-2xl'
 
 const userItems = computed(() => [
   ...users.value.map((user) => ({

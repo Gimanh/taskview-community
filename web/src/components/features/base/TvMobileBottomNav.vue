@@ -1,20 +1,21 @@
 <template>
   <nav class="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-default pb-safe bg-default">
-    <div class="flex items-center justify-between min-h-14">
+    <div class="flex items-stretch justify-around min-h-16 gap-1 p-1.5">
       <UButton
         v-for="item in navItems"
-        :key="item.label"
+        :key="item.key"
         :icon="item.icon"
-        :to="item.to"
-        color="neutral"
-        variant="ghost"
-        size="lg"
-        class="flex-1 h-full rounded-none"
-        :class="{ 'text-primary': item.active?.() }"
+        :label="item.label"
+        :color="item.active() ? 'primary' : 'neutral'"
+        :variant="item.active() ? 'soft' : 'ghost'"
+        block
+        class="flex-1 min-w-0"
         :ui="{
-          base: ' justify-center',
+          base: 'flex-col gap-1 py-1.5 rounded-xl',
+          leadingIcon: 'size-5',
+          label: 'text-[11px] leading-none truncate max-w-full',
         }"
-        @click="item.onClick?.()"
+        @click="onItemClick(item)"
       />
     </div>
   </nav>
@@ -22,89 +23,104 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDashboard } from '@/composables/useDashboard'
 import { useAppRouteInfo } from '@/composables/useAppRouteInfo'
 import { ALL_TASKS_LIST_ID } from 'taskview-api'
+import { useGoalsStore } from '@/stores/goals.store'
+import { useGoalPermissionsFor } from '@/composables/useGoalPermissions'
+
+type NavItem = {
+  key: string
+  label: string
+  icon: string
+  to?: RouteLocationRaw
+  active: () => boolean
+  onClick?: () => void
+}
 
 const route = useRoute()
+const router = useRouter()
 const { t } = useI18n()
 const { isSidebarOpen } = useDashboard()
-const { isUserRoute, isAccountRoute, hasProject, projectId, hasList } = useAppRouteInfo()
+const { isUserRoute, isAccountRoute, hasProject, projectId } = useAppRouteInfo()
+const goalsStore = useGoalsStore()
 
-const navItems = computed(() => {
-  if (isAccountRoute.value) {
-    return [
-      {
-        label: t('main'),
-        icon: 'i-lucide-house',
-        to: { name: 'user' },
-        active: (): boolean => false,
-      },
-    ]
-  }
+const currentGoal = computed(() =>
+  hasProject.value ? goalsStore.goalMap.get(projectId.value) ?? null : null,
+)
+const { canViewKanban, canViewGraph } = useGoalPermissionsFor(currentGoal)
 
-  if (isUserRoute.value && !hasProject.value) {
-    return [
-      {
-        label: t('projects.title'),
-        icon: 'i-lucide-folder',
-        active: (): boolean => isSidebarOpen.value,
-        onClick: () => { isSidebarOpen.value = !isSidebarOpen.value },
-      },
-      {
-        label: t('account.title'),
-        icon: 'i-lucide-settings',
-        to: { name: 'account' },
-        active: (): boolean => false,
-      },
-    ]
-  }
-
-  return [
+// A stable core (Home · Projects · … · Account) keeps tab positions predictable
+// across routes; project shortcuts (Kanban/Graph) only slot in when inside a
+// project and the user is allowed to see them.
+const navItems = computed<NavItem[]>(() => {
+  const items: NavItem[] = [
     {
+      key: 'home',
       label: t('main'),
       icon: 'i-lucide-house',
       to: { name: 'user' },
-      active: (): boolean => false,
+      active: () => isUserRoute.value && !hasProject.value,
     },
     {
+      key: 'projects',
       label: t('projects.title'),
-      icon: 'i-lucide-folder',
-      active: (): boolean => isSidebarOpen.value,
+      icon: 'i-lucide-panel-left',
+      active: () => isSidebarOpen.value,
       onClick: () => { isSidebarOpen.value = !isSidebarOpen.value },
     },
-    {
-      label: t('projects.kanban'),
-      icon: 'i-lucide-kanban',
-      to: { name: 'kanban', params: { projectId: projectId.value } },
-      active: (): boolean => route.name === 'kanban',
-    },
-    {
-      label: t('projects.graph'),
-      icon: 'i-lucide-git-fork',
-      to: { name: 'graph', params: { projectId: projectId.value } },
-      active: (): boolean => route.name === 'graph',
-    },
-    {
-      label: t('projects.collaboration'),
-      icon: 'i-lucide-users',
-      to: { name: 'collaboration', params: { projectId: projectId.value } },
-      active: (): boolean => route.name === 'collaboration',
-    },
-    {
-      label: t('lists.title'),
-      icon: 'i-lucide-list',
-      to: { name: 'user', params: { projectId: projectId.value } },
-      active: (): boolean => isUserRoute.value && hasProject.value && !hasList.value,
-    },
-    {
-      label: t('tasks.allTasks'),
-      icon: 'i-lucide-list-checks',
-      to: { name: 'user', params: { projectId: projectId.value, listId: ALL_TASKS_LIST_ID } },
-      active: (): boolean => isUserRoute.value && hasList.value,
-    },
   ]
+
+  if (hasProject.value) {
+    if (canViewKanban.value) {
+      items.push({
+        key: 'kanban',
+        label: t('contextMenu.kanban'),
+        icon: 'i-lucide-kanban',
+        to: { name: 'kanban', params: { projectId: projectId.value } },
+        active: () => route.name === 'kanban',
+      })
+    }
+    if (canViewGraph.value) {
+      items.push({
+        key: 'graph',
+        label: t('contextMenu.graph'),
+        icon: 'i-lucide-git-fork',
+        to: { name: 'graph', params: { projectId: projectId.value } },
+        active: () => route.name === 'graph',
+      })
+    }
+    items.push({
+      key: 'list',
+      label: t('contextMenu.tasks'),
+      icon: 'i-lucide-list',
+      to: { name: 'user', params: { projectId: projectId.value, listId: ALL_TASKS_LIST_ID } },
+      active: () => isUserRoute.value && hasProject.value,
+    })
+  }
+
+  // Inside a project the bar fills up with project shortcuts (List/Kanban/Graph),
+  // so drop Settings there — it stays reachable from the global tabs.
+  if (!hasProject.value) {
+    items.push({
+      key: 'account',
+      label: t('account.nav'),
+      icon: 'i-lucide-settings',
+      to: { name: 'account' },
+      active: () => isAccountRoute.value,
+    })
+  }
+
+  return items
 })
+
+function onItemClick(item: NavItem) {
+  if (item.onClick) {
+    item.onClick()
+    return
+  }
+  if (item.to) router.push(item.to)
+}
 </script>

@@ -20,8 +20,9 @@ const nonNegativeIntFromQuery = type('string | number')
 export const AnalyticsFetchSectionsArkType = type({
   scope: "'org' | 'project'",
   organizationId: positiveIntFromQuery,
-  period: "'7d' | '30d' | '90d' | '180d' | '365d' | 'custom'",
+  period: "'month' | '7d' | '30d' | '90d' | '180d' | '365d' | 'custom'",
   'goalId?': positiveIntFromQuery,
+  'timezone?': 'string',
   'from?': 'string',
   'to?': 'string',
   'sections?': 'string',
@@ -30,8 +31,9 @@ export const AnalyticsFetchSectionsArkType = type({
 export const AnalyticsDrillDownArkType = type({
   scope: "'org' | 'project'",
   organizationId: positiveIntFromQuery,
-  period: "'7d' | '30d' | '90d' | '180d' | '365d' | 'custom'",
+  period: "'month' | '7d' | '30d' | '90d' | '180d' | '365d' | 'custom'",
   'goalId?': positiveIntFromQuery,
+  'timezone?': 'string',
   'from?': 'string',
   'to?': 'string',
   'bucket?': 'string',
@@ -51,6 +53,14 @@ export type DrillDownMeta = typeof DrillDownMetaArkType.infer
 export type AnalyticsRange = {
   from: Date
   to: Date
+}
+
+export type ResolveRangeArgs = {
+  period: AnalyticsPeriod
+  /** IANA timezone the period boundaries are resolved in; defaults to UTC. */
+  timezone?: string
+  from?: string
+  to?: string
 }
 
 export type BuilderContext = {
@@ -97,6 +107,8 @@ export type AnalyticsArgBuildSections = {
   organizationId: number
   period: AnalyticsPeriod
   range: AnalyticsRange
+  /** IANA timezone of the viewer; used to format the response range. */
+  timezone?: string
   sectionIds?: string[]
 }
 

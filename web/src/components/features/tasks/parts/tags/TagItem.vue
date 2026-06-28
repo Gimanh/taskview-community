@@ -5,6 +5,8 @@
     :variant="isSelected ? 'solid' : 'outline'"
     class="cursor-pointer select-none"
     size="lg"
+    :ui="{ base: 'rounded-10 gap-1.5' }"
+    data-testid="tag-item"
     @click="handleClick"
   >
     <template #leading>
@@ -24,6 +26,7 @@
           size="xs"
           color="neutral"
           variant="ghost"
+          data-testid="tag-item-edit"
           @click.stop="$emit('edit', tag)"
         />
         <!-- <UButton

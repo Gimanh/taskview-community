@@ -40,9 +40,9 @@
 
     <UModal
       v-model:open="showAddDialog"
-      :fullscreen="isMobile"
+      :fullscreen="isFullscreenModal"
       :ui="{
-        content: 'sm:max-w-md sm:rounded-lg sm:m-auto w-full',
+        content: isFullscreenModal ? 'w-full' : 'sm:max-w-md sm:rounded-lg sm:m-auto w-full',
         footer: 'p-4!',
       }"
     >
@@ -106,8 +106,8 @@ import { useBreakpoints, breakpointsTailwind } from '@vueuse/core'
 import { useAdditionalServer } from '@/composables/useAdditionalServer'
 
 const { t } = useI18n()
-const bp = useBreakpoints(breakpointsTailwind)
-const isMobile = bp.smaller('lg')
+const bp = useBreakpoints({ ...breakpointsTailwind, fullscreenModalMax: 1366 })
+const isFullscreenModal = bp.smallerOrEqual('fullscreenModalMax')
 
 const mainServer = ref('')
 const allServers = ref<string[]>([])

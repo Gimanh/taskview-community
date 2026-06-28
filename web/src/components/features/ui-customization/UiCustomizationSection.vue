@@ -1,5 +1,5 @@
 <template>
-  <UCard>
+  <UCard variant="soft" data-testid="ui-customization-section">
     <template #header>
       <h3 class="font-semibold">
         {{ title }}

@@ -1,8 +1,8 @@
 <template>
   <UModal
     v-model:open="open"
-    :fullscreen="isMobile"
-    :ui="{ content: 'max-w-lg max-h-[90vh] flex flex-col' }"
+    :fullscreen="isFullscreenModal"
+    :ui="{ content: isFullscreenModal ? 'flex flex-col' : 'max-w-lg max-h-[90vh] flex flex-col' }"
   >
     <template #content>
       <UCard
@@ -36,6 +36,7 @@
         <UTabs
           :items="tabs"
           class="w-full"
+          :ui="{ list: 'rounded-2xl', indicator: 'rounded-xl' }"
         >
           <template #general>
             <div class="flex flex-col gap-4 pt-4">
@@ -58,6 +59,7 @@
                 v-if="isAdmin"
                 :label="t('organizations.save')"
                 :loading="saving"
+                variant="soft"
                 @click="save"
               />
             </div>
@@ -82,7 +84,7 @@
               v-if="isOwner && !organization.isPersonal"
               :label="t('organizations.delete')"
               color="error"
-              variant="ghost"
+              variant="soft"
               icon="i-lucide-trash-2"
               :ui="{leadingIcon: 'size-4.5'}"
               @click="deleteOrg"
@@ -90,7 +92,7 @@
             <div v-else />
             <UButton
               :label="t('organizations.close')"
-              variant="ghost"
+              variant="soft"
               @click="open = false"
             />
           </div>
@@ -117,7 +119,7 @@ const props = defineProps<{
 
 const { t } = useI18n()
 const toast = useToast()
-const { isMobile } = useTaskView()
+const { isFullscreenModal } = useTaskView()
 const orgStore = useOrganizationStore()
 const { isAdmin, isOwner } = useOrgPermissions(() => props.organization)
 

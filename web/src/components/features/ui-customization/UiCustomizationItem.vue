@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center gap-3 p-3 bg-elevated rounded-lg">
+  <div class="flex items-center gap-3 p-3 bg-elevated rounded-14">
     <UIcon
       name="i-lucide-grip-vertical"
       class="size-4 text-muted shrink-0 cursor-grab drag-handle"

@@ -1,12 +1,17 @@
 <template>
-  <div class="space-y-3">
+  <div
+    class="space-y-3"
+    data-testid="tag-search-add"
+  >
     <UInput
       v-model="searchQuery"
       :placeholder="t('tags.searchPlaceholder')"
       icon="i-lucide-search"
       size="xl"
       class="w-full"
-      :variant="isDark ? 'subtle' : 'soft'"
+      variant="outline"
+      :ui="{ base: 'rounded-xl bg-default' }"
+      data-testid="tag-search-add-input"
       @keydown.enter="handleEnter"
     />
 
@@ -26,23 +31,26 @@
       />
     </div>
 
-    <div
+    <p
       v-else-if="searchQuery.trim()"
-      class="text-sm text-muted py-2"
+      class="text-sm text-muted text-center py-1"
     >
       {{ t('tags.noTagsFound') }}
-    </div>
+    </p>
 
     <UButton
       :disabled="!canEditTaskTags"
       icon="i-lucide-plus"
-      color="neutral"
-      variant="subtle"
-      size="md"
-      class="w-full justify-start"
-      @click="$emit('create')"
+      :color="canQuickCreate ? 'primary' : 'neutral'"
+      :variant="'soft'"
+      size="xl"
+      block
+      :ui="{ base: 'rounded-xl justify-start' }"
+      data-testid="tag-search-add-create"
+      class="bg-accented/40"
+      @click="handleCreateClick"
     >
-      {{ t('tags.createTag') }}
+      {{ createLabel }}
     </UButton>
   </div>
 </template>
@@ -52,7 +60,6 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { TagItem as TagItemType } from 'taskview-api'
 import TagItem from './TagItem.vue'
-import { useColorMode } from '@vueuse/core'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 
 const props = defineProps<{
@@ -69,8 +76,6 @@ const emit = defineEmits<{
   quickCreate: [data: { name: string; color: string }]
 }>()
 
-const colorMode = useColorMode()
-const isDark = computed(() => colorMode.value === 'dark')
 const { canEditTaskTags } = useGoalPermissions()
 const { t } = useI18n()
 
@@ -91,12 +96,31 @@ const filteredTags = computed(() => {
   )
 })
 
+const canQuickCreate = computed(() =>
+  searchQuery.value.trim().length > 0 && filteredTags.value.length === 0,
+)
+
+const createLabel = computed(() =>
+  canQuickCreate.value
+    ? t('tags.createNamed', { name: searchQuery.value.trim() })
+    : t('tags.createTag'),
+)
+
 function isTagSelected(tagId: number): boolean {
   return props.selectedTagIds.includes(tagId)
 }
 
 function getRandomColor(): string {
   return colorPresets[Math.floor(Math.random() * colorPresets.length)]
+}
+
+function handleCreateClick() {
+  if (canQuickCreate.value) {
+    emit('quickCreate', { name: searchQuery.value.trim(), color: getRandomColor() })
+    searchQuery.value = ''
+  } else {
+    emit('create')
+  }
 }
 
 function handleEnter() {

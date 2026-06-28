@@ -1,15 +1,12 @@
 <template>
-  <div class="shadow-sm rounded-lg">
     <UInput
       v-model="projectName"
-      :placeholder="t('projects.addPlaceholder')"
+      :placeholder="placeholder ?? t('projects.addPlaceholder')"
       size="xl"
       variant="soft"
       class="w-full"
       data-testid="project-add-input"
-      :ui="{
-        base: 'bg-tv-ui-bg-elevated',
-      }"
+     
       @keydown.enter="addProject"
     >
       <template #trailing>
@@ -29,12 +26,15 @@
         />
       </template>
     </UInput>
-  </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+
+defineProps<{
+  placeholder?: string
+}>()
 
 const emit = defineEmits<{
   add: [name: string]
