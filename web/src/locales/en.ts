@@ -103,6 +103,7 @@ export default {
     createNew: 'Create new project',
     add: 'Add project',
     empty: 'No projects yet',
+    inbox: 'Inbox',
   },
   contextMenu: {
     tasks: 'Tasks',

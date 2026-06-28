@@ -12,6 +12,7 @@ export const DEFAULT_GOAL_ITEM: GoalItem = {
   dateCreation: null,
   organizationId: null,
   estimateUnit: 'points',
+  isInbox: false,
 }
 
 export const AllGoalPermissions = TvPermissions

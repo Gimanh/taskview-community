@@ -19,6 +19,10 @@
       <NotificationBell />
     </div>
 
+    <SidebarInboxLink />
+
+    <USeparator />
+
     <ProjectsSidebar />
 
     <template #footer="{ collapsed }">
@@ -32,6 +36,7 @@ import { useI18n } from 'vue-i18n'
 import { useDashboard } from '@/composables/useDashboard'
 import TvGoalLikeItem from '@/components/features/base/TvGoalLikeItem.vue'
 import ProjectsSidebar from '@/components/features/projects/ProjectsSidebar.vue'
+import SidebarInboxLink from '@/components/sidebars/SidebarInboxLink.vue'
 import NotificationBell from '@/components/NotificationBell.vue'
 import ActiveTimerIndicator from '@/components/ActiveTimerIndicator.vue'
 import UserMenu from '@/components/UserMenu.vue'

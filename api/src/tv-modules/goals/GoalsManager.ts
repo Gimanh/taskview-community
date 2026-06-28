@@ -63,8 +63,16 @@ export default class GoalsManager {
         return new GoalItemForClient(goal, (await this.getPermissionsForGoal(goal.id)).getAllPermissions());
     }
 
+    private async isInboxGoal(goalId: number): Promise<boolean> {
+        const goal = await this.goalsRepository.findGoalById(goalId);
+        return !!goal && goal.isInbox;
+    }
+
     /** @deprecated use deleteGoalNew instead */
     async deleteGoal(goalId: number): Promise<boolean> {
+        if (await this.isInboxGoal(goalId)) {
+            return false;
+        }
         return await this.goalsRepository.deleteGoal(goalId);
     }
 
@@ -88,6 +96,9 @@ export default class GoalsManager {
     }
 
     async updateArchive(goalId: number, archive: GoalItemInDb['archive']) {
+        if (archive === 1 && (await this.isInboxGoal(goalId))) {
+            return false;
+        }
         return await this.goalsRepository.updateArchive(goalId, archive);
     }
 
@@ -134,6 +145,12 @@ export default class GoalsManager {
     }
 
     async updateGoalNew(goalData: GoalsArgUpdate): Promise<GoalsItemForClientWithPermissions | false> {
+        // The Inbox must never be archived. Archiving flows through this endpoint
+        // (PATCH /module/goals), not the unrouted updateArchive, so the guard lives here.
+        if (goalData.archive === 1 && (await this.isInboxGoal(goalData.id))) {
+            return false;
+        }
+
         const goal = await this.goalsRepository.updateGoalNew(goalData);
 
         if (!goal) {
@@ -153,6 +170,9 @@ export default class GoalsManager {
     }
 
     async deleteGoalNew(goalData: GoalsArgDelete) {
+        if (await this.isInboxGoal(goalData.goalId)) {
+            return false;
+        }
         return await this.goalsRepository.deleteGoalNew(goalData);
     }
 

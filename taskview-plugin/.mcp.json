@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "taskview": {
+      "command": "npx",
+      "args": ["-y", "taskview-mcp"],
+      "env": {
+        "TASKVIEW_URL": "${user_config.taskview_url}",
+        "TASKVIEW_TOKEN": "${user_config.taskview_token}"
+      }
+    }
+  }
+}

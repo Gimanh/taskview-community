@@ -105,6 +105,7 @@ import { useGoalsStore } from '@/stores/goals.store'
 import { useBaseScreenStore } from '@/stores/base-screen.store'
 import { $ls, $tvApi } from '@/plugins/axios'
 import { useTaskView } from '@/composables/useTaskView'
+import { useInbox } from '@/composables/useInbox'
 import { useWeekStart } from '@/composables/useWeekStart'
 
 const weekStart = useWeekStart()
@@ -136,6 +137,7 @@ const { t } = useI18n()
 const goalsStore = useGoalsStore()
 const baseScreenStore = useBaseScreenStore()
 const { isMobile } = useTaskView()
+const { inbox } = useInbox()
 
 const taskDescription = ref(props.taskName)
 const selectedGoalId = ref<number | undefined>(undefined)
@@ -161,18 +163,13 @@ watch(model, async (isOpen) => {
       )
     }
 
-    // Pre-select the last used project. Read fresh from storage on every open so
-    // it stays in sync across the multiple dialog instances on the screen.
-    const activeGoals = goalsStore.goals.filter(g => !g.archive)
+    // Use the last chosen project (it may be the Inbox); otherwise default to the
+    // Inbox — that's exactly what it's for.
     const saved = await $ls.getValue(LAST_SELECTED_PROJECT_KEY)
     const savedId = saved ? Number(saved) : undefined
-    const savedGoal = savedId ? activeGoals.find(g => g.id === savedId) : undefined
+    const savedGoal = savedId ? goalsStore.goals.find(g => !g.archive && g.id === savedId) : undefined
 
-    if (savedGoal) {
-      selectedGoalId.value = savedGoal.id
-    } else if (activeGoals.length === 1) {
-      selectedGoalId.value = activeGoals[0].id
-    }
+    selectedGoalId.value = savedGoal ? savedGoal.id : inbox.value?.id
   } else {
     // Reset form on close
     taskDescription.value = props.taskName
@@ -181,14 +178,16 @@ watch(model, async (isOpen) => {
   }
 })
 
-const goalOptions = computed(() =>
-  goalsStore.goals
-    .filter(g => !g.archive)
-    .map(g => ({
-      label: g.name,
-      value: g.id,
-    })),
-)
+const goalOptions = computed(() => {
+  const active = goalsStore.goals.filter(g => !g.archive)
+  const options = active
+    .filter(g => !g.isInbox)
+    .map(g => ({ label: g.name, value: g.id }))
+  if (inbox.value) {
+    options.unshift({ label: t('projects.inbox'), value: inbox.value.id })
+  }
+  return options
+})
 
 const formattedDeadline = computed(() => {
   if (!deadline.value) return ''

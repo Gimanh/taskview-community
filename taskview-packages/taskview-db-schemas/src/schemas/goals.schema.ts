@@ -1,4 +1,4 @@
-import { integer, pgSchema, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, integer, pgSchema, timestamp, varchar } from "drizzle-orm/pg-core";
 import { UsersSchema } from "./users.schema";
 import { OrganizationsSchema } from "./organizations.schema";
 // import { createInsertSchema, createSelectSchema } from "drizzle-arktype";
@@ -16,6 +16,7 @@ export const GoalsSchema = pgSchema('tasks').table('goals', {
     backlogVersion: integer('backlog_version').default(1),
     organizationId: integer('organization_id').references(() => OrganizationsSchema.id, { onDelete: 'cascade' }),
     estimateUnit: varchar('estimate_unit', { length: 10 }).$type<'hours' | 'points'>().notNull().default('points'),
+    isInbox: boolean('is_inbox').notNull().default(false),
 });
 
 export type GoalsSchemaTypeForSelect = typeof GoalsSchema.$inferSelect;

@@ -640,5 +640,20 @@
         "description": [
             "Added tasks.recurrence_rules.has_time — explicit flag for whether a series is anchored to a wall-clock time or is date-only. Previously the code inferred 'no time' from a midnight dtstart, which silently collapsed an explicit 00:00 series into date-only. Backfill (has_time = dtstart::time <> '00:00:00') reproduces the old inference so existing series keep their behavior; new series carry the flag through from the origin task's start_time (null = date-only, set = timed, including midnight)."
         ]
+    },
+    "50": {
+        "version": "1.55.0",
+        "name": "Release 1.55.0",
+        "releaseDate": "20260628",
+        "scripts": [
+            "/1.55.0/0.alter-goals-add-is-inbox.sql",
+            "/1.55.0/1.backfill-inbox-goals.sql",
+            "/1.55.0/2.unique-inbox-per-org.sql"
+        ],
+        "description": [
+            "Added tasks.goals.is_inbox (BOOLEAN NOT NULL DEFAULT FALSE) — flags a project as the user's personal Inbox. One Inbox per personal organization, auto-created at signup and guarded against deletion and archival in GoalsManager.",
+            "Backfill: for every personal organization without an Inbox, inserts one tasks.goals row (name='Inbox', is_inbox=true, owner=the org owner, organization_id=the org). The existing AFTER INSERT triggers fully provision it like any project — default kanban statuses, the owner added to collaboration, and the default editor/executor roles with their permissions. Idempotent — skips orgs that already have an Inbox.",
+            "Partial unique index goals_one_inbox_per_org_uidx ON tasks.goals (organization_id) WHERE is_inbox — enforces at most one Inbox per organization at the DB level, hardening the check-then-insert against concurrent races."
+        ]
     }
 }

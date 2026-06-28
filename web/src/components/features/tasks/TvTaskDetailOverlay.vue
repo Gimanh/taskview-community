@@ -23,6 +23,22 @@
       <template #body>
         <TaskDetailPanel />
       </template>
+      <template #footer>
+        <div class="flex justify-between gap-2 w-full">
+          <UButton
+            :label="t('common.delete')"
+            color="error"
+            variant="soft"
+            @click="openDeleteDialog"
+          />
+          <UButton
+            :label="t('common.close')"
+            color="neutral"
+            variant="soft"
+            @click="closeTask"
+          />
+        </div>
+      </template>
     </USlideover>
 
     <!-- Task Detail Modal -->

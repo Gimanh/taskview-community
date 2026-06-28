@@ -17,6 +17,7 @@ export const GoalsArkTypeUpdate = type({
     'description?': 'string | null',
     'color?': 'string | null',
     "estimateUnit?": "'hours' | 'points'",
+    'archive?': '0 | 1',
 });
 
 export type GoalsArgUpdate = typeof GoalsArkTypeUpdate.infer;
@@ -34,3 +35,8 @@ export const GoalsArkTypeFetch = type({
 export type GoalsArgFetch = typeof GoalsArkTypeFetch.infer;
 
 export type GoalsItemForClientWithPermissions = GoalsSchemaTypeForSelect & { permissions: GoalPermissionsForClient };
+
+export type GoalsArgCreateInbox = {
+    ownerId: number;
+    organizationId: number;
+};

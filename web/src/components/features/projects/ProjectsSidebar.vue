@@ -33,8 +33,8 @@ const goalsStore = useGoalsStore()
 const orgStore = useOrganizationStore()
 const { goals } = storeToRefs(goalsStore)
 
-const activeProjects = computed(() => goals.value.filter(p => p.archive === 0))
-const archivedProjects = computed(() => goals.value.filter(p => p.archive === 1))
+const activeProjects = computed(() => goals.value.filter(p => p.archive === 0 && !p.isInbox))
+const archivedProjects = computed(() => goals.value.filter(p => p.archive === 1 && !p.isInbox))
 
 
 watch(() => orgStore.currentOrg, async () => {

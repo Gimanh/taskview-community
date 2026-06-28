@@ -13,7 +13,6 @@
           :to="{ name: 'user' }"
           variant="taskview"
           class="flex-1"
-          :ui="{ container: 'px-4 py-3' }"
         >
           {{ t('main') }}
         </TvGoalLikeItem>
@@ -22,6 +21,10 @@
       </div>
 
       <SearchActivator />
+      <SidebarInboxLink />
+
+      <USeparator />
+
       <SidebarProjectSelect />
       <SidebarTools />
       <ProjectAddInput
@@ -53,6 +56,7 @@ import UserMenu from '@/components/UserMenu.vue'
 import TvGoalLikeItem from '@/components/features/base/TvGoalLikeItem.vue'
 import ActiveTimerIndicator from '@/components/ActiveTimerIndicator.vue'
 import NotificationBell from '@/components/NotificationBell.vue'
+import SidebarInboxLink from '@/components/sidebars/SidebarInboxLink.vue'
 import SidebarProjectSelect from './dashboard-second/SidebarProjectSelect.vue'
 import SidebarTools from './dashboard-second/SidebarTools.vue'
 import SidebarOrgSelect from './dashboard-second/SidebarOrgSelect.vue'

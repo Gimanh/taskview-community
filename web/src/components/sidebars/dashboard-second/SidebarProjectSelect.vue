@@ -10,7 +10,7 @@
         variant="soft"
         size="xl"
         block
-        icon="i-lucide-folder"
+        :icon="currentProject?.isInbox ? 'i-lucide-inbox' : 'i-lucide-folder'"
         trailing-icon="i-lucide-chevron-down"
         :ui="{ base: 'rounded-xl', trailingIcon: 'ms-auto' }"
       >
@@ -18,7 +18,7 @@
           class="flex-1 text-left truncate"
           :class="currentProject ? '' : 'text-muted'"
         >
-          {{ currentProject?.name ?? t('projects.selectProject') }}
+          {{ currentProjectLabel }}
         </span>
       </UButton>
 
@@ -89,7 +89,7 @@
       class="flex items-center justify-end gap-2"
     >
       <UButton
-        v-if="canEditGoal && !isArchived"
+        v-if="canEditGoal && !isArchived && !isInbox"
         icon="i-lucide-archive"
         color="neutral"
         variant="soft"
@@ -99,7 +99,7 @@
         @click="archive"
       />
       <UButton
-        v-if="canEditGoal && isArchived"
+        v-if="canEditGoal && isArchived && !isInbox"
         icon="i-lucide-archive-restore"
         color="neutral"
         variant="soft"
@@ -109,7 +109,7 @@
         @click="restore"
       />
       <UButton
-        v-if="canEditGoal"
+        v-if="canEditGoal && !isInbox"
         icon="i-lucide-pencil"
         color="neutral"
         variant="soft"
@@ -118,7 +118,7 @@
         @click="isEditOpen = true"
       />
       <UButton
-        v-if="canDeleteGoal"
+        v-if="canDeleteGoal && !isInbox"
         icon="i-lucide-trash-2"
         color="error"
         variant="soft"
@@ -165,12 +165,18 @@ const isEditOpen = ref(false)
 const isDeleteOpen = ref(false)
 
 const currentProjectId = computed(() => Number(route.params.projectId) || null)
-const activeProjects = computed(() => goals.value.filter(p => p.archive === 0))
-const archivedProjects = computed(() => goals.value.filter(p => p.archive === 1))
+const activeProjects = computed(() => goals.value.filter(p => p.archive === 0 && !p.isInbox))
+const archivedProjects = computed(() => goals.value.filter(p => p.archive === 1 && !p.isInbox))
 const currentProject = computed<Project | null>(() =>
   currentProjectId.value ? goalsStore.goalMap.get(currentProjectId.value) ?? null : null,
 )
 const isArchived = computed(() => currentProject.value?.archive === 1)
+const isInbox = computed(() => currentProject.value?.isInbox === true)
+const currentProjectLabel = computed(() =>
+  currentProject.value
+    ? (currentProject.value.isInbox ? t('projects.inbox') : currentProject.value.name)
+    : t('projects.selectProject'),
+)
 
 const { canEditGoal, canDeleteGoal } = useGoalPermissionsFor(currentProject)
 

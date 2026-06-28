@@ -22,7 +22,7 @@ import { useI18n } from 'vue-i18n'
 const goalsStore = useGoalsStore()
 
 const { t } = useI18n()
-const noGoals = computed(() => goalsStore.goals.filter((g) => !g.archive).length === 0)
+const noGoals = computed(() => goalsStore.goals.filter((g) => !g.archive && !g.isInbox).length === 0)
 
 async function addProject(name: string) {
   await goalsStore.addGoal({ name })
