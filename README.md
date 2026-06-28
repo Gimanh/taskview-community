@@ -1,7 +1,7 @@
 # TaskView™
 
 <p align="center">
-  <img src="./assets/taskview/kanban-dark.png" alt="TaskView logo" width="320">
+  <img src="./assets/taskview/kanban-dark.png" alt="TaskView — Kanban board" width="1440" style="max-width: 100%;">
 </p>
 
 <p align="center">
@@ -14,7 +14,7 @@
 </p>
 
 <details>
-  <summary><strong>View more screenshots</strong></summary>
+  <summary style="font-size: 24px"><strong>View more screenshots</strong></summary>
 
   <br>
 
@@ -59,6 +59,15 @@
 <p align="center">
   <a href="./LICENSE">
     <img src="https://img.shields.io/badge/license-Source--Available-blue" alt="Source-Available License">
+  </a>
+  <a href="https://github.com/Gimanh/taskview-community/releases">
+    <img src="https://img.shields.io/github/v/release/Gimanh/taskview-community?label=release&color=brightgreen" alt="Latest release">
+  </a>
+  <a href="https://www.npmjs.com/package/taskview-mcp">
+    <img src="https://img.shields.io/npm/v/taskview-mcp?label=taskview-mcp&logo=npm&color=CB3837" alt="taskview-mcp on npm">
+  </a>
+  <a href="https://www.npmjs.com/package/taskview-api">
+    <img src="https://img.shields.io/npm/v/taskview-api?label=taskview-api&logo=npm&color=CB3837" alt="taskview-api on npm">
   </a>
   <img src="https://img.shields.io/badge/status-active-brightgreen" alt="Active development">
   <img src="https://img.shields.io/badge/self--hosted-Docker-2496ED" alt="Docker self-hosted">
@@ -169,7 +178,37 @@ Depending on the permissions assigned to an API token, an AI assistant can:
 
 MCP access can be restricted by permission and by selected projects.
 
-See the [TaskView MCP documentation](https://taskview.tech/docs/integrations/mcp) for configuration examples.
+### Connecting an MCP client
+
+The MCP server is published as [`taskview-mcp`](https://www.npmjs.com/package/taskview-mcp) and runs over stdio via `npx` — no install required. You only need a TaskView API token (`tvk_...`) — generate one in your account settings (see [API tokens](https://taskview.tech/docs/features/api-tokens)). Scope the token to the minimum permissions and projects the assistant should reach.
+
+**Claude Code** — add to `.claude/settings.json` (project) or `~/.claude.json` (global):
+
+```json
+{
+  "mcpServers": {
+    "taskview": {
+      "command": "npx",
+      "args": ["-y", "taskview-mcp"],
+      "env": {
+        "TASKVIEW_URL": "https://api.taskview.tech",
+        "TASKVIEW_TOKEN": "tvk_your_token_here"
+      }
+    }
+  }
+}
+```
+
+**Claude Desktop** — add the same `mcpServers` block to `claude_desktop_config.json`.
+
+**Other MCP clients** (Cursor, Windsurf, etc.) — use the same stdio command `npx -y taskview-mcp` with the `TASKVIEW_URL` and `TASKVIEW_TOKEN` environment variables in that client's MCP configuration.
+
+| Variable | Required | Description |
+|---|---|---|
+| `TASKVIEW_URL` | yes | TaskView API server URL (e.g. `https://api.taskview.tech`, or your self-hosted instance) |
+| `TASKVIEW_TOKEN` | yes | API token with the `tvk_` prefix |
+
+See the [TaskView MCP documentation](https://taskview.tech/docs/integrations/mcp) and the [`taskview-mcp` package README](taskview-packages/taskview-mcp/README.md) for the full tool list and more options.
 
 ## Quick start
 
