@@ -114,16 +114,13 @@ export class OidcProvider implements SsoProvider {
     const tokens = await client.authorizationCodeGrant(config, currentUrl, {
       pkceCodeVerifier: codeVerifier,
       expectedState: returnedState,
+      expectedNonce: storedNonce,
     })
 
     const claims = tokens.claims()
 
     if (!claims || !claims.email) {
       throw new Error('OIDC token missing email claim')
-    }
-
-    if (claims.nonce !== storedNonce) {
-      throw new Error('Nonce mismatch — possible token replay attack')
     }
 
     return {

@@ -313,7 +313,7 @@ export default class AuthController {
     loginByCode = async (req: Request, res: Response) => {
         const schema = z.object({
             email: z.string().trim().email().toLowerCase(),
-            code: z.string().trim().regex(/^\d{6}$/, '6-digit code'),
+            code: z.string().trim().min(6).max(64),
         });
 
         const data = schema.safeParse(req.body);
