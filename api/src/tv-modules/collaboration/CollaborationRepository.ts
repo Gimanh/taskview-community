@@ -74,7 +74,7 @@ export class CollaborationRepository {
         }
 
         await this.db
-            .query(`insert into collaboration.users_to_goals (goal_id, user_id) values ($1, $2)`, [goalId, userId])
+            .query(`insert into collaboration.users_to_goals (goal_id, user_id) values ($1, $2) on conflict (user_id, goal_id) do nothing`, [goalId, userId])
             .catch(logError);
 
         return userId ?? false;
@@ -220,7 +220,7 @@ export class CollaborationRepository {
                 await tx.insert(CollaborationUsersToGoalsSchema).values({
                     userId: userId,
                     goalId: args.goalId,
-                });
+                }).onConflictDoNothing();
 
                 return user;
             })

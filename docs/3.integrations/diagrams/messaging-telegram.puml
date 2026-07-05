@@ -1,0 +1,75 @@
+@startuml messaging-telegram
+title TaskView — Telegram messaging integration (sequence)
+
+actor User
+participant "Web\n(frontend)" as Web
+participant "Telegram" as TG
+participant "API routes\n+ controller" as API
+participant "MessagingManager" as Mgr
+participant "TelegramProvider" as Prov
+participant "MessagingDispatcher" as Disp
+participant "EventBus /\nTasksManager" as Core
+queue "pg-boss" as Q
+database "PostgreSQL" as DB
+
+== One-time setup (admin) ==
+note over API, TG
+  Admin runs setWebhook(url, secret_token) once.
+  Telegram then POSTs every update to
+  /module/messaging/telegram/webhook.
+end note
+
+== Connect (deep-link binding) ==
+User -> Web: Messengers → Connect Telegram → Get link
+Web -> API: GET /:provider/connect-link (personal or project)
+API -> Mgr: createPersonalConnectLink / createProjectConnectLink
+Mgr -> Prov: startConnect(ctx)
+Prov --> Mgr: t.me deep-link + one-time token
+Mgr -> DB: store hashed link token (TTL 15 min)
+API --> User: deep-link ("Add bot to group") + /connect <token>
+User -> TG: /start <token> (private)  or  /connect <token> (group)
+TG -> API: POST /telegram/webhook
+API -> API: VerifyTelegramWebhook (secret token, constant-time)
+API -> Mgr: handleInbound(source=webhook)
+Mgr -> Prov: parseInbound → {bindByToken, scope}
+Mgr -> DB: findValidLinkToken → create connection\n(+ identity_map for personal), consume token
+Mgr -> Prov: deliver("Done! connected")
+Prov -> TG: sendMessage
+TG --> User: confirmation
+
+== Outbound notification ==
+User -> Core: create / assign / complete a task
+Core -> Disp: EventBus emit task.*
+Disp -> DB: resolve recipients + subscribed connections
+note right of Disp: description RBAC-gated per recipient\n(COMPONENT_CAN_WATCH_CONTENT)
+Disp -> Q: enqueue deliver jobs
+Q -> Disp: worker → deliverJob
+Disp -> Prov: deliver(message)
+Prov -> TG: sendMessage (HTML, link on "[event] [project]")
+TG --> User: notification
+alt delivery fails
+  Disp -> Q: re-enqueue (backoff, max 3)
+end
+
+== Inbound: /task ==
+User -> TG: /task <text> (group; /task@bot if privacy is on)
+TG -> API: POST /telegram/webhook
+API -> API: VerifyTelegramWebhook (secret token)
+API -> Mgr: handleInbound(source=webhook)
+Mgr -> Prov: parseInbound → {command: createTask}
+Mgr -> DB: identity (telegram user → userId)
+Mgr -> DB: group chat → project (goalId)
+Mgr -> Core: RBAC (COMPONENT_CAN_ADD_TASKS) + addTaskNew
+Core --> Mgr: created task
+Mgr -> Prov: deliver("Task created" + link)
+Prov -> TG: sendMessage
+TG --> User: reply
+
+note over User, DB
+  Telegram = notifications + binding + /task.
+  No inline buttons (Done/Assign) — that is Slack-only.
+  The link is always sent; Telegram itself won't render
+  a localhost href (needs a public APP_URL).
+end note
+
+@enduml
