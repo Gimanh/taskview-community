@@ -75,6 +75,11 @@ const router = createRouter({
           component: () => import('./pages/user/webhooks.vue'),
         },
         {
+          path: ':projectId/messaging',
+          name: 'messaging',
+          component: () => import('./pages/user/messaging.vue'),
+        },
+        {
           path: 'account',
           name: 'account',
           component: () => import('./pages/user/account.vue'),

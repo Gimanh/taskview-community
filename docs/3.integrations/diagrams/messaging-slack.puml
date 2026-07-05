@@ -1,0 +1,83 @@
+@startuml messaging-slack
+title TaskView — Slack messaging integration (sequence)
+
+actor User
+participant "Web\n(frontend)" as Web
+participant "Slack" as Slack
+participant "API routes\n+ controller" as API
+participant "MessagingManager /\nSlackInboundManager" as Mgr
+participant "SlackProvider" as Prov
+participant "MessagingDispatcher" as Disp
+participant "EventBus /\nTasksManager" as Core
+queue "pg-boss" as Q
+database "PostgreSQL" as DB
+
+== Connect (OAuth) ==
+User -> Web: Messengers → Connect Slack
+Web -> API: GET /slack/oauth/start (?token, returnPath)
+API -> Mgr: startOAuthConnect(ctx)
+Mgr -> Prov: startConnect(ctx)
+Prov --> API: url + anti-CSRF nonce cookie
+API --> User: 302 → Slack authorize
+User -> Slack: authorize (project: pick a channel)
+Slack -> API: GET /slack/oauth/callback (code, state)
+API -> Mgr: handleInbound(source=oauth-callback, cookie=nonce)
+Mgr -> Prov: parseInbound → verify state+nonce, exchange code
+Prov -> Slack: oauth.v2.access
+Slack --> Prov: bot token, team, channel
+Prov --> Mgr: {createConnection, identity?}
+Mgr -> DB: store connection (encrypted bot token)\n(+ identity_map for personal)
+API --> User: 302 back (?messaging=connected)
+
+== Outbound notification ==
+User -> Core: create / assign / complete a task
+Core -> Disp: EventBus emit task.*
+Disp -> DB: resolve recipients + subscribed connections
+note right of Disp: description RBAC-gated per recipient\n(COMPONENT_CAN_WATCH_CONTENT)
+Disp -> Q: enqueue deliver jobs
+Q -> Disp: worker → deliverJob
+Disp -> Prov: deliver(message)
+Prov -> Slack: chat.postMessage (Block Kit + buttons)
+Slack --> User: notification card
+alt delivery fails
+  Disp -> Q: re-enqueue (backoff, max 3)
+end
+
+== Inbound: /task ==
+User -> Slack: /task <text> (project channel)
+Slack -> API: POST /slack/commands
+API -> API: VerifySlackRequest (HMAC signature + replay window)
+API -> Mgr: handleSlashCommand(payload)
+Mgr -> DB: identity (slack user → userId)
+Mgr -> DB: channel → project (goalId)
+Mgr -> Core: RBAC (COMPONENT_CAN_ADD_TASKS) + addTaskNew
+Core --> Mgr: created task
+Mgr --> Slack: ephemeral "✅ Task created: <text>" (no link)
+Slack --> User: ephemeral reply
+
+== Inbound: Done / Reopen / Assign buttons ==
+User -> Slack: click Done / Reopen / Assign
+Slack -> API: POST /slack/interactivity
+API -> API: VerifySlackRequest (signature)
+API -> Mgr: handleInteraction(payload)
+Mgr -> DB: identity → userId
+alt Assign
+  Mgr -> Slack: views.open (multi-select modal, current assignees pre-selected)
+  User -> Slack: pick assignees → Save
+  Slack -> API: POST /slack/interactivity (view_submission)
+  API -> Mgr: handleAssignSubmit
+  Mgr -> Core: RBAC (TASKS_CAN_ASSIGN_USERS) + toggleTaskUsers (set)
+  Mgr --> Slack: {} → modal closes (no ephemeral)
+else Done / Reopen
+  Mgr -> Core: RBAC (TASKS_CAN_EDIT_STATUS) + updateTask(complete)
+  Mgr --> Slack: ephemeral ack (response_url, replace_original=false)
+  Slack --> User: private confirmation
+end
+
+note over User, DB
+  Feed model: each event posts a NEW card.
+  Past cards are not edited; a stale click is safe
+  (idempotent action + RBAC re-check).
+end note
+
+@enduml

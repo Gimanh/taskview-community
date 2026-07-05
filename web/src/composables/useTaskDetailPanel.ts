@@ -70,10 +70,14 @@ const _useTaskDetailPanel = () => {
   }
 
   function closeTask() {
-    // On user route with taskId — go back (browser history), watcher will clear state
+    // On user route with taskId — remove taskId from the URL; the watcher clears state.
     if (route.name === 'user' && route.params.taskId) {
       syncBaseScreen()
-      router.back()
+      if (window.history.state?.back != null) {
+        router.back()
+      } else {
+        router.replace({ name: 'user', params: { ...route.params, taskId: undefined } })
+      }
       return
     }
 

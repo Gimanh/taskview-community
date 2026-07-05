@@ -22,6 +22,15 @@ export const AppEnvSchema = z.object({
     SMTP_FROM_NAME: z.string().optional(),
     SMTP_FROM_EMAIL: z.string().optional(),
     APP_URL: z.string(),
+
+    TELEGRAM_BOT_TOKEN: z.string().optional(),
+    TELEGRAM_BOT_USERNAME: z.string().optional(),
+    TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
+
+    SLACK_CLIENT_ID: z.string().optional(),
+    SLACK_CLIENT_SECRET: z.string().optional(),
+    SLACK_CALLBACK_URL: z.string().optional(),
+    SLACK_SIGNING_SECRET: z.string().optional(),
 });
 
 export const StringToNumber = z

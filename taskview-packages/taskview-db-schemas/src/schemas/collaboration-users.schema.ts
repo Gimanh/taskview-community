@@ -1,4 +1,4 @@
-import { integer, pgSchema, time, varchar } from "drizzle-orm/pg-core";
+import { integer, pgSchema, time, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { GoalsSchema } from "./goals.schema";
 import { PermissionsSchema } from "./users.schema";
 
@@ -26,7 +26,9 @@ export const CollaborationPermissionsToRoleSchema = pgSchema('collaboration').ta
 export const CollaborationUsersToGoalsSchema = pgSchema('collaboration').table('users_to_goals', {
     userId: integer('user_id').notNull().references(() => CollaborationUsersSchema.id, { onDelete: 'cascade' }),
     goalId: integer('goal_id').notNull().references(() => GoalsSchema.id, { onDelete: 'cascade' }),
-});
+}, (table) => [
+    uniqueIndex('users_to_goals_user_goal_uidx').on(table.userId, table.goalId),
+]);
 
 export const CollaborationUsersToRolesSchema = pgSchema('collaboration').table('users_to_roles', {
     userId: integer('user_id').notNull().references(() => CollaborationUsersSchema.id, { onDelete: 'cascade' }),

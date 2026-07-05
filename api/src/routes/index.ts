@@ -6,6 +6,7 @@ import GraphRoutes from '../tv-modules/graph/GraphRoutes';
 import IntegrationsRoutes from '../tv-modules/integrations/IntegrationsRoutes';
 import NotificationsRoutes from '../tv-modules/notifications/NotificationsRoutes';
 import WebhooksRoutes from '../tv-modules/webhooks/WebhooksRoutes';
+import MessagingRoutes from '../tv-modules/messaging/MessagingRoutes';
 import ApiTokensRoutes from '../tv-modules/api-tokens/ApiTokensRoutes';
 import SessionsRoutes from '../tv-modules/sessions/SessionsRoutes';
 import KanbanRoutes from '../tv-modules/kanban/KanbanRoutes';
@@ -39,6 +40,7 @@ const routes: Record<string, RoutableConstructor> = {
     '/module/integrations': IntegrationsRoutes,
     '/module/notifications': NotificationsRoutes,
     '/module/webhooks': WebhooksRoutes,
+    '/module/messaging': MessagingRoutes,
     '/module/api-tokens': ApiTokensRoutes,
     '/module/sessions': SessionsRoutes,
     '/module/organizations': OrganizationRoutes,

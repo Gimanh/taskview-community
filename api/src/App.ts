@@ -51,7 +51,16 @@ export default class App {
                 }
             },
         }));
-        this.app.use(express.urlencoded({ extended: true }));
+        this.app.use(express.urlencoded({
+            extended: true,
+            verify: (req: any, _res, buf) => {
+                // Slack sends slash commands / interactivity as urlencoded; keep the raw body
+                // for HMAC signature verification (VerifySlackRequest).
+                if (req.url?.includes('/messaging/slack/')) {
+                    req.rawBody = buf;
+                }
+            },
+        }));
         this.app.use(appUserMiddleware);
     }
 

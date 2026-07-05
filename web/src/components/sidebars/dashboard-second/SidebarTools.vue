@@ -101,6 +101,7 @@ const tools = computed<Tool[]>(() => {
   if (canViewIntegrations.value) {
     list.push({ key: 'webhooks', label: t('contextMenu.webhooks'), icon: 'i-lucide-webhook', to: { name: 'webhooks', params: { projectId: id } }, active: () => route.name === 'webhooks' })
     list.push({ key: 'integrations', label: t('contextMenu.integrations'), icon: 'i-lucide-plug', to: { name: 'integrations', params: { projectId: id } }, active: () => route.name === 'integrations' })
+    list.push({ key: 'messaging', label: t('contextMenu.messaging'), icon: 'i-lucide-send', to: { name: 'messaging', params: { projectId: id } }, active: () => route.name === 'messaging' })
   }
   if (canViewTimeTracking.value) {
     list.push({ key: 'timeReports', label: t('contextMenu.timeReports'), icon: 'i-lucide-clock', to: { name: 'project-time-reports', params: { projectId: id } }, active: () => route.name === 'project-time-reports' })
