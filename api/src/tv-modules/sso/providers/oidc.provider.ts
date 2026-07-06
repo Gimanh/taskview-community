@@ -110,7 +110,8 @@ export class OidcProvider implements SsoProvider {
       throw new Error('CSRF state mismatch — possible CSRF attack')
     }
 
-    const currentUrl = new URL(req.originalUrl, `${req.protocol}://${req.get('host')}`)
+    const callbackOrigin = new URL(this.config.oidcCallbackUrl!).origin
+    const currentUrl = new URL(req.originalUrl, callbackOrigin)
     const tokens = await client.authorizationCodeGrant(config, currentUrl, {
       pkceCodeVerifier: codeVerifier,
       expectedState: returnedState,

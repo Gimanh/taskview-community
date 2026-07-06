@@ -31,7 +31,17 @@ export default class App {
     protected extendApp(): void { }
     protected extendMiddlewares(): void { }
 
+    private resolveTrustProxy(): boolean | number | string {
+        const raw = process.env.TRUST_PROXY?.trim();
+        if (!raw || raw.toLowerCase() === 'false') return false;
+        if (raw.toLowerCase() === 'true') return true;
+        if (/^\d+$/.test(raw)) return Number(raw);
+        return raw;
+    }
+
     private initializeMiddlewares() {
+        this.app.set('trust proxy', this.resolveTrustProxy());
+
         //add tvJson method, clien need response format like {response: data}
         this.app.use((_req: Request, res: Response, next) => {
             res.tvJson = function (data: any) {
