@@ -44,7 +44,7 @@ const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const { isSidebarOpen } = useDashboard()
-const { isUserRoute, isAccountRoute, hasProject, projectId } = useAppRouteInfo()
+const { isUserRoute, isSettingsRoute, hasProject, projectId } = useAppRouteInfo()
 const goalsStore = useGoalsStore()
 
 const currentGoal = computed(() =>
@@ -105,11 +105,11 @@ const navItems = computed<NavItem[]>(() => {
   // so drop Settings there — it stays reachable from the global tabs.
   if (!hasProject.value) {
     items.push({
-      key: 'account',
+      key: 'settings',
       label: t('account.nav'),
       icon: 'i-lucide-settings',
-      to: { name: 'account' },
-      active: () => isAccountRoute.value,
+      to: { name: 'settings' },
+      active: () => isSettingsRoute.value,
     })
   }
 

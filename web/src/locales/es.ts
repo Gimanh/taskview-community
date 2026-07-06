@@ -618,6 +618,15 @@ export default {
     logoutFailed: 'Error al cerrar sesión',
     logoutFailedDescription: 'Intenta borrar la caché del navegador para eliminar el token de autorización',
   },
+  settings: {
+    title: 'Configuración',
+    account: 'Cuenta',
+    appearance: 'Apariencia',
+    layout: 'Diseño',
+    about: 'Acerca de',
+    system: 'Sistema',
+    version: 'Versión',
+  },
   analytics: {
     page: {
       title: 'Analíticas',

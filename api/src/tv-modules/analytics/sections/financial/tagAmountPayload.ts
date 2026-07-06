@@ -2,7 +2,7 @@ import type { AnalyticsDataset, AnalyticsSeriesPayload, LocalizedText } from 'ta
 import type { AmountPerTagMonthSectionRow } from '../row.types'
 import { UNTAGGED_TAG_ID } from '../../types'
 
-const UNTAGGED_LABEL: LocalizedText = { ru: 'Без тегов', en: 'Untagged' }
+const UNTAGGED_LABEL: LocalizedText = { ru: 'Без тегов', en: 'Untagged', de: 'Ohne Tags', es: 'Sin etiquetas' }
 
 export type BuildTagAmountPayloadArgs = {
   rows: AmountPerTagMonthSectionRow[]

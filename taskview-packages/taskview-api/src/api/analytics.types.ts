@@ -23,6 +23,8 @@ export type AnalyticsRange = {
 export type LocalizedText = {
   ru: string
   en: string
+  de?: string
+  es?: string
 }
 
 export type AnalyticsUnit =

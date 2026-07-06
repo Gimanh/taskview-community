@@ -34,6 +34,7 @@
 
       <div class="flex-1" />
 
+      <SidebarWorkspaceLinks />
       <SidebarOrgSelect />
     </div>
 
@@ -57,6 +58,7 @@ import TvGoalLikeItem from '@/components/features/base/TvGoalLikeItem.vue'
 import ActiveTimerIndicator from '@/components/ActiveTimerIndicator.vue'
 import NotificationBell from '@/components/NotificationBell.vue'
 import SidebarInboxLink from '@/components/sidebars/SidebarInboxLink.vue'
+import SidebarWorkspaceLinks from '@/components/sidebars/SidebarWorkspaceLinks.vue'
 import SidebarProjectSelect from './dashboard-second/SidebarProjectSelect.vue'
 import SidebarTools from './dashboard-second/SidebarTools.vue'
 import SidebarOrgSelect from './dashboard-second/SidebarOrgSelect.vue'

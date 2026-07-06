@@ -80,6 +80,11 @@ const router = createRouter({
           component: () => import('./pages/user/messaging.vue'),
         },
         {
+          path: 'settings',
+          name: 'settings',
+          component: () => import('./pages/user/settings.vue'),
+        },
+        {
           path: 'account',
           name: 'account',
           component: () => import('./pages/user/account.vue'),

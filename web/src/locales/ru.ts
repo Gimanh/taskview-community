@@ -605,6 +605,15 @@ export default {
     logoutFailed: 'Не удалось выйти',
     logoutFailedDescription: 'Попробуйте очистить кэш браузера, чтобы удалить токен авторизации',
   },
+  settings: {
+    title: 'Настройки',
+    account: 'Аккаунт',
+    appearance: 'Оформление',
+    layout: 'Макет',
+    about: 'О приложении',
+    system: 'Системная',
+    version: 'Версия',
+  },
   analytics: {
     page: {
       title: 'Аналитика',

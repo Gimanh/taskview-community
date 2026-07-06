@@ -6,6 +6,7 @@ export const useAppRouteInfo = () => {
   const orgSlug = computed(() => String(route.params.orgSlug || ''))
   const isUserRoute = computed(() => route.name === 'user')
   const isAccountRoute = computed(() => route.name === 'account')
+  const isSettingsRoute = computed(() => route.name === 'settings')
   const projectId = computed(() => Number(route.params.projectId) || -1)
   const hasProject = computed(() => projectId.value > 0)
   const listId = computed(() => Number(route.params.listId) || -1)
@@ -16,6 +17,7 @@ export const useAppRouteInfo = () => {
     orgSlug,
     isUserRoute,
     isAccountRoute,
+    isSettingsRoute,
     hasProject,
     projectId,
     listId,
