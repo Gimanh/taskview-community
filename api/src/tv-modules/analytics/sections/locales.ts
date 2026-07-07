@@ -19,148 +19,188 @@ export const sectionLocales = {
   // ===== KPI =====
 
   'kpi.created_tasks': {
-    title: { ru: 'Создано задач', en: 'Created tasks' },
+    title: { ru: 'Создано задач', en: 'Created tasks', de: 'Erstellte Aufgaben', es: 'Tareas creadas' },
     help: {
       summary: {
         ru: 'Количество созданных задач за выбранный период',
         en: 'Number of tasks created in the selected period',
+        de: 'Anzahl der im gewählten Zeitraum erstellten Aufgaben',
+        es: 'Número de tareas creadas en el período seleccionado',
       },
       details: {
         ru: 'Показывает входящий поток работы. Сравните со счётчиком «Закрыто задач» — если создаётся больше, чем закрывается, команда не успевает справляться, и бэклог растёт. Delta показывает изменение относительно предыдущего периода той же длины.',
         en: 'Shows incoming work volume. Compare against "Completed tasks" — if creation outpaces completion, the backlog is growing and the team is falling behind. The delta compares against the equivalent previous period.',
+        de: 'Zeigt das eingehende Arbeitsvolumen. Vergleiche mit "Abgeschlossene Aufgaben" — wird mehr erstellt als abgeschlossen, wächst das Backlog und das Team kommt nicht hinterher. Das Delta vergleicht mit dem gleich langen vorherigen Zeitraum.',
+        es: 'Muestra el volumen de trabajo entrante. Compara con "Tareas completadas": si se crean más de las que se completan, el backlog crece y el equipo se queda atrás. El delta se compara con el período anterior equivalente.',
       },
     },
   },
 
   'kpi.completed_tasks': {
-    title: { ru: 'Закрыто задач', en: 'Completed tasks' },
+    title: { ru: 'Закрыто задач', en: 'Completed tasks', de: 'Abgeschlossene Aufgaben', es: 'Tareas completadas' },
     help: {
       summary: {
         ru: 'Количество задач, закрытых за период',
         en: 'Tasks completed in the selected period',
+        de: 'Im gewählten Zeitraum abgeschlossene Aufgaben',
+        es: 'Tareas completadas en el período seleccionado',
       },
       details: {
         ru: 'Реальный выход команды — сколько работы было доведено до конца. Сопоставляйте с «Создано задач»: если создано ≫ закрыто, нарастает бэклог. Стабильный тренд роста = хороший признак ускорения процессов.',
         en: 'Actual team output — how much work got finished. Compare with "Created tasks": if creation far exceeds completion, the backlog is growing. A steady upward trend indicates process acceleration.',
+        de: 'Der tatsächliche Output des Teams — wie viel Arbeit fertiggestellt wurde. Vergleiche mit "Erstellte Aufgaben": Wird deutlich mehr erstellt als abgeschlossen, wächst das Backlog. Ein stetig steigender Trend deutet auf eine Beschleunigung der Prozesse hin.',
+        es: 'La producción real del equipo: cuánto trabajo se terminó. Compara con "Tareas creadas": si la creación supera con creces la finalización, el backlog crece. Una tendencia ascendente constante indica una aceleración de los procesos.',
       },
     },
   },
 
   'kpi.overdue': {
-    title: { ru: 'Просрочено', en: 'Overdue' },
+    title: { ru: 'Просрочено', en: 'Overdue', de: 'Überfällig', es: 'Vencidas' },
     help: {
       summary: {
         ru: 'Открытые задачи с прошедшим дедлайном',
         en: 'Open tasks past their due date',
+        de: 'Offene Aufgaben mit überschrittenem Fälligkeitsdatum',
+        es: 'Tareas abiertas que superaron su fecha límite',
       },
       details: {
         ru: 'Работа, требующая срочного внимания. Если число стабильно растёт — команда перегружена или дедлайны нереалистичны. Кликните по KPI, чтобы увидеть конкретные просроченные задачи.',
         en: 'Work that needs immediate attention. A steadily growing number signals team overload or unrealistic deadlines. Click the KPI to drill into the specific overdue tasks.',
+        de: 'Arbeit, die sofortige Aufmerksamkeit erfordert. Eine stetig wachsende Zahl signalisiert Überlastung des Teams oder unrealistische Fristen. Klicke auf den KPI, um die konkreten überfälligen Aufgaben aufzuschlüsseln.',
+        es: 'Trabajo que necesita atención inmediata. Un número en aumento constante indica sobrecarga del equipo o plazos poco realistas. Haz clic en el KPI para ver las tareas vencidas concretas.',
       },
     },
   },
 
   'kpi.cycle_time': {
-    title: { ru: 'Cycle time (медиана)', en: 'Cycle time (median)' },
-    description: { ru: 'Медианное время от создания до завершения', en: 'Median time from creation to completion' },
+    title: { ru: 'Cycle time (медиана)', en: 'Cycle time (median)', de: 'Durchlaufzeit (Median)', es: 'Tiempo de ciclo (mediana)' },
+    description: { ru: 'Медианное время от создания до завершения', en: 'Median time from creation to completion', de: 'Median-Zeit von Erstellung bis Abschluss', es: 'Tiempo mediano desde la creación hasta la finalización' },
     help: {
       summary: {
         ru: 'Медианное время от создания задачи до её закрытия',
         en: 'Median time from task creation to completion',
+        de: 'Median-Zeit von der Erstellung einer Aufgabe bis zu ihrem Abschluss',
+        es: 'Tiempo mediano desde la creación de la tarea hasta su finalización',
       },
       details: {
         ru: 'Сколько в среднем живёт задача с момента создания до закрытия. Рост показателя = замедление процессов. Используется медиана, а не среднее — выбросы (застрявшие задачи) не искажают картину.',
         en: "How long a task typically lives from creation to completion. A rising number means slowing processes. We use the median rather than the mean so that outliers (stuck tasks) don't distort the picture.",
+        de: 'Wie lange eine Aufgabe typischerweise von der Erstellung bis zum Abschluss lebt. Eine steigende Zahl bedeutet langsamere Prozesse. Wir verwenden den Median statt des Mittelwerts, damit Ausreißer (feststeckende Aufgaben) das Bild nicht verzerren.',
+        es: 'Cuánto vive normalmente una tarea desde su creación hasta su finalización. Un número creciente significa procesos más lentos. Usamos la mediana en lugar de la media para que los valores atípicos (tareas atascadas) no distorsionen la imagen.',
       },
     },
   },
 
   'kpi.total_income': {
-    title: { ru: 'Доходы', en: 'Income' },
-    description: { ru: 'Сумма за период', en: 'Sum for period' },
+    title: { ru: 'Доходы', en: 'Income', de: 'Einnahmen', es: 'Ingresos' },
+    description: { ru: 'Сумма за период', en: 'Sum for period', de: 'Summe für den Zeitraum', es: 'Suma del período' },
     help: {
       summary: {
         ru: 'Сумма всех доходов за выбранный период',
         en: 'Total income for the selected period',
+        de: 'Gesamteinnahmen für den gewählten Zeitraum',
+        es: 'Ingresos totales del período seleccionado',
       },
       details: {
         ru: 'Складываются суммы по закрытым задачам, у которых отмечен тип «доход». Сравнение — с предыдущим периодом такой же длины. Зелёная стрелка вверх — доход вырос, это хорошо.',
         en: 'Sum of amounts on closed tasks marked as "income". Compared against the previous equivalent period. A green up arrow means income grew, which is good.',
+        de: 'Summe der Beträge abgeschlossener Aufgaben, die als "Einnahme" markiert sind. Verglichen mit dem vorherigen gleich langen Zeitraum. Ein grüner Aufwärtspfeil bedeutet, die Einnahmen sind gestiegen — das ist gut.',
+        es: 'Suma de los importes de las tareas cerradas marcadas como "ingreso". Comparado con el período anterior equivalente. Una flecha verde hacia arriba significa que los ingresos crecieron, lo cual es bueno.',
       },
     },
   },
 
   'kpi.total_expense': {
-    title: { ru: 'Расходы', en: 'Expense' },
-    description: { ru: 'Сумма за период', en: 'Sum for period' },
+    title: { ru: 'Расходы', en: 'Expense', de: 'Ausgaben', es: 'Gastos' },
+    description: { ru: 'Сумма за период', en: 'Sum for period', de: 'Summe für den Zeitraum', es: 'Suma del período' },
     help: {
       summary: {
         ru: 'Сумма всех расходов за выбранный период',
         en: 'Total expenses for the selected period',
+        de: 'Gesamtausgaben für den gewählten Zeitraum',
+        es: 'Gastos totales del período seleccionado',
       },
       details: {
         ru: 'Складываются суммы по закрытым задачам, у которых отмечен тип «расход». Сравнение — с предыдущим периодом такой же длины. Зелёная стрелка вниз — расходы снизились, это хорошо.',
         en: 'Sum of amounts on closed tasks marked as "expense". Compared against the previous equivalent period. A green down arrow means expenses dropped, which is good.',
+        de: 'Summe der Beträge abgeschlossener Aufgaben, die als "Ausgabe" markiert sind. Verglichen mit dem vorherigen gleich langen Zeitraum. Ein grüner Abwärtspfeil bedeutet, die Ausgaben sind gesunken — das ist gut.',
+        es: 'Suma de los importes de las tareas cerradas marcadas como "gasto". Comparado con el período anterior equivalente. Una flecha verde hacia abajo significa que los gastos bajaron, lo cual es bueno.',
       },
     },
   },
 
   'kpi.planned_income': {
-    title: { ru: 'Планируемые доходы', en: 'Planned income' },
-    description: { ru: 'По открытым задачам', en: 'From open tasks' },
+    title: { ru: 'Планируемые доходы', en: 'Planned income', de: 'Geplante Einnahmen', es: 'Ingresos previstos' },
+    description: { ru: 'По открытым задачам', en: 'From open tasks', de: 'Aus offenen Aufgaben', es: 'De tareas abiertas' },
     help: {
       summary: {
         ru: 'Сумма доходов по открытым задачам с указанной суммой',
         en: 'Sum of income from open tasks with amount set',
+        de: 'Summe der Einnahmen aus offenen Aufgaben mit gesetztem Betrag',
+        es: 'Suma de ingresos de tareas abiertas con importe definido',
       },
       details: {
         ru: 'Складываются суммы по всем открытым (не завершённым) задачам с типом «доход» и заполненной суммой. Это снимок ожидаемых поступлений — пока задача не закрыта, доход считается планируемым. Не зависит от выбранного периода.',
         en: 'Sum of amounts from all open (incomplete) tasks marked as "income" with a filled amount. This is a snapshot of expected income — until a task is closed, the income is planned. Not affected by the selected period.',
+        de: 'Summe der Beträge aller offenen (nicht abgeschlossenen) Aufgaben, die als "Einnahme" markiert sind und einen ausgefüllten Betrag haben. Eine Momentaufnahme der erwarteten Einnahmen — solange eine Aufgabe nicht abgeschlossen ist, gelten die Einnahmen als geplant. Unabhängig vom gewählten Zeitraum.',
+        es: 'Suma de los importes de todas las tareas abiertas (sin completar) marcadas como "ingreso" y con importe definido. Es una instantánea de los ingresos esperados: mientras una tarea no se cierra, el ingreso se considera previsto. No depende del período seleccionado.',
       },
     },
   },
 
   'kpi.planned_expense': {
-    title: { ru: 'Планируемые расходы', en: 'Planned expense' },
-    description: { ru: 'По открытым задачам', en: 'From open tasks' },
+    title: { ru: 'Планируемые расходы', en: 'Planned expense', de: 'Geplante Ausgaben', es: 'Gastos previstos' },
+    description: { ru: 'По открытым задачам', en: 'From open tasks', de: 'Aus offenen Aufgaben', es: 'De tareas abiertas' },
     help: {
       summary: {
         ru: 'Сумма расходов по открытым задачам с указанной суммой',
         en: 'Sum of expenses from open tasks with amount set',
+        de: 'Summe der Ausgaben aus offenen Aufgaben mit gesetztem Betrag',
+        es: 'Suma de gastos de tareas abiertas con importe definido',
       },
       details: {
         ru: 'Складываются суммы по всем открытым (не завершённым) задачам с типом «расход» и заполненной суммой. Это снимок ожидаемых трат — пока задача не закрыта, расход считается планируемым. Не зависит от выбранного периода.',
         en: 'Sum of amounts from all open (incomplete) tasks marked as "expense" with a filled amount. This is a snapshot of expected spending — until a task is closed, the expense is planned. Not affected by the selected period.',
+        de: 'Summe der Beträge aller offenen (nicht abgeschlossenen) Aufgaben, die als "Ausgabe" markiert sind und einen ausgefüllten Betrag haben. Eine Momentaufnahme der erwarteten Ausgaben — solange eine Aufgabe nicht abgeschlossen ist, gelten die Ausgaben als geplant. Unabhängig vom gewählten Zeitraum.',
+        es: 'Suma de los importes de todas las tareas abiertas (sin completar) marcadas como "gasto" y con importe definido. Es una instantánea del gasto esperado: mientras una tarea no se cierra, el gasto se considera previsto. No depende del período seleccionado.',
       },
     },
   },
 
   'kpi.net_profit': {
-    title: { ru: 'Чистая прибыль', en: 'Net profit' },
-    description: { ru: 'Доходы минус расходы', en: 'Income minus expense' },
+    title: { ru: 'Чистая прибыль', en: 'Net profit', de: 'Nettogewinn', es: 'Beneficio neto' },
+    description: { ru: 'Доходы минус расходы', en: 'Income minus expense', de: 'Einnahmen minus Ausgaben', es: 'Ingresos menos gastos' },
     help: {
       summary: {
         ru: 'Чистая прибыль за период: доходы минус расходы',
         en: 'Net profit for the period: income minus expense',
+        de: 'Nettogewinn für den Zeitraum: Einnahmen minus Ausgaben',
+        es: 'Beneficio neto del período: ingresos menos gastos',
       },
       details: {
         ru: 'Считается как разница между всеми доходами и расходами по закрытым задачам в периоде. Положительное число — заработали больше, чем потратили. Дельта показывает, насколько изменилась прибыль по сравнению с предыдущим периодом такой же длины.',
         en: 'Calculated as the difference between all income and expense from closed tasks in the period. A positive number means you earned more than you spent. The delta shows how profit changed vs the previous equivalent period.',
+        de: 'Berechnet als Differenz zwischen allen Einnahmen und Ausgaben abgeschlossener Aufgaben im Zeitraum. Eine positive Zahl bedeutet, du hast mehr eingenommen als ausgegeben. Das Delta zeigt, wie sich der Gewinn gegenüber dem vorherigen gleich langen Zeitraum verändert hat.',
+        es: 'Se calcula como la diferencia entre todos los ingresos y gastos de las tareas cerradas en el período. Un número positivo significa que ganaste más de lo que gastaste. El delta muestra cómo cambió el beneficio respecto al período anterior equivalente.',
       },
     },
   },
 
   'kpi.amount_coverage': {
-    title: { ru: 'Заполнено amount', en: 'Amount coverage' },
-    description: { ru: '% задач с заполненной суммой', en: '% of tasks with amount filled' },
+    title: { ru: 'Заполнено amount', en: 'Amount coverage', de: 'Betragsabdeckung', es: 'Cobertura de importe' },
+    description: { ru: '% задач с заполненной суммой', en: '% of tasks with amount filled', de: '% der Aufgaben mit ausgefülltem Betrag', es: '% de tareas con importe rellenado' },
     help: {
       summary: {
         ru: 'Доля задач с заполненным полем суммы',
         en: 'Share of tasks with the amount field filled',
+        de: 'Anteil der Aufgaben mit ausgefülltem Betragsfeld',
+        es: 'Proporción de tareas con el campo de importe rellenado',
       },
       details: {
         ru: 'Показатель качества данных для финансовой аналитики. Если % низкий — графики «Доходы/расходы» и «Топ проектов» отражают только малую часть реальности. Стоит либо не доверять им, либо наладить практику заполнения amount/transactionType.',
         en: 'Data quality indicator for financial analytics. If this percentage is low, the Income/Expense and Top Projects charts only reflect a small slice of reality — either treat them with caution or establish a practice of filling the amount/transactionType fields.',
+        de: 'Datenqualitäts-Indikator für die Finanzanalyse. Ist dieser Prozentsatz niedrig, spiegeln die Diagramme "Einnahmen/Ausgaben" und "Top-Projekte" nur einen kleinen Ausschnitt der Realität wider — behandle sie mit Vorsicht oder etabliere die Praxis, die Felder amount/transactionType auszufüllen.',
+        es: 'Indicador de calidad de datos para la analítica financiera. Si este porcentaje es bajo, los gráficos de Ingresos/Gastos y Top proyectos solo reflejan una pequeña parte de la realidad: trátalos con cautela o establece la práctica de rellenar los campos amount/transactionType.',
       },
     },
   },
@@ -168,119 +208,143 @@ export const sectionLocales = {
   // ===== Productivity =====
 
   'chart.throughput': {
-    title: { ru: 'Создано vs закрыто', en: 'Created vs completed' },
+    title: { ru: 'Создано vs закрыто', en: 'Created vs completed', de: 'Erstellt vs. abgeschlossen', es: 'Creadas vs completadas' },
     description: {
       ru: 'Баланс входящей и закрываемой работы',
       en: 'Balance of incoming and completed work',
+      de: 'Gleichgewicht von eingehender und abgeschlossener Arbeit',
+      es: 'Equilibrio entre trabajo entrante y completado',
     },
     help: {
       summary: {
         ru: 'Созданные и закрытые задачи по периодам',
         en: 'Created and completed tasks over time',
+        de: 'Erstellte und abgeschlossene Aufgaben im Zeitverlauf',
+        es: 'Tareas creadas y completadas a lo largo del tiempo',
       },
       details: {
         ru: 'Главный индикатор здоровья проекта. Зазор между линиями — предупреждение: вы создаёте больше, чем закрываете, и бэклог растёт. Постоянный зазор → накопление долга, команда не справляется. Линии близко друг к другу → работа идёт в темпе поступления.',
         en: 'The primary project health indicator. A gap between the lines is a warning — creation outpaces completion, so the backlog is growing. A persistent gap means the team is falling behind; tight lines mean work is getting done at the rate it arrives.',
+        de: 'Der wichtigste Indikator für die Projektgesundheit. Ein Abstand zwischen den Linien ist eine Warnung — es wird mehr erstellt als abgeschlossen, das Backlog wächst. Ein dauerhafter Abstand bedeutet, das Team kommt nicht hinterher; eng beieinanderliegende Linien bedeuten, die Arbeit wird im Tempo des Eingangs erledigt.',
+        es: 'El principal indicador de salud del proyecto. Una brecha entre las líneas es una advertencia: se crea más de lo que se completa, por lo que el backlog crece. Una brecha persistente significa que el equipo se queda atrás; líneas juntas significan que el trabajo se hace al ritmo que llega.',
       },
     },
     datasets: {
-      created: { ru: 'Создано', en: 'Created' },
-      completed: { ru: 'Закрыто', en: 'Completed' },
+      created: { ru: 'Создано', en: 'Created', de: 'Erstellt', es: 'Creadas' },
+      completed: { ru: 'Закрыто', en: 'Completed', de: 'Abgeschlossen', es: 'Completadas' },
     },
-    yAxisLabel: { ru: 'Задач', en: 'Tasks' },
+    yAxisLabel: { ru: 'Задач', en: 'Tasks', de: 'Aufgaben', es: 'Tareas' },
   },
 
   'chart.priority_mix': {
-    title: { ru: 'Приоритеты создаваемых задач', en: 'Priority mix over time' },
-    description: { ru: 'Распределение новых задач по приоритету', en: 'Distribution of new tasks by priority' },
+    title: { ru: 'Приоритеты создаваемых задач', en: 'Priority mix over time', de: 'Prioritätsverteilung über Zeit', es: 'Distribución de prioridades en el tiempo' },
+    description: { ru: 'Распределение новых задач по приоритету', en: 'Distribution of new tasks by priority', de: 'Verteilung neuer Aufgaben nach Priorität', es: 'Distribución de nuevas tareas por prioridad' },
     help: {
       summary: {
         ru: 'Как меняется распределение приоритетов у создаваемых задач',
         en: 'How priority mix of newly created tasks shifts over time',
+        de: 'Wie sich die Prioritätsverteilung neu erstellter Aufgaben im Zeitverlauf verändert',
+        es: 'Cómo cambia la distribución de prioridades de las tareas nuevas con el tiempo',
       },
       details: {
         ru: 'Если доля High растёт — вероятно, проблемы с планированием или команда в режиме пожаротушения. Здоровая продуктовая работа имеет больше Medium и Low, чем High. Также обратите внимание на долю задач «Без приоритета» — это сигнал плохой практики триажа.',
         en: 'If the High share grows, the team may be firefighting or planning poorly. Healthy product work has more Medium/Low than High. Also watch the "No priority" share — a large portion points to poor triage practice.',
+        de: 'Wächst der Anteil "Hoch", plant das Team womöglich schlecht oder befindet sich im Krisenmodus. Gesunde Produktarbeit hat mehr "Mittel/Niedrig" als "Hoch". Achte auch auf den Anteil "Keine Priorität" — ein großer Teil deutet auf mangelhafte Triage-Praxis hin.',
+        es: 'Si la proporción "Alta" crece, el equipo puede estar apagando incendios o planificando mal. Un trabajo de producto sano tiene más "Media/Baja" que "Alta". Vigila también la proporción "Sin prioridad": una parte grande indica una mala práctica de triaje.',
       },
     },
     datasets: {
-      high: { ru: 'Высокий', en: 'High' },
-      medium: { ru: 'Средний', en: 'Medium' },
-      low: { ru: 'Низкий', en: 'Low' },
-      none: { ru: 'Без приоритета', en: 'No priority' },
+      high: { ru: 'Высокий', en: 'High', de: 'Hoch', es: 'Alta' },
+      medium: { ru: 'Средний', en: 'Medium', de: 'Mittel', es: 'Media' },
+      low: { ru: 'Низкий', en: 'Low', de: 'Niedrig', es: 'Baja' },
+      none: { ru: 'Без приоритета', en: 'No priority', de: 'Keine Priorität', es: 'Sin prioridad' },
     },
-    yAxisLabel: { ru: 'Создано задач', en: 'Tasks created' },
+    yAxisLabel: { ru: 'Создано задач', en: 'Tasks created', de: 'Erstellte Aufgaben', es: 'Tareas creadas' },
   },
 
   // ===== Workload =====
 
   'chart.workload_by_assignee': {
-    title: { ru: 'Нагрузка по исполнителям', en: 'Workload by assignee' },
-    description: { ru: 'Открытые задачи, сгруппированные по приоритету', en: 'Open tasks grouped by priority' },
+    title: { ru: 'Нагрузка по исполнителям', en: 'Workload by assignee', de: 'Auslastung nach Bearbeiter', es: 'Carga por responsable' },
+    description: { ru: 'Открытые задачи, сгруппированные по приоритету', en: 'Open tasks grouped by priority', de: 'Offene Aufgaben, gruppiert nach Priorität', es: 'Tareas abiertas agrupadas por prioridad' },
     help: {
       summary: {
         ru: 'Количество открытых задач на каждого исполнителя с разбивкой по приоритету',
         en: 'Open tasks per assignee, broken down by priority',
+        de: 'Offene Aufgaben pro Bearbeiter, aufgeschlüsselt nach Priorität',
+        es: 'Tareas abiertas por responsable, desglosadas por prioridad',
       },
       details: {
         ru: 'Быстрый взгляд на перегруз команды. Если у одного человека 15+ задач или много High-приоритета — нужно перераспределить нагрузку. Это не рейтинг эффективности: размер задач разный, и некоторые люди формально числятся в assignee, но не работают.',
         en: 'A quick check for team overload. If one person has 15+ tasks or many High-priority items, workload needs rebalancing. This is not a performance ranking: task sizes vary and some people appear as formal assignees without actively working.',
+        de: 'Ein schneller Blick auf die Überlastung des Teams. Hat eine Person 15+ Aufgaben oder viele mit hoher Priorität, muss die Last neu verteilt werden. Das ist kein Leistungsranking: Aufgabengrößen variieren und manche Personen sind nur formal als Bearbeiter eingetragen, ohne aktiv zu arbeiten.',
+        es: 'Un vistazo rápido a la sobrecarga del equipo. Si una persona tiene más de 15 tareas o muchas de prioridad alta, hay que reequilibrar la carga. No es un ranking de rendimiento: el tamaño de las tareas varía y algunas personas figuran como responsables formales sin trabajar de forma activa.',
       },
     },
     datasets: {
-      high: { ru: 'Высокий', en: 'High' },
-      medium: { ru: 'Средний', en: 'Medium' },
-      low: { ru: 'Низкий', en: 'Low' },
-      no_priority: { ru: 'Без приоритета', en: 'No priority' },
+      high: { ru: 'Высокий', en: 'High', de: 'Hoch', es: 'Alta' },
+      medium: { ru: 'Средний', en: 'Medium', de: 'Mittel', es: 'Media' },
+      low: { ru: 'Низкий', en: 'Low', de: 'Niedrig', es: 'Baja' },
+      no_priority: { ru: 'Без приоритета', en: 'No priority', de: 'Keine Priorität', es: 'Sin prioridad' },
     },
-    xAxisLabel: { ru: 'Задач', en: 'Tasks' },
+    xAxisLabel: { ru: 'Задач', en: 'Tasks', de: 'Aufgaben', es: 'Tareas' },
   },
 
   'chart.blocked_by_deps': {
-    title: { ru: 'Заблокировано зависимостями', en: 'Blocked by dependencies' },
-    description: { ru: 'Открытые задачи, ждущие завершения зависимостей', en: 'Open tasks waiting on incomplete prerequisites' },
+    title: { ru: 'Заблокировано зависимостями', en: 'Blocked by dependencies', de: 'Durch Abhängigkeiten blockiert', es: 'Bloqueadas por dependencias' },
+    description: { ru: 'Открытые задачи, ждущие завершения зависимостей', en: 'Open tasks waiting on incomplete prerequisites', de: 'Offene Aufgaben, die auf unerledigte Voraussetzungen warten', es: 'Tareas abiertas que esperan requisitos sin completar' },
     help: {
       summary: {
         ru: 'Открытые задачи, которые не могут стартовать, пока не закрыты их предшественники',
         en: 'Open tasks that cannot start until their predecessors are completed',
+        de: 'Offene Aufgaben, die nicht starten können, solange ihre Vorgänger nicht abgeschlossen sind',
+        es: 'Tareas abiertas que no pueden empezar hasta que se completen sus predecesoras',
       },
       details: {
         ru: 'Явные блокеры процесса — здесь нужно вмешательство PM в первую очередь. Высокое число = поток остановлен, нужно разблокировать ключевые задачи. Зависимости берутся из графа задач (стрелка от A к B = B зависит от A).',
         en: 'Explicit process blockers — the PM should address these first. A high count means the pipeline is stalled and key prerequisites need attention. Dependencies are derived from the task graph (an arrow from A to B means B depends on A).',
+        de: 'Explizite Prozessblocker — der PM sollte sich zuerst darum kümmern. Eine hohe Zahl bedeutet, der Fluss steht still und wichtige Voraussetzungen brauchen Aufmerksamkeit. Abhängigkeiten stammen aus dem Aufgabengraphen (ein Pfeil von A nach B bedeutet, B hängt von A ab).',
+        es: 'Bloqueadores explícitos del proceso: el PM debería atenderlos primero. Un número alto significa que el flujo está detenido y los requisitos clave necesitan atención. Las dependencias provienen del grafo de tareas (una flecha de A a B significa que B depende de A).',
       },
     },
     datasets: {
-      blocked: { ru: 'Заблокировано', en: 'Blocked' },
+      blocked: { ru: 'Заблокировано', en: 'Blocked', de: 'Blockiert', es: 'Bloqueadas' },
     },
-    xAxisLabel: { ru: 'Задач', en: 'Tasks' },
+    xAxisLabel: { ru: 'Задач', en: 'Tasks', de: 'Aufgaben', es: 'Tareas' },
   },
 
   'chart.time_in_kanban_status': {
-    title: { ru: 'Время в колонках канбана', en: 'Time in kanban columns' },
-    description: { ru: 'Среднее время жизни открытой задачи в каждом статусе', en: 'Average open-task age per kanban column' },
+    title: { ru: 'Время в колонках канбана', en: 'Time in kanban columns', de: 'Zeit in Kanban-Spalten', es: 'Tiempo en columnas kanban' },
+    description: { ru: 'Среднее время жизни открытой задачи в каждом статусе', en: 'Average open-task age per kanban column', de: 'Durchschnittliches Alter offener Aufgaben pro Kanban-Spalte', es: 'Antigüedad media de tareas abiertas por columna kanban' },
     help: {
       summary: {
         ru: 'Среднее время, которое открытые задачи проводят в каждом статусе',
         en: 'Average age of open tasks broken down by kanban column',
+        de: 'Durchschnittliche Verweildauer offener Aufgaben in jedem Status',
+        es: 'Tiempo medio que las tareas abiertas pasan en cada estado',
       },
       details: {
         ru: 'Выявляет узкие места процесса. Если задачи застревают в «Review» на 5+ дней — не хватает ревьюеров. Если в «In Progress» — WIP-лимит превышен. Требует выбора проекта, потому что колонки канбана уникальны для каждого.',
         en: 'Reveals process bottlenecks. If tasks sit in "Review" for 5+ days, you lack reviewers; long times in "In Progress" mean the WIP limit is exceeded. Requires selecting a project because kanban columns are unique per project.',
+        de: 'Deckt Engpässe im Prozess auf. Bleiben Aufgaben 5+ Tage in "Review" hängen, fehlen Reviewer; lange Zeiten in "In Bearbeitung" bedeuten, das WIP-Limit ist überschritten. Erfordert die Auswahl eines Projekts, da Kanban-Spalten pro Projekt einzigartig sind.',
+        es: 'Revela cuellos de botella del proceso. Si las tareas permanecen en "Revisión" 5+ días, faltan revisores; tiempos largos en "En curso" indican que se superó el límite de WIP. Requiere seleccionar un proyecto porque las columnas kanban son únicas por proyecto.',
       },
     },
     datasets: {
-      avg_days: { ru: 'Среднее время в колонке', en: 'Avg time in column' },
+      avg_days: { ru: 'Среднее время в колонке', en: 'Avg time in column', de: 'Ø Zeit in Spalte', es: 'Tiempo medio en columna' },
     },
-    yAxisLabel: { ru: 'Дней', en: 'Days' },
+    yAxisLabel: { ru: 'Дней', en: 'Days', de: 'Tage', es: 'Días' },
   },
 
   'chart.aging_open_tasks': {
-    title: { ru: 'Возраст открытых задач', en: 'Aging of open tasks' },
-    description: { ru: 'Средний и максимальный возраст открытых задач по исполнителям', en: 'Average and maximum open-task age per assignee' },
+    title: { ru: 'Возраст открытых задач', en: 'Aging of open tasks', de: 'Alter offener Aufgaben', es: 'Antigüedad de tareas abiertas' },
+    description: { ru: 'Средний и максимальный возраст открытых задач по исполнителям', en: 'Average and maximum open-task age per assignee', de: 'Durchschnittliches und maximales Alter offener Aufgaben pro Bearbeiter', es: 'Antigüedad media y máxima de tareas abiertas por responsable' },
     help: {
       summary: {
         ru: 'Сколько дней прошло с момента создания открытых задач, по исполнителям',
         en: "Days since creation for each assignee's open tasks",
+        de: 'Wie viele Tage seit der Erstellung der offenen Aufgaben vergangen sind, pro Bearbeiter',
+        es: 'Cuántos días han pasado desde la creación de las tareas abiertas, por responsable',
       },
       details: {
         ru: join([
@@ -333,51 +397,109 @@ export const sectionLocales = {
           '• Time until deadline — see Overdue metrics',
           '• Efficiency — an old task may simply be large or blocked',
         ]),
+        de: join([
+          'Was "Alter" bedeutet:',
+          'Wie viele Tage seit der Erstellung der Aufgabe bis heute vergangen sind. Beispiel: Aufgabe am 1. April erstellt, heute ist der 21. April → Alter = 20 Tage.',
+          '',
+          'Was das Diagramm zeigt:',
+          'Für jeden Bearbeiter werden alle seine offenen (nicht abgeschlossenen) Aufgaben herangezogen und berechnet:',
+          '• Durchschnittsalter — wie alt seine Aufgaben im Schnitt sind',
+          '• Maximum — Alter seiner ältesten offenen Aufgabe',
+          '',
+          'Wie man es liest:',
+          '• Hoher Durchschnitt → viele alte Aufgaben haben sich angesammelt: möglicherweise überlastet oder das Backlog wird nicht bewegt',
+          '• Hohes Maximum bei niedrigem Durchschnitt → insgesamt schnell, aber ein bis zwei "hängende" Aufgaben — abschließen oder als veraltet schließen',
+          '• Beide niedrig → Aufgaben sind entweder frisch oder werden schnell geschlossen — ein gesunder Zustand',
+          '• Große Lücke dazwischen → "schwere Ausläufer": einzelne alte Aufgaben fallen aus dem gewohnten Rhythmus',
+          '',
+          'Hinweise:',
+          '• Gezählt nach Bearbeiter, nicht nach Ersteller',
+          '• Eine an zwei Personen zugewiesene Aufgabe erscheint bei beiden (korrekt: beide sind verantwortlich)',
+          '• Oben in der Liste stehen Bearbeiter mit der im Schnitt ältesten Arbeit',
+          '',
+          'Was NICHT gemessen wird:',
+          '• Zeit in aktiver Arbeit — das ist die separate Kennzahl Durchlaufzeit',
+          '• Zeit bis zur Frist — siehe Überfällig-Kennzahlen',
+          '• Effizienz — eine alte Aufgabe kann einfach groß oder blockiert sein',
+        ]),
+        es: join([
+          'Qué significa "antigüedad":',
+          'Cuántos días han pasado desde que se creó la tarea hasta hoy. Ejemplo: tarea creada el 1 de abril, hoy es 21 de abril → antigüedad = 20 días.',
+          '',
+          'Qué muestra el gráfico:',
+          'Para cada responsable se toman todas sus tareas abiertas (sin completar) y se calcula:',
+          '• Antigüedad media — qué tan antiguas son sus tareas de media',
+          '• Máx — antigüedad de su tarea abierta más antigua',
+          '',
+          'Cómo leerlo:',
+          '• Media alta → se han acumulado muchas tareas viejas: posible sobrecarga o no se mueve el backlog',
+          '• Máximo alto con media baja → en general rápido, pero una o dos tareas "atascadas" — termínalas o ciérralas como obsoletas',
+          '• Ambos bajos → las tareas son recientes o se cierran rápido — un estado sano',
+          '• Gran diferencia entre ambos → "colas pesadas": tareas viejas aisladas que rompen la norma',
+          '',
+          'Notas:',
+          '• Se cuenta por responsable, no por creador',
+          '• Una tarea asignada a dos personas aparece en ambas (correcto: ambas son responsables)',
+          '• En la parte superior de la lista están los responsables con el trabajo típicamente más antiguo',
+          '',
+          'Lo que NO se mide:',
+          '• Tiempo en trabajo activo — esa es la métrica aparte de Tiempo de ciclo',
+          '• Tiempo hasta la fecha límite — consulta las métricas de Vencidas',
+          '• Eficiencia — una tarea vieja puede ser simplemente grande o estar bloqueada',
+        ]),
       },
     },
     datasets: {
-      avg_age: { ru: 'Средний возраст', en: 'Average age' },
-      max_age: { ru: 'Максимум', en: 'Max' },
+      avg_age: { ru: 'Средний возраст', en: 'Average age', de: 'Durchschnittsalter', es: 'Antigüedad media' },
+      max_age: { ru: 'Максимум', en: 'Max', de: 'Maximum', es: 'Máx' },
     },
-    xAxisLabel: { ru: 'Дней', en: 'Days' },
+    xAxisLabel: { ru: 'Дней', en: 'Days', de: 'Tage', es: 'Días' },
   },
 
   // ===== Quality =====
 
   'chart.overdue_by_age': {
-    title: { ru: 'Просроченные по срокам давности', en: 'Overdue by age' },
+    title: { ru: 'Просроченные по срокам давности', en: 'Overdue by age', de: 'Überfällige nach Dauer', es: 'Vencidas por antigüedad' },
     help: {
       summary: {
         ru: 'Просроченные задачи, сгруппированные по времени с даты дедлайна',
         en: 'Overdue tasks grouped by how long they have been overdue',
+        de: 'Überfällige Aufgaben, gruppiert danach, wie lange sie überfällig sind',
+        es: 'Tareas vencidas agrupadas por cuánto tiempo llevan vencidas',
       },
       details: {
         ru: 'Приоритизация «тушения пожаров». Задачи, просроченные 1-3 дня — скорее всего в работе и скоро закроются. 15+ дней — либо срочно решать, либо закрывать как устаревшие: такие дедлайны уже потеряли смысл.',
         en: 'Firefighting priority. Tasks overdue 1–3 days are likely close to finishing. Tasks overdue 15+ days need urgent resolution or should be closed as obsolete — those deadlines have already lost meaning.',
+        de: 'Priorisierung fürs "Feuerlöschen". 1–3 Tage überfällige Aufgaben sind wahrscheinlich fast fertig. 15+ Tage überfällige brauchen dringende Klärung oder sollten als veraltet geschlossen werden — diese Fristen haben bereits ihre Bedeutung verloren.',
+        es: 'Priorización de "apagar incendios". Las tareas vencidas 1–3 días probablemente estén casi terminadas. Las vencidas 15+ días necesitan resolución urgente o deberían cerrarse como obsoletas: esos plazos ya perdieron sentido.',
       },
     },
     datasets: {
-      overdue: { ru: 'Просрочено', en: 'Overdue' },
+      overdue: { ru: 'Просрочено', en: 'Overdue', de: 'Überfällig', es: 'Vencidas' },
     },
     labels: {
-      bucket_1_3: { ru: '1–3 дн', en: '1–3 d' },
-      bucket_4_7: { ru: '4–7 дн', en: '4–7 d' },
-      bucket_8_14: { ru: '8–14 дн', en: '8–14 d' },
-      bucket_15_plus: { ru: '15+ дн', en: '15+ d' },
+      bucket_1_3: { ru: '1–3 дн', en: '1–3 d', de: '1–3 T', es: '1–3 d' },
+      bucket_4_7: { ru: '4–7 дн', en: '4–7 d', de: '4–7 T', es: '4–7 d' },
+      bucket_8_14: { ru: '8–14 дн', en: '8–14 d', de: '8–14 T', es: '8–14 d' },
+      bucket_15_plus: { ru: '15+ дн', en: '15+ d', de: '15+ T', es: '15+ d' },
     },
-    yAxisLabel: { ru: 'Задач', en: 'Tasks' },
+    yAxisLabel: { ru: 'Задач', en: 'Tasks', de: 'Aufgaben', es: 'Tareas' },
   },
 
   'chart.cycle_time_histogram': {
-    title: { ru: 'Распределение cycle time', en: 'Cycle time distribution' },
+    title: { ru: 'Распределение cycle time', en: 'Cycle time distribution', de: 'Verteilung der Durchlaufzeit', es: 'Distribución del tiempo de ciclo' },
     description: {
       ru: 'Сколько задач закрылось в каждом диапазоне по длительности',
       en: 'How many tasks closed in each duration range',
+      de: 'Wie viele Aufgaben in jedem Dauerbereich abgeschlossen wurden',
+      es: 'Cuántas tareas se cerraron en cada rango de duración',
     },
     help: {
       summary: {
         ru: 'Сколько закрытых задач попало в каждый диапазон по длительности',
         en: 'How many completed tasks fall into each duration range',
+        de: 'Wie viele abgeschlossene Aufgaben in jeden Dauerbereich fallen',
+        es: 'Cuántas tareas completadas caen en cada rango de duración',
       },
       details: {
         ru: join([
@@ -404,41 +526,71 @@ export const sectionLocales = {
           'Note:',
           'Measures the full task life — from creation to close, including time spent in the backlog. A task created 2 months ago and finished in a day lands in "30+d", not "<1d".',
         ]),
+        de: join([
+          'Was es zeigt:',
+          'Alle im Zeitraum abgeschlossenen Aufgaben werden in 6 Dauerbereiche aufgeteilt (von Erstellung bis Abschluss). Jeder Balken zeigt, wie viele Aufgaben in diesen Bereich fielen.',
+          '',
+          'Wie man es liest:',
+          '• Die meisten in "<1T" und "1-3T" → das Team schließt Aufgaben schnell ab',
+          '• Verschiebung Richtung "7-14T" und höher → Aufgaben sind groß oder liegen lange im Backlog',
+          '• Hoher Balken bei "30+T" → alte Aufgaben endlich abgeschlossen, ein Zeichen für Backlog-Schulden',
+          '',
+          'Hinweis:',
+          'Gemessen wird das volle Aufgabenleben — von der Erstellung bis zum Abschluss, inklusive Zeit im Backlog. Eine vor 2 Monaten erstellte und an einem Tag erledigte Aufgabe landet in "30+T", nicht in "<1T".',
+        ]),
+        es: join([
+          'Qué muestra:',
+          'Todas las tareas cerradas durante el período se reparten en 6 rangos de duración (de la creación al cierre). Cada barra muestra cuántas tareas cayeron en ese rango.',
+          '',
+          'Cómo leerlo:',
+          '• La mayoría en "<1d" y "1-3d" → el equipo cierra tareas rápido',
+          '• Sesgo hacia "7-14d" y más → las tareas son grandes o pasan mucho tiempo en el backlog',
+          '• Barra alta en "30+d" → tareas viejas cerradas por fin, señal de deuda de backlog',
+          '',
+          'Nota:',
+          'Mide la vida completa de la tarea — de la creación al cierre, incluido el tiempo en el backlog. Una tarea creada hace 2 meses y terminada en un día cae en "30+d", no en "<1d".',
+        ]),
       },
     },
     datasets: {
-      tasks: { ru: 'Задач', en: 'Tasks' },
+      tasks: { ru: 'Задач', en: 'Tasks', de: 'Aufgaben', es: 'Tareas' },
     },
-    xAxisLabel: { ru: 'Длительность', en: 'Duration' },
-    yAxisLabel: { ru: 'Задач', en: 'Tasks' },
+    xAxisLabel: { ru: 'Длительность', en: 'Duration', de: 'Dauer', es: 'Duración' },
+    yAxisLabel: { ru: 'Задач', en: 'Tasks', de: 'Aufgaben', es: 'Tareas' },
   },
 
   'chart.stale_tasks': {
-    title: { ru: 'Забытые задачи', en: 'Stale tasks' },
-    description: { ru: 'Открытые задачи без изменений более 30 дней', en: 'Open tasks without changes for over 30 days' },
+    title: { ru: 'Забытые задачи', en: 'Stale tasks', de: 'Liegengebliebene Aufgaben', es: 'Tareas olvidadas' },
+    description: { ru: 'Открытые задачи без изменений более 30 дней', en: 'Open tasks without changes for over 30 days', de: 'Offene Aufgaben ohne Änderungen seit über 30 Tagen', es: 'Tareas abiertas sin cambios durante más de 30 días' },
     help: {
       summary: {
         ru: 'Открытые задачи, по которым не было никаких изменений более 30 дней',
         en: 'Open tasks with no changes for more than 30 days',
+        de: 'Offene Aufgaben, an denen seit mehr als 30 Tagen nichts geändert wurde',
+        es: 'Tareas abiertas sin ningún cambio durante más de 30 días',
       },
       details: {
         ru: 'Карта «где гниёт работа» по проектам. Кандидаты либо на чистку (удалить устаревшее), либо на ре-активацию (если всё ещё актуально). Большое число на проекте = бэклог перегружен неактуальной работой, пора провести ревью.',
         en: '"Where work rots" — per project. Candidates for cleanup (delete obsolete) or reactivation (if still relevant). A high number on a project means the backlog is bloated with obsolete work and needs a review.',
+        de: 'Eine Karte, "wo die Arbeit verrottet" — pro Projekt. Kandidaten zum Aufräumen (Veraltetes löschen) oder Reaktivieren (falls noch relevant). Eine hohe Zahl in einem Projekt bedeutet, das Backlog ist mit veralteter Arbeit überfüllt und braucht ein Review.',
+        es: 'Un mapa de "dónde se pudre el trabajo" — por proyecto. Candidatas para limpieza (eliminar lo obsoleto) o reactivación (si sigue siendo relevante). Un número alto en un proyecto significa que el backlog está saturado de trabajo obsoleto y necesita una revisión.',
       },
     },
     datasets: {
-      stale: { ru: 'Без движения >30д', en: 'No activity >30d' },
+      stale: { ru: 'Без движения >30д', en: 'No activity >30d', de: 'Keine Aktivität >30 T', es: 'Sin actividad >30 d' },
     },
-    xAxisLabel: { ru: 'Задач', en: 'Tasks' },
+    xAxisLabel: { ru: 'Задач', en: 'Tasks', de: 'Aufgaben', es: 'Tareas' },
   },
 
   'chart.cycle_time_per_project': {
-    title: { ru: 'Cycle time по проектам', en: 'Cycle time per project' },
-    description: { ru: 'Медианное время выполнения закрытых задач', en: 'Median completion time for finished tasks' },
+    title: { ru: 'Cycle time по проектам', en: 'Cycle time per project', de: 'Durchlaufzeit nach Projekt', es: 'Tiempo de ciclo por proyecto' },
+    description: { ru: 'Медианное время выполнения закрытых задач', en: 'Median completion time for finished tasks', de: 'Median-Bearbeitungszeit abgeschlossener Aufgaben', es: 'Tiempo mediano de finalización de tareas terminadas' },
     help: {
       summary: {
         ru: 'Сколько в среднем задача живёт от создания до закрытия в каждом проекте',
         en: 'How long a task typically lives from creation to completion in each project',
+        de: 'Wie lange eine Aufgabe in jedem Projekt typischerweise von der Erstellung bis zum Abschluss lebt',
+        es: 'Cuánto vive normalmente una tarea desde la creación hasta la finalización en cada proyecto',
       },
       details: {
         ru: join([
@@ -489,44 +641,100 @@ export const sectionLocales = {
           "4. Don't directly compare projects of different nature.",
           'A marketing project with short posts and a dev project with large features have different normal values. Compare a project against itself over time, not against its neighbors in the list.',
         ]),
+        de: join([
+          'Was es zeigt:',
+          'Für jedes Projekt — die typische Zeit, die eine Aufgabe von der Erstellung bis zum Abschluss braucht. Wir verwenden den Median: "die Hälfte der Aufgaben dieses Projekts wird schneller als X Tage abgeschlossen".',
+          '',
+          'Welche Aufgaben gezählt werden:',
+          'Nur abgeschlossene Aufgaben, deren Abschlussdatum in den gewählten Zeitraum fällt. Projekte ohne Abschlüsse im Zeitraum werden ausgeblendet.',
+          '',
+          'Wie man es liest:',
+          'Man sieht, welche Projekte schneller und welche langsamer laufen. Ist ein Projekt 2–3× langsamer als der Rest, lohnt sich ein Gespräch mit dessen PM — es kann Blocker, überdimensionierte Aufgaben oder einen schwächelnden Prozess geben.',
+          '',
+          '⚠ Keine Panik bei großen Zahlen:',
+          '',
+          '1. Wir zählen das volle Aufgabenleben, nicht nur die Zeit in aktiver Arbeit.',
+          'Lag eine Aufgabe 2 Monate im Backlog und wurde dann in 3 Tagen erledigt, zählt sie als 63 Tage. Die tatsächliche "In Bearbeitung"-Zeit war nur 3 Tage. Wir können "Warten" und "Arbeiten" noch nicht trennen.',
+          '',
+          '2. Der Zeitraum filtert nach Abschlussdatum, nicht nach Erstellung.',
+          'Eine im Januar erstellte und im April abgeschlossene Aufgabe fällt in den April-Zeitraum. Ihre Zeit = ihr gesamtes Leben (95 Tage), nicht "Zeit im April".',
+          '',
+          '3. Wir verwenden den Median, nicht den Mittelwert.',
+          'Ein längst vergessenes Ticket, das endlich geschlossen wurde, bricht die Kennzahl nicht. Der Median sagt ehrlich: "die Hälfte der Aufgaben wird schneller abgeschlossen".',
+          '',
+          '4. Vergleiche nicht direkt Projekte unterschiedlicher Art.',
+          'Ein Marketing-Projekt mit kurzen Posts und ein Dev-Projekt mit großen Features haben unterschiedliche Normalwerte. Vergleiche ein Projekt mit sich selbst über die Zeit, nicht mit seinen Nachbarn in der Liste.',
+        ]),
+        es: join([
+          'Qué muestra:',
+          'Para cada proyecto — el tiempo típico que una tarea pasa de la creación a la finalización. Usamos la mediana: "la mitad de las tareas de este proyecto se cierran más rápido que X días".',
+          '',
+          'Qué tareas se cuentan:',
+          'Solo tareas cerradas cuya fecha de finalización cae dentro del período seleccionado. Los proyectos sin finalizaciones en el período se ocultan.',
+          '',
+          'Cómo leerlo:',
+          'Puedes ver qué proyectos avanzan más rápido y cuáles más lento. Si un proyecto es 2–3× más lento que el resto, vale la pena hablar con su PM: puede haber bloqueadores, tareas demasiado grandes o un proceso que flaquea.',
+          '',
+          '⚠ No te asustes por los números grandes:',
+          '',
+          '1. Contamos la vida completa de la tarea, no solo el tiempo en trabajo activo.',
+          'Si una tarea estuvo 2 meses en el backlog y luego se hizo en 3 días, cuenta como 63 días. El tiempo real "en curso" fue solo 3 días. Todavía no podemos separar "esperar" de "trabajar".',
+          '',
+          '2. El período filtra por fecha de finalización, no de creación.',
+          'Una tarea creada en enero y cerrada en abril cae en el período de abril. Su tiempo = toda su vida (95 días), no "tiempo durante abril".',
+          '',
+          '3. Usamos la mediana, no la media.',
+          'Un ticket olvidado hace mucho que por fin se cerró no rompe la métrica. La mediana dice con honestidad: "la mitad de las tareas se cierran más rápido".',
+          '',
+          '4. No compares directamente proyectos de naturaleza distinta.',
+          'Un proyecto de marketing con posts cortos y uno de desarrollo con grandes funcionalidades tienen valores normales diferentes. Compara un proyecto consigo mismo a lo largo del tiempo, no con sus vecinos de la lista.',
+        ]),
       },
     },
     datasets: {
-      median: { ru: 'Медиана cycle time', en: 'Median cycle time' },
+      median: { ru: 'Медиана cycle time', en: 'Median cycle time', de: 'Median-Durchlaufzeit', es: 'Tiempo de ciclo mediano' },
     },
-    xAxisLabel: { ru: 'Дней', en: 'Days' },
+    xAxisLabel: { ru: 'Дней', en: 'Days', de: 'Tage', es: 'Días' },
   },
 
   // ===== Usage =====
 
   'chart.status_distribution': {
-    title: { ru: 'Распределение по статусам', en: 'Status distribution' },
+    title: { ru: 'Распределение по статусам', en: 'Status distribution', de: 'Statusverteilung', es: 'Distribución por estado' },
     description: {
       ru: 'Открытые задачи в колонках канбана',
       en: 'Open tasks across kanban columns',
+      de: 'Offene Aufgaben über die Kanban-Spalten',
+      es: 'Tareas abiertas en las columnas kanban',
     },
     help: {
       summary: {
         ru: 'Доли открытых задач в каждой колонке канбана выбранного проекта',
         en: 'Share of open tasks in each kanban column of the selected project',
+        de: 'Anteil offener Aufgaben in jeder Kanban-Spalte des gewählten Projekts',
+        es: 'Proporción de tareas abiertas en cada columna kanban del proyecto seleccionado',
       },
       details: {
         ru: 'Моментальный снимок «где сейчас концентрация работы». Перекос в одну колонку (например, «In Review») = процесс застрял там, нужно разблокировать. Требует выбора проекта, потому что колонки канбана у каждого проекта свои.',
         en: 'A snapshot of "where the work currently sits". A heavy skew into one column (e.g. "In Review") means the process is stuck there and needs unblocking. Requires selecting a project because each project has its own kanban columns.',
+        de: 'Eine Momentaufnahme, "wo die Arbeit gerade liegt". Eine starke Häufung in einer Spalte (z. B. "In Review") bedeutet, der Prozess steckt dort fest und muss entblockt werden. Erfordert die Auswahl eines Projekts, da jedes Projekt eigene Kanban-Spalten hat.',
+        es: 'Una instantánea de "dónde está el trabajo ahora mismo". Una fuerte concentración en una columna (p. ej. "En revisión") significa que el proceso está atascado ahí y hay que desbloquearlo. Requiere seleccionar un proyecto porque cada uno tiene sus propias columnas kanban.',
       },
     },
     datasets: {
-      count: { ru: 'Задач', en: 'Tasks' },
+      count: { ru: 'Задач', en: 'Tasks', de: 'Aufgaben', es: 'Tareas' },
     },
   },
 
   'chart.active_projects': {
-    title: { ru: 'Активные vs мёртвые проекты', en: 'Active vs dead projects' },
-    description: { ru: 'По активности за 14 / 30 дней', en: 'By activity in last 14 / 30 days' },
+    title: { ru: 'Активные vs мёртвые проекты', en: 'Active vs dead projects', de: 'Aktive vs. tote Projekte', es: 'Proyectos activos vs muertos' },
+    description: { ru: 'По активности за 14 / 30 дней', en: 'By activity in last 14 / 30 days', de: 'Nach Aktivität in den letzten 14 / 30 Tagen', es: 'Por actividad en los últimos 14 / 30 días' },
     help: {
       summary: {
         ru: 'Сколько проектов активны, затухают или мертвы по последней активности',
         en: 'How many projects are active, fading, or dead by recent activity',
+        de: 'Wie viele Projekte anhand der letzten Aktivität aktiv, abklingend oder tot sind',
+        es: 'Cuántos proyectos están activos, en declive o muertos según la actividad reciente',
       },
       details: {
         ru: join([
@@ -557,52 +765,88 @@ export const sectionLocales = {
           'Drill-down:',
           "Click a bar or sector to see open tasks in projects of that category. Especially useful for \"dead\" — see what's lying in abandoned projects.",
         ]),
+        de: join([
+          'Was es zeigt:',
+          'Alle deine Projekte, aufgeteilt in 4 Gruppen danach, wann zuletzt etwas darin getan wurde:',
+          '• Aktiv — Änderungen in den letzten 14 Tagen',
+          '• Klingt ab — letzte Änderungen vor 14-30 Tagen',
+          '• Tot — keine Aktivität seit über 30 Tagen',
+          '• Ohne Aufgaben — Projekt existiert, hat aber keine Aufgaben',
+          '',
+          'Warum darauf achten:',
+          'Tote und leere Projekte überladen die Seitenleiste — archiviere sie, damit nur das Lebendige sichtbar bleibt. Abklingende Projekte lohnen einen Blick — erledigt oder vergessen.',
+          '',
+          'Drill-down:',
+          'Klicke auf einen Balken oder ein Segment, um offene Aufgaben in Projekten dieser Kategorie zu sehen. Besonders nützlich für "tot" — sieh, was in verlassenen Projekten liegt.',
+        ]),
+        es: join([
+          'Qué muestra:',
+          'Todos tus proyectos divididos en 4 grupos según cuándo se hizo algo por última vez en ellos:',
+          '• Activo — hubo cambios en los últimos 14 días',
+          '• En declive — últimos cambios hace 14-30 días',
+          '• Muerto — sin actividad durante más de 30 días',
+          '• Sin tareas — el proyecto existe pero no tiene tareas',
+          '',
+          'Por qué mirarlo:',
+          'Los proyectos muertos y vacíos saturan la barra lateral: archívalos para dejar a la vista solo lo vivo. Los proyectos en declive merecen una comprobación: terminados u olvidados.',
+          '',
+          'Desglose:',
+          'Haz clic en una barra o sector para ver las tareas abiertas de los proyectos de esa categoría. Especialmente útil para "muerto": mira qué hay en los proyectos abandonados.',
+        ]),
       },
     },
     datasets: {
-      count: { ru: 'Проектов', en: 'Projects' },
+      count: { ru: 'Проектов', en: 'Projects', de: 'Projekte', es: 'Proyectos' },
     },
     labels: {
-      active: { ru: 'Активен', en: 'Active' },
-      fading: { ru: 'Затухает', en: 'Fading' },
-      dead: { ru: 'Мёртв', en: 'Dead' },
-      empty: { ru: 'Без задач', en: 'Empty' },
+      active: { ru: 'Активен', en: 'Active', de: 'Aktiv', es: 'Activo' },
+      fading: { ru: 'Затухает', en: 'Fading', de: 'Klingt ab', es: 'En declive' },
+      dead: { ru: 'Мёртв', en: 'Dead', de: 'Tot', es: 'Muerto' },
+      empty: { ru: 'Без задач', en: 'Empty', de: 'Ohne Aufgaben', es: 'Sin tareas' },
     },
-    yAxisLabel: { ru: 'Проектов', en: 'Projects' },
+    yAxisLabel: { ru: 'Проектов', en: 'Projects', de: 'Projekte', es: 'Proyectos' },
   },
 
   // ===== Financial =====
 
   'chart.income_expense_month': {
-    title: { ru: 'Доходы и расходы по месяцам', en: 'Income and expense per month' },
-    description: { ru: 'Суммы завершённых финансовых задач', en: 'Amounts of completed financial tasks' },
+    title: { ru: 'Доходы и расходы по месяцам', en: 'Income and expense per month', de: 'Einnahmen und Ausgaben pro Monat', es: 'Ingresos y gastos por mes' },
+    description: { ru: 'Суммы завершённых финансовых задач', en: 'Amounts of completed financial tasks', de: 'Beträge abgeschlossener Finanzaufgaben', es: 'Importes de tareas financieras completadas' },
     help: {
       summary: {
         ru: 'Суммы завершённых финансовых задач, сгруппированные по месяцам',
         en: 'Completed financial task amounts grouped by month',
+        de: 'Beträge abgeschlossener Finanzaufgaben, gruppiert nach Monat',
+        es: 'Importes de tareas financieras completadas agrupados por mes',
       },
       details: {
         ru: 'Требует заполнения полей Amount и Transaction Type на задачах. Используется командами, ведущими лёгкий финансовый трекинг в TaskView (частый кейс у small business). Для достоверности проверьте KPI «Заполнено amount» — при низком покрытии картина неполная.',
         en: 'Requires the Amount and Transaction Type fields to be filled on tasks. Used by teams running lightweight financial tracking inside TaskView (common small-business case). Cross-check with the "Amount coverage" KPI — a low coverage means the picture is incomplete.',
+        de: 'Erfordert das Ausfüllen der Felder Amount und Transaction Type an den Aufgaben. Wird von Teams genutzt, die ein leichtgewichtiges Finanz-Tracking in TaskView betreiben (häufiger Fall bei kleinen Unternehmen). Zur Absicherung den KPI "Betragsabdeckung" prüfen — bei niedriger Abdeckung ist das Bild unvollständig.',
+        es: 'Requiere rellenar los campos Amount y Transaction Type en las tareas. Lo usan equipos que llevan un seguimiento financiero ligero dentro de TaskView (caso común en pequeñas empresas). Para fiabilidad, comprueba el KPI "Cobertura de importe": una cobertura baja significa que la imagen está incompleta.',
       },
     },
     datasets: {
-      income: { ru: 'Доходы', en: 'Income' },
-      expense: { ru: 'Расходы', en: 'Expense' },
+      income: { ru: 'Доходы', en: 'Income', de: 'Einnahmen', es: 'Ingresos' },
+      expense: { ru: 'Расходы', en: 'Expense', de: 'Ausgaben', es: 'Gastos' },
     },
-    yAxisLabel: { ru: 'Сумма', en: 'Amount' },
+    yAxisLabel: { ru: 'Сумма', en: 'Amount', de: 'Betrag', es: 'Importe' },
   },
 
   'chart.income_expense_per_project': {
-    title: { ru: 'Доходы и расходы по проектам', en: 'Income and expense per project' },
+    title: { ru: 'Доходы и расходы по проектам', en: 'Income and expense per project', de: 'Einnahmen und Ausgaben pro Projekt', es: 'Ingresos y gastos por proyecto' },
     description: {
       ru: 'Сколько каждый проект принёс и сколько потратил',
       en: 'How much each project earned and spent',
+      de: 'Wie viel jedes Projekt eingenommen und ausgegeben hat',
+      es: 'Cuánto ganó y gastó cada proyecto',
     },
     help: {
       summary: {
         ru: 'Доходы и расходы каждого проекта рядом, чтобы сравнить напрямую',
         en: 'Income and expense for each project side-by-side for direct comparison',
+        de: 'Einnahmen und Ausgaben jedes Projekts nebeneinander zum direkten Vergleich',
+        es: 'Ingresos y gastos de cada proyecto uno al lado del otro para comparar directamente',
       },
       details: {
         ru: join([
@@ -649,25 +893,73 @@ export const sectionLocales = {
           '• Tasks without a transaction type',
           '• Real profit after taxes and fees — TaskView only shows what you enter yourself',
         ]),
+        de: join([
+          'Was es zeigt:',
+          'Für jedes Projekt — zwei Balken nebeneinander: grün (Einnahmen) und rot (Ausgaben). Die Zahlen stammen aus Aufgaben, bei denen du Betrag und Transaktionstyp ausgefüllt hast.',
+          '',
+          'Unterschied zu "Top-Projekte nach Betrag":',
+          'Dort wird der Gesamtumsatz gezeigt — Balkenhöhe = Einnahmen + Ausgaben zusammen. Hier werden die beiden Werte direkt verglichen: du siehst, wo ein Projekt mehr einnimmt als ausgibt und umgekehrt.',
+          '',
+          'Wie man es liest:',
+          '• Grün höher als rot → Projekt ist profitabel',
+          '• Rot höher als grün → Projekt ist bisher im Minus',
+          '• Beide klein → schwache Aktivität oder du füllst die Finanzfelder selten aus',
+          '',
+          'Sortiert nach Nettogewinn absteigend: profitable Projekte oben.',
+          '',
+          'Was nötig ist, um im Diagramm zu erscheinen:',
+          'Eine Aufgabe braucht sowohl einen Betrag als auch einen Typ (Einnahme/Ausgabe). Nutzt du die Finanzfelder von TaskView nicht, bleibt dieses Diagramm leer. Um die Datenqualität einzuschätzen, sieh dir die Karte "Betragsabdeckung" an.',
+          '',
+          'Was NICHT enthalten ist:',
+          '• Aufgaben ohne angegebenen Betrag',
+          '• Aufgaben ohne Transaktionstyp',
+          '• Echter Gewinn nach Steuern und Gebühren — TaskView zeigt nur, was du selbst eingibst',
+        ]),
+        es: join([
+          'Qué muestra:',
+          'Para cada proyecto — dos barras contiguas: verde (ingresos) y roja (gastos). Los números provienen de tareas donde has rellenado un importe y un tipo de transacción.',
+          '',
+          'Diferencia con "Top proyectos por importe":',
+          'Ese gráfico muestra el volumen total — altura de la barra = ingresos + gastos juntos. Este compara los dos valores directamente: puedes ver qué proyecto gana más de lo que gasta y viceversa.',
+          '',
+          'Cómo leerlo:',
+          '• Verde más alta que roja → el proyecto es rentable',
+          '• Roja más alta que verde → el proyecto está en números rojos por ahora',
+          '• Ambas pequeñas → poca actividad o rara vez rellenas los campos financieros',
+          '',
+          'Ordenado por beneficio neto descendente: los proyectos rentables arriba.',
+          '',
+          'Qué se necesita para aparecer en el gráfico:',
+          'Una tarea necesita tanto un importe como un tipo (ingreso/gasto). Si no usas los campos financieros de TaskView, este gráfico estará vacío. Para valorar la calidad de los datos, consulta la tarjeta "Cobertura de importe".',
+          '',
+          'Lo que NO se incluye:',
+          '• Tareas sin importe indicado',
+          '• Tareas sin tipo de transacción',
+          '• El beneficio real tras impuestos y comisiones — TaskView solo muestra lo que introduces tú mismo',
+        ]),
       },
     },
     datasets: {
-      income: { ru: 'Доходы', en: 'Income' },
-      expense: { ru: 'Расходы', en: 'Expense' },
+      income: { ru: 'Доходы', en: 'Income', de: 'Einnahmen', es: 'Ingresos' },
+      expense: { ru: 'Расходы', en: 'Expense', de: 'Ausgaben', es: 'Gastos' },
     },
-    yAxisLabel: { ru: 'Сумма', en: 'Amount' },
+    yAxisLabel: { ru: 'Сумма', en: 'Amount', de: 'Betrag', es: 'Importe' },
   },
 
   'chart.income_per_project_month': {
-    title: { ru: 'Доходы по проектам по месяцам', en: 'Income per project by month' },
+    title: { ru: 'Доходы по проектам по месяцам', en: 'Income per project by month', de: 'Einnahmen nach Projekt pro Monat', es: 'Ingresos por proyecto y mes' },
     description: {
       ru: 'Линия дохода по каждому проекту в разрезе месяцев',
       en: 'Income line per project broken down by month',
+      de: 'Einnahmenlinie pro Projekt, aufgeschlüsselt nach Monat',
+      es: 'Línea de ingresos por proyecto desglosada por mes',
     },
     help: {
       summary: {
         ru: 'Доходы по проектам в каждом месяце периода',
         en: 'Income per project in each month of the period',
+        de: 'Einnahmen pro Projekt in jedem Monat des Zeitraums',
+        es: 'Ingresos por proyecto en cada mes del período',
       },
       details: {
         ru: join([
@@ -694,22 +986,50 @@ export const sectionLocales = {
           '• Open tasks (planned income)',
           '• Projects with no completed income tasks in the period',
         ]),
+        de: join([
+          'Was es zeigt:',
+          'Für jedes Projekt — eine Linie (oder Balken) mit den monatlichen Einnahmensummen. Gezählt werden nur abgeschlossene Aufgaben vom Typ "Einnahme" mit ausgefülltem Betrag.',
+          '',
+          'Anders als "Einnahmen und Ausgaben pro Projekt" (Gesamtsumme über den ganzen Zeitraum) zeigt dies den Trend: welches Projekt beim Umsatz wächst, welches stagniert, wo die Einbrüche waren.',
+          '',
+          'Was NICHT enthalten ist:',
+          '• Aufgaben ohne Betrag',
+          '• Aufgaben ohne Transaktionstyp',
+          '• Offene Aufgaben (geplante Einnahmen)',
+          '• Projekte ohne einen einzigen Einnahmenabschluss im Zeitraum',
+        ]),
+        es: join([
+          'Qué muestra:',
+          'Para cada proyecto — una línea (o barras) con los totales de ingresos mensuales. Solo se cuentan las tareas completadas de tipo "ingreso" con un importe rellenado.',
+          '',
+          'A diferencia de "Ingresos y gastos por proyecto" (total de todo el período), esto revela la tendencia: qué proyecto crece en ingresos, cuál se estanca, dónde hubo caídas.',
+          '',
+          'Lo que NO se incluye:',
+          '• Tareas sin importe',
+          '• Tareas sin tipo de transacción',
+          '• Tareas abiertas (ingresos previstos)',
+          '• Proyectos sin ninguna tarea de ingreso completada en el período',
+        ]),
       },
     },
-    xAxisLabel: { ru: 'Месяц', en: 'Month' },
-    yAxisLabel: { ru: 'Доход', en: 'Income' },
+    xAxisLabel: { ru: 'Месяц', en: 'Month', de: 'Monat', es: 'Mes' },
+    yAxisLabel: { ru: 'Доход', en: 'Income', de: 'Einnahmen', es: 'Ingresos' },
   },
 
   'chart.expense_per_project_month': {
-    title: { ru: 'Расходы по проектам по месяцам', en: 'Expense per project by month' },
+    title: { ru: 'Расходы по проектам по месяцам', en: 'Expense per project by month', de: 'Ausgaben nach Projekt pro Monat', es: 'Gastos por proyecto y mes' },
     description: {
       ru: 'Линия расхода по каждому проекту в разрезе месяцев',
       en: 'Expense line per project broken down by month',
+      de: 'Ausgabenlinie pro Projekt, aufgeschlüsselt nach Monat',
+      es: 'Línea de gastos por proyecto desglosada por mes',
     },
     help: {
       summary: {
         ru: 'Расходы по проектам в каждом месяце периода',
         en: 'Expense per project in each month of the period',
+        de: 'Ausgaben pro Projekt in jedem Monat des Zeitraums',
+        es: 'Gastos por proyecto en cada mes del período',
       },
       details: {
         ru: join([
@@ -736,22 +1056,50 @@ export const sectionLocales = {
           '• Open tasks (planned expenses)',
           '• Projects with no completed expense tasks in the period',
         ]),
+        de: join([
+          'Was es zeigt:',
+          'Für jedes Projekt — eine Linie (oder Balken) mit den monatlichen Ausgabensummen. Gezählt werden nur abgeschlossene Aufgaben vom Typ "Ausgabe" mit ausgefülltem Betrag.',
+          '',
+          'Anders als "Einnahmen und Ausgaben pro Projekt" (Gesamtsumme über den ganzen Zeitraum) zeigt dies den Trend: welches Projekt die Ausgaben hochfährt, in welchem Monat der Ausgabenhöhepunkt lag, welches Projekt "abgekühlt" ist.',
+          '',
+          'Was NICHT enthalten ist:',
+          '• Aufgaben ohne Betrag',
+          '• Aufgaben ohne Transaktionstyp',
+          '• Offene Aufgaben (geplante Ausgaben)',
+          '• Projekte ohne einen einzigen Ausgabenabschluss im Zeitraum',
+        ]),
+        es: join([
+          'Qué muestra:',
+          'Para cada proyecto — una línea (o barras) con los totales de gastos mensuales. Solo se cuentan las tareas completadas de tipo "gasto" con un importe rellenado.',
+          '',
+          'A diferencia de "Ingresos y gastos por proyecto" (total de todo el período), esto revela la tendencia: qué proyecto acelera el gasto, en qué mes estuvo el pico, qué proyecto se ha enfriado.',
+          '',
+          'Lo que NO se incluye:',
+          '• Tareas sin importe',
+          '• Tareas sin tipo de transacción',
+          '• Tareas abiertas (gastos previstos)',
+          '• Proyectos sin ninguna tarea de gasto completada en el período',
+        ]),
       },
     },
-    xAxisLabel: { ru: 'Месяц', en: 'Month' },
-    yAxisLabel: { ru: 'Расход', en: 'Expense' },
+    xAxisLabel: { ru: 'Месяц', en: 'Month', de: 'Monat', es: 'Mes' },
+    yAxisLabel: { ru: 'Расход', en: 'Expense', de: 'Ausgaben', es: 'Gastos' },
   },
 
   'chart.income_per_tag_month': {
-    title: { ru: 'Доходы по тегам по месяцам', en: 'Income per tag by month' },
+    title: { ru: 'Доходы по тегам по месяцам', en: 'Income per tag by month', de: 'Einnahmen nach Tag pro Monat', es: 'Ingresos por etiqueta y mes' },
     description: {
       ru: 'Линия дохода по каждому тегу в разрезе месяцев',
       en: 'Income line per tag broken down by month',
+      de: 'Einnahmenlinie pro Tag, aufgeschlüsselt nach Monat',
+      es: 'Línea de ingresos por etiqueta desglosada por mes',
     },
     help: {
       summary: {
         ru: 'Доходы по топ-тегам в каждом месяце периода',
         en: 'Income for the top tags in each month of the period',
+        de: 'Einnahmen der Top-Tags in jedem Monat des Zeitraums',
+        es: 'Ingresos de las etiquetas principales en cada mes del período',
       },
       details: {
         ru: join([
@@ -774,22 +1122,46 @@ export const sectionLocales = {
           'The "Untagged" category:',
           'Tasks without any tag appear as a separate series. A large untagged share means weak financial categorization.',
         ]),
+        de: join([
+          'Was es zeigt:',
+          'Für jeden Tag — eine Linie (oder Balken) mit den monatlichen Einnahmensummen. Gezählt werden nur abgeschlossene Aufgaben vom Typ "Einnahme" mit ausgefülltem Betrag.',
+          '',
+          'Wie Aufgaben mit mehreren Tags gezählt werden:',
+          'Jeder Tag erhält den vollen Aufgabenbetrag. Die Summe über alle Tags übersteigt daher meist den echten Umsatz — das ist normal.',
+          '',
+          'Die Kategorie "Ohne Tags":',
+          'Aufgaben ohne einen einzigen Tag erscheinen als eigene Serie. Ein großer Anteil "Ohne Tags" bedeutet schwache Finanzkategorisierung.',
+        ]),
+        es: join([
+          'Qué muestra:',
+          'Para cada etiqueta — una línea (o barras) con los totales de ingresos mensuales. Solo se cuentan las tareas completadas de tipo "ingreso" con un importe rellenado.',
+          '',
+          'Cómo se cuentan las tareas con varias etiquetas:',
+          'Cada etiqueta recibe el importe completo de la tarea. Por eso la suma de todas las etiquetas suele superar los ingresos reales — es lo esperado.',
+          '',
+          'La categoría "Sin etiquetas":',
+          'Las tareas sin ninguna etiqueta aparecen como una serie aparte. Una gran proporción "Sin etiquetas" significa una categorización financiera débil.',
+        ]),
       },
     },
-    xAxisLabel: { ru: 'Месяц', en: 'Month' },
-    yAxisLabel: { ru: 'Доход', en: 'Income' },
+    xAxisLabel: { ru: 'Месяц', en: 'Month', de: 'Monat', es: 'Mes' },
+    yAxisLabel: { ru: 'Доход', en: 'Income', de: 'Einnahmen', es: 'Ingresos' },
   },
 
   'chart.expense_per_tag_month': {
-    title: { ru: 'Расходы по тегам по месяцам', en: 'Expense per tag by month' },
+    title: { ru: 'Расходы по тегам по месяцам', en: 'Expense per tag by month', de: 'Ausgaben nach Tag pro Monat', es: 'Gastos por etiqueta y mes' },
     description: {
       ru: 'Линия расхода по каждому тегу в разрезе месяцев',
       en: 'Expense line per tag broken down by month',
+      de: 'Ausgabenlinie pro Tag, aufgeschlüsselt nach Monat',
+      es: 'Línea de gastos por etiqueta desglosada por mes',
     },
     help: {
       summary: {
         ru: 'Расходы по топ-тегам в каждом месяце периода',
         en: 'Expense for the top tags in each month of the period',
+        de: 'Ausgaben der Top-Tags in jedem Monat des Zeitraums',
+        es: 'Gastos de las etiquetas principales en cada mes del período',
       },
       details: {
         ru: join([
@@ -812,30 +1184,54 @@ export const sectionLocales = {
           'The "Untagged" category:',
           'Tasks without any tag appear as a separate series. A large untagged share means weak expense categorization.',
         ]),
+        de: join([
+          'Was es zeigt:',
+          'Für jeden Tag — eine Linie (oder Balken) mit den monatlichen Ausgabensummen. Gezählt werden nur abgeschlossene Aufgaben vom Typ "Ausgabe" mit ausgefülltem Betrag.',
+          '',
+          'Wie Aufgaben mit mehreren Tags gezählt werden:',
+          'Jeder Tag erhält den vollen Aufgabenbetrag. Die Summe über alle Tags übersteigt daher meist die echten Ausgaben — das ist normal.',
+          '',
+          'Die Kategorie "Ohne Tags":',
+          'Aufgaben ohne einen einzigen Tag erscheinen als eigene Serie. Ein großer Anteil "Ohne Tags" bedeutet schwache Ausgabenkategorisierung.',
+        ]),
+        es: join([
+          'Qué muestra:',
+          'Para cada etiqueta — una línea (o barras) con los totales de gastos mensuales. Solo se cuentan las tareas completadas de tipo "gasto" con un importe rellenado.',
+          '',
+          'Cómo se cuentan las tareas con varias etiquetas:',
+          'Cada etiqueta recibe el importe completo de la tarea. Por eso la suma de todas las etiquetas suele superar los gastos reales — es lo esperado.',
+          '',
+          'La categoría "Sin etiquetas":',
+          'Las tareas sin ninguna etiqueta aparecen como una serie aparte. Una gran proporción "Sin etiquetas" significa una categorización de gastos débil.',
+        ]),
       },
     },
-    xAxisLabel: { ru: 'Месяц', en: 'Month' },
-    yAxisLabel: { ru: 'Расход', en: 'Expense' },
+    xAxisLabel: { ru: 'Месяц', en: 'Month', de: 'Monat', es: 'Mes' },
+    yAxisLabel: { ru: 'Расход', en: 'Expense', de: 'Ausgaben', es: 'Gastos' },
   },
 
   'chart.top_projects_by_amount': {
-    title: { ru: 'Топ проектов по сумме', en: 'Top projects by amount' },
-    description: { ru: 'Суммарный доход и расход в каждом проекте', en: 'Total income and expense per project' },
+    title: { ru: 'Топ проектов по сумме', en: 'Top projects by amount', de: 'Top-Projekte nach Betrag', es: 'Top proyectos por importe' },
+    description: { ru: 'Суммарный доход и расход в каждом проекте', en: 'Total income and expense per project', de: 'Gesamte Einnahmen und Ausgaben pro Projekt', es: 'Ingresos y gastos totales por proyecto' },
     help: {
       summary: {
         ru: 'Проекты, отсортированные по суммарному финансовому обороту',
         en: 'Projects ranked by total financial turnover',
+        de: 'Projekte, sortiert nach gesamtem Finanzumsatz',
+        es: 'Proyectos ordenados por volumen financiero total',
       },
       details: {
         ru: 'Где крутятся деньги. Income + Expense как стек показывает полный оборот, а не только прибыль — так видно и затратные проекты, а не только прибыльные. Для сравнения чистой прибыли смотрите разницу сегментов.',
         en: 'Shows where the money flows. Stacking income and expense reveals total turnover, not just profit — so expensive projects are visible, not only profitable ones. To compare net profit, eyeball the segment gap.',
+        de: 'Zeigt, wo das Geld fließt. Einnahmen + Ausgaben gestapelt zeigen den Gesamtumsatz, nicht nur den Gewinn — so werden auch kostenintensive Projekte sichtbar, nicht nur profitable. Zum Vergleich des Nettogewinns die Segmentdifferenz abschätzen.',
+        es: 'Muestra por dónde fluye el dinero. Apilar ingresos y gastos revela el volumen total, no solo el beneficio — así se ven también los proyectos costosos, no solo los rentables. Para comparar el beneficio neto, estima la diferencia entre segmentos.',
       },
     },
     datasets: {
-      income: { ru: 'Доходы', en: 'Income' },
-      expense: { ru: 'Расходы', en: 'Expense' },
+      income: { ru: 'Доходы', en: 'Income', de: 'Einnahmen', es: 'Ingresos' },
+      expense: { ru: 'Расходы', en: 'Expense', de: 'Ausgaben', es: 'Gastos' },
     },
-    xAxisLabel: { ru: 'Сумма', en: 'Amount' },
+    xAxisLabel: { ru: 'Сумма', en: 'Amount', de: 'Betrag', es: 'Importe' },
   },
 } satisfies Record<string, SectionLocale>
 

@@ -618,6 +618,15 @@ export default {
     logoutFailed: 'Abmeldung fehlgeschlagen',
     logoutFailedDescription: 'Versuchen Sie, den Browser-Cache zu leeren, um das Autorisierungstoken zu entfernen',
   },
+  settings: {
+    title: 'Einstellungen',
+    account: 'Konto',
+    appearance: 'Erscheinungsbild',
+    layout: 'Layout',
+    about: 'Über',
+    system: 'System',
+    version: 'Version',
+  },
   analytics: {
     page: {
       title: 'Analytik',

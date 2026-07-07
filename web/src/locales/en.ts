@@ -632,6 +632,15 @@ export default {
     logoutFailed: 'Logout failed',
     logoutFailedDescription: 'Try clearing browser cache to remove the authorization token',
   },
+  settings: {
+    title: 'Settings',
+    account: 'Account',
+    appearance: 'Appearance',
+    layout: 'Layout',
+    about: 'About',
+    system: 'System',
+    version: 'Version',
+  },
   analytics: {
     page: {
       title: 'Analytics',
