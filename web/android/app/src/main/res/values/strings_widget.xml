@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_today_title">Today</string>
+    <string name="widget_upcoming_title">Upcoming</string>
+    <string name="widget_today_empty">No tasks for today</string>
+    <string name="widget_overdue">Overdue</string>
+    <string name="widget_today_description">Your tasks for today at a glance</string>
+</resources>

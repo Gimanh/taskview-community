@@ -12,14 +12,15 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.1.0"),
-        .package(name: "CapacitorFirebaseMessaging", path: "../../../../node_modules/.pnpm/@capacitor-firebase+messaging@8.1.0_@capacitor+core@8.1.0_firebase@12.10.0/node_modules/@capacitor-firebase/messaging"),
-        .package(name: "CapacitorApp", path: "../../../../node_modules/.pnpm/@capacitor+app@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/app"),
-        .package(name: "CapacitorBrowser", path: "../../../../node_modules/.pnpm/@capacitor+browser@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/browser"),
-        .package(name: "CapacitorDevice", path: "../../../../node_modules/.pnpm/@capacitor+device@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/device"),
-        .package(name: "CapacitorPreferences", path: "../../../../node_modules/.pnpm/@capacitor+preferences@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/preferences"),
-        .package(name: "CapacitorPushNotifications", path: "../../../../node_modules/.pnpm/@capacitor+push-notifications@8.0.2_@capacitor+core@8.1.0/node_modules/@capacitor/push-notifications"),
-        .package(name: "CapacitorSplashScreen", path: "../../../../node_modules/.pnpm/@capacitor+splash-screen@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/splash-screen"),
-        .package(name: "CapgoCapacitorUpdater", path: "../../../../node_modules/.pnpm/@capgo+capacitor-updater@8.43.8_@capacitor+core@8.1.0/node_modules/@capgo/capacitor-updater")
+        .package(name: "CapacitorFirebaseMessaging", path: "../../../../../node_modules/.pnpm/@capacitor-firebase+messaging@8.1.0_@capacitor+core@8.1.0_firebase@12.11.0/node_modules/@capacitor-firebase/messaging"),
+        .package(name: "CapacitorApp", path: "../../../../../node_modules/.pnpm/@capacitor+app@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/app"),
+        .package(name: "CapacitorBrowser", path: "../../../../../node_modules/.pnpm/@capacitor+browser@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/browser"),
+        .package(name: "CapacitorDevice", path: "../../../../../node_modules/.pnpm/@capacitor+device@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/device"),
+        .package(name: "CapacitorPreferences", path: "../../../../../node_modules/.pnpm/@capacitor+preferences@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/preferences"),
+        .package(name: "CapacitorPushNotifications", path: "../../../../../node_modules/.pnpm/@capacitor+push-notifications@8.0.3_@capacitor+core@8.1.0/node_modules/@capacitor/push-notifications"),
+        .package(name: "CapacitorSplashScreen", path: "../../../../../node_modules/.pnpm/@capacitor+splash-screen@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/splash-screen"),
+        .package(name: "CapgoCapacitorUpdater", path: "../../../../../node_modules/.pnpm/@capgo+capacitor-updater@8.43.2_@capacitor+core@8.1.0/node_modules/@capgo/capacitor-updater"),
+        .package(name: "CapacitorWidgetBridge", path: "../../../node_modules/capacitor-widget-bridge")
     ],
     targets: [
         .target(
@@ -34,7 +35,8 @@ let package = Package(
                 .product(name: "CapacitorPreferences", package: "CapacitorPreferences"),
                 .product(name: "CapacitorPushNotifications", package: "CapacitorPushNotifications"),
                 .product(name: "CapacitorSplashScreen", package: "CapacitorSplashScreen"),
-                .product(name: "CapgoCapacitorUpdater", package: "CapgoCapacitorUpdater")
+                .product(name: "CapgoCapacitorUpdater", package: "CapgoCapacitorUpdater"),
+                .product(name: "CapacitorWidgetBridge", package: "CapacitorWidgetBridge")
             ]
         )
     ]

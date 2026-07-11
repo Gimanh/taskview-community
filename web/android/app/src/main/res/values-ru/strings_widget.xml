@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_today_title">Сегодня</string>
+    <string name="widget_upcoming_title">Ближайшие</string>
+    <string name="widget_today_empty">Нет задач на сегодня</string>
+    <string name="widget_overdue">Просрочено</string>
+    <string name="widget_today_description">Ваши задачи на сегодня</string>
+</resources>
