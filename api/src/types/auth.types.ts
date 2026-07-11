@@ -90,6 +90,8 @@ export type ChangeOwnPasswordByPassword = z.infer<typeof ChangeOwnPasswordByPass
 
 export type PasswordChangeConfirmationMode = 'email' | 'password';
 
+export type LoginMethod = 'magic-link' | 'password' | 'sso' | 'social';
+
 export const ChangeDefaultUserCredentialsSchema = z
     .object({
         currentPassword: z.string().min(1).max(128),

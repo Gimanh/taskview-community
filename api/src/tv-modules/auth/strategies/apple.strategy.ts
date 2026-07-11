@@ -16,8 +16,7 @@ export function initAppleStrategy() {
         !process.env.APPLE_KEY_ID ||
         !process.env.APPLE_CALLBACK_URL ||
         !process.env.APPLE_KEY_LOCATION) {
-        $logger.warn("APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_CALLBACK_URL, and APPLE_KEY_LOCATION must be set");
-        console.warn("APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_CALLBACK_URL, and APPLE_KEY_LOCATION must be set");
+        $logger.debug("Apple login is not configured (APPLE_CLIENT_ID / APPLE_TEAM_ID / APPLE_KEY_ID / APPLE_CALLBACK_URL / APPLE_KEY_LOCATION) — skipping");
         return;
     }
 

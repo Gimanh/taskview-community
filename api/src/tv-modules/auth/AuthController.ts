@@ -19,6 +19,7 @@ import {
     UserJwtPayloadSchema,
 } from '../../types/auth.types';
 import { generateString, isEmail, time } from '../../utils/helpers';
+import { LoginMethods } from './LoginMethods';
 import EnEmailTemplate from './mail/confirm-email-en';
 import RuEmailTemplate from './mail/confirm-email-ru';
 import LoginCodeEmailTemplate from './mail/login-code-en';
@@ -662,6 +663,15 @@ export default class AuthController {
         await this.setRefreshToken(res, newTokens.refresh);
 
         return res.json(newTokens);
+    };
+
+    getLoginOptions = async (_req: Request, res: Response) => {
+        return res.status(200).send({
+            magicLink: LoginMethods.isEnabled('magic-link'),
+            password: LoginMethods.isEnabled('password'),
+            sso: LoginMethods.isEnabled('sso'),
+            socialProviders: LoginMethods.availableSocialProviders(),
+        });
     };
 
     private passwordChangeConfirmationMode(): PasswordChangeConfirmationMode {

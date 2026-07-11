@@ -3,6 +3,7 @@ import type { Routable } from '../../types/routable.type'
 import { IsLoggedIn } from '../auth/middlewares/is-logged-in'
 import { IsOrgAdmin } from '../organizations/middlewares/IsOrgAdmin'
 import { IsSsoConfigAdmin } from './middlewares/IsSsoConfigAdmin'
+import { RequireLoginMethod } from '../auth/middlewares/require-login-method'
 import { SsoController } from './SsoController'
 
 export default class SsoRoutes implements Routable {
@@ -20,10 +21,10 @@ export default class SsoRoutes implements Routable {
   }
 
   initRoutes() {
-    this.router.get('/providers', this.controller.listPublicProviders)
-    this.router.get('/login/:configId', this.controller.initiateLogin)
-    this.router.get('/callback/:configId', this.controller.handleCallback)
-    this.router.post('/callback/:configId', this.controller.handleCallback)
+    this.router.get('/providers', [RequireLoginMethod('sso')], this.controller.listPublicProviders)
+    this.router.get('/login/:configId', [RequireLoginMethod('sso')], this.controller.initiateLogin)
+    this.router.get('/callback/:configId', [RequireLoginMethod('sso')], this.controller.handleCallback)
+    this.router.post('/callback/:configId', [RequireLoginMethod('sso')], this.controller.handleCallback)
 
     this.router.get('/admin/metadata', [IsLoggedIn, IsOrgAdmin], this.controller.parseMetadata)
     this.router.get('/admin/configs', [IsLoggedIn, IsOrgAdmin], this.controller.listConfigs)

@@ -5,8 +5,7 @@ import type { ExternalAuthUser } from "./external-auth.types";
 
 export function initGoogleStrategy() {
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_CALLBACK_URL) {
-        $logger.warn("GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_CALLBACK_URL must be set");
-        console.warn("GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_CALLBACK_URL must be set");
+        $logger.debug("Google login is not configured (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_CALLBACK_URL) — skipping");
         return;
     }
     const options = {
