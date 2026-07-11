@@ -544,6 +544,8 @@ export default {
     subtasks: 'Subtasks',
     addSubtask: 'Add subtask',
     notFound: 'Task not found',
+    copyId: 'Copy task ID',
+    idCopied: 'Task ID copied',
     noTasks: 'No tasks',
     showCompleted: 'Show completed',
     hideCompleted: 'Hide completed',

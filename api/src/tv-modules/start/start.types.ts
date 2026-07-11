@@ -1,3 +1,17 @@
+import type { TasksSchemaTypeForSelect } from 'taskview-db-schemas';
+
+export type SearchTaskArgs = {
+    description: string;
+    goalsIds: number[];
+};
+
+export type SearchTaskResult = TasksSchemaTypeForSelect & {
+    tags: number[];
+    assignedUsers: number[];
+    historyId: number | null;
+    subtasks: SearchTaskResult[];
+};
+
 export type FetchAllListsResult = {
     goalName: string | null;
     listName: string | null;

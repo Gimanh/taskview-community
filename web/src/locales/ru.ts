@@ -517,6 +517,8 @@ export default {
     subtasks: 'Подзадачи',
     addSubtask: 'Добавить подзадачу',
     notFound: 'Задача не найдена',
+    copyId: 'Скопировать ID задачи',
+    idCopied: 'ID задачи скопирован',
     noTasks: 'Нет задач',
     showCompleted: 'Показать выполненные',
     hideCompleted: 'Скрыть выполненные',

@@ -1,5 +1,5 @@
-import { and, eq, inArray, isNotNull, or } from 'drizzle-orm';
-import { GoalsSchema, GoalsListSchema } from 'taskview-db-schemas';
+import { and, eq, ilike, inArray, isNotNull, isNull, or } from 'drizzle-orm';
+import { GoalsSchema, GoalsListSchema, TasksSchema } from 'taskview-db-schemas';
 import type { AppUser } from '../../core/AppUser';
 import { Database } from '../../modules/db';
 import { $logger } from '../../modules/logget';
@@ -8,7 +8,7 @@ import { logError } from '../../utils/api';
 import { callWithCatch } from '../../utils/helpers';
 import type { TagToTaskInDb } from '../tags/tags.types';
 import { TaskItemForClient } from '../tasks/TaskItemForClient';
-import type { AssigneesForTaskFromDb, FetchAllListsResult, UsersByProjectsFromDb } from './start.types';
+import type { AssigneesForTaskFromDb, FetchAllListsResult, SearchTaskArgs, SearchTaskResult, UsersByProjectsFromDb } from './start.types';
 
 //TODO: refactor 
 export class StartRepository {
@@ -371,31 +371,38 @@ export class StartRepository {
         return [...taskIdToTaskMap.values()];
     }
 
-    async searchTask(description: string, goalsIds: number[]): Promise<TaskItemForClient[]> {
-        if (goalsIds.length === 0 || !description.trim()) {
+    async searchTask(args: SearchTaskArgs): Promise<SearchTaskResult[]> {
+        const description = args.description.trim();
+        if (args.goalsIds.length === 0 || !description) {
             return [];
         }
-        const placeholders = goalsIds.map((_id, index) => {
-            return `$${index + 1}`;
-        });
 
-        const result = await this.db.query<TaskItemInDb>(
-            `select * from tasks.tasks where goal_id in (${placeholders.join(',')}) and complete = FALSE and parent_id is null and description ILIKE $${goalsIds.length + 1}`,
-            [...goalsIds, `%${description}%`]
+        const idMatch = description.match(/^#(\d+)$/);
+        const searchCondition = idMatch
+            ? eq(TasksSchema.id, Number(idMatch[1]))
+            : and(
+                eq(TasksSchema.complete, false),
+                isNull(TasksSchema.parentId),
+                ilike(TasksSchema.description, `%${description}%`),
+            );
+
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select()
+                .from(TasksSchema)
+                .where(and(inArray(TasksSchema.goalId, args.goalsIds), searchCondition))
         );
 
         if (!result) {
             return [];
         }
 
-        const map: Map<number, TaskItemForClient> = new Map();
-
-        result.rows.forEach((t) => {
-            if (!map.get(t.id)) {
-                map.set(t.id, new TaskItemForClient(t));
-            }
-        });
-
-        return [...map.values()];
+        return result.map((task) => ({
+            ...task,
+            tags: [],
+            assignedUsers: [],
+            historyId: null,
+            subtasks: [],
+        }));
     }
 }

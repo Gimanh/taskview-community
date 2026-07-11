@@ -89,7 +89,7 @@ export class StartManager {
         await this.fetchSharedGoals(organizationId);
         const goalIds = await this.getAllGoalsIds(organizationId);
 
-        const tasks = await this.repository.searchTask(description.trim(), goalIds);
+        const tasks = await this.repository.searchTask({ description, goalsIds: goalIds });
         return tasks;
     }
 }
