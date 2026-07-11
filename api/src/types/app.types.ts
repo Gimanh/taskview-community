@@ -23,6 +23,9 @@ export const AppEnvSchema = z.object({
     SMTP_FROM_EMAIL: z.string().optional(),
     APP_URL: z.string(),
 
+    // How account password changes are confirmed: code sent by email (default) or current password
+    PASSWORD_CHANGE_CONFIRMATION: z.enum(['email', 'password']).optional(),
+
     TELEGRAM_BOT_TOKEN: z.string().optional(),
     TELEGRAM_BOT_USERNAME: z.string().optional(),
     TELEGRAM_WEBHOOK_SECRET: z.string().optional(),

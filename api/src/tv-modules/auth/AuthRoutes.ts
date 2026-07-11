@@ -2,6 +2,7 @@ import { Router, type NextFunction, type Request, type Response } from 'express'
 import type { Routable } from '../../types/routable.type';
 import AuthController from './AuthController';
 import { IsLoggedIn } from './middlewares/is-logged-in';
+import { RejectApiTokenAuth } from '../api-tokens/middlewares/RejectApiTokenAuth';
 import passport from './strategies/passport-login';
 import { ExternalProviderScope } from './strategies/external-auth.types';
 export default class AuthRoutes implements Routable {
@@ -26,6 +27,10 @@ export default class AuthRoutes implements Routable {
         this.router.get('/confirm/email/:code/login/:login', this.authController.confirmEmail);
         this.router.post('/email/recovery', this.authController.remindPassword);
         this.router.post('/password/reset', this.authController.changeRemindedPassword);
+        this.router.get('/password/change/mode', [IsLoggedIn], this.authController.getPasswordChangeMode);
+        this.router.post('/password/change/code', [IsLoggedIn, RejectApiTokenAuth], this.authController.sendPasswordChangeCode);
+        this.router.post('/password/change', [IsLoggedIn, RejectApiTokenAuth], this.authController.changeOwnPassword);
+        this.router.post('/credentials/change', [IsLoggedIn, RejectApiTokenAuth], this.authController.changeDefaultUserCredentials);
         this.router.post('/logout', [IsLoggedIn], this.authController.logout);
         this.router.post('/refresh/token', this.authController.refreshTokens);
         this.router.post('/delete/account/code', [IsLoggedIn], this.authController.sendDeleteAccountCode);

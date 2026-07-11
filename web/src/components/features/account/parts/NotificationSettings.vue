@@ -1,5 +1,8 @@
 <template>
-  <UPageCard class="w-full rounded-3xl">
+  <UPageCard
+    variant="soft"
+    class="w-full rounded-3xl"
+  >
     <div class="flex flex-col gap-4">
       <div>
         <h2 class="text-lg font-semibold">

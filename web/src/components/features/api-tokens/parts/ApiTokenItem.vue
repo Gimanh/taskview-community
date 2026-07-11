@@ -61,7 +61,7 @@
         <UButton
           :label="t('common.delete')"
           color="error"
-          variant="outline"
+          variant="soft"
           :loading="deleting"
           @click="handleDelete"
         />

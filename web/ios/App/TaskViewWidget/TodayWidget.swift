@@ -48,21 +48,29 @@ struct TodayWidgetView: View {
         WidgetStrings.forLocale(entry.snapshot?.locale)
     }
 
-    private var maxSlots: Int {
-        switch family {
-        case .systemLarge: return 8
-        case .systemSmall: return 4
-        default: return 3
+    var body: some View {
+        GeometryReader { geo in
+            TaskListTodayView(
+                snapshot: entry.snapshot,
+                strings: strings,
+                maxSlots: slots(for: geo.size.height),
+                compact: family == .systemSmall,
+                pinMoreToBottom: true
+            )
         }
     }
 
-    var body: some View {
-        TaskListTodayView(
-            snapshot: entry.snapshot,
-            strings: strings,
-            maxSlots: maxSlots,
-            compact: family == .systemSmall
-        )
+    // Rows are given a fixed frame (24pt compact / 32pt regular), so this math is exact:
+    // header = top + bottom padding + content; chrome = list top + bottom padding;
+    // each slot after the first adds a hairline divider.
+    private func slots(for height: CGFloat) -> Int {
+        let compact = family == .systemSmall
+        let headerHeight: CGFloat = compact ? 38 : 46
+        let listChrome: CGFloat = compact ? 9 : 12
+        let rowHeight: CGFloat = compact ? 24 : 32
+        let dividerHeight: CGFloat = 0.34
+        let available = height - headerHeight - listChrome + dividerHeight
+        return max(2, Int(available / (rowHeight + dividerHeight)))
     }
 }
 
@@ -71,10 +79,12 @@ struct TaskListTodayView: View {
     let strings: WidgetStrings
     let maxSlots: Int
     let compact: Bool
+    let pinMoreToBottom: Bool
 
-    private var horizontalPadding: CGFloat { compact ? 12 : 16 }
-    private var rowVerticalPadding: CGFloat { compact ? 6 : 10 }
-    private var dividerInset: CGFloat { compact ? 38 : 48 }
+    private var horizontalPadding: CGFloat { compact ? 16 : 20 }
+    private var rowFixedHeight: CGFloat { compact ? 24 : 32 }
+    private var rowVerticalPadding: CGFloat { compact ? 3 : 6 }
+    private var dividerInset: CGFloat { compact ? 42 : 52 }
 
     private var isUpcoming: Bool {
         snapshot?.isUpcoming ?? false
@@ -98,6 +108,8 @@ struct TaskListTodayView: View {
 
                 Text(isUpcoming ? strings.upcoming : strings.today)
                     .font(compact ? .footnote.weight(.semibold) : .headline)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
 
                 Spacer()
 
@@ -110,8 +122,8 @@ struct TaskListTodayView: View {
                     .background(WidgetPalette.accent, in: Capsule())
             }
             .padding(.horizontal, horizontalPadding)
-            .padding(.top, 12)
-            .padding(.bottom, compact ? 8 : 12)
+            .padding(.top, compact ? 16 : 18)
+            .padding(.bottom, compact ? 4 : 6)
             .background(WidgetPalette.headerBackground)
 
             if !visibleTasks.isEmpty {
@@ -125,7 +137,8 @@ struct TaskListTodayView: View {
 
                             TaskRowView(task: task, strings: strings, compact: compact, showDate: isUpcoming)
                                 .padding(.horizontal, horizontalPadding)
-                                .padding(.vertical, rowVerticalPadding)
+                                .frame(height: pinMoreToBottom ? rowFixedHeight : nil)
+                                .padding(.vertical, pinMoreToBottom ? 0 : rowVerticalPadding)
                         }
                         .transition(.opacity.combined(with: .move(edge: .trailing)))
                     }
@@ -134,16 +147,25 @@ struct TaskListTodayView: View {
                         Divider()
                             .padding(.leading, dividerInset)
 
+                        if pinMoreToBottom {
+                            Spacer(minLength: 0)
+                        }
+
                         Text(strings.more(hiddenCount))
                             .font(compact ? .caption2 : .footnote)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.leading, dividerInset)
                             .padding(.trailing, horizontalPadding)
-                            .padding(.vertical, rowVerticalPadding)
+                            .frame(height: pinMoreToBottom ? rowFixedHeight : nil)
+                            .padding(.vertical, pinMoreToBottom ? 0 : rowVerticalPadding)
                     }
                 }
-                Spacer(minLength: 0)
+                .padding(.top, compact ? 3 : 4)
+                .padding(.bottom, compact ? 6 : 8)
+                if !(pinMoreToBottom && hiddenCount > 0) {
+                    Spacer(minLength: 0)
+                }
             } else {
                 Spacer()
                 Text(snapshot == nil ? strings.openApp : strings.empty)
