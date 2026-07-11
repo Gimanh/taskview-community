@@ -19,7 +19,10 @@
       <NotificationBell />
     </div>
 
-    <SidebarInboxLink />
+    <div class="flex items-stretch gap-2">
+      <SidebarInboxLink class="flex-1" />
+      <SidebarDefaultProjectLink />
+    </div>
     <SidebarWorkspaceLinks />
 
     <USeparator />
@@ -38,6 +41,7 @@ import { useDashboard } from '@/composables/useDashboard'
 import TvGoalLikeItem from '@/components/features/base/TvGoalLikeItem.vue'
 import ProjectsSidebar from '@/components/features/projects/ProjectsSidebar.vue'
 import SidebarInboxLink from '@/components/sidebars/SidebarInboxLink.vue'
+import SidebarDefaultProjectLink from '@/components/sidebars/SidebarDefaultProjectLink.vue'
 import SidebarWorkspaceLinks from '@/components/sidebars/SidebarWorkspaceLinks.vue'
 import NotificationBell from '@/components/NotificationBell.vue'
 import ActiveTimerIndicator from '@/components/ActiveTimerIndicator.vue'
