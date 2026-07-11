@@ -17,6 +17,7 @@ dependencies {
     implementation project(':capacitor-push-notifications')
     implementation project(':capacitor-splash-screen')
     implementation project(':capgo-capacitor-updater')
+    implementation project(':capacitor-widget-bridge')
 
 }
 

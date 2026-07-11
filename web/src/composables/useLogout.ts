@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core'
+import { WidgetBridge } from 'capacitor-widget-bridge'
 import $api from '@/helpers/axios'
 import { $ls, $tvApi } from '@/plugins/axios'
 import { usePushNotifications } from '@/composables/usePushNotifications'
@@ -18,6 +20,11 @@ export async function useLogout() {
 
   if (result) {
     reset()
+    if (Capacitor.isNativePlatform()) {
+      await WidgetBridge.clearSnapshot().catch((err) => {
+        console.error('[Logout] Failed to clear widget snapshot:', err)
+      })
+    }
     await $ls.invalidateTokens()
     return true
   }

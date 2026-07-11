@@ -22,8 +22,6 @@ function isNewerVersion(server: string, current: string): boolean {
 }
 
 export async function useUpdater(canUpdate: boolean = false) {
-  // console.log(canUpdate);
-  // return;
   try {
     const BRANCH_MODE: 'prod' | 'dev' = (await $ls.getValue('update_loading')) === 'dev' ? 'dev' : 'prod'
 
@@ -42,9 +40,11 @@ export async function useUpdater(canUpdate: boolean = false) {
       return
     }
 
-    console.log('currentVersion', currentVersion, 'updateInfo', last)
+    const effectiveVersion = currentVersion || APP_VERSION
 
-    if (!currentVersion || isNewerVersion(last.version, currentVersion) || (version && version?.version !== last.version)) {
+    console.log('currentVersion', effectiveVersion, 'updateInfo', last)
+
+    if (isNewerVersion(last.version, effectiveVersion) || (version && version?.version !== last.version)) {
       console.log('[Update] Downloading new version:', last.version)
 
       version = await CapacitorUpdater.download({

@@ -7,8 +7,8 @@ android {
         applicationId "com.handscreamgnl.taskview.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 14801
-        versionName "1.48.1"
+        versionCode 14902
+        versionName "1.49.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

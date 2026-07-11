@@ -25,6 +25,9 @@ const config: CapacitorConfig = {
     CapacitorHttp: {
       enabled: true,
     },
+    WidgetBridge: {
+      appGroup: 'group.com.handscream.taskview.app',
+    },
   },
 }
 

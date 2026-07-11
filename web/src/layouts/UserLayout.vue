@@ -34,6 +34,8 @@ import DashboardSidebarSecond from '@/components/sidebars/DashboardSidebarSecond
 import SearchAll from '@/components/features/main/screen-main/parts/SearchAll.vue'
 import { useCentrifugo } from '@/composables/useCentrifugo'
 import { usePushNotifications } from '@/composables/usePushNotifications'
+import { useWidgetSnapshot } from '@/composables/useWidgetSnapshot'
+import { useWidgetDeepLink } from '@/composables/useWidgetDeepLink'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useOrganizationStore } from '@/stores/organization.store'
 import { useTimeTrackingStore } from '@/stores/time-tracking.store'
@@ -48,6 +50,9 @@ const goalsStore = useGoalsStore()
 const orgStore = useOrganizationStore()
 const timeTrackingStore = useTimeTrackingStore()
 const uiPrefsStore = useUiPreferencesStore()
+
+useWidgetSnapshot()
+useWidgetDeepLink()
 
 watch(
   () => timeTrackingStore.lastError,
