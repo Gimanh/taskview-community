@@ -5,6 +5,7 @@ import { corsMiddleware } from './middlewares/cors';
 import errorHandler from './middlewares/error-handler';
 import routes from './routes';
 import passport, { initPassportLogin } from './tv-modules/auth/strategies/passport-login';
+import { LoginMethods } from './tv-modules/auth/LoginMethods';
 import cookieParser from 'cookie-parser';
 import { registerAllEventHandlers, startAllWorkers } from './core/all-events';
 
@@ -13,6 +14,8 @@ export default class App {
     public port: number;
 
     constructor(port: number) {
+        LoginMethods.validateOnStartup();
+
         this.app = express();
         this.port = port;
 

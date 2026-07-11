@@ -7,8 +7,7 @@ import type { VerifyCallback } from "passport-google-oauth20";
 
 export function initGithubStrategy() {
     if (!process.env.GITHUB_CLIENT_ID || !process.env.GITHUB_CLIENT_SECRET || !process.env.GITHUB_CALLBACK_URL) {
-        $logger.warn("GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, and GITHUB_CALLBACK_URL must be set");
-        console.warn("GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, and GITHUB_CALLBACK_URL must be set");
+        $logger.debug("GitHub login is not configured (GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET / GITHUB_CALLBACK_URL) — skipping");
         return;
     }
 

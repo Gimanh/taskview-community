@@ -7,8 +7,12 @@ export type UiPreferencesItem = {
 
 export type FirstDayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6
 
+export type DefaultView = 'tasks' | 'kanban' | 'graph' | 'sprints'
+
 export type UiSettings = {
   firstDayOfWeek?: FirstDayOfWeek
+  defaultProjectId?: number
+  defaultView?: DefaultView
 }
 
 export const UI_SETTINGS_KEY = '__settings__'

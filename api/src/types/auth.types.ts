@@ -62,6 +62,61 @@ export const ChangePasswordDataScheme = z
 
 export type ChangePasswordData = z.infer<typeof ChangePasswordDataScheme>;
 
+export const ChangeOwnPasswordSchema = z
+    .object({
+        code: z.string().min(1).max(64),
+        password: z.string().min(6).max(128),
+        passwordRepeat: z.string().max(128),
+    })
+    .refine((data) => data.password === data.passwordRepeat, {
+        message: "Passwords don't match",
+        path: ['passwordRepeat'],
+    });
+
+export type ChangeOwnPassword = z.infer<typeof ChangeOwnPasswordSchema>;
+
+export const ChangeOwnPasswordByPasswordSchema = z
+    .object({
+        currentPassword: z.string().min(1).max(128),
+        password: z.string().min(6).max(128),
+        passwordRepeat: z.string().max(128),
+    })
+    .refine((data) => data.password === data.passwordRepeat, {
+        message: "Passwords don't match",
+        path: ['passwordRepeat'],
+    });
+
+export type ChangeOwnPasswordByPassword = z.infer<typeof ChangeOwnPasswordByPasswordSchema>;
+
+export type PasswordChangeConfirmationMode = 'email' | 'password';
+
+export type LoginMethod = 'magic-link' | 'password' | 'sso' | 'social';
+
+export const ChangeDefaultUserCredentialsSchema = z
+    .object({
+        currentPassword: z.string().min(1).max(128),
+        login: z.string().min(3).max(64).regex(/^[a-zA-Z0-9._-]+$/).toLowerCase(),
+        email: z.string().email().max(255).toLowerCase(),
+        password: z.string().min(6).max(128),
+        passwordRepeat: z.string().max(128),
+    })
+    .refine((data) => data.password === data.passwordRepeat, {
+        message: "Passwords don't match",
+        path: ['passwordRepeat'],
+    });
+
+export type ChangeDefaultUserCredentials = z.infer<typeof ChangeDefaultUserCredentialsSchema>;
+
+export type UpdateUserCredentialsArgs = {
+    userId: number;
+    oldEmail: string;
+    login: string;
+    email: string;
+    passwordHash: string;
+};
+
+export type UpdateUserCredentialsResult = 'ok' | 'conflict' | 'error';
+
 export const RefreshTokenSchema = z.object({
     refreshToken: z.string(),
 });

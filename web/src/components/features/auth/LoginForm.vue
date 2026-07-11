@@ -19,11 +19,26 @@
     </template>
 
     <!-- Login Views -->
+    <template v-else-if="isLoadingOptions">
+      <div class="flex justify-center py-10">
+        <UIcon
+          name="i-lucide-loader-circle"
+          class="size-6 animate-spin text-muted"
+        />
+      </div>
+    </template>
+
     <template v-else>
-      <SocialButtons />
+      <SocialButtons
+        v-if="loginOptions.socialProviders.length > 0"
+        :providers="loginOptions.socialProviders"
+      />
 
       <!-- Divider -->
-      <div class="relative">
+      <div
+        v-if="loginOptions.socialProviders.length > 0 && tabs.length > 0"
+        class="relative"
+      >
         <div class="absolute inset-0 flex items-center">
           <div class="w-full border-t border-default" />
         </div>
@@ -32,8 +47,23 @@
         </div>
       </div>
 
+      <!-- Single method — no tabs needed -->
+      <template v-if="tabs.length === 1">
+        <LoginByCode
+          v-if="tabs[0].value === 'code'"
+          @success="handleSuccess"
+        />
+        <LoginByPassword
+          v-else-if="tabs[0].value === 'password'"
+          @success="handleSuccess"
+          @forgot-password="currentView = 'forgot'"
+        />
+        <LoginBySso v-else-if="tabs[0].value === 'sso'" />
+      </template>
+
       <!-- Tabs -->
       <UTabs
+        v-else-if="tabs.length > 1"
         v-model="currentView"
         :items="tabs"
         class="w-full"
@@ -62,8 +92,11 @@
       </UTabs>
     </template>
     
-    <!-- Server Selector -->
-    <UCollapsible class="flex flex-col gap-2">
+    <!-- Server Selector (hidden when the API URL is pinned at deploy time) -->
+    <UCollapsible
+      v-if="!isServerLocked"
+      class="flex flex-col gap-2"
+    >
       <UButton
         class="group"
         :label="t('server.selectServer')"
@@ -99,8 +132,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, reactive, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import $api from '@/helpers/axios'
+import { logError } from '@/helpers/Helper'
+import { getConfiguredApiUrl } from '@/helpers/serverConfig'
 import LoginByCode from './LoginByCode.vue'
 import LoginByPassword from './LoginByPassword.vue'
 import LoginBySso from './LoginBySso.vue'
@@ -116,13 +152,48 @@ const emit = defineEmits<{
 
 type View = 'code' | 'password' | 'sso' | 'forgot'
 
+type LoginOptions = {
+  magicLink: boolean
+  password: boolean
+  sso: boolean
+  socialProviders: string[]
+}
+
 const currentView = ref<View>('code')
 
-const tabs = computed(() => [
-  { value: 'code', label: t('auth.magicLink'), slot: 'code' as const },
-  { value: 'password', label: t('auth.password'), slot: 'password' as const },
-  { value: 'sso', label: 'SSO', slot: 'sso' as const },
-])
+const isLoadingOptions = ref(true)
+const isServerLocked = getConfiguredApiUrl() !== null
+
+const loginOptions = reactive<LoginOptions>({
+  magicLink: true,
+  password: true,
+  sso: true,
+  socialProviders: ['google', 'github', 'apple'],
+})
+
+onMounted(async () => {
+  try {
+    const result = await $api.get<LoginOptions>('/module/auth/login-options').catch(logError)
+    if (result) Object.assign(loginOptions, result.data)
+  } finally {
+    isLoadingOptions.value = false
+  }
+})
+
+const tabs = computed(() => {
+  const items = []
+  if (loginOptions.magicLink) items.push({ value: 'code', label: t('auth.magicLink'), slot: 'code' as const })
+  if (loginOptions.password) items.push({ value: 'password', label: t('auth.password'), slot: 'password' as const })
+  if (loginOptions.sso) items.push({ value: 'sso', label: 'SSO', slot: 'sso' as const })
+  return items
+})
+
+watch(tabs, (items) => {
+  if (currentView.value === 'forgot') return
+  if (!items.some((item) => item.value === currentView.value)) {
+    currentView.value = (items[0]?.value ?? 'code') as View
+  }
+})
 
 function onTabChange(value: string | number) {
   currentView.value = value as View

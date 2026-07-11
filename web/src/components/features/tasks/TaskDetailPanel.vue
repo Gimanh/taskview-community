@@ -26,6 +26,10 @@
           </UTextarea>
         </div>
       </div>
+      <TaskIdCopy
+        :task-id="task.id"
+        class="self-start -mt-2"
+      />
       <!-- Source link (GitHub/GitLab issue) -->
       <a
         v-if="task.sourceUrl"
@@ -170,6 +174,7 @@ import TaskHistory from '@/components/features/tasks/parts/TaskHistory.vue'
 import TvDeadlineSelect from '@/components/features/base/TvDeadlineSelect.vue'
 import TaskRecurrence from '@/components/features/tasks/parts/TaskRecurrence.vue'
 import TaskSubtasks from '@/components/features/tasks/parts/TaskSubtasks.vue'
+import TaskIdCopy from '@/components/features/tasks/parts/TaskIdCopy.vue'
 import TvSprintSelect from '@/components/features/base/TvSprintSelect.vue'
 import TaskEstimateInput from '@/components/features/tasks/parts/TaskEstimateInput.vue'
 import type { PriorityValue } from '@/composables/usePriorityOptions'

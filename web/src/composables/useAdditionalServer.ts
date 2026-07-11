@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import $api from '@/helpers/axios'
 import { $ls, $tvApi } from '@/plugins/axios'
 import { additionalUrlStore } from '@/stores/additional-url.store'
+import { getConfiguredApiUrl } from '@/helpers/serverConfig'
 
 export const LS_KEY_ADDITIONAL_SERVERS = 'additionalServers'
 export const LS_KEY_MAIN_SERVER = 'mainServer'
@@ -17,15 +18,18 @@ export const useAdditionalServer = async () => {
   const { allServers, mainServer, systemServer } = storeToRefs(additionalUrlStore())
   const serversFromLocalStorage = ref<string | null>(await $ls.getValue(LS_KEY_ADDITIONAL_SERVERS))
   const mainServerFromLocalStorage = await $ls.getValue(LS_KEY_MAIN_SERVER)
+  const configuredApiUrl = getConfiguredApiUrl()
 
   allServers.value = serversFromLocalStorage.value ? [...JSON.parse(serversFromLocalStorage.value)] : []
 
   mainServer.value =
+    configuredApiUrl ||
     mainServerFromLocalStorage ||
     (process.env.NODE_ENV !== 'production' ? 'http://localhost:1401' : 'https://api.taskview.tech')
 
   systemServer.value =
-    process.env.NODE_ENV !== 'production' ? 'http://localhost:1401' : 'https://api.taskview.tech'
+    configuredApiUrl ||
+    (process.env.NODE_ENV !== 'production' ? 'http://localhost:1401' : 'https://api.taskview.tech')
 
   const setMainServer = (server: string) => {
     mainServer.value = server

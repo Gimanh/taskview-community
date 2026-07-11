@@ -44,6 +44,8 @@ const firstDayOfWeekArkType = type('number.integer').narrow((v, ctx) =>
 
 export const UiSettingsArkType = type({
   'firstDayOfWeek?': firstDayOfWeekArkType,
+  'defaultProjectId?': 'number.integer >= 1',
+  'defaultView?': "'tasks' | 'kanban' | 'graph' | 'sprints'",
 })
 
 export type UiSettings = typeof UiSettingsArkType.infer

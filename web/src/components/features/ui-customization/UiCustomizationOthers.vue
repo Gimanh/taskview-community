@@ -14,19 +14,84 @@
         :ui="{ base: 'rounded-xl' }"
       />
     </UFormField>
+
+    <UFormField
+      :label="t('uiCustomization.others.defaultProject')"
+      :description="t('uiCustomization.others.defaultProjectHint')"
+    >
+      <USelectMenu
+        v-model="defaultProject"
+        :items="projectItems"
+        value-key="value"
+        variant="soft"
+        class="w-full lg:w-72"
+        size="xl"
+        :ui="{ base: 'rounded-xl' }"
+      />
+    </UFormField>
+
+    <UFormField
+      :label="t('uiCustomization.others.defaultView')"
+      :description="t('uiCustomization.others.defaultViewHint')"
+    >
+      <USelectMenu
+        v-model="defaultView"
+        :items="viewItems"
+        value-key="value"
+        :disabled="defaultProject === NONE"
+        variant="soft"
+        class="w-full lg:w-72"
+        size="xl"
+        :ui="{ base: 'rounded-xl' }"
+      />
+    </UFormField>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { FirstDayOfWeek } from 'taskview-api'
+import type { DefaultView, FirstDayOfWeek } from 'taskview-api'
 import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
+import { useGoalsStore } from '@/stores/goals.store'
 
 const { t } = useI18n()
 const store = useUiPreferencesStore()
+const goalsStore = useGoalsStore()
 
 const DEFAULT = -1
+const NONE = -1
+
+onMounted(() => {
+  if (!goalsStore.initialized) goalsStore.fetchGoals()
+})
+
+const defaultProject = computed<number>({
+  get: () => store.settings.defaultProjectId ?? NONE,
+  set: (value) => {
+    store.setSetting('defaultProjectId', value === NONE ? undefined : value)
+    if (value === NONE) store.setSetting('defaultView', undefined)
+  },
+})
+
+const defaultView = computed<DefaultView>({
+  get: () => store.settings.defaultView ?? 'tasks',
+  set: (value) => {
+    store.setSetting('defaultView', value === 'tasks' ? undefined : value)
+  },
+})
+
+const projectItems = computed(() => [
+  { value: NONE, label: t('uiCustomization.others.defaultProjectNone') },
+  ...goalsStore.goals.map((goal) => ({ value: goal.id, label: goal.name })),
+])
+
+const viewItems = computed(() => [
+  { value: 'tasks', label: t('uiCustomization.others.viewTasks') },
+  { value: 'kanban', label: t('uiCustomization.others.viewKanban') },
+  { value: 'graph', label: t('uiCustomization.others.viewGraph') },
+  { value: 'sprints', label: t('uiCustomization.others.viewSprints') },
+])
 
 const weekStart = computed<number>({
   get: () => store.settings.firstDayOfWeek ?? DEFAULT,

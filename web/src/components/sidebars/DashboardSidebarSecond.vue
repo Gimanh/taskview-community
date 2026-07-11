@@ -21,7 +21,10 @@
       </div>
 
       <SearchActivator />
-      <SidebarInboxLink />
+      <div class="flex items-stretch gap-2">
+        <SidebarInboxLink class="flex-1" />
+        <SidebarDefaultProjectLink />
+      </div>
 
       <USeparator />
 
@@ -58,6 +61,7 @@ import TvGoalLikeItem from '@/components/features/base/TvGoalLikeItem.vue'
 import ActiveTimerIndicator from '@/components/ActiveTimerIndicator.vue'
 import NotificationBell from '@/components/NotificationBell.vue'
 import SidebarInboxLink from '@/components/sidebars/SidebarInboxLink.vue'
+import SidebarDefaultProjectLink from '@/components/sidebars/SidebarDefaultProjectLink.vue'
 import SidebarWorkspaceLinks from '@/components/sidebars/SidebarWorkspaceLinks.vue'
 import SidebarProjectSelect from './dashboard-second/SidebarProjectSelect.vue'
 import SidebarTools from './dashboard-second/SidebarTools.vue'

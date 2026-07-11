@@ -6,7 +6,11 @@ import { z } from 'zod';
 import { Email } from '../../core/Email';
 import { $logger } from '../../modules/logget';
 import {
+    ChangeDefaultUserCredentialsSchema,
+    ChangeOwnPasswordByPasswordSchema,
+    ChangeOwnPasswordSchema,
     ChangePasswordDataScheme,
+    type PasswordChangeConfirmationMode,
     ConfirmEmailReqDataSchema,
     RefreshTokenSchema,
     RemindPasswordSchema,
@@ -15,6 +19,7 @@ import {
     UserJwtPayloadSchema,
 } from '../../types/auth.types';
 import { generateString, isEmail, time } from '../../utils/helpers';
+import { LoginMethods } from './LoginMethods';
 import EnEmailTemplate from './mail/confirm-email-en';
 import RuEmailTemplate from './mail/confirm-email-ru';
 import LoginCodeEmailTemplate from './mail/login-code-en';
@@ -23,6 +28,10 @@ import { OrganizationRepository } from '../organizations/OrganizationRepository'
 import { GoalsRepository } from '../goals/GoalsRepository';
 
 const LOGIN_CODE_TTL_MS = 5 * 60 * 1000;
+const PASSWORD_CHANGE_CODE_TTL_S = 15 * 60;
+const PASSWORD_CHANGE_CODE_RESEND_COOLDOWN_S = 60;
+// Seeded by migration 0.0.0 (app_permissions.sql) on self-hosted installs.
+const DEFAULT_USER_EMAIL = 'test@mail.dest';
 
 export default class AuthController {
     private readonly jwtAlg: Algorithm = process.env.JWT_ALG as Algorithm;
@@ -654,6 +663,187 @@ export default class AuthController {
         await this.setRefreshToken(res, newTokens.refresh);
 
         return res.json(newTokens);
+    };
+
+    getLoginOptions = async (_req: Request, res: Response) => {
+        return res.status(200).send({
+            magicLink: LoginMethods.isEnabled('magic-link'),
+            password: LoginMethods.isEnabled('password'),
+            sso: LoginMethods.isEnabled('sso'),
+            socialProviders: LoginMethods.availableSocialProviders(),
+        });
+    };
+
+    private passwordChangeConfirmationMode(): PasswordChangeConfirmationMode {
+        return process.env.PASSWORD_CHANGE_CONFIRMATION === 'password' ? 'password' : 'email';
+    }
+
+    getPasswordChangeMode = async (_req: Request, res: Response) => {
+        return res.status(200).send({ mode: this.passwordChangeConfirmationMode() });
+    };
+
+    sendPasswordChangeCode = async (req: Request, res: Response) => {
+        if (this.passwordChangeConfirmationMode() !== 'email') {
+            return res.status(403).send();
+        }
+
+        const userEmail = req.appUser.getUserData()?.email;
+        if (!userEmail) {
+            return res.status(400).end();
+        }
+
+        const userData = await req.appUser.authManager.repository.getUserByLogin(userEmail, true);
+        if (!userData) {
+            return res.status(400).end();
+        }
+
+        const now = Math.floor(Date.now() / 1000);
+        const sinceLastCode = userData.remind_password_time ? now - userData.remind_password_time : null;
+        if (sinceLastCode !== null && sinceLastCode < PASSWORD_CHANGE_CODE_RESEND_COOLDOWN_S) {
+            return res.status(429).send({
+                message: 'Please wait before requesting another code.',
+                retryAfter: PASSWORD_CHANGE_CODE_RESEND_COOLDOWN_S - sinceLastCode,
+            });
+        }
+
+        // High-entropy code: the shared remind_password_code column is also redeemable
+        // via the unauthenticated /password/reset endpoint, so a short numeric code
+        // would be brute-forceable there.
+        const code = generateString(12);
+        const saved = await req.appUser.authManager.repository.setReminderCodeAndTime(userEmail, code, now);
+        if (!saved) {
+            $logger.error(`Can not save password change code for user ${userData.id}`);
+            return res.status(500).end();
+        }
+
+        const text = `Your TaskView password change code is ${code}\n\nUse this code to confirm your new password. The code expires in 15 minutes.\n\nIf you didn't request this change, ignore this email.`;
+
+        Email.send({
+            text,
+            to: userEmail,
+            subject: `Your TaskView password change code: ${code}`,
+            from: process.env.SMTP_FROM_EMAIL as string,
+        })
+            .then((ok) => {
+                if (!ok) $logger.error({ to: userEmail }, 'Failed to send password change code email');
+            })
+            .catch((err) => $logger.error({ err, to: userEmail }, 'Failed to send password change code email'));
+
+        return res.status(200).end();
+    };
+
+    changeOwnPassword = async (req: Request, res: Response) => {
+        const userEmail = req.appUser.getUserData()?.email;
+        if (!userEmail) {
+            return res.status(400).end();
+        }
+
+        const userData = await req.appUser.authManager.repository.getUserByLogin(userEmail, true);
+        if (!userData) {
+            return res.status(400).send();
+        }
+
+        if (this.passwordChangeConfirmationMode() === 'password') {
+            const parsedData = ChangeOwnPasswordByPasswordSchema.safeParse(req.body);
+            if (!parsedData.success) {
+                return res.status(400).send();
+            }
+
+            const validPassword = await this.comparePasswords(parsedData.data.currentPassword, userData.password);
+            if (!validPassword) {
+                return res.status(403).send({ field: 'currentPassword' });
+            }
+
+            return this.applyNewPassword(res, req, userData.id, parsedData.data.password);
+        }
+
+        const parsedData = ChangeOwnPasswordSchema.safeParse(req.body);
+        if (!parsedData.success) {
+            return res.status(400).send();
+        }
+
+        if (!userData.remind_password_code || !userData.remind_password_time) {
+            return res.status(400).send();
+        }
+
+        const now = Math.floor(Date.now() / 1000);
+        if (now > userData.remind_password_time + PASSWORD_CHANGE_CODE_TTL_S) {
+            return res.status(400).send();
+        }
+
+        if (userData.remind_password_code !== parsedData.data.code) {
+            return res.status(400).send();
+        }
+
+        await req.appUser.authManager.repository.setReminderCodeAndTime(userEmail, null, null);
+
+        return this.applyNewPassword(res, req, userData.id, parsedData.data.password);
+    };
+
+    private async applyNewPassword(res: Response, req: Request, userId: number, newPassword: string) {
+        const passwordHash = hashSync(newPassword, 10);
+        const result = await req.appUser.authManager.repository.updateUserPassword(passwordHash, userId);
+        if (!result) {
+            $logger.error(`Can not update password for user ${userId}`);
+            return res.status(500).send();
+        }
+
+        const currentSessionId = req.appUser.getTokenId();
+        await req.appUser.authManager.sessionStorage.deleteAllSessions(userId, currentSessionId);
+
+        return res.status(200).send({ changed: true });
+    }
+
+    changeDefaultUserCredentials = async (req: Request, res: Response) => {
+        const parsedData = ChangeDefaultUserCredentialsSchema.safeParse(req.body);
+        if (!parsedData.success) {
+            return res.status(400).send();
+        }
+
+        const userEmail = req.appUser.getUserData()?.email;
+        if (!userEmail) {
+            return res.status(400).end();
+        }
+
+        const userData = await req.appUser.authManager.repository.getUserByLogin(userEmail, true);
+        if (!userData || userData.email.toLowerCase() !== DEFAULT_USER_EMAIL) {
+            return res.status(403).send();
+        }
+
+        const validPassword = await this.comparePasswords(parsedData.data.currentPassword, userData.password);
+        if (!validPassword) {
+            return res.status(403).send({ field: 'currentPassword' });
+        }
+
+        const { login, email } = parsedData.data;
+
+        if (login !== userData.login && (await req.appUser.authManager.repository.getUserByLogin(login))) {
+            return res.status(409).send({ field: 'login' });
+        }
+        if (email !== userData.email && (await req.appUser.authManager.repository.getUserByLogin(email, true))) {
+            return res.status(409).send({ field: 'email' });
+        }
+
+        const updated = await req.appUser.authManager.repository.updateUserCredentials({
+            userId: userData.id,
+            oldEmail: userData.email,
+            login,
+            email,
+            passwordHash: hashSync(parsedData.data.password, 10),
+        });
+        if (updated === 'conflict') {
+            return res.status(409).send({ field: 'email' });
+        }
+        if (updated !== 'ok') {
+            return res.status(500).send();
+        }
+
+        // JWTs carry login/email and refresh does not re-read them from the DB,
+        // so drop every session and make the user sign in with the new credentials.
+        await req.appUser.authManager.sessionStorage.deleteAllSessions(userData.id);
+        this.clearRefreshToken(res);
+
+        return res.status(200).send({ changed: true });
     };
 
     sendDeleteAccountCode = async (req: Request, res: Response) => {

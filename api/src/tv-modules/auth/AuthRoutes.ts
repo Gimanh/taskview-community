@@ -2,6 +2,8 @@ import { Router, type NextFunction, type Request, type Response } from 'express'
 import type { Routable } from '../../types/routable.type';
 import AuthController from './AuthController';
 import { IsLoggedIn } from './middlewares/is-logged-in';
+import { RejectApiTokenAuth } from '../api-tokens/middlewares/RejectApiTokenAuth';
+import { RequireLoginMethod, RequireSocialProvider } from './middlewares/require-login-method';
 import passport from './strategies/passport-login';
 import { ExternalProviderScope } from './strategies/external-auth.types';
 export default class AuthRoutes implements Routable {
@@ -19,13 +21,18 @@ export default class AuthRoutes implements Routable {
     }
 
     initRoutes() {
-        this.router.post('/send-login-code', this.authController.sendLoginCode);
-        this.router.post('/login-by-code', this.authController.loginByCode);
-        this.router.post('/login', this.authController.login);
+        this.router.get('/login-options', this.authController.getLoginOptions);
+        this.router.post('/send-login-code', [RequireLoginMethod('magic-link')], this.authController.sendLoginCode);
+        this.router.post('/login-by-code', [RequireLoginMethod('magic-link')], this.authController.loginByCode);
+        this.router.post('/login', [RequireLoginMethod('password')], this.authController.login);
         this.router.post('/registration', this.authController.registration);
         this.router.get('/confirm/email/:code/login/:login', this.authController.confirmEmail);
-        this.router.post('/email/recovery', this.authController.remindPassword);
-        this.router.post('/password/reset', this.authController.changeRemindedPassword);
+        this.router.post('/email/recovery', [RequireLoginMethod('password')], this.authController.remindPassword);
+        this.router.post('/password/reset', [RequireLoginMethod('password')], this.authController.changeRemindedPassword);
+        this.router.get('/password/change/mode', [IsLoggedIn], this.authController.getPasswordChangeMode);
+        this.router.post('/password/change/code', [IsLoggedIn, RejectApiTokenAuth], this.authController.sendPasswordChangeCode);
+        this.router.post('/password/change', [IsLoggedIn, RejectApiTokenAuth], this.authController.changeOwnPassword);
+        this.router.post('/credentials/change', [IsLoggedIn, RejectApiTokenAuth], this.authController.changeDefaultUserCredentials);
         this.router.post('/logout', [IsLoggedIn], this.authController.logout);
         this.router.post('/refresh/token', this.authController.refreshTokens);
         this.router.post('/delete/account/code', [IsLoggedIn], this.authController.sendDeleteAccountCode);
@@ -33,6 +40,7 @@ export default class AuthRoutes implements Routable {
 
         this.router.get(
             '/provider/:providerName',
+            RequireSocialProvider,
             (req: Request, res: Response, next: NextFunction) => passport.authenticate(req.params.providerName, {
                 scope: ExternalProviderScope[req.params.providerName],
                 session: false,
@@ -43,6 +51,7 @@ export default class AuthRoutes implements Routable {
         );
         this.router.get(
             '/provider/:providerName/callback',
+            RequireSocialProvider,
             (req: Request, res: Response, next: NextFunction) => passport.authenticate(req.params.providerName, {
                 scope: ExternalProviderScope[req.params.providerName], session: false
             })(req, res, next),
@@ -51,6 +60,7 @@ export default class AuthRoutes implements Routable {
 
         this.router.post(
             '/provider/:providerName/callback',
+            RequireSocialProvider,
             (req: Request, res: Response, next: NextFunction) => passport.authenticate(req.params.providerName, {
                 scope: ExternalProviderScope[req.params.providerName], session: false
             })(req, res, next),

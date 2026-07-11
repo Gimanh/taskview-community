@@ -1,6 +1,7 @@
 <template>
   <div class="space-y-3">
     <UButton
+      v-if="providers.includes('google')"
       :label="t('auth.continueWithGoogle')"
       icon="i-lucide-chrome"
       color="neutral"
@@ -11,6 +12,7 @@
       @click="handleLogin('google')"
     />
     <UButton
+      v-if="providers.includes('github')"
       :label="t('auth.continueWithGithub')"
       icon="i-lucide-github"
       color="neutral"
@@ -21,6 +23,7 @@
       @click="handleLogin('github')"
     />
     <UButton
+      v-if="providers.includes('apple')"
       :label="t('auth.continueWithApple')"
       icon="i-lucide-apple"
       color="neutral"
@@ -41,6 +44,10 @@ import { Browser } from '@capacitor/browser'
 import { useAdditionalServer } from '@/composables/useAdditionalServer'
 
 type Provider = 'google' | 'github' | 'apple'
+
+defineProps<{
+  providers: string[]
+}>()
 
 const { t } = useI18n()
 
