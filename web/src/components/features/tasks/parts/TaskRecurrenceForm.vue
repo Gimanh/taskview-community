@@ -1,20 +1,20 @@
 <template>
   <div class="flex flex-col gap-5">
-    <div class="flex gap-1 p-1 rounded-2xl bg-elevated">
-      <UButton
-        v-for="opt in frequencyItems"
-        :key="opt.value"
-        :label="opt.label"
-        color="neutral"
-        variant="ghost"
-        size="md"
-        block
-        class="flex-1"
-        :ui="{ base: form.frequency === opt.value
-          ? 'rounded-xl justify-center bg-default text-highlighted font-semibold shadow-sm hover:bg-default'
-          : 'rounded-xl justify-center text-muted' }"
-        @click="form.frequency = opt.value"
+    <TaskRecurrenceSegmentedControl
+      v-model="form.frequency"
+      :items="frequencyItems"
+    />
+
+    <div class="flex flex-col gap-1.5">
+      <span class="text-sm font-medium text-muted px-1">{{ t('recurrence.mode.title') }}</span>
+      <TaskRecurrenceSegmentedControl
+        v-model="form.scheduleMode"
+        :items="modeItems"
       />
+      <span
+        v-if="isAfterCompletion"
+        class="text-xs text-muted px-1"
+      >{{ t('recurrence.mode.hint') }}</span>
     </div>
 
     <div class="flex items-center justify-between gap-3">
@@ -54,13 +54,13 @@
     </div>
 
     <TaskRecurrenceWeekdays
-      v-if="form.frequency === 'weekly'"
+      v-if="form.frequency === 'weekly' && !isAfterCompletion"
       v-model="form.weekdays"
       :start-weekday="startWeekday"
     />
 
     <USelect
-      v-if="form.frequency === 'monthly'"
+      v-if="form.frequency === 'monthly' && !isAfterCompletion"
       v-model="form.monthlyMode"
       :items="monthlyModeItems"
       size="lg"
@@ -180,6 +180,10 @@
         v-if="previewFooter"
         class="text-xs text-muted"
       >{{ previewFooter }}</span>
+      <span
+        v-if="isAfterCompletion"
+        class="text-xs text-muted"
+      >{{ t('recurrence.previewApprox') }}</span>
     </div>
   </div>
 </template>
@@ -192,7 +196,8 @@ import type { DateValue } from '@internationalized/date'
 import { buildRruleString, jsDayToRruleWeekday, previewOccurrences } from '@/helpers/recurrence'
 import { useWeekStart } from '@/composables/useWeekStart'
 import TaskRecurrenceWeekdays from './TaskRecurrenceWeekdays.vue'
-import type { RecurrenceEndsMode, RecurrenceFormValue, RecurrenceFrequency } from '@/types/recurrence.types'
+import TaskRecurrenceSegmentedControl from './TaskRecurrenceSegmentedControl.vue'
+import type { RecurrenceEndsMode, RecurrenceFormValue, RecurrenceFrequency, RecurrenceScheduleMode } from '@/types/recurrence.types'
 
 const PREVIEW_LIMIT = 5
 
@@ -211,6 +216,13 @@ const frequencyItems = computed<{ label: string; value: RecurrenceFrequency }[]>
   { label: t('recurrence.freqShort.monthly'), value: 'monthly' },
   { label: t('recurrence.freqShort.yearly'), value: 'yearly' },
 ])
+
+const modeItems = computed<{ label: string; value: RecurrenceScheduleMode }[]>(() => [
+  { label: t('recurrence.mode.fixed'), value: 'fixed' },
+  { label: t('recurrence.mode.afterCompletion'), value: 'after-completion' },
+])
+
+const isAfterCompletion = computed(() => form.value.scheduleMode === 'after-completion')
 
 const monthlyModeItems = computed(() => [
   { label: t('recurrence.monthly.dayOfMonth', { day: startDateObj.value.getUTCDate() }), value: 'dayOfMonth' },

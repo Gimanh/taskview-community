@@ -83,6 +83,7 @@ const summary = computed(() => {
     dtstart: parseRuleDtstart(rule.dtstart),
     notifyOnOccurrence: rule.notifyOnOccurrence,
     hasTime: rule.hasTime,
+    scheduleMode: rule.scheduleMode,
   })
 
   const unit = t(`recurrence.units.${form.frequency}`)
@@ -91,7 +92,8 @@ const summary = computed(() => {
     : t(`recurrence.summary.${form.frequency}`)
 
   const parts = [base]
-  if (form.frequency === 'weekly' && form.weekdays.length > 0) {
+  if (form.scheduleMode === 'after-completion') parts.push(t('recurrence.summary.afterCompletion'))
+  if (form.scheduleMode !== 'after-completion' && form.frequency === 'weekly' && form.weekdays.length > 0) {
     const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
     parts.push(form.weekdays.map((d) => t(`recurrence.weekdays.${dayKeys[d]}`)).join(', '))
   }

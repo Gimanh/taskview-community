@@ -233,6 +233,13 @@ export default {
     occurrenceTime: 'Occurrence time',
     datesCount: '{n} dates',
     previewFooterTime: '{period} · at {time}',
+    previewApprox: 'Approximate dates — actual ones depend on the completion day',
+    mode: {
+      title: 'Next occurrence',
+      fixed: 'On a schedule',
+      afterCompletion: 'After completion',
+      hint: 'The next task is created one interval after the current one is actually completed',
+    },
     frequency: {
       daily: 'Daily',
       weekly: 'Weekly',
@@ -258,6 +265,7 @@ export default {
       monthly: 'Monthly',
       yearly: 'Yearly',
       everyN: 'Every {n} {unit}',
+      afterCompletion: 'after completion',
     },
     weekdays: {
       mon: 'Mon',

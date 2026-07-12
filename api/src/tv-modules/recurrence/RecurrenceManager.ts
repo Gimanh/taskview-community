@@ -61,10 +61,12 @@ export class RecurrenceManager {
             return fail('invalid_rule', 'timezone must be a valid IANA name');
         }
 
+        const scheduleMode = args.scheduleMode ?? 'fixed';
         let dtstart: Date;
         let hasTime: boolean;
         try {
             RecurrenceParser.validateRuleString(args.rrule);
+            if (scheduleMode === 'after-completion') RecurrenceParser.validateForAfterCompletion(args.rrule);
             ({ date: dtstart, hasTime } = RecurrenceParser.parseDtstart(args.dtstart));
         } catch (err) {
             return fail('invalid_rule', (err as Error).message);
@@ -99,6 +101,7 @@ export class RecurrenceManager {
                 dtstart,
                 hasTime,
                 timezone: args.timezone,
+                scheduleMode,
                 lastInstanceDate: originInstanceDate,
                 notifyOnOccurrence: args.notifyOnOccurrence ?? false,
                 creatorId: this.initiatorId,
@@ -196,13 +199,26 @@ export class RecurrenceManager {
             }
             patch.timezone = args.timezone;
         }
-        if (patch.rrule !== undefined || patch.dtstart !== undefined) {
-            const nextDate = RecurrenceParser.nextOccurrenceDate({
-                rrule: patch.rrule ?? rule.rrule,
-                dtstart: patch.dtstart ?? rule.dtstart,
-                afterDate: RecurrenceParser.todayInTimezone(patch.timezone ?? rule.timezone),
-                skipDates: new Set<string>(),
-            });
+        if (args.scheduleMode !== undefined) patch.scheduleMode = args.scheduleMode;
+        const effectiveMode = patch.scheduleMode ?? rule.scheduleMode;
+        if (effectiveMode === 'after-completion') {
+            try {
+                RecurrenceParser.validateForAfterCompletion(patch.rrule ?? rule.rrule);
+            } catch (err) {
+                return fail('invalid_rule', (err as Error).message);
+            }
+        }
+        if (patch.rrule !== undefined || patch.dtstart !== undefined || patch.scheduleMode !== undefined) {
+            const afterDate = RecurrenceParser.todayInTimezone(patch.timezone ?? rule.timezone);
+            const nextDate =
+                effectiveMode === 'after-completion'
+                    ? RecurrenceParser.nextDateAfterCompletion({ rrule: patch.rrule ?? rule.rrule, afterDate })
+                    : RecurrenceParser.nextOccurrenceDate({
+                          rrule: patch.rrule ?? rule.rrule,
+                          dtstart: patch.dtstart ?? rule.dtstart,
+                          afterDate,
+                          skipDates: new Set<string>(),
+                      });
             if (!nextDate) return fail('invalid_rule', 'rule produces no occurrences');
         }
         if (args.notifyOnOccurrence !== undefined) patch.notifyOnOccurrence = args.notifyOnOccurrence;

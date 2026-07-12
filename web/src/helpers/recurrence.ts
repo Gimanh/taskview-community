@@ -1,5 +1,5 @@
 import { RRule, Weekday } from 'rrule'
-import type { RecurrenceFormValue } from '@/types/recurrence.types'
+import type { RecurrenceFormValue, RecurrenceScheduleMode } from '@/types/recurrence.types'
 
 const FREQ_TO_RRULE = {
   daily: RRule.DAILY,
@@ -29,6 +29,7 @@ function timeFromDtstart(dtstart: Date): string {
 export function defaultRecurrenceForm(dtstart: Date, hasTime: boolean): RecurrenceFormValue {
   return {
     frequency: 'daily',
+    scheduleMode: 'fixed',
     startDate: formatUtcDate(dtstart),
     interval: 1,
     weekdays: [jsDayToRruleWeekday(dtstart.getUTCDay())],
@@ -47,11 +48,15 @@ export function buildRruleString(args: { form: RecurrenceFormValue; dtstart: Dat
     freq: FREQ_TO_RRULE[form.frequency],
     interval: form.interval > 1 ? form.interval : undefined,
   }
-  if (form.frequency === 'weekly' && form.weekdays.length > 0) {
-    options.byweekday = [...form.weekdays].sort((a, b) => a - b)
-  }
-  if (form.frequency === 'monthly') {
-    options.bymonthday = form.monthlyMode === 'lastDay' ? -1 : dtstart.getUTCDate()
+  // After-completion series step from the completion day — calendar anchors
+  // (weekdays, day of month) have no meaning there and the backend rejects them.
+  if (form.scheduleMode !== 'after-completion') {
+    if (form.frequency === 'weekly' && form.weekdays.length > 0) {
+      options.byweekday = [...form.weekdays].sort((a, b) => a - b)
+    }
+    if (form.frequency === 'monthly') {
+      options.bymonthday = form.monthlyMode === 'lastDay' ? -1 : dtstart.getUTCDate()
+    }
   }
   if (form.ends === 'after') {
     options.count = form.count
@@ -62,9 +67,16 @@ export function buildRruleString(args: { form: RecurrenceFormValue; dtstart: Dat
   return RRule.optionsToString({ ...new RRule(options).origOptions }).replace(/^RRULE:/, '')
 }
 
-export function parseRruleToForm(args: { rrule: string; dtstart: Date; notifyOnOccurrence: boolean; hasTime: boolean }): RecurrenceFormValue {
+export function parseRruleToForm(args: {
+  rrule: string
+  dtstart: Date
+  notifyOnOccurrence: boolean
+  hasTime: boolean
+  scheduleMode: RecurrenceScheduleMode
+}): RecurrenceFormValue {
   const form = defaultRecurrenceForm(args.dtstart, args.hasTime)
   form.notifyOnOccurrence = args.notifyOnOccurrence
+  form.scheduleMode = args.scheduleMode
   const options = RRule.parseString(args.rrule)
   if (options.freq !== undefined && RRULE_TO_FREQ[options.freq]) {
     form.frequency = RRULE_TO_FREQ[options.freq]

@@ -233,6 +233,13 @@ export default {
     occurrenceTime: 'Время повторения',
     datesCount: '{n} дат',
     previewFooterTime: '{period} · в {time}',
+    previewApprox: 'Даты примерные — фактические зависят от дня завершения',
+    mode: {
+      title: 'Следующее повторение',
+      fixed: 'По расписанию',
+      afterCompletion: 'После завершения',
+      hint: 'Следующая задача создаётся через интервал после фактического завершения текущей',
+    },
     frequency: {
       daily: 'Ежедневно',
       weekly: 'Еженедельно',
@@ -258,6 +265,7 @@ export default {
       monthly: 'Ежемесячно',
       yearly: 'Ежегодно',
       everyN: 'Каждые {n} {unit}',
+      afterCompletion: 'после завершения',
     },
     weekdays: {
       mon: 'Пн',

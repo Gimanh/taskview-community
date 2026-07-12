@@ -1,17 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'http'
-import { networkInterfaces } from 'os'
 
-function getLocalIp(): string {
-  const nets = networkInterfaces()
-  for (const name of Object.keys(nets)) {
-    for (const net of nets[name]!) {
-      if (net.family === 'IPv4' && !net.internal) {
-        return net.address
-      }
-    }
-  }
-  return '127.0.0.1'
-}
+const RECEIVER_HOST = process.env.TASKVIEW_TEST_WEBHOOK_HOST || 'host.docker.internal'
 
 export type ReceivedWebhook = {
   body: any
@@ -42,12 +31,10 @@ export function createWebhookReceiver() {
     })
   })
 
-  const ip = getLocalIp()
-
   return {
     server,
     received,
-    getUrl: () => `http://${ip}:${(server.address() as any).port}/webhook`,
+    getUrl: () => `http://${RECEIVER_HOST}:${(server.address() as any).port}/webhook`,
     start: () => new Promise<void>((resolve) => {
       server.listen(0, '0.0.0.0', () => resolve())
     }),

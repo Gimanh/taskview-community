@@ -1,9 +1,16 @@
 import { DateTime } from 'luxon';
 import { RRule } from 'rrule';
-import type { InstanceWindow, InstanceWindowArgs, NextOccurrenceArgs, ParseRuleArgs } from './types';
+import type { InstanceWindow, InstanceWindowArgs, NextDateAfterCompletionArgs, NextOccurrenceArgs, ParseRuleArgs } from './types';
 
 const ALLOWED_FREQUENCIES = new Set<number>([RRule.YEARLY, RRule.MONTHLY, RRule.WEEKLY, RRule.DAILY]);
 const MAX_COUNT = 10000;
+
+const FREQ_TO_STEP_UNIT: Record<number, 'years' | 'months' | 'weeks' | 'days'> = {
+    [RRule.YEARLY]: 'years',
+    [RRule.MONTHLY]: 'months',
+    [RRule.WEEKLY]: 'weeks',
+    [RRule.DAILY]: 'days',
+};
 
 /**
  * All recurrence math happens in a single floating wall-clock frame:
@@ -39,6 +46,40 @@ export class RecurrenceParser {
     /** COUNT encoded in the RRULE string, if any. */
     static getCount(rruleString: string): number | null {
         return RRule.parseString(rruleString).count ?? null;
+    }
+
+    /**
+     * After-completion series step from the completion day, so calendar anchors
+     * (BYDAY, BYMONTHDAY) have no defined meaning for them — reject instead of
+     * silently ignoring what the client asked for.
+     */
+    static validateForAfterCompletion(rruleString: string): void {
+        const options = RRule.parseString(rruleString);
+        if (options.byweekday !== undefined && options.byweekday !== null) {
+            throw new Error('BYDAY is not supported for after-completion series');
+        }
+        if (options.bymonthday !== undefined && options.bymonthday !== null) {
+            throw new Error('BYMONTHDAY is not supported for after-completion series');
+        }
+    }
+
+    /**
+     * Next date of an after-completion series: one FREQ/INTERVAL step after
+     * `afterDate` (the completion day), no calendar anchor. Month/year steps
+     * clamp to the last valid day (Jan 31 + 1 month → Feb 28). COUNT is
+     * enforced by the caller via instances_created (same as fixed series);
+     * returns null when the step lands past UNTIL — the series is over.
+     */
+    static nextDateAfterCompletion(args: NextDateAfterCompletionArgs): string | null {
+        const options = RRule.parseString(args.rrule);
+        const unit = options.freq !== undefined ? FREQ_TO_STEP_UNIT[options.freq] : undefined;
+        if (!unit) return null;
+        const nextDate = DateTime.fromISO(args.afterDate, { zone: 'utc' })
+            .plus({ [unit]: options.interval ?? 1 })
+            .toISODate();
+        if (!nextDate) return null;
+        if (options.until && nextDate > RecurrenceParser.toIsoDate(options.until)) return null;
+        return nextDate;
     }
 
     /**

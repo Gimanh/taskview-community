@@ -219,6 +219,13 @@ export default {
     occurrenceTime: 'Hora de la ocurrencia',
     datesCount: '{n} fechas',
     previewFooterTime: '{period} · a las {time}',
+    previewApprox: 'Fechas aproximadas — las reales dependen del día de finalización',
+    mode: {
+      title: 'Próxima ocurrencia',
+      fixed: 'Según calendario',
+      afterCompletion: 'Tras completar',
+      hint: 'La siguiente tarea se crea un intervalo después de completar realmente la actual',
+    },
     frequency: {
       daily: 'Diaria',
       weekly: 'Semanal',
@@ -244,6 +251,7 @@ export default {
       monthly: 'Mensual',
       yearly: 'Anual',
       everyN: 'Cada {n} {unit}',
+      afterCompletion: 'tras completar',
     },
     weekdays: {
       mon: 'Lun',
