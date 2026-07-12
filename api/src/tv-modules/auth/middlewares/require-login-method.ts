@@ -11,6 +11,15 @@ export const RequireLoginMethod = (method: LoginMethod) => {
     };
 };
 
+export const RequireAnyLoginMethod = (methods: LoginMethod[]) => {
+    return (_req: Request, res: Response, next: NextFunction) => {
+        if (!methods.some((method) => LoginMethods.isEnabled(method))) {
+            return res.status(403).send();
+        }
+        return next();
+    };
+};
+
 export const RequireSocialProvider = (req: Request, res: Response, next: NextFunction) => {
     const providerName = String(req.params.providerName || '').toLowerCase();
     if (!LoginMethods.availableSocialProviders().includes(providerName)) {
