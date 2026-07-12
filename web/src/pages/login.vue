@@ -75,6 +75,11 @@ onMounted(async () => {
     await loginByCode(result.code, result.email)
   } catch (error) {
     console.error('Failed to process tokens from URL:', error)
+    toast.add({
+      title: t('auth.error'),
+      description: t('auth.loginFailed'),
+      color: 'error',
+    })
   }
 })
 
@@ -92,6 +97,11 @@ App.addListener('appUrlOpen', async ({ url }) => {
       await loginByCode(result.code, result.email)
     } catch (error) {
       console.error('Failed to process deep link tokens:', error)
+      toast.add({
+        title: t('auth.error'),
+        description: t('auth.loginFailed'),
+        color: 'error',
+      })
     }
   }
 

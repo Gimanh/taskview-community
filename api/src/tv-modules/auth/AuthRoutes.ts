@@ -3,7 +3,7 @@ import type { Routable } from '../../types/routable.type';
 import AuthController from './AuthController';
 import { IsLoggedIn } from './middlewares/is-logged-in';
 import { RejectApiTokenAuth } from '../api-tokens/middlewares/RejectApiTokenAuth';
-import { RequireLoginMethod, RequireSocialProvider } from './middlewares/require-login-method';
+import { RequireAnyLoginMethod, RequireLoginMethod, RequireSocialProvider } from './middlewares/require-login-method';
 import passport from './strategies/passport-login';
 import { ExternalProviderScope } from './strategies/external-auth.types';
 export default class AuthRoutes implements Routable {
@@ -23,7 +23,9 @@ export default class AuthRoutes implements Routable {
     initRoutes() {
         this.router.get('/login-options', this.authController.getLoginOptions);
         this.router.post('/send-login-code', [RequireLoginMethod('magic-link')], this.authController.sendLoginCode);
-        this.router.post('/login-by-code', [RequireLoginMethod('magic-link')], this.authController.loginByCode);
+        // Shared one-time-code redemption: magic-link emails, SSO callbacks and social
+        // OAuth callbacks all complete the login through this endpoint
+        this.router.post('/login-by-code', [RequireAnyLoginMethod(['magic-link', 'sso', 'social'])], this.authController.loginByCode);
         this.router.post('/login', [RequireLoginMethod('password')], this.authController.login);
         this.router.post('/registration', this.authController.registration);
         this.router.get('/confirm/email/:code/login/:login', this.authController.confirmEmail);
