@@ -112,6 +112,7 @@ function initialForm(): RecurrenceFormValue {
       dtstart: dtstart.value.date,
       notifyOnOccurrence: props.rule.notifyOnOccurrence,
       hasTime: props.rule.hasTime,
+      scheduleMode: props.rule.scheduleMode,
     })
   }
   return defaultRecurrenceForm(dtstart.value.date, !!props.task.startTime)
@@ -138,6 +139,7 @@ async function save() {
         rrule,
         dtstart: dtstartIso,
         timezone,
+        scheduleMode: form.value.scheduleMode,
         notifyOnOccurrence: form.value.notifyOnOccurrence,
       })
       : await tasksStore.createRecurrence({
@@ -145,6 +147,7 @@ async function save() {
         rrule,
         dtstart: dtstartIso,
         timezone,
+        scheduleMode: form.value.scheduleMode,
         notifyOnOccurrence: form.value.notifyOnOccurrence,
       })
 

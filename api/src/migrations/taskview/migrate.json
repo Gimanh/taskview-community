@@ -704,5 +704,16 @@
         "description": [
             "Add external_team_id to messaging_identity_map so Slack identities are keyed by (provider, team, user) — prevents cross-workspace identity collision"
         ]
+    },
+    "55": {
+        "version": "1.60.0",
+        "name": "Recurrence schedule mode",
+        "releaseDate": "20260712",
+        "scripts": [
+            "/1.60.0/0.alter-recurrence-add-schedule-mode.sql"
+        ],
+        "description": [
+            "Add schedule_mode to recurrence_rules: 'fixed' (calendar schedule) or 'after-completion' (next occurrence = completion day + interval)"
+        ]
     }
 }

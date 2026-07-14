@@ -1,9 +1,14 @@
+import type { RecurrenceScheduleMode } from 'taskview-api'
+
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly'
 export type RecurrenceEndsMode = 'never' | 'after' | 'onDate'
 export type RecurrenceMonthlyMode = 'dayOfMonth' | 'lastDay'
+export type { RecurrenceScheduleMode }
 
 export type RecurrenceFormValue = {
   frequency: RecurrenceFrequency
+  /** 'fixed' — calendar schedule; 'after-completion' — next occurrence is one interval step after the completion day. */
+  scheduleMode: RecurrenceScheduleMode
   /** 'YYYY-MM-DD' wall-clock start date of the series. */
   startDate: string
   interval: number

@@ -219,6 +219,13 @@ export default {
     occurrenceTime: 'Uhrzeit des Termins',
     datesCount: '{n} Termine',
     previewFooterTime: '{period} · um {time}',
+    previewApprox: 'Ungefähre Termine — die tatsächlichen hängen vom Abschlusstag ab',
+    mode: {
+      title: 'Nächster Termin',
+      fixed: 'Nach Zeitplan',
+      afterCompletion: 'Nach Abschluss',
+      hint: 'Die nächste Aufgabe wird ein Intervall nach dem tatsächlichen Abschluss der aktuellen erstellt',
+    },
     frequency: {
       daily: 'Täglich',
       weekly: 'Wöchentlich',
@@ -244,6 +251,7 @@ export default {
       monthly: 'Monatlich',
       yearly: 'Jährlich',
       everyN: 'Alle {n} {unit}',
+      afterCompletion: 'nach Abschluss',
     },
     weekdays: {
       mon: 'Mo',

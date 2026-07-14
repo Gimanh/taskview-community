@@ -4,6 +4,7 @@ import { TasksSchema } from "./tasks.schema";
 import { UsersSchema } from "./users.schema";
 
 export type RecurrenceState = 'active' | 'paused' | 'ended';
+export type RecurrenceScheduleMode = 'fixed' | 'after-completion';
 
 export const RecurrenceRulesSchema = pgSchema('tasks').table('recurrence_rules', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -20,6 +21,7 @@ export const RecurrenceRulesSchema = pgSchema('tasks').table('recurrence_rules',
     hasTime: boolean('has_time').notNull().default(false),
     timezone: varchar({ length: 50 }).notNull(),
     state: varchar({ length: 20 }).$type<RecurrenceState>().notNull().default('active'),
+    scheduleMode: varchar('schedule_mode', { length: 20 }).$type<RecurrenceScheduleMode>().notNull().default('fixed'),
     lastInstanceDate: date('last_instance_date').notNull(),
     instancesCreated: integer('instances_created').notNull().default(1),
     notifyOnOccurrence: boolean('notify_on_occurrence').notNull().default(false),

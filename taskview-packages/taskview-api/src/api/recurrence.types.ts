@@ -1,6 +1,8 @@
 import type { Task } from './tasks.api.types';
 
 export type RecurrenceState = 'active' | 'paused' | 'ended';
+/** 'fixed' — calendar schedule; 'after-completion' — next occurrence is one interval step after the completion day. */
+export type RecurrenceScheduleMode = 'fixed' | 'after-completion';
 
 export type RecurrenceRule = {
     id: number;
@@ -20,6 +22,7 @@ export type RecurrenceRule = {
     hasTime: boolean;
     /** IANA timezone name, e.g. 'Europe/Moscow'. */
     timezone: string;
+    scheduleMode: RecurrenceScheduleMode;
     state: RecurrenceState;
     lastInstanceDate: string;
     instancesCreated: number;
@@ -41,6 +44,7 @@ export type RecurrenceCreateArgs = {
     /** 'YYYY-MM-DD' for a date-only series, 'YYYY-MM-DDTHH:mm:ss' for a timed one (incl. 00:00). */
     dtstart: string;
     timezone: string;
+    scheduleMode?: RecurrenceScheduleMode;
     notifyOnOccurrence?: boolean;
 };
 
@@ -58,6 +62,7 @@ export type RecurrenceUpdateArgs = {
     rrule?: string;
     dtstart?: string;
     timezone?: string;
+    scheduleMode?: RecurrenceScheduleMode;
     notifyOnOccurrence?: boolean;
     templateOverrides?: RecurrenceTemplateOverrides;
 };

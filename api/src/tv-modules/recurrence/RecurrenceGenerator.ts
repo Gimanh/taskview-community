@@ -84,12 +84,20 @@ export class RecurrenceGenerator {
                 // Completed late → next from today, not a pile of overdue copies (Todoist behavior).
                 const today = RecurrenceParser.todayInTimezone(rule.timezone);
                 const afterDate = rule.lastInstanceDate > today ? rule.lastInstanceDate : today;
-                const nextDate = RecurrenceParser.nextOccurrenceDate({
-                    rrule: rule.rrule,
-                    dtstart: rule.dtstart,
-                    afterDate,
-                    skipDates,
-                });
+                // Fixed series follow the calendar schedule; after-completion series
+                // take one interval step from the completion day. Stepping from
+                // max(lastInstanceDate, today) keeps instance dates strictly
+                // increasing, so the (rule_id, instance_date) unique index can
+                // never collide with an earlier instance of the series.
+                const nextDate =
+                    rule.scheduleMode === 'after-completion'
+                        ? RecurrenceParser.nextDateAfterCompletion({ rrule: rule.rrule, afterDate })
+                        : RecurrenceParser.nextOccurrenceDate({
+                              rrule: rule.rrule,
+                              dtstart: rule.dtstart,
+                              afterDate,
+                              skipDates,
+                          });
                 if (!nextDate) {
                     await tx
                         .update(RecurrenceRulesSchema)

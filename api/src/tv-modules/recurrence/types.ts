@@ -2,6 +2,7 @@ import { type } from 'arktype';
 import type {
     RecurrenceRulesSchemaTypeForInsert,
     RecurrenceRulesSchemaTypeForSelect,
+    RecurrenceScheduleMode,
     TasksSchemaTypeForSelect,
 } from 'taskview-db-schemas';
 
@@ -12,6 +13,7 @@ export const RecurrenceArkTypeCreate = type({
     rrule: 'string > 0',
     dtstart: 'string', // 'YYYY-MM-DDTHH:mm:ss' floating wall-clock, no TZ suffix
     timezone: 'string > 0', // IANA name, e.g. 'Europe/Moscow'
+    'scheduleMode?': '"fixed" | "after-completion"',
     'notifyOnOccurrence?': 'boolean',
 });
 
@@ -20,6 +22,7 @@ export const RecurrenceArkTypeUpdate = type({
     'rrule?': 'string > 0',
     'dtstart?': 'string',
     'timezone?': 'string > 0',
+    'scheduleMode?': '"fixed" | "after-completion"',
     'notifyOnOccurrence?': 'boolean',
     'templateOverrides?': type({
         'description?': 'string',
@@ -63,6 +66,11 @@ export type NextOccurrenceArgs = {
     afterDate: string;
     skipDates: Set<string>;
 };
+export type NextDateAfterCompletionArgs = {
+    rrule: string;
+    /** 'YYYY-MM-DD' — the completion day; the next date is one FREQ/INTERVAL step after it. */
+    afterDate: string;
+};
 export type InstanceWindowArgs = {
     /** 'YYYY-MM-DD' wall-clock occurrence date in the rule's timezone. */
     occurrenceDate: string;
@@ -93,6 +101,7 @@ export type RecurrenceRulePatchArgs = {
         dtstart: Date;
         hasTime: boolean;
         timezone: string;
+        scheduleMode: RecurrenceScheduleMode;
         state: 'active' | 'paused' | 'ended';
         lastInstanceDate: string;
         instancesCreated: number;
