@@ -2,7 +2,9 @@ import { Capacitor } from '@capacitor/core'
 import { WidgetBridge } from 'capacitor-widget-bridge'
 import $api from '@/helpers/axios'
 import { $ls, $tvApi } from '@/plugins/axios'
+import { resetAccountStores } from '@/plugins/pinia'
 import { usePushNotifications } from '@/composables/usePushNotifications'
+import { useOrganizationStore } from '@/stores/organization.store'
 
 export async function useLogout() {
   const { getCurrentToken, reset } = usePushNotifications()
@@ -26,6 +28,8 @@ export async function useLogout() {
       })
     }
     await $ls.invalidateTokens()
+    useOrganizationStore().setCurrentOrg(null)
+    resetAccountStores()
     return true
   }
 

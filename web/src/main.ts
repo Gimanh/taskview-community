@@ -9,6 +9,7 @@ import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import ui from '@nuxt/ui/vue-plugin'
 import { i18n, restoreSavedLocale } from './plugins/i18n'
+import { storeResetPlugin } from './plugins/pinia'
 
 addCollection(lucide)
 addCollection(mdi)
@@ -22,7 +23,9 @@ import LoginPage from './pages/login.vue'
 
 const app = createApp(App)
 
-app.use(createPinia())
+const pinia = createPinia()
+pinia.use(storeResetPlugin)
+app.use(pinia)
 app.use(api)
 app.use(i18n as unknown as Plugin)
 
