@@ -33,6 +33,7 @@
   },
   "include": [
     "vite.config.ts",
+    "vite.ui.options.ts",
     "eslint.config.ts"
   ]
 }
