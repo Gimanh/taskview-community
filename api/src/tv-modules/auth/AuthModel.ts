@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { CollaborationUsersSchema, OrganizationMembersSchema, SsoIdentitiesSchema, UsersSchema } from 'taskview-db-schemas';
 import { Database } from '../../modules/db';
 import { $logger } from '../../modules/logget';
@@ -65,6 +65,28 @@ export default class AuthModel {
             return false;
         } catch (_error: any) {
             $logger.error('Can not inser user into DB');
+            return false;
+        }
+    }
+
+    async isEmailInvited(email: string): Promise<boolean> {
+        const normalized = email.toLowerCase();
+        try {
+            const orgMembers = await this.db.dbDrizzle
+                .select({ email: OrganizationMembersSchema.email })
+                .from(OrganizationMembersSchema)
+                .where(sql`lower(${OrganizationMembersSchema.email}) = ${normalized}`)
+                .limit(1);
+            if (orgMembers.length > 0) return true;
+
+            const collaborators = await this.db.dbDrizzle
+                .select({ email: CollaborationUsersSchema.email })
+                .from(CollaborationUsersSchema)
+                .where(sql`lower(${CollaborationUsersSchema.email}) = ${normalized}`)
+                .limit(1);
+            return collaborators.length > 0;
+        } catch (error: unknown) {
+            $logger.error(error, '[AuthModel:isEmailInvited] failed to check invitations');
             return false;
         }
     }

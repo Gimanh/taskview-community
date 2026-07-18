@@ -59,6 +59,7 @@ export default {
     invalidCredentials: 'Ungültige Anmeldedaten oder Passwort',
     loginFailed: 'Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.',
     failedToSendCode: 'Code konnte nicht gesendet werden. Bitte versuchen Sie es erneut.',
+    registrationDisabled: 'Die Registrierung ist auf diesem Server deaktiviert. Bitten Sie einen Administrator um eine Einladung.',
     failedToResendCode: 'Code konnte nicht erneut gesendet werden',
     failedToSendResetLink: 'Reset-Link konnte nicht gesendet werden. Bitte versuchen Sie es erneut.',
     tooManyAttempts: 'Zu viele fehlgeschlagene Versuche. Bitte warten Sie einige Minuten und versuchen Sie es erneut.',

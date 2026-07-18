@@ -61,7 +61,9 @@ onMounted(async () => {
   if (route.query.sso_error) {
     toast.add({
       title: t('auth.error'),
-      description: t('auth.ssoError'),
+      description: route.query.sso_error === 'registration-disabled'
+        ? t('auth.registrationDisabled')
+        : t('auth.ssoError'),
       color: 'error',
     })
   }
