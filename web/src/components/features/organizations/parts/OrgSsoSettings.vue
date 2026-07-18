@@ -44,7 +44,7 @@ import { storeToRefs } from 'pinia'
 import { $tvApi } from '@/plugins/axios'
 import { additionalUrlStore } from '@/stores/additional-url.store'
 import { useAdditionalServer } from '@/composables/useAdditionalServer'
-import type { SsoConfig } from 'taskview-api'
+import type { SsoConfig, SsoPublicUrls } from 'taskview-api'
 import OrgSsoConfigCard from './OrgSsoConfigCard.vue'
 import OrgSsoConfigForm from './OrgSsoConfigForm.vue'
 
@@ -78,13 +78,21 @@ const form = reactive({
   oidcCallbackUrl: '',
 })
 
-const apiBaseUrl = computed(() => mainServer.value || window.location.origin)
-const callbackUrlPlaceholder = computed(() => `${apiBaseUrl.value}/module/sso/callback/${ssoConfig.value?.id ?? '{id}'}`)
-const activeCallbackUrl = computed(() => ssoConfig.value ? `${apiBaseUrl.value}/module/sso/callback/${ssoConfig.value.id}` : '')
-const scimEndpointUrl = computed(() => `${apiBaseUrl.value}/scim/v2`)
+// URLs the admin copies into the IdP come from the server (API_PUBLIC_URL aware);
+// the browser-derived base is only a fallback for older API servers.
+const publicUrls = ref<SsoPublicUrls | null>(null)
+
+const apiBaseUrl = computed(() => publicUrls.value?.apiBaseUrl ?? (mainServer.value || window.location.origin))
+const callbackUrlPlaceholder = computed(() => {
+  const template = publicUrls.value?.callbackUrlTemplate ?? `${apiBaseUrl.value}/module/sso/callback/{id}`
+  return template.replace('{id}', String(ssoConfig.value?.id ?? '{id}'))
+})
+const activeCallbackUrl = computed(() => ssoConfig.value ? callbackUrlPlaceholder.value : '')
+const scimEndpointUrl = computed(() => publicUrls.value?.scimEndpointUrl ?? `${apiBaseUrl.value}/scim/v2`)
 
 onMounted(async () => {
   await useAdditionalServer()
+  publicUrls.value = await $tvApi.sso.getPublicUrls().catch(() => null)
 })
 
 watch(() => props.organizationId, () => fetchConfig(), { immediate: true })

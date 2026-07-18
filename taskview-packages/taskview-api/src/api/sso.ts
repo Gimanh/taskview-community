@@ -5,6 +5,7 @@ import type {
   SsoConfigArgCreate,
   SsoConfigArgUpdate,
   SsoProviderPublic,
+  SsoPublicUrls,
 } from './sso.types'
 
 export default class TvSsoApi extends TvApiBase {
@@ -33,6 +34,12 @@ export default class TvSsoApi extends TvApiBase {
   public async deleteConfig(configId: number) {
     return this.request(
       this.$axios.delete<AppResponse<boolean>>(`${this.moduleUrl}/admin/configs/${configId}`)
+    )
+  }
+
+  public async getPublicUrls() {
+    return this.request(
+      this.$axios.get<AppResponse<SsoPublicUrls>>(`${this.moduleUrl}/admin/public-urls`)
     )
   }
 

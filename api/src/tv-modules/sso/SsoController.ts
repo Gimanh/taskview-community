@@ -3,6 +3,7 @@ import { type } from 'arktype'
 import { hashSync } from 'bcryptjs'
 import type { Request, Response } from 'express'
 import { $logger } from '../../modules/logget'
+import { PublicApiUrl } from '../../modules/public-url'
 import { logError } from '../../utils/api'
 import { generateString, isEmail } from '../../utils/helpers'
 import AuthModel from '../auth/AuthModel'
@@ -137,6 +138,16 @@ export class SsoController {
       id: config.id,
       displayName: config.displayName,
       protocol: config.protocol,
+    })
+  }
+
+  getPublicUrls = async (req: Request, res: Response) => {
+    const base = PublicApiUrl.base(req)
+    return res.tvJson({
+      apiBaseUrl: base,
+      callbackUrlTemplate: `${base}/module/sso/callback/{id}`,
+      scimEndpointUrl: `${base}/scim/v2`,
+      apiPublicUrlConfigured: PublicApiUrl.configured() !== null,
     })
   }
 

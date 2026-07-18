@@ -81,3 +81,10 @@ export type SsoProviderPublic = {
   displayName: string
   protocol: string
 }
+
+export type SsoPublicUrls = {
+  apiBaseUrl: string
+  callbackUrlTemplate: string
+  scimEndpointUrl: string
+  apiPublicUrlConfigured: boolean
+}
