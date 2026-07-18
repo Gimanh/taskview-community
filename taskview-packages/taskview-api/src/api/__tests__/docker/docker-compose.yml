@@ -36,6 +36,8 @@ services:
       # The test suite runs against a closed instance (see registration-flag.test.ts);
       # no other test creates accounts through public registration paths.
       ALLOW_PUBLIC_REGISTRATION: "false"
+      # IdP-facing URLs are built from this base (see sso-public-urls.test.ts)
+      API_PUBLIC_URL: "https://api.public.example"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:

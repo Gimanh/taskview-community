@@ -26,6 +26,7 @@ export default class SsoRoutes implements Routable {
     this.router.get('/callback/:configId', [RequireLoginMethod('sso')], this.controller.handleCallback)
     this.router.post('/callback/:configId', [RequireLoginMethod('sso')], this.controller.handleCallback)
 
+    this.router.get('/admin/public-urls', [IsLoggedIn], this.controller.getPublicUrls)
     this.router.get('/admin/metadata', [IsLoggedIn, IsOrgAdmin], this.controller.parseMetadata)
     this.router.get('/admin/configs', [IsLoggedIn, IsOrgAdmin], this.controller.listConfigs)
     this.router.post('/admin/configs', [IsLoggedIn, IsOrgAdmin], this.controller.createConfig)
