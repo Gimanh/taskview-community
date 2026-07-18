@@ -2,6 +2,10 @@
 
 @import "@nuxt/ui";
 
+@source "../../";
+
+@source "../../../vite.ui.options.ts";
+
 @theme static {
   --font-sans: 'Public Sans', sans-serif;
 }
