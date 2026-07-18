@@ -157,6 +157,7 @@ type LoginOptions = {
   password: boolean
   sso: boolean
   socialProviders: string[]
+  publicRegistration: boolean
 }
 
 const currentView = ref<View>('code')
@@ -169,6 +170,7 @@ const loginOptions = reactive<LoginOptions>({
   password: true,
   sso: true,
   socialProviders: ['google', 'github', 'apple'],
+  publicRegistration: true,
 })
 
 onMounted(async () => {

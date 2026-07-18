@@ -69,6 +69,7 @@ export default {
     invalidCredentials: 'Invalid login or password',
     loginFailed: 'Login failed. Please try again.',
     failedToSendCode: 'Failed to send code. Please try again.',
+    registrationDisabled: 'Registration is disabled on this server. Ask an administrator to invite you.',
     failedToResendCode: 'Failed to resend code',
     failedToSendResetLink: 'Failed to send reset link. Please try again.',
     tooManyAttempts: 'Too many failed attempts. Please wait a few minutes before trying again.',

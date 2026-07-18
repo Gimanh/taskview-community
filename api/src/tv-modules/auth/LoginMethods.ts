@@ -15,7 +15,21 @@ export class LoginMethods {
         return LoginMethods.enabled().has(method);
     }
 
+    static publicRegistrationAllowed(): boolean {
+        return process.env.ALLOW_PUBLIC_REGISTRATION?.trim().toLowerCase() !== 'false';
+    }
+
     static validateOnStartup(): void {
+        const registrationRaw = process.env.ALLOW_PUBLIC_REGISTRATION;
+        if (registrationRaw !== undefined && registrationRaw.trim() !== '') {
+            const normalized = registrationRaw.trim().toLowerCase();
+            if (normalized !== 'true' && normalized !== 'false') {
+                throw new Error(
+                    `ALLOW_PUBLIC_REGISTRATION has unrecognized value "${registrationRaw}". Allowed: true, false`
+                );
+            }
+        }
+
         const raw = process.env.AUTH_LOGIN_METHODS;
         if (!raw || !raw.trim()) return;
 

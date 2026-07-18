@@ -59,6 +59,7 @@ export default {
     invalidCredentials: 'Usuario o contraseña inválidos',
     loginFailed: 'Error al iniciar sesión. Inténtalo de nuevo.',
     failedToSendCode: 'Error al enviar el código. Inténtalo de nuevo.',
+    registrationDisabled: 'El registro está deshabilitado en este servidor. Pide a un administrador que te invite.',
     failedToResendCode: 'Error al reenviar el código',
     failedToSendResetLink: 'Error al enviar el enlace de restablecimiento. Inténtalo de nuevo.',
     tooManyAttempts: 'Demasiados intentos fallidos. Espera unos minutos antes de volver a intentarlo.',

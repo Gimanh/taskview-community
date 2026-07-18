@@ -153,6 +153,11 @@ export default class AuthController {
         }
 
         if (!userData) {
+            if (!(await this.canCreateAccount(req, email))) {
+                $logger.info(`[AuthController:sendLoginCode] public registration disabled, email not invited`);
+                return res.status(403).send({ registrationDisabled: true });
+            }
+
             const password = this.makeidLogin(7),
                 login = this.makeidLogin(7);
 
@@ -227,6 +232,11 @@ export default class AuthController {
         );
 
         if (!userData) {
+            if (!(await this.canCreateAccount(req, user.email))) {
+                $logger.info(`[AuthController:loginByProvider] public registration disabled, email not invited`);
+                return res.redirect(`${process.env.APP_URL}/login?sso_error=registration-disabled`);
+            }
+
             const password = this.makeidLogin(7);
             const login = this.makeidLogin(7);
 
@@ -428,6 +438,11 @@ export default class AuthController {
         email = (email as string).toLowerCase();
         if (!isEmail(email)) {
             return res.status(400).end();
+        }
+
+        if (!(await this.canCreateAccount(req, email))) {
+            $logger.info(`[AuthController:registration] public registration disabled, email not invited`);
+            return res.status(403).send({ registrationDisabled: true });
         }
 
         password = hashSync(password, 10);
@@ -671,7 +686,13 @@ export default class AuthController {
             password: LoginMethods.isEnabled('password'),
             sso: LoginMethods.isEnabled('sso'),
             socialProviders: LoginMethods.availableSocialProviders(),
+            publicRegistration: LoginMethods.publicRegistrationAllowed(),
         });
+    };
+
+    private canCreateAccount = async (req: Request, email: string): Promise<boolean> => {
+        if (LoginMethods.publicRegistrationAllowed()) return true;
+        return await req.appUser.authManager.repository.isEmailInvited(email);
     };
 
     private passwordChangeConfirmationMode(): PasswordChangeConfirmationMode {

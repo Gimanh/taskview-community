@@ -169,7 +169,7 @@ async function handleSubmit() {
       showCodeField.value = true
     }
   } catch (error: unknown) {
-    const axiosError = error as { response?: { status?: number } }
+    const axiosError = error as { response?: { status?: number, data?: { registrationDisabled?: boolean } } }
     const status = axiosError.response?.status
     if (showCodeField.value) {
       let description = t('auth.loginFailed')
@@ -177,9 +177,12 @@ async function handleSubmit() {
       else if (status === 400 || status === 403) description = t('auth.invalidCode')
       toast.add({ title: t('auth.error'), description, color: 'error' })
     } else {
+      let description = t('auth.failedToSendCode')
+      if (status === 429) description = t('auth.tooManyAttempts')
+      else if (status === 403 && axiosError.response?.data?.registrationDisabled) description = t('auth.registrationDisabled')
       toast.add({
         title: t('auth.error'),
-        description: status === 429 ? t('auth.tooManyAttempts') : t('auth.failedToSendCode'),
+        description,
         color: 'error',
       })
     }
