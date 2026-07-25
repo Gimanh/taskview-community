@@ -9,6 +9,7 @@
       class="flex-1"
       trailing-icon="i-lucide-chevron-down"
       :ui="activatorUi('text-muted')"
+      data-testid="task-recurrence-trigger"
       @click="dialogOpen = true"
     >
       <span

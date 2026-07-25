@@ -2,6 +2,7 @@
   <div
     v-if="canViewTimeTracking || canLogTime"
     class="flex flex-col gap-3 rounded-2xl bg-accented/20 p-3.5"
+    data-testid="time-tracking-section"
   >
     <div class="flex items-center justify-between gap-2">
       <div class="flex items-center gap-2">
@@ -17,6 +18,7 @@
           variant="subtle"
           size="sm"
           :ui="{ base: 'rounded-full' }"
+          data-testid="time-total-badge"
         />
       </div>
 
@@ -37,6 +39,7 @@
       size="lg"
       block
       :ui="{ base: 'rounded-xl justify-center' }"
+      data-testid="time-start-button"
       @click="onStart"
     />
     <UButton
@@ -48,6 +51,7 @@
       size="lg"
       block
       :ui="{ base: 'rounded-xl justify-center' }"
+      data-testid="time-stop-button"
       @click="store.stop()"
     />
 
@@ -66,6 +70,7 @@
       <div
         v-if="entries.length > 0"
         class="flex flex-col gap-1 rounded-2xl bg-elevated p-2 max-h-80 overflow-y-auto"
+        data-testid="time-entries-list"
       >
         <TaskTimeTrackingEntry
           v-for="entry in entries"
@@ -97,6 +102,7 @@
         size="lg"
         block
         :ui="{ base: 'rounded-xl justify-start' }"
+        data-testid="time-add-manual-button"
         @click="manualOpen = true"
       />
       <TaskTimeTrackingForm

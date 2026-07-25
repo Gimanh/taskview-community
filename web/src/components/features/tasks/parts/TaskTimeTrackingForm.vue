@@ -1,9 +1,13 @@
 <template>
   <div class="flex flex-col gap-3">
     <div class="flex gap-2">
-      <UPopover v-model:open="startOpen" :ui="{ content: 'rounded-16' }">
+      <UPopover
+        v-model:open="startOpen"
+        :ui="{ content: 'rounded-16' }"
+      >
         <UButton
           :label="formattedStart"
+          data-testid="time-form-start"
           icon="i-lucide-calendar"
           color="neutral"
           variant="outline"
@@ -30,6 +34,7 @@
       <UPopover v-model:open="endOpen">
         <UButton
           :label="formattedEnd"
+          data-testid="time-form-end"
           icon="i-lucide-calendar-check"
           color="neutral"
           variant="outline"
@@ -61,6 +66,7 @@
         variant="outline"
         class="w-full"
         :ui="{ base: 'rounded-xl' }"
+        data-testid="time-form-description"
       />
     </UFormField>
 
@@ -81,6 +87,7 @@
         :label="submitLabel ?? t('timeTracking.save')"
         color="primary"
         :disabled="!isValid"
+        data-testid="time-form-save"
         @click="onSubmit"
       />
     </div>

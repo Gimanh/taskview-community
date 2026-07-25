@@ -26,6 +26,7 @@
               :label="t('timeTracking.delete')"
               icon="i-lucide-trash-2"
               color="error"
+              data-testid="time-delete-confirm"
               @click="onConfirm"
             />
           </div>

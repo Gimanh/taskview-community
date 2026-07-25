@@ -131,7 +131,7 @@ function applyExtensionMessages(extensions: TvWebExtension[]) {
   }
 }
 
-export function createTaskviewApp(options: CreateTaskviewAppOptions = {}) {
+export async function createTaskviewApp(options: CreateTaskviewAppOptions = {}) {
   const extensions = options.extensions ?? []
 
   addCollection(lucide)
@@ -143,7 +143,7 @@ export function createTaskviewApp(options: CreateTaskviewAppOptions = {}) {
   const pinia = createPinia()
   pinia.use(storeResetPlugin)
   app.use(pinia)
-  app.use(api)
+  await api.install(app)
   app.use(i18n as unknown as Plugin)
 
   applyExtensionMessages(extensions)

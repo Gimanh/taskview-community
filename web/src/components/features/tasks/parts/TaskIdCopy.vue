@@ -6,6 +6,7 @@
     :icon="copied ? 'i-lucide-check' : 'i-lucide-hash'"
     class="text-muted hover:text-default"
     :title="t('tasks.copyId')"
+    data-testid="task-id-copy"
     @click="copyId"
   >
     {{ taskId }}

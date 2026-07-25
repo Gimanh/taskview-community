@@ -22,6 +22,7 @@
           :label="t('common.delete')"
           color="error"
           variant="soft"
+          data-testid="task-delete-confirm"
           @click="confirmDelete"
         />
       </div>

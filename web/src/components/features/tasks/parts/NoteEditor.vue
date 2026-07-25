@@ -1,5 +1,8 @@
 <template>
-  <div class="note-editor border border-default rounded-2xl overflow-hidden dark:bg-tv-ui-bg-elevated!">
+  <div
+    class="note-editor border border-default rounded-2xl overflow-hidden dark:bg-tv-ui-bg-elevated!"
+    data-testid="task-note-editor"
+  >
     <UEditor
       v-if="canViewTaskNote"
       #default="{ editor }"

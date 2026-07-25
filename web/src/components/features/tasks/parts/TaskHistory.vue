@@ -50,6 +50,7 @@
             color="neutral"
             variant="ghost"
             size="xs"
+            data-testid="history-info"
             @click="openDetailModal(item)"
           />
           <UButton
@@ -60,6 +61,7 @@
             size="xs"
             :loading="restoringId === item.historyId"
             :disabled="restoringId !== null"
+            data-testid="history-restore"
             @click="handleRestore(item.historyId)"
           />
         </div>
@@ -194,7 +196,7 @@ async function fetchHistory() {
 
 function toggleExpand() {
   isExpanded.value = !isExpanded.value
-  if (isExpanded.value && history.value.length === 0) {
+  if (isExpanded.value) {
     fetchHistory()
   }
 }

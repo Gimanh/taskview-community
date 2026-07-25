@@ -54,6 +54,7 @@
             :ui="{ base: 'rounded-md', leadingIcon: 'size-3' }"
             variant="subtle"
             size="md"
+            data-testid="task-recurrence-badge"
           />
           
           <!-- Project -->

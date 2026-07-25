@@ -8,6 +8,7 @@
     :ui="{
       base: 'bg-tv-ui-bg-elevated',
     }"
+    data-testid="list-add-input"
     @keydown.enter="addList"
   >
     <template #trailing>

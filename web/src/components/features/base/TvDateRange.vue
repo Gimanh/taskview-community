@@ -13,6 +13,7 @@
       icon="i-lucide-calendar"
       :trailing-icon="open ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
       :ui="activatorUi('text-muted')"
+      data-testid="date-range-trigger"
     >
       <span class="flex-1 flex items-center gap-2 text-left font-medium">
         <template v-if="isRange">

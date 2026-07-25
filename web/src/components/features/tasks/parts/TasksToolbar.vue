@@ -21,6 +21,7 @@
           size="sm"
           :loading="loading"
           :disabled="loading"
+          data-testid="tasks-toggle-completed"
           @click="toggleCompleted"
         />
       </UTooltip>

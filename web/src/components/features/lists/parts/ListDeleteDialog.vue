@@ -21,6 +21,7 @@
         <UButton
           :label="t('contextMenu.delete')"
           color="error"
+          data-testid="list-delete-confirm"
           @click="confirmDelete"
         />
       </div>

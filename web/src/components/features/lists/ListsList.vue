@@ -7,8 +7,12 @@
         :to="{ name: 'user', params: { projectId, listId: list.id } }"
         :active="currentListId === list.id"
         variant="taskview"
+        :data-testid="`list-card-${list.name}`"
       >
-        <div class="flex items-center justify-between w-full">
+        <div
+          class="flex items-center justify-between w-full"
+          :data-testid="`list-row-${list.name}`"
+        >
           <span>{{ list.name }}</span>
           <UButton
             icon="i-lucide-ellipsis"
@@ -16,6 +20,7 @@
             variant="ghost"
             size="xs"
             class="z-10 cursor-pointer"
+            data-testid="list-menu-trigger"
             @click.prevent.stop="openContextMenu($event, list)"
           />
         </div>
@@ -32,6 +37,7 @@
         variant="ghost"
         color="neutral"
         class="w-full justify-start"
+        data-testid="list-menu-edit"
         @click="openEditModal"
       />
 
@@ -54,6 +60,7 @@
         variant="ghost"
         color="error"
         class="w-full justify-start"
+        data-testid="list-menu-delete"
         @click="openDeleteDialog"
       />
     </div>
@@ -77,6 +84,7 @@ import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import TvContextMenu from '@/components/features/base/TvContextMenu.vue'
+import TvGoalLikeItem from '@/components/features/base/TvGoalLikeItem.vue'
 import ListEditModal from '@/components/features/lists/parts/ListEditModal.vue'
 import ListDeleteDialog from '@/components/features/lists/parts/ListDeleteDialog.vue'
 import type { List } from '@/components/features/lists/types'

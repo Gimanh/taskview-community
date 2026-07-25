@@ -21,7 +21,7 @@ export default class LocalStorage {
     this.axios = options.axios
     this.getToken().then(async (token) => {
       this.isLoggedIn = !!token
-      this.userStore = useUserStore()
+      this.userStore ??= useUserStore()
       this.userStore.loading = false
       await this.updateUserStoreByToken()
     })
@@ -97,7 +97,8 @@ export default class LocalStorage {
 
   async updateUserStoreByToken() {
     const accessToken = await this.getToken()
-    if (accessToken && this.userStore) {
+    this.userStore ??= useUserStore()
+    if (accessToken) {
       this.userStore.setAccessToken(accessToken)
       const refreshToken = await this.getRefreshToken()
       if (refreshToken) {

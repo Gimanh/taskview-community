@@ -11,6 +11,8 @@
 import { watch } from 'vue'
 import { useRoute } from 'vue-router'
 import MainScreen from '@/components/features/main/MainScreen.vue'
+import ListsContainer from '@/components/features/lists/ListsContainer.vue'
+import TasksContainer from '@/components/features/tasks/TasksContainer.vue'
 import { useAppRouteInfo } from '@/composables/useAppRouteInfo'
 import { useProjectDataLoader } from '@/composables/useProjectDataLoader'
 import TvTaskDetailOverlay from '@/components/features/tasks/TvTaskDetailOverlay.vue'
