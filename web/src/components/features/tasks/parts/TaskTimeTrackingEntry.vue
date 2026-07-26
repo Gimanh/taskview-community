@@ -1,5 +1,8 @@
 <template>
-  <div class="flex flex-col gap-1 px-3 py-2 rounded-xl bg-default shadow-xs text-sm">
+  <div
+    class="flex flex-col gap-1 px-3 py-2 rounded-xl bg-default shadow-xs text-sm"
+    data-testid="time-entry"
+  >
     <div class="flex lg:items-center flex-col lg:flex-row justify-between gap-2">
       <div class="flex flex-col min-w-0 flex-1">
         <div class="flex items-center gap-2 text-xs text-muted">
@@ -18,6 +21,7 @@
           color="neutral"
           variant="subtle"
           size="sm"
+          data-testid="time-entry-duration"
         />
         <UBadge
           v-else
@@ -25,6 +29,7 @@
           color="primary"
           variant="subtle"
           size="xs"
+          data-testid="time-entry-running"
         />
         <div class="w-full flex justify-end gap-2">
           <UButton
@@ -33,6 +38,7 @@
             color="neutral"
             variant="ghost"
             size="xs"
+            data-testid="time-entry-edit"
             @click="editing = true"
           />
           <UButton
@@ -41,6 +47,7 @@
             color="error"
             variant="ghost"
             size="xs"
+            data-testid="time-entry-delete"
             @click="emit('delete', entry.id)"
           />
         </div>

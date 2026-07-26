@@ -13,6 +13,7 @@
             variant="soft"
             class="w-full"
             :ui="{ base: 'rounded-xl' }"
+            data-testid="list-edit-name"
           />
         </UFormField>
       </div>
@@ -29,6 +30,7 @@
         :label="t('common.save')"
         color="primary"
         variant="outline"
+        data-testid="list-edit-save"
         @click="save"
       />
     </template>

@@ -10,6 +10,7 @@
     variant="soft"
     class="w-full"
     :ui="activatorUi('text-muted')"
+    data-testid="task-estimate-input"
     @update:model-value="onInput"
     @blur="save"
   />

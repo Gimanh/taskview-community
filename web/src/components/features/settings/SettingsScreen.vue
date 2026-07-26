@@ -26,11 +26,14 @@
       <SettingsVersionRow v-if="section.key === 'about'" />
     </SettingsSection>
 
+    <ExtensionOutlet name="settings-sections" />
+
     <SettingsLogoutRow />
   </div>
 </template>
 
 <script setup lang="ts">
+import ExtensionOutlet from '@/components/ExtensionOutlet.vue'
 import { useSettingsHub } from './composables/useSettingsHub'
 import SettingsProfileHeader from './parts/SettingsProfileHeader.vue'
 import SettingsSection from './parts/SettingsSection.vue'

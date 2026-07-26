@@ -1,5 +1,8 @@
 <template>
-  <div class="h-full relative flex flex-col gap-4 @container">
+  <div
+    class="h-full relative flex flex-col gap-4 @container"
+    data-testid="task-detail-panel"
+  >
     <template v-if="task">
       <!-- Title & Checkbox -->
       <div class="flex items-start gap-3 shadow-sm rounded-2xl dark:bg-tv-ui-bg-elevated">
@@ -12,6 +15,7 @@
             class="w-full"
             :class="{ 'text-muted': task.complete }"
             :ui="{ base: 'rounded-2xl' }"
+            data-testid="task-detail-title"
           >
             <template #leading>
               <div class="h-full">
@@ -19,6 +23,7 @@
                   :disabled="!canEditTaskStatus"
                   :model-value="!!task.complete"
                   class="mt-0.5"
+                  data-testid="task-detail-complete"
                   @update:model-value="toggleComplete"
                 />
               </div>

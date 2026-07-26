@@ -29,12 +29,14 @@
             :label="t('common.delete')"
             color="error"
             variant="soft"
+            data-testid="task-detail-delete-button"
             @click="openDeleteDialog"
           />
           <UButton
             :label="t('common.close')"
             color="neutral"
             variant="soft"
+            data-testid="task-detail-close-button"
             @click="closeTask"
           />
         </div>
@@ -77,12 +79,14 @@
             :label="t('common.delete')"
             color="error"
             variant="soft"
+            data-testid="task-detail-delete-button"
             @click="openDeleteDialog"
           />
           <UButton
             :label="t('common.close')"
             color="neutral"
             variant="soft"
+            data-testid="task-detail-close-button"
             @click="closeTask"
           />
         </div>

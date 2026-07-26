@@ -13,6 +13,7 @@
         :icon="currentProject?.isInbox ? 'i-lucide-inbox' : 'i-lucide-folder'"
         trailing-icon="i-lucide-chevron-down"
         :ui="{ base: 'rounded-xl', trailingIcon: 'ms-auto' }"
+        data-testid="project-select-trigger"
       >
         <span
           class="flex-1 text-left truncate"
@@ -33,6 +34,7 @@
             :variant="project.id === currentProjectId ? 'soft' : 'ghost'"
             block
             class="justify-start"
+            :data-testid="`project-option-${project.name}`"
             @click="selectProject(project)"
           />
           <p
@@ -115,6 +117,7 @@
         variant="soft"
         size="sm"
         :ui="{ base: 'rounded-lg' }"
+        data-testid="project-edit-button"
         @click="isEditOpen = true"
       />
       <UButton
@@ -124,6 +127,7 @@
         variant="soft"
         size="sm"
         :ui="{ base: 'rounded-lg' }"
+        data-testid="project-delete-button"
         @click="isDeleteOpen = true"
       />
     </div>

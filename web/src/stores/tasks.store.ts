@@ -132,14 +132,15 @@ export const useTasksStore = defineStore('tasks', {
         if (this.selectedTask && this.selectedTask !== mainTask && this.selectedTask.id === task.parentId) {
           this.selectedTask.subtasks = mainTask.subtasks
         }
-      } else {
+      } else if (!this.tasks.some((existing) => existing.id === task.id)) {
         this.tasks.unshift(task)
       }
       return task
     },
 
     appendTasks(items: Task[]) {
-      this.tasks = [...this.tasks, ...items]
+      const existingIds = new Set(this.tasks.map((task) => task.id))
+      this.tasks = [...this.tasks, ...items.filter((task) => !existingIds.has(task.id))]
     },
 
     async fetchAllTasks(goalId: number, showCompleted: 0 | 1 = 1, firstNew: 0 | 1 = 1, ignoreCompleted: boolean = false) {

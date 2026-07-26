@@ -203,6 +203,7 @@
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import TvContextMenu from '@/components/features/base/TvContextMenu.vue'
+import TvGoalLikeItem from '@/components/features/base/TvGoalLikeItem.vue'
 import ProjectEditModal from '@/components/features/projects/parts/ProjectEditModal.vue'
 import ProjectDeleteDialog from '@/components/features/projects/parts/ProjectDeleteDialog.vue'
 import ProjectAddInput from '@/components/features/projects/parts/ProjectAddInput.vue'

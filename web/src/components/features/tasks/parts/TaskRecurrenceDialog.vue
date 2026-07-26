@@ -57,6 +57,7 @@
             :label="t('common.save')"
             class="ml-auto"
             :loading="actionLoading === 'save'"
+            data-testid="recurrence-save"
             @click="save"
           />
         </div>
