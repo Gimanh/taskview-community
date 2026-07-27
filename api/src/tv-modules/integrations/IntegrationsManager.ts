@@ -8,10 +8,12 @@ import { $logger } from '../../modules/logget';
 import { IntegrationsRepository } from './IntegrationsRepository';
 import { TasksRepository } from '../tasks/TasksRepository';
 import type { IntegrationsSchemaTypeForSelect } from 'taskview-db-schemas';
-import type { IntegrationsArgAdd, IntegrationsArgDelete, IntegrationsArgFetch, IntegrationsArgSelectRepo, IntegrationsArgToggle, OAuthStatePayload, RepoItemForClient } from './types';
+import type { IntegrationProvider, IntegrationsArgAdd, IntegrationsArgDelete, IntegrationsArgFetch, IntegrationsArgSelectRepo, IntegrationsArgToggle, OAuthStatePayload, RepoItemForClient } from './types';
 import { randomBytes } from 'crypto';
 import { getGitHubOAuthUrl, exchangeGitHubCode, fetchGitHubRepos, fetchGitHubIssues, createGitHubWebhook, updateGitHubIssueState, GITHUB_BASE_URL } from './providers/github.provider';
 import { getGitLabOAuthUrl, exchangeGitLabCode, fetchGitLabRepos, fetchGitLabIssues, createGitLabWebhook, updateGitLabIssueState, refreshGitLabToken, GITLAB_BASE_URL } from './providers/gitlab.provider';
+import { getGiteaOAuthUrl, exchangeGiteaCode, fetchGiteaRepos, fetchGiteaIssues, createGiteaWebhook, updateGiteaIssueState, refreshGiteaToken, verifyGiteaToken, GITEA_BASE_URL } from './providers/gitea.provider';
+import { integrationsDebugLog } from './debugLog';
 
 export class IntegrationsManager {
     public readonly repository: IntegrationsRepository;
@@ -55,13 +57,16 @@ export class IntegrationsManager {
             return getGitHubOAuthUrl(state);
         } else if (provider === 'gitlab') {
             return getGitLabOAuthUrl(state);
+        } else if (provider === 'gitea') {
+            return getGiteaOAuthUrl(state);
         }
         throw new Error(`Unknown provider: ${provider}`);
     }
 
-    async handleOAuthCallback(provider: string, code: string, state: string): Promise<{ projectId: number; userLogin: string }> {
+    async handleOAuthCallback(provider: string, code: string, state: string): Promise<{ projectId: number; orgSlug: string }> {
         $logger.debug({ provider }, '[integrations] handleOAuthCallback start');
         const payload = jwt.verify(state, process.env.JWT_SIGN as string) as OAuthStatePayload;
+        integrationsDebugLog({ step: 'callback:state-verified', data: { userId: payload.userId, projectId: payload.projectId, provider: payload.provider } });
 
         if (payload.provider !== provider) {
             $logger.error({ provider, payloadProvider: payload.provider }, '[integrations] provider mismatch in state');
@@ -69,6 +74,7 @@ export class IntegrationsManager {
         }
 
         const userLogin = await this.repository.fetchUserLogin(payload.userId);
+        integrationsDebugLog({ step: 'callback:user-fetched', data: { userLogin } });
         if (!userLogin) {
             $logger.error({ userId: payload.userId }, '[integrations] user not found during OAuth callback');
             throw new Error('User not found');
@@ -84,19 +90,35 @@ export class IntegrationsManager {
             const tokens = await exchangeGitLabCode(code);
             accessTokenEncrypted = encrypt(tokens.accessToken);
             refreshTokenEncrypted = encrypt(tokens.refreshToken);
+        } else if (provider === 'gitea') {
+            const tokens = await exchangeGiteaCode(code);
+            integrationsDebugLog({ step: 'callback:token-exchanged', data: { hasAccessToken: !!tokens.accessToken, hasRefreshToken: !!tokens.refreshToken } });
+            accessTokenEncrypted = encrypt(tokens.accessToken);
+            refreshTokenEncrypted = tokens.refreshToken ? encrypt(tokens.refreshToken) : null;
         } else {
             throw new Error(`Unknown provider: ${provider}`);
         }
+        integrationsDebugLog({ step: 'callback:tokens-encrypted' });
 
-        await this.repository.createWithToken(
-            provider as 'github' | 'gitlab',
+        const created = await this.repository.createWithToken(
+            provider as IntegrationProvider,
             payload.projectId,
             accessTokenEncrypted,
             refreshTokenEncrypted,
         );
+        if (!created) {
+            integrationsDebugLog({ step: 'callback:db-insert-failed' });
+            throw new Error('Failed to store integration record');
+        }
+        integrationsDebugLog({ step: 'callback:integration-created', data: { integrationId: created.id } });
 
-        $logger.debug({ provider, projectId: payload.projectId, userLogin }, '[integrations] OAuth callback completed');
-        return { projectId: payload.projectId, userLogin };
+        // The app routes are /:orgSlug/:projectId/... — redirect must use the slug
+        // of the project's organization, falling back to the user login for legacy
+        // projects without an organization.
+        const orgSlug = await this.repository.fetchProjectOrgSlug(payload.projectId) ?? userLogin;
+
+        $logger.debug({ provider, projectId: payload.projectId, orgSlug }, '[integrations] OAuth callback completed');
+        return { projectId: payload.projectId, orgSlug };
     }
 
     async fetchRepos(integrationId: number): Promise<RepoItemForClient[]> {
@@ -125,6 +147,16 @@ export class IntegrationsManager {
                 isPrivate: r.visibility === 'private',
                 description: r.description,
                 url: r.web_url,
+            }));
+        } else if (integration.provider === 'gitea') {
+            const repos = await fetchGiteaRepos(accessToken);
+            return repos.map((r) => ({
+                id: r.id,
+                fullName: r.full_name,
+                name: r.name,
+                isPrivate: r.private,
+                description: r.description,
+                url: r.html_url,
             }));
         }
 
@@ -174,6 +206,14 @@ export class IntegrationsManager {
         } else if (integration.provider === 'gitlab' && integration.repoExternalId) {
             const result = await createGitLabWebhook(accessToken, Number(integration.repoExternalId), webhookUrl, webhookSecret);
             webhookId = String(result.id);
+        } else if (integration.provider === 'gitea') {
+            const result = await createGiteaWebhook({
+                accessToken,
+                repoFullName: integration.repoFullName,
+                webhookUrl,
+                secret: webhookSecret,
+            });
+            webhookId = String(result.id);
         } else {
             return;
         }
@@ -197,12 +237,11 @@ export class IntegrationsManager {
         const existingMappings = await this.repository.fetchMappingsByIntegrationId(integrationId);
         const mappingsByIssueNumber = new Map(existingMappings.map((m) => [m.issueNumber, m]));
 
+        const issueUrlPrefix = this.getIssueUrlPrefix(integration);
+
         // Backfill sourceUrl for existing tasks that don't have it yet
         if (existingMappings.length > 0) {
-            const baseUrl = integration.provider === 'github' ? GITHUB_BASE_URL : GITLAB_BASE_URL;
-            const issuePath = integration.provider === 'gitlab' ? '/-/issues/' : '/issues/';
-            const prefix = `${baseUrl}/${integration.repoFullName}${issuePath}`;
-            await this.repository.backfillSourceUrls(integrationId, prefix).catch(logError);
+            await this.repository.backfillSourceUrls(integrationId, issueUrlPrefix).catch(logError);
         }
 
         type NewIssueItem = { goalId: number; description: string; integrationId: number; issueNumber: number; issueState: string; note: string | null; complete: boolean; kanbanOrder: number; sourceUrl: string | null };
@@ -263,6 +302,34 @@ export class IntegrationsManager {
                     sourceUrl: `${GITLAB_BASE_URL}/${integration.repoFullName}/-/issues/${issue.iid}`,
                 });
             }
+        } else if (integration.provider === 'gitea') {
+            const issues = await fetchGiteaIssues({ accessToken, repoFullName: integration.repoFullName, since });
+            for (const issue of issues) {
+                const existing = mappingsByIssueNumber.get(issue.number);
+                if (existing) {
+                    const isClosed = issue.state === 'closed';
+                    const targetState = isClosed ? 'closed' : 'open';
+                    await this.repository.updateTaskComplete(existing.taskId, isClosed).catch(logError);
+                    if (existing.issueState !== targetState) {
+                        await this.repository.updateMappingState(existing.id, targetState).catch(logError);
+                    }
+                    await this.repository.updateTaskTitleAndNote(existing.taskId, issue.title, issue.body ?? null).catch(logError);
+                    await this.repository.updateTaskSourceUrl(existing.taskId, `${issueUrlPrefix}${issue.number}`).catch(logError);
+                    continue;
+                }
+                const isClosed = issue.state === 'closed';
+                newItems.push({
+                    goalId: integration.projectId,
+                    description: issue.title,
+                    integrationId,
+                    issueNumber: issue.number,
+                    issueState: isClosed ? 'closed' : 'open',
+                    note: issue.body ?? null,
+                    complete: isClosed,
+                    kanbanOrder: 0,
+                    sourceUrl: `${issueUrlPrefix}${issue.number}`,
+                });
+            }
         }
 
         // Issues come newest-first from API.
@@ -319,6 +386,13 @@ export class IntegrationsManager {
                 mapping.issueNumber,
                 complete ? 'close' : 'reopen',
             );
+        } else if (integration.provider === 'gitea') {
+            await updateGiteaIssueState({
+                accessToken,
+                repoFullName: integration.repoFullName,
+                issueNumber: mapping.issueNumber,
+                state: targetState,
+            });
         }
 
         await this.repository.updateMappingState(mapping.id, targetState);
@@ -326,41 +400,56 @@ export class IntegrationsManager {
         return true;
     }
 
+    private getIssueUrlPrefix(integration: IntegrationsSchemaTypeForSelect): string {
+        if (integration.provider === 'gitlab') {
+            return `${GITLAB_BASE_URL}/${integration.repoFullName}/-/issues/`;
+        }
+        const baseUrl = integration.provider === 'gitea' ? GITEA_BASE_URL : GITHUB_BASE_URL;
+        return `${baseUrl}/${integration.repoFullName}/issues/`;
+    }
+
     private async getAccessToken(integration: IntegrationsSchemaTypeForSelect): Promise<string | null> {
         if (!integration.accessTokenEncrypted) return null;
 
         const accessToken = decrypt(integration.accessTokenEncrypted);
 
-        if (integration.provider !== 'gitlab' || !integration.refreshTokenEncrypted) {
+        const hasExpiringToken = integration.provider === 'gitlab' || integration.provider === 'gitea';
+        if (!hasExpiringToken || !integration.refreshTokenEncrypted) {
             return accessToken;
         }
 
         // Try the current token, refresh on 401
         try {
-            const axios = (await import('axios')).default;
-            const gitlabApiUrl = process.env.GITLAB_API_URL || 'https://gitlab.com/api/v4';
-            await axios.get(`${gitlabApiUrl}/user`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-            });
+            if (integration.provider === 'gitea') {
+                await verifyGiteaToken(accessToken);
+            } else {
+                const axios = (await import('axios')).default;
+                const gitlabApiUrl = process.env.GITLAB_API_URL || 'https://gitlab.com/api/v4';
+                await axios.get(`${gitlabApiUrl}/user`, {
+                    headers: { Authorization: `Bearer ${accessToken}` },
+                });
+            }
             return accessToken;
         } catch (err: any) {
             if (err?.response?.status !== 401) return accessToken;
-            $logger.debug({ integrationId: integration.id }, '[integrations] GitLab token expired (401), refreshing');
+            $logger.debug({ integrationId: integration.id, provider: integration.provider }, '[integrations] token expired (401), refreshing');
         }
 
         // Token expired, refresh it
         try {
             const refreshToken = decrypt(integration.refreshTokenEncrypted);
-            const tokens = await refreshGitLabToken(refreshToken);
+            const tokens = integration.provider === 'gitea'
+                ? await refreshGiteaToken(refreshToken)
+                : await refreshGitLabToken(refreshToken);
             await this.repository.updateTokens(
                 integration.id,
                 encrypt(tokens.accessToken),
                 encrypt(tokens.refreshToken),
             );
-            $logger.debug({ integrationId: integration.id }, '[integrations] GitLab token refreshed successfully');
+            $logger.debug({ integrationId: integration.id, provider: integration.provider }, '[integrations] token refreshed successfully');
             return tokens.accessToken;
         } catch (err) {
-            $logger.error({ integrationId: integration.id, err }, '[integrations] GitLab token refresh failed');
+            $logger.error({ integrationId: integration.id, provider: integration.provider, err }, '[integrations] token refresh failed');
             return null;
         }
     }

@@ -55,7 +55,7 @@
         >
           <div class="flex items-center gap-3">
             <UIcon
-              :name="item.provider === 'github' ? 'i-mdi-github' : 'i-mdi-gitlab'"
+              :name="INTEGRATION_PROVIDERS[item.provider].icon"
               class="size-6"
             />
             <div>
@@ -63,7 +63,7 @@
                 {{ t('integrations.pendingSelectRepo') }}
               </p>
               <p class="text-sm text-muted">
-                {{ item.provider === 'github' ? 'GitHub' : 'GitLab' }}
+                {{ INTEGRATION_PROVIDERS[item.provider].label }}
               </p>
             </div>
           </div>
@@ -125,6 +125,7 @@ import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import IntegrationItem from './parts/IntegrationItem.vue'
 import AddIntegrationModal from './parts/AddIntegrationModal.vue'
 import RepoSelectModal from './parts/RepoSelectModal.vue'
+import { INTEGRATION_PROVIDERS } from '@/components/features/integrations/integrationProviders'
 import type { IntegrationItem as IntegrationItemType, RepoItem } from 'taskview-api'
 
 const { t } = useI18n()

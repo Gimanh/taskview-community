@@ -11,7 +11,6 @@
           icon="i-lucide-calendar"
           color="neutral"
           variant="outline"
-          size="lg"
           class="flex-1"
           :ui="{ base: 'rounded-xl justify-start' }"
         />
@@ -38,7 +37,6 @@
           icon="i-lucide-calendar-check"
           color="neutral"
           variant="outline"
-          size="lg"
           class="flex-1"
           :ui="{ base: 'rounded-xl justify-start' }"
         />
@@ -62,7 +60,7 @@
     <UFormField :label="t('timeTracking.description')">
       <UInput
         v-model="description"
-        size="lg"
+        size="xl"
         variant="outline"
         class="w-full"
         :ui="{ base: 'rounded-xl' }"

@@ -491,6 +491,8 @@ export default {
     addDescription: 'Добавить описание...',
     note: 'Заметка',
     addNote: 'Добавить заметку...',
+    sourceOfTruthTitle: 'Источник истины — {provider}',
+    sourceOfTruthDescription: 'Задача связана с issue в {provider}. Если там изменят название или описание, задача обновится автоматически.',
     priority: 'Приоритет',
     priorityNone: 'Без приоритета',
     priorityLow: 'Низкий',

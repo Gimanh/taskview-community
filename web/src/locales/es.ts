@@ -504,6 +504,8 @@ export default {
     addDescription: 'Añade una descripción...',
     note: 'Nota',
     addNote: 'Añade una nota...',
+    sourceOfTruthTitle: '{provider} es la fuente de verdad',
+    sourceOfTruthDescription: 'Esta tarea está vinculada a una issue en {provider}. Si allí se edita el título o la descripción, la tarea se actualiza automáticamente.',
     priority: 'Prioridad',
     priorityNone: 'Sin prioridad',
     priorityLow: 'Baja',

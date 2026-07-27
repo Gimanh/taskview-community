@@ -518,6 +518,8 @@ export default {
     addDescription: 'Add a description...',
     note: 'Note',
     addNote: 'Add a note...',
+    sourceOfTruthTitle: '{provider} is the source of truth',
+    sourceOfTruthDescription: 'This task is linked to an issue in {provider}. If the title or description is edited there, the task is updated automatically.',
     priority: 'Priority',
     priorityNone: 'No priority',
     priorityLow: 'Low',

@@ -1,4 +1,4 @@
-export type IntegrationProvider = 'github' | 'gitlab';
+export type IntegrationProvider = 'github' | 'gitlab' | 'gitea';
 
 export type IntegrationItem = {
     id: number;

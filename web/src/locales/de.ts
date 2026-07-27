@@ -504,6 +504,8 @@ export default {
     addDescription: 'Beschreibung hinzufügen...',
     note: 'Notiz',
     addNote: 'Notiz hinzufügen...',
+    sourceOfTruthTitle: '{provider} ist die Datenquelle',
+    sourceOfTruthDescription: 'Diese Aufgabe ist mit einem Issue in {provider} verknüpft. Werden dort Titel oder Beschreibung geändert, wird die Aufgabe automatisch aktualisiert.',
     priority: 'Priorität',
     priorityNone: 'Keine Priorität',
     priorityLow: 'Niedrig',
