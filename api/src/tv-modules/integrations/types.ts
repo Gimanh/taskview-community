@@ -1,7 +1,7 @@
 import { type } from 'arktype';
 
 export const IntegrationsArkTypeAdd = type({
-    provider: "'github' | 'gitlab'",
+    provider: "'github' | 'gitlab' | 'gitea'",
     repoFullName: 'string',
     projectId: 'number',
 });
@@ -30,10 +30,43 @@ export const IntegrationsArkTypeSelectRepo = type({
 });
 export type IntegrationsArgSelectRepo = typeof IntegrationsArkTypeSelectRepo.infer;
 
+export type IntegrationProvider = 'github' | 'gitlab' | 'gitea';
+
 export type OAuthStatePayload = {
     userId: number;
     projectId: number;
-    provider: 'github' | 'gitlab';
+    provider: IntegrationProvider;
+};
+
+export type GiteaFetchIssuesArgs = {
+    accessToken: string;
+    repoFullName: string;
+    since?: string;
+};
+
+export type GiteaCreateWebhookArgs = {
+    accessToken: string;
+    repoFullName: string;
+    webhookUrl: string;
+    secret: string;
+};
+
+export type GiteaVerifyWebhookSignatureArgs = {
+    rawBody: Buffer;
+    signature: string;
+    secret: string;
+};
+
+export type GiteaUpdateIssueStateArgs = {
+    accessToken: string;
+    repoFullName: string;
+    issueNumber: number;
+    state: 'open' | 'closed';
+};
+
+export type IntegrationsDebugLogEntry = {
+    step: string;
+    data?: unknown;
 };
 
 export type RepoItemForClient = {

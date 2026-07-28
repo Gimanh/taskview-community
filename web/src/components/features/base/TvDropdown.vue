@@ -2,7 +2,7 @@
   <UPopover
     v-if="withActivator"
     v-model:open="open"
-    :content="{ align: 'start' }"
+    :content="{ align: 'start', collisionPadding: 8 }"
     :ui="{ content: 'rounded-2xl' }"
   >
     <UButton
@@ -23,7 +23,7 @@
     </UButton>
 
     <template #content>
-      <div class="p-2 min-w-56">
+      <div class="p-2 min-w-56 overflow-y-auto max-h-[min(24rem,var(--reka-popover-content-available-height))]">
         <TvDropdownOptions
           v-model="model"
           :items="items"

@@ -46,6 +46,7 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { IntegrationItem } from 'taskview-api'
 import { useIntegrationsStore } from '@/stores/integrations.store'
+import { INTEGRATION_PROVIDERS } from '@/components/features/integrations/integrationProviders'
 
 const { t } = useI18n()
 const integrationsStore = useIntegrationsStore()
@@ -63,9 +64,9 @@ defineEmits<{
 
 const syncing = ref(false)
 
-const providerIcon = computed(() =>  props.integration.provider === 'github' ? 'i-mdi-github' : 'i-mdi-gitlab')
+const providerIcon = computed(() => INTEGRATION_PROVIDERS[props.integration.provider].icon)
 
-const providerLabel = computed(() => props.integration.provider === 'github' ? 'GitHub' : 'GitLab')
+const providerLabel = computed(() => INTEGRATION_PROVIDERS[props.integration.provider].label)
 
 async function handleSync() {
   syncing.value = true

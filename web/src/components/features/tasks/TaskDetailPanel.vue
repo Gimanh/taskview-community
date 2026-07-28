@@ -31,24 +31,13 @@
           </UTextarea>
         </div>
       </div>
-      <TaskIdCopy
-        :task-id="task.id"
-        class="self-start -mt-2"
-      />
-      <!-- Source link (GitHub/GitLab issue) -->
-      <a
-        v-if="task.sourceUrl"
-        :href="task.sourceUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="inline-flex items-center gap-2 mb-2 text-sm text-muted hover:text-default transition-colors"
-      >
-        <UIcon
-          :name="task.sourceUrl.includes('github') ? 'i-lucide-github' : task.sourceUrl.includes('gitlab') ? 'i-lucide-gitlab' : 'i-lucide-external-link'"
-          class="size-4 shrink-0"
+      <div class="flex items-center flex-wrap gap-x-1 min-w-0 -mt-2 mb-1">
+        <TaskIdCopy :task-id="task.id" />
+        <TaskSourceLink
+          v-if="task.sourceUrl"
+          :source-url="task.sourceUrl"
         />
-        <span class="truncate underline underline-offset-2">{{ task.sourceUrl }}</span>
-      </a>
+      </div>
 
       <div class="grid grid-cols-1 @lg:grid-cols-2 gap-4">
         <template
@@ -178,6 +167,7 @@ import TaskTimeTracking from '@/components/features/tasks/parts/TaskTimeTracking
 import TaskHistory from '@/components/features/tasks/parts/TaskHistory.vue'
 import TvDeadlineSelect from '@/components/features/base/TvDeadlineSelect.vue'
 import TaskRecurrence from '@/components/features/tasks/parts/TaskRecurrence.vue'
+import TaskSourceLink from '@/components/features/tasks/parts/TaskSourceLink.vue'
 import TaskSubtasks from '@/components/features/tasks/parts/TaskSubtasks.vue'
 import TaskIdCopy from '@/components/features/tasks/parts/TaskIdCopy.vue'
 import TvSprintSelect from '@/components/features/base/TvSprintSelect.vue'

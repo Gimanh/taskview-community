@@ -1,11 +1,14 @@
 import { type } from 'arktype';
 import type { Request, Response } from 'express';
 import { logError } from '../../utils/api';
+import { $logger } from '../../modules/logget';
+import { integrationsDebugLog } from './debugLog';
 import { decrypt } from '../../utils/crypto';
 import AuthController from '../auth/AuthController';
 import { IntegrationsRepository } from './IntegrationsRepository';
 import { verifyGitHubWebhookSignature, GITHUB_BASE_URL } from './providers/github.provider';
 import { verifyGitLabWebhookToken, GITLAB_BASE_URL } from './providers/gitlab.provider';
+import { verifyGiteaWebhookSignature, GITEA_BASE_URL } from './providers/gitea.provider';
 import { IntegrationsArkTypeAdd, IntegrationsArkTypeDelete, IntegrationsArkTypeFetch, IntegrationsArkTypeSelectRepo, IntegrationsArkTypeToggle } from './types';
 
 export default class IntegrationsController {
@@ -47,23 +50,29 @@ export default class IntegrationsController {
 
     initiateOAuth = async (req: Request, res: Response) => {
         try {
+            integrationsDebugLog({ step: 'initiate:start', data: { provider: req.params.provider, projectId: req.query.projectId, hasToken: !!req.query.token } });
             const token = req.query.token as string;
             if (!token) {
+                integrationsDebugLog({ step: 'initiate:reject', data: 'token is required' });
                 return res.status(401).send('token is required');
             }
             const userPayload = await AuthController.validateTokens(token);
             if (!userPayload?.userData?.id) {
+                integrationsDebugLog({ step: 'initiate:reject', data: 'invalid token' });
                 return res.status(401).send('Invalid token');
             }
 
             const provider = req.params.provider;
             const projectId = Number(req.query.projectId);
             if (!projectId || isNaN(projectId)) {
+                integrationsDebugLog({ step: 'initiate:reject', data: 'projectId is required' });
                 return res.status(400).send('projectId is required');
             }
             const url = req.appUser.integrationsManager.getOAuthUrl(provider, projectId, userPayload.userData.id);
+            integrationsDebugLog({ step: 'initiate:redirect', data: { userId: userPayload.userData.id, url } });
             return res.redirect(url);
-        } catch (err) {
+        } catch (err: any) {
+            integrationsDebugLog({ step: 'initiate:error', data: { message: err?.message, stack: err?.stack } });
             logError(err);
             return res.status(500).send('Failed to initiate OAuth');
         }
@@ -74,15 +83,36 @@ export default class IntegrationsController {
             const provider = req.params.provider;
             const code = req.query.code as string;
             const state = req.query.state as string;
+            integrationsDebugLog({ step: 'callback:start', data: { provider, hasCode: !!code, hasState: !!state, queryKeys: Object.keys(req.query) } });
 
             if (!code || !state) {
+                integrationsDebugLog({ step: 'callback:reject', data: 'missing code or state' });
                 return res.redirect(`${process.env.APP_URL}?oauth=error`);
             }
 
-            const { projectId, userLogin } = await req.appUser.integrationsManager.handleOAuthCallback(provider, code, state);
-            return res.redirect(`${process.env.APP_URL}/${userLogin}/${projectId}/integrations?oauth=success`);
-        } catch (err) {
-            logError(err);
+            const { projectId, orgSlug } = await req.appUser.integrationsManager.handleOAuthCallback(provider, code, state);
+            integrationsDebugLog({ step: 'callback:success', data: { projectId, orgSlug } });
+            return res.redirect(`${process.env.APP_URL}/${orgSlug}/${projectId}/integrations?oauth=success`);
+        } catch (err: any) {
+            integrationsDebugLog({
+                step: 'callback:error',
+                data: {
+                    message: err?.message,
+                    responseStatus: err?.response?.status,
+                    responseData: err?.response?.data,
+                    stack: err?.stack,
+                },
+            });
+            $logger.error(
+                {
+                    provider: req.params.provider,
+                    errorMessage: err?.message,
+                    responseStatus: err?.response?.status,
+                    responseData: err?.response?.data,
+                    stack: err?.stack,
+                },
+                '[integrations] OAuth callback failed',
+            );
             return res.redirect(`${process.env.APP_URL}?oauth=error`);
         }
     };
@@ -184,6 +214,91 @@ export default class IntegrationsController {
                             issueBody,
                             false,
                             `${GITHUB_BASE_URL}/${repoFullName}/issues/${issueNumber}`,
+                        );
+                    }
+                } else if (action === 'edited') {
+                    if (mapping) {
+                        await repo.updateTaskTitleAndNote(mapping.taskId, issueTitle, issueBody);
+                    }
+                } else if (action === 'closed') {
+                    if (mapping) {
+                        await repo.updateTaskComplete(mapping.taskId, true);
+                        await repo.updateMappingState(mapping.id, 'closed');
+                    }
+                } else if (action === 'reopened') {
+                    if (mapping) {
+                        await repo.updateTaskComplete(mapping.taskId, false);
+                        await repo.updateMappingState(mapping.id, 'open');
+                    }
+                }
+            }
+
+            return res.status(200).send('OK');
+        } catch (err) {
+            logError(err);
+            return res.status(500).send('Webhook processing failed');
+        }
+    };
+
+    handleGiteaWebhook = async (req: Request, res: Response) => {
+        try {
+            const signature = req.headers['x-gitea-signature'] as string;
+            const event = req.headers['x-gitea-event'] as string;
+
+            if (!signature) {
+                return res.status(401).send('Missing signature');
+            }
+
+            if (event !== 'issues') {
+                return res.status(200).send('OK');
+            }
+
+            const repoFullName = req.body?.repository?.full_name;
+            if (!repoFullName) {
+                return res.status(400).send('Missing repository');
+            }
+
+            const repo = new IntegrationsRepository();
+            const integrations = await repo.fetchAllActiveByRepoFullName(repoFullName);
+            if (integrations.length === 0) {
+                return res.status(404).send('Integration not found');
+            }
+
+            // Verify signature with the first integration that has a webhook secret
+            const withSecret = integrations.find((i) => i.webhookSecretEncrypted);
+            if (!withSecret) {
+                return res.status(401).send('No webhook secret');
+            }
+            const secret = decrypt(withSecret.webhookSecretEncrypted!);
+            const rawBody = (req as any).rawBody as Buffer;
+            if (!rawBody || !verifyGiteaWebhookSignature({ rawBody, signature, secret })) {
+                return res.status(401).send('Invalid signature');
+            }
+
+            const action = req.body.action as string;
+            const issue = req.body.issue;
+            if (!issue) {
+                return res.status(200).send('OK');
+            }
+
+            const issueNumber = issue.number as number;
+            const issueTitle = issue.title as string;
+            const issueBody = (issue.body as string) || null;
+
+            for (const integration of integrations) {
+                const mapping = await repo.fetchMappingByIssueNumber(integration.id, issueNumber);
+
+                if (action === 'opened') {
+                    if (!mapping) {
+                        await repo.createTaskAndMapping(
+                            integration.projectId,
+                            issueTitle,
+                            integration.id,
+                            issueNumber,
+                            'open',
+                            issueBody,
+                            false,
+                            `${GITEA_BASE_URL}/${repoFullName}/issues/${issueNumber}`,
                         );
                     }
                 } else if (action === 'edited') {

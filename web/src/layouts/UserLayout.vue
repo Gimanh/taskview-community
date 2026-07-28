@@ -119,7 +119,6 @@ onMounted(async () => {
     orgStore.restoreCurrentOrg()
     if (orgStore.currentOrg) {
       router.replace({ name: 'user', params: { orgSlug: orgStore.currentOrgSlug } })
-      return
     }
   }
 

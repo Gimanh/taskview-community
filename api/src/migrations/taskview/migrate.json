@@ -715,5 +715,16 @@
         "description": [
             "Add schedule_mode to recurrence_rules: 'fixed' (calendar schedule) or 'after-completion' (next occurrence = completion day + interval)"
         ]
+    },
+    "56": {
+        "version": "1.61.0",
+        "name": "Gitea integration provider",
+        "releaseDate": "20260726",
+        "scripts": [
+            "/1.61.0/0.alter-integrations-provider-check-gitea.sql"
+        ],
+        "description": [
+            "Extend integrations_provider_check constraint to allow the 'gitea' provider alongside 'github' and 'gitlab'"
+        ]
     }
 }

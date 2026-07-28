@@ -31,5 +31,6 @@ export default class IntegrationsRoutes implements Routable {
         this.router.get('/oauth/:provider/callback', this.controller.handleOAuthCallback);
         this.router.post('/webhook/github', this.controller.handleGitHubWebhook);
         this.router.post('/webhook/gitlab', this.controller.handleGitLabWebhook);
+        this.router.post('/webhook/gitea', this.controller.handleGiteaWebhook);
     }
 }

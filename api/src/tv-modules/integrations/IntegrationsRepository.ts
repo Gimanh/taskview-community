@@ -1,8 +1,8 @@
 import { and, eq, ne, isNull, sql } from 'drizzle-orm';
-import { IntegrationsSchema, IntegrationTaskMapSchema, TasksSchema, UsersSchema, type IntegrationsSchemaTypeForSelect, type IntegrationTaskMapSchemaTypeForSelect } from 'taskview-db-schemas';
+import { GoalsSchema, IntegrationsSchema, IntegrationTaskMapSchema, OrganizationsSchema, TasksSchema, UsersSchema, type IntegrationsSchemaTypeForSelect, type IntegrationTaskMapSchemaTypeForSelect } from 'taskview-db-schemas';
 import { Database } from '../../modules/db';
 import { callWithCatch } from '../../utils/helpers';
-import type { IntegrationsArgAdd, IntegrationsArgDelete, IntegrationsArgSelectRepo, IntegrationsArgToggle } from './types';
+import type { IntegrationProvider, IntegrationsArgAdd, IntegrationsArgDelete, IntegrationsArgSelectRepo, IntegrationsArgToggle } from './types';
 import { TasksRepository } from '../tasks/TasksRepository';
 
 export class IntegrationsRepository {
@@ -62,7 +62,7 @@ export class IntegrationsRepository {
     }
 
     async createWithToken(
-        provider: 'github' | 'gitlab',
+        provider: IntegrationProvider,
         projectId: number,
         accessTokenEncrypted: string,
         refreshTokenEncrypted?: string | null,
@@ -320,6 +320,17 @@ export class IntegrationsRepository {
                 .where(eq(IntegrationsSchema.id, integrationId))
         );
         return !!result;
+    }
+
+    async fetchProjectOrgSlug(projectId: number): Promise<string | null> {
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle.select({ slug: OrganizationsSchema.slug })
+                .from(GoalsSchema)
+                .innerJoin(OrganizationsSchema, eq(GoalsSchema.organizationId, OrganizationsSchema.id))
+                .where(eq(GoalsSchema.id, projectId))
+        );
+        if (!result || result.length === 0) return null;
+        return result[0].slug;
     }
 
     async fetchUserLogin(userId: number): Promise<string | null> {

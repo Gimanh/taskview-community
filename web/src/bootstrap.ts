@@ -3,6 +3,7 @@ import { addCollection } from '@iconify/vue'
 import lucide from '@iconify-json/lucide/icons.json'
 import mdi from '@iconify-json/mdi/icons.json'
 import carbon from '@iconify-json/carbon/icons.json'
+import { tvIconsCollection } from '@/assets/tvIconsCollection'
 import { createPinia } from 'pinia'
 import type { Plugin } from 'vue'
 import { createApp } from 'vue'
@@ -137,6 +138,7 @@ export async function createTaskviewApp(options: CreateTaskviewAppOptions = {}) 
   addCollection(lucide)
   addCollection(mdi)
   addCollection(carbon)
+  addCollection(tvIconsCollection)
 
   const app = createApp(App)
 

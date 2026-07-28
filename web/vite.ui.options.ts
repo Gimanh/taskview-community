@@ -124,6 +124,10 @@ export const uiPluginOptions: NuxtUIOptions = {
             leadingIcon: 'size-4.5',
             leading: 'ps-3.5',
           },
+          // 16px minimum — anything smaller makes iOS Safari zoom in on focus
+          lg: {
+            base: 'text-base',
+          },
         },
       },
     },

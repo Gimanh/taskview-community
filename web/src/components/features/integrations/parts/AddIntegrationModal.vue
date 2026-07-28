@@ -12,20 +12,14 @@
         </p>
         <div class="flex gap-3">
           <UButton
-            label="GitHub"
-            icon="i-mdi-github"
+            v-for="(meta, provider) in INTEGRATION_PROVIDERS"
+            :key="provider"
+            :label="meta.label"
+            :icon="meta.icon"
             size="lg"
             variant="outline"
             class="flex-1 justify-center"
-            @click="startOAuth('github')"
-          />
-          <UButton
-            label="GitLab"
-            icon="i-mdi-gitlab"
-            size="lg"
-            variant="outline"
-            class="flex-1 justify-center"
-            @click="startOAuth('gitlab')"
+            @click="startOAuth(provider)"
           />
         </div>
       </div>
@@ -37,6 +31,7 @@
 import { useI18n } from 'vue-i18n'
 import { useTaskViewMainUrl } from '@/composables/useTaskViewMainUrl'
 import $api from '@/helpers/axios'
+import { INTEGRATION_PROVIDERS } from '@/components/features/integrations/integrationProviders'
 import type { IntegrationProvider } from 'taskview-api'
 
 const props = defineProps<{
