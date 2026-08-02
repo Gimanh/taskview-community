@@ -23,6 +23,11 @@ export const AppEnvSchema = z.object({
     SMTP_FROM_EMAIL: z.string().optional(),
     APP_URL: z.string(),
 
+    // Send an email to a person when they are invited to a project (requires SMTP); default off
+    INVITE_EMAIL_ENABLED: z.string().optional(),
+    // Max invite emails one user may trigger per hour (default 30)
+    INVITE_EMAIL_HOURLY_LIMIT: z.string().optional(),
+
     // How account password changes are confirmed: code sent by email (default) or current password
     PASSWORD_CHANGE_CONFIRMATION: z.enum(['email', 'password']).optional(),
 

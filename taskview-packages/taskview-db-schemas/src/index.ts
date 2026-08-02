@@ -4,6 +4,7 @@ export * from './schemas/tasks-to-tags.schema';
 export * from './schemas/tags.schema';
 export * from './schemas/users.schema';
 export * from './schemas/collaboration-users.schema';
+export * from './schemas/invite-emails.schema';
 export * from './schemas/tasks-assignee.schema';
 export * from './schemas/goals.schema';
 export * from './schemas/goals-list.schema';

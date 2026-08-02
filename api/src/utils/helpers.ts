@@ -2,6 +2,17 @@ import { randomInt } from 'crypto';
 import { UAParser } from 'ua-parser-js';
 import { $logger } from '../modules/logget';
 
+// Escapes HTML text and attribute contexts (the quotes matter inside href="...")
+// so a user-controlled value can't break out of the surrounding markup.
+export function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 export function isEmail(email: string): boolean {
     const re =
         /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;

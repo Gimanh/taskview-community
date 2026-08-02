@@ -21,16 +21,7 @@ export function isSafeUrl(url: string): boolean {
     }
 }
 
-// Escapes HTML text and attribute contexts (the quotes matter inside href="...")
-// so a user-controlled value can't break out of a Telegram HTML message.
-export function escapeHtml(text: string): string {
-    return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
+export { escapeHtml } from '../../utils/helpers';
 
 // Slack mrkdwn requires escaping these three in text (incl. link labels).
 export function escapeSlackText(text: string): string {

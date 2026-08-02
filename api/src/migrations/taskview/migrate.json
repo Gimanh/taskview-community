@@ -726,5 +726,16 @@
         "description": [
             "Extend integrations_provider_check constraint to allow the 'gitea' provider alongside 'github' and 'gitlab'"
         ]
+    },
+    "57": {
+        "version": "1.62.0",
+        "name": "Invite email rate limiting",
+        "releaseDate": "20260730",
+        "scripts": [
+            "/1.62.0/0.create-invite-emails.sql"
+        ],
+        "description": [
+            "Log of sent project-invite emails (collaboration.invite_emails) backing the per-recipient cooldown and the hourly per-initiator sending cap"
+        ]
     }
 }
