@@ -37,9 +37,18 @@ cd web
 bash build-docker-web.sh $VERSION
 cd ..
 
+# Build CE MCP
+echo "========================================="
+echo "Building CE MCP Server..."
+echo "========================================="
+cd taskview-packages/taskview-mcp
+bash build-docker-mcp.sh $VERSION gimanhead/taskview-ce-mcp
+cd ../..
+
 echo "========================================="
 echo "Build complete!"
 echo "Images built:"
 echo "  - gimanhead/taskview-ce-api-server:$VERSION"
 echo "  - gimanhead/taskview-ce-webapp:$VERSION"
+echo "  - gimanhead/taskview-ce-mcp:$VERSION"
 echo "========================================="

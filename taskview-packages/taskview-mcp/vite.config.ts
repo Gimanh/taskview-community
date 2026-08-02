@@ -4,14 +4,19 @@ import { resolve } from 'path'
 export default defineConfig({
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: {
+        index: resolve(__dirname, 'src/index.ts'),
+        http: resolve(__dirname, 'src/http.ts'),
+      },
       formats: ['es'],
-      fileName: () => 'index.js',
+      fileName: (_format, name) => `${name}.js`,
     },
     rollupOptions: {
       external: [
         '@modelcontextprotocol/sdk/server/mcp.js',
         '@modelcontextprotocol/sdk/server/stdio.js',
+        '@modelcontextprotocol/sdk/server/streamableHttp.js',
+        'node:http',
       ],
     },
     target: 'node22',

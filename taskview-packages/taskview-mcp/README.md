@@ -71,27 +71,70 @@ Then use `"command": "taskview-mcp"` (no `args` needed).
 | Variable | Required | Description |
 |---|---|---|
 | `TASKVIEW_URL` | yes | TaskView API server URL (e.g. `https://api.taskview.tech`) |
-| `TASKVIEW_TOKEN` | yes | API token with `tvk_` prefix |
+| `TASKVIEW_TOKEN` | yes (stdio mode) | API token with `tvk_` prefix. Not used in HTTP mode — each caller sends their own token |
+| `MCP_HTTP_PORT` | no (HTTP mode) | Port for the HTTP server, default `3100` |
+
+## HTTP server (remote / self-hosted)
+
+Besides the local stdio mode above, the package ships an HTTP entrypoint
+(Streamable HTTP transport) so one shared server can serve many users — each
+request authenticates with the caller's own API token:
+
+```bash
+TASKVIEW_URL=https://api.taskview.tech taskview-mcp-http
+# MCP endpoint: http://localhost:3100/mcp, health check: /health
+```
+
+Connect from Claude Code:
+
+```bash
+claude mcp add --transport http taskview https://mcp.example.com/mcp \
+  --header "Authorization: Bearer tvk_..."
+```
+
+or in `.mcp.json` (Claude Code, Cursor, VS Code):
+
+```json
+{
+  "mcpServers": {
+    "taskview": {
+      "type": "http",
+      "url": "https://mcp.example.com/mcp",
+      "headers": { "Authorization": "Bearer tvk_..." }
+    }
+  }
+}
+```
+
+The server is stateless: every request gets its own isolated API client
+carrying only that caller's token. Requests without a `Bearer` token get 401.
+Self-hosted instances run their own copy next to their API (see `Dockerfile`
+in this package) — point `TASKVIEW_URL` at your API server and put the MCP
+port behind your reverse proxy with HTTPS.
 
 ## Available tools
 
-37 tools covering the full TaskView surface.
+61 tools covering the full TaskView surface.
 
 **Projects (Goals)** — `list_goals`, `create_goal`, `update_goal`, `delete_goal`
 
 **Lists** — `list_lists`, `create_list`, `update_list`, `delete_list`
 
-**Tasks** — `list_tasks`, `get_task`, `create_task`, `update_task`, `delete_task`, `toggle_task_assignees`, `get_task_history`
+**Tasks** — `list_tasks`, `get_task`, `create_task`, `update_task`, `delete_task`, `toggle_task_assignees`, `get_task_history`, `restore_task_from_history`
 
 **Tags** — `list_tags`, `create_tag`, `update_tag`, `delete_tag`, `toggle_task_tag`
 
 **Kanban** — `list_kanban_columns`, `create_kanban_column`, `update_kanban_column`, `delete_kanban_column`
 
-**Collaboration** — `list_collaborators`, `list_collaborators_for_goal`, `invite_collaborator`, `remove_collaborator`, `toggle_collaborator_roles`, `list_roles`, `create_role`, `delete_role`, `list_permissions`, `toggle_role_permission`
+**Collaboration** — `list_collaborators`, `list_collaborators_for_goal`, `invite_collaborator`, `remove_collaborator`, `toggle_collaborator_roles`, `list_roles`, `create_role`, `delete_role`, `list_permissions`, `list_role_permissions_for_goal`, `toggle_role_permission`
 
 **Task dependencies (graph)** — `list_task_dependencies`, `add_task_dependency`, `delete_task_dependency`
 
 **Notifications** — `list_notifications`, `mark_notification_read`, `mark_all_notifications_read`
+
+**Organizations** — `list_organizations`, `get_organization`, `create_organization`, `update_organization`, `delete_organization`, `list_organization_members`, `add_organization_member`, `update_organization_member_role`, `remove_organization_member`
+
+**Time tracking** — `start_timer`, `stop_timer`, `get_active_timer`, `log_time`, `list_time_entries`, `update_time_entry`, `delete_time_entry`, `get_time_summary`, `get_time_report`, `get_time_contributors`
 
 ## How it works
 
