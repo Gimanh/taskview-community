@@ -4,7 +4,8 @@
   "description": "MCP (Model Context Protocol) server for TaskView — lets AI assistants (Claude Code, Claude Desktop, etc.) manage projects and tasks via the TaskView API",
   "type": "module",
   "bin": {
-    "taskview-mcp": "./dist/index.js"
+    "taskview-mcp": "./dist/index.js",
+    "taskview-mcp-http": "./dist/http.js"
   },
   "main": "./dist/index.js",
   "files": [
