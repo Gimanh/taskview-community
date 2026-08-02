@@ -237,7 +237,7 @@ export default class GoalsManager {
 
         await this.user.collaborationManager.repository.toggleUserRolesNew({
             goalId,
-            userId: collabUser.id,
+            userId: collabUser.user.id,
             roles: [role.id],
         })
     }

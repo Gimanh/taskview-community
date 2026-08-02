@@ -10,6 +10,7 @@ import { $logger } from '../../modules/logget';
 import { logError } from '../../utils/api';
 import { callWithCatch } from '../../utils/helpers';
 import type {
+    CollaborationAddUserRepoResult,
     CollaborationArgAddUser,
     CollaborationArgDeleteUser,
     CollaborationArgToggleUserRoles,
@@ -197,8 +198,8 @@ export class CollaborationRepository {
 
     async addUserForCollaborationNew(
         args: CollaborationArgAddUser
-    ): Promise<CollaborationUsersSchemaTypeForSelect | null> {
-        const user = await callWithCatch(() =>
+    ): Promise<CollaborationAddUserRepoResult | null> {
+        return await callWithCatch(() =>
             this.db.dbDrizzle.transaction(async (tx) => {
                 let userId: number;
                 let user: CollaborationUsersSchemaTypeForSelect;
@@ -217,18 +218,14 @@ export class CollaborationRepository {
                     user = userTransaction;
                 }
 
-                await tx.insert(CollaborationUsersToGoalsSchema).values({
+                const linked = await tx.insert(CollaborationUsersToGoalsSchema).values({
                     userId: userId,
                     goalId: args.goalId,
-                }).onConflictDoNothing();
+                }).onConflictDoNothing().returning();
 
-                return user;
+                return { user, created: linked.length > 0 };
             })
         );
-
-        if (!user) return null;
-
-        return user;
     }
 
     async deleteUserNew(args: CollaborationArgDeleteUser) {

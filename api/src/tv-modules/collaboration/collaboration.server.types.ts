@@ -1,4 +1,5 @@
 import { type } from 'arktype';
+import type { CollaborationUsersSchemaTypeForSelect } from 'taskview-db-schemas';
 
 export const CollaborationArkTypeAddUser = type({
     goalId: 'number',
@@ -97,3 +98,30 @@ export const CollaborationArkTypeToggleRolePermission = type({
 });
 
 export type CollaborationArgToggleRolePermission = typeof CollaborationArkTypeToggleRolePermission.infer;
+
+// created=false means the person was already a collaborator of the goal — no invitation happened
+export type CollaborationAddUserRepoResult = {
+    user: CollaborationUsersSchemaTypeForSelect;
+    created: boolean;
+};
+
+export type CollaborationAddUserResult = {
+    user: CollaborationUserWithRoles;
+    created: boolean;
+};
+
+export type InviteEmailLocale = 'en' | 'ru';
+
+export type InviteEmailSendArgs = {
+    email: string;
+    inviterName: string;
+    goalName: string;
+    link: string;
+    locale: InviteEmailLocale;
+};
+
+export type InviteEmailRateLimitArgs = {
+    initiatorId: number;
+    email: string;
+    goalId: number;
+};

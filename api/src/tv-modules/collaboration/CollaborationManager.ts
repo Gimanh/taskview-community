@@ -2,6 +2,7 @@ import type { AppUser } from '../../core/AppUser';
 import { GoalPermissions } from '../../types/auth.types';
 import { CollaborationRepository } from './CollaborationRepository';
 import type {
+    CollaborationAddUserResult,
     CollaborationArgAddUser,
     CollaborationArgDeleteUser,
     CollaborationArgToggleUserRoles,
@@ -120,7 +121,7 @@ export class CollaborationManager {
         return await this.repository.deleteUser(args);
     }
 
-    async addUserNew(args: CollaborationArgAddUser): Promise<CollaborationUserWithRoles | null> {
+    async addUserNew(args: CollaborationArgAddUser): Promise<CollaborationAddUserResult | null> {
         const email = args.email.toLowerCase();
 
         const goal = await this.user.goalsManager.goalsRepository.findGoalById(args.goalId);
@@ -131,19 +132,22 @@ export class CollaborationManager {
             }
         }
 
-        const user = await this.repository.addUserForCollaborationNew({
+        const result = await this.repository.addUserForCollaborationNew({
             ...args,
             email,
         });
-        if (!user) return null;
+        if (!result) return null;
 
         return {
-            ...user,
-            goalId: args.goalId,
-            goal_id: args.goalId,
-            invitation_date: user.invitationDate,
-            roles: [],
-            goalOwner: false,
+            user: {
+                ...result.user,
+                goalId: args.goalId,
+                goal_id: args.goalId,
+                invitation_date: result.user.invitationDate,
+                roles: [],
+                goalOwner: false,
+            },
+            created: result.created,
         };
     }
 

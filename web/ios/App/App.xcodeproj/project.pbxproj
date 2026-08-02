@@ -436,7 +436,7 @@
 				CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.49.2;
+				CURRENT_PROJECT_VERSION = 1.50.10;
 				DEVELOPMENT_TEAM = H2W2SG48JT;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -444,7 +444,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.49.2;
+				MARKETING_VERSION = 1.50.10;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-weak_framework",
@@ -466,7 +466,7 @@
 				CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.49.2;
+				CURRENT_PROJECT_VERSION = 1.50.10;
 				DEVELOPMENT_TEAM = H2W2SG48JT;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -474,7 +474,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.49.2;
+				MARKETING_VERSION = 1.50.10;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-weak_framework",
@@ -495,7 +495,7 @@
 				CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
 				CODE_SIGN_ENTITLEMENTS = TaskViewWidget/TaskViewWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.49.2;
+				CURRENT_PROJECT_VERSION = 1.50.10;
 				DEVELOPMENT_TEAM = H2W2SG48JT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TaskViewWidget/Info.plist;
@@ -506,7 +506,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.49.2;
+				MARKETING_VERSION = 1.50.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.handscream.taskview.app.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -524,7 +524,7 @@
 				CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
 				CODE_SIGN_ENTITLEMENTS = TaskViewWidget/TaskViewWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.49.2;
+				CURRENT_PROJECT_VERSION = 1.50.10;
 				DEVELOPMENT_TEAM = H2W2SG48JT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TaskViewWidget/Info.plist;
@@ -535,7 +535,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.49.2;
+				MARKETING_VERSION = 1.50.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.handscream.taskview.app.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
 import type { RecurrenceRulesSchemaTypeForSelect, SprintsSchemaTypeForSelect, TasksSchemaTypeForSelect } from 'taskview-db-schemas';
 import type { TimeEntryWithUser } from '../tv-modules/time-tracking/types';
+import type { InviteEmailLocale } from '../tv-modules/collaboration/collaboration.server.types';
 import { $logger } from '../modules/logget';
 
 export interface AppEvents {
@@ -8,7 +9,7 @@ export interface AppEvents {
     'task.updated': { task: TasksSchemaTypeForSelect; changes: Record<string, unknown>; initiatorId: number };
     'task.assigneesChanged': { taskId: number; userIds: number[]; initiatorId: number };
     'task.deleted': { taskId: number; goalId: number; initiatorId: number };
-    'collaboration.userAdded': { goalId: number; email: string; initiatorId: number };
+    'collaboration.userAdded': { goalId: number; email: string; initiatorId: number; locale: InviteEmailLocale };
     'collaboration.userRemoved': { goalId: number; collaborationUserId: number; initiatorId: number };
     'collaboration.rolesChanged': { goalId: number; collaborationUserId: number; initiatorId: number };
     'time-entry.started': { entry: TimeEntryWithUser; taskId: number; userId: number; goalId: number };

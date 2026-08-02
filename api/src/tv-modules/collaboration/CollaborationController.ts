@@ -82,18 +82,29 @@ export class CollaborationController {
             return res.status(400).send(output.summary);
         }
 
-        const user = await req.appUser.collaborationManager.addUserNew(output);
+        const result = await req.appUser.collaborationManager.addUserNew(output);
 
-        if (user) {
+        // created=false means the person was already in the goal — re-POSTing must not re-notify
+        if (result?.created) {
             eventBus.emit('collaboration.userAdded', {
                 goalId: output.goalId,
                 email: output.email.toLowerCase(),
                 initiatorId: req.appUser.getUserData()!.id,
+                locale: this.resolveLocale(req),
             });
         }
 
-        return res.tvJson(user ?? null);
+        return res.tvJson(result?.user ?? null);
     };
+
+    // The invitee has no stored locale (often no account yet), so localize by the inviter's browser language
+    private resolveLocale(req: Request): 'en' | 'ru' {
+        const acceptLanguage = req.headers['accept-language'];
+        if (!acceptLanguage) return 'en';
+
+        const languages = acceptLanguage.split(',').map((lang) => lang.split(';')[0].trim().toLowerCase());
+        return languages.some((lang) => lang === 'ru' || lang.startsWith('ru-')) ? 'ru' : 'en';
+    }
 
     deleteUserNew = async (req: Request, res: Response) => {
         const output = CollaborationArkTypeDeleteUser(req.body);
