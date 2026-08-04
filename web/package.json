@@ -2,7 +2,7 @@
   "name": "web-nuxt-ui",
   "private": true,
   "type": "module",
-  "version": "1.50.10",
+  "version": "1.51.0",
   "scripts": {
     "dev": "vite",
     "build:packages": "pnpm --filter taskview-db-schemas build && pnpm --filter taskview-api build && pnpm --filter capacitor-widget-bridge build",
