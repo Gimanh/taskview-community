@@ -16,6 +16,7 @@ import {
 } from './collaboration.types';
 
 export class CollaborationController {
+    /** @deprecated */
     fetchAllUsers = async (req: Request, res: Response) => {
         const users = await req.appUser.collaborationManager.fetchAllUsers();
         return res.tvJson(users);

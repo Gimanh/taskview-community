@@ -25,6 +25,7 @@ export class CollaborationManager {
         this.repository = new CollaborationRepository();
     }
 
+    /** @deprecated */
     async fetchAllUsers(): Promise<CollaborationUserWithRoles[] | false> {
         const sharedGoals = await this.user.goalsManager.fetchSharedGoals();
 
@@ -70,6 +71,7 @@ export class CollaborationManager {
         return Object.values(resultMap);
     }
 
+    /** @deprecated */
     async fetchUsersForGoal(args: FetchGoalUsersArg): Promise<CollaborationUserWithRoles[] | false> {
         const users = await this.repository.fetchUsersForGoal(args.goalId);
 
@@ -104,6 +106,7 @@ export class CollaborationManager {
         return Object.values(resultMap);
     }
 
+    /** @deprecated*/
     async toggleUserRoles(args: ToggleUserRolesArg): Promise<number[] | false> {
         return await this.repository.updateUserRoles(args.userId, args.roles);
     }
@@ -181,7 +184,7 @@ export class CollaborationManager {
             return [];
         }
 
-        
+
         const resultMap: Record<string, CollaborationUserWithRoles> = {};
 
         users.forEach((item) => {
@@ -214,7 +217,7 @@ export class CollaborationManager {
             return [];
         }
 
-        
+
         const resultMap: Record<string, CollaborationUserWithRoles> = {};
 
         users.forEach((item) => {
