@@ -1,5 +1,6 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, exists, inArray } from 'drizzle-orm';
 import {
+    CollaborationRolesSchema,
     CollaborationUsersSchema,
     type CollaborationUsersSchemaTypeForSelect,
     CollaborationUsersToGoalsSchema,
@@ -24,6 +25,7 @@ export class CollaborationRepository {
         this.db = Database.getInstance();
     }
 
+    /** @deprecated */
     async fetchAllUsers(goalIds: number[]): Promise<FetchUsersForGoal[] | false> {
         if (goalIds.length === 0) {
             return [];
@@ -35,6 +37,10 @@ export class CollaborationRepository {
           FROM collaboration.users u
           left join collaboration.users_to_goals utg on u.id = utg.user_id
           LEFT JOIN collaboration.users_to_roles utr ON u.id = utr.user_id
+            AND EXISTS (
+              SELECT 1 FROM collaboration.roles r
+              WHERE r.id = utr.role_id AND r.goal_id = utg.goal_id
+            )
           WHERE utg.goal_id IN (${placeholders})
         `;
 
@@ -92,7 +98,8 @@ export class CollaborationRepository {
         return result.rows[0];
     }
 
-    
+
+    /** @deprecated */
     async fetchUsersForGoal(goalId: number): Promise<FetchUsersForGoal[] | false> {
         const query = `
           SELECT u.*, u.invitation_date::text, utr.role_id, utg.goal_id
@@ -112,6 +119,7 @@ export class CollaborationRepository {
         return result.rows;
     }
 
+    /** @deprecated */
     async fetchUsersForGoals(goalIds: number[]): Promise<FetchUsersForGoal[] | false> {
         if (goalIds.length === 0) {
             return [];
@@ -146,6 +154,7 @@ export class CollaborationRepository {
         return !!(result.rowCount && result.rowCount > 0);
     }
 
+    /** @deprecated */
     async updateUserRoles(userId: number, roles: number[]): Promise<number[] | false> {
         const deleteQuery = `DELETE FROM collaboration.users_to_roles WHERE user_id = $1`;
         let i = 1;
@@ -247,13 +256,29 @@ export class CollaborationRepository {
     async toggleUserRolesNew(args: CollaborationArgToggleUserRoles): Promise<number[]> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.transaction(async (tx) => {
-                await tx
-                    .delete(CollaborationUsersToRolesSchema)
-                    .where(eq(CollaborationUsersToRolesSchema.userId, args.userId));
-                if (args.roles.length > 0) {
+
+                const goalRoles = await tx
+                    .select({ id: CollaborationRolesSchema.id })
+                    .from(CollaborationRolesSchema)
+                    .where(eq(CollaborationRolesSchema.goalId, args.goalId));
+                const goalRoleIds = goalRoles.map((role) => role.id);
+
+                if (goalRoleIds.length > 0) {
+                    await tx
+                        .delete(CollaborationUsersToRolesSchema)
+                        .where(
+                            and(
+                                eq(CollaborationUsersToRolesSchema.userId, args.userId),
+                                inArray(CollaborationUsersToRolesSchema.roleId, goalRoleIds)
+                            )
+                        );
+                }
+
+                const rolesToAssign = args.roles.filter((roleId) => goalRoleIds.includes(roleId));
+                if (rolesToAssign.length > 0) {
                     return await tx
                         .insert(CollaborationUsersToRolesSchema)
-                        .values(args.roles.map((roleId) => ({ userId: args.userId, roleId })))
+                        .values(rolesToAssign.map((roleId) => ({ userId: args.userId, roleId })))
                         .returning();
                 }
                 return [];
@@ -284,7 +309,20 @@ export class CollaborationRepository {
                 )
                 .leftJoin(
                     CollaborationUsersToRolesSchema,
-                    eq(CollaborationUsersSchema.id, CollaborationUsersToRolesSchema.userId)
+                    and(
+                        eq(CollaborationUsersSchema.id, CollaborationUsersToRolesSchema.userId),
+                        exists(
+                            this.db.dbDrizzle
+                                .select()
+                                .from(CollaborationRolesSchema)
+                                .where(
+                                    and(
+                                        eq(CollaborationRolesSchema.id, CollaborationUsersToRolesSchema.roleId),
+                                        eq(CollaborationRolesSchema.goalId, CollaborationUsersToGoalsSchema.goalId)
+                                    )
+                                )
+                        )
+                    )
                 )
                 .where(inArray(CollaborationUsersToGoalsSchema.goalId, goalIds))
         );
@@ -308,7 +346,20 @@ export class CollaborationRepository {
                 )
                 .leftJoin(
                     CollaborationUsersToRolesSchema,
-                    eq(CollaborationUsersSchema.id, CollaborationUsersToRolesSchema.userId)
+                    and(
+                        eq(CollaborationUsersSchema.id, CollaborationUsersToRolesSchema.userId),
+                        exists(
+                            this.db.dbDrizzle
+                                .select()
+                                .from(CollaborationRolesSchema)
+                                .where(
+                                    and(
+                                        eq(CollaborationRolesSchema.id, CollaborationUsersToRolesSchema.roleId),
+                                        eq(CollaborationRolesSchema.goalId, CollaborationUsersToGoalsSchema.goalId)
+                                    )
+                                )
+                        )
+                    )
                 )
                 .where(eq(CollaborationUsersToGoalsSchema.goalId, goalId))
         );

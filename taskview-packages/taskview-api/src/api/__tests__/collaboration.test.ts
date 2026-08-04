@@ -308,6 +308,127 @@ describe('Collaboration', () => {
 
     });
 
+    // Regression for #98, the reporter's exact path: an org admin who is a collaborator
+    // in several projects created a new project in that org and lost every role he had.
+    // The trigger is creating a goal in an organization owned by SOMEONE ELSE - only then
+    // does the API add the creator as a collaborator, which used to wipe his other roles.
+    it('an org member creating a project in that org keeps his roles in other projects', async () => {
+        const { $tvApiForSecondUser, user2Email } = await initApi();
+
+        const org = await $api.organizations.create({ name: `Roles org ${Date.now()}` });
+        expect(org?.id).toBeDefined();
+
+        // the reporter's case: the second user is an ADMIN of the organization
+        await $api.organizations.addMember({
+            organizationId: org.id,
+            email: user2Email,
+            role: 'admin',
+        });
+
+        // owner creates two projects in the org and gives the admin roles in both
+        const projectA = await $api.goals.createGoal({ name: 'Org project A', organizationId: org.id });
+        const projectB = await $api.goals.createGoal({ name: 'Org project B', organizationId: org.id });
+        expect(projectA?.id).toBeDefined();
+        expect(projectB?.id).toBeDefined();
+
+        const collabA = await $api.collaboration.inviteUserToGoal({ goalId: projectA!.id, email: user2Email });
+        const collabB = await $api.collaboration.inviteUserToGoal({ goalId: projectB!.id, email: user2Email });
+        expect(collabA?.id).toBeDefined();
+        expect(collabB?.id).toEqual(collabA?.id);
+
+        const editorA = (await $api.collaboration.fetchRolesForGoal(projectA!.id))?.find((r) => r.name === 'editor');
+        const editorB = (await $api.collaboration.fetchRolesForGoal(projectB!.id))?.find((r) => r.name === 'editor');
+        expect(editorA?.id).toBeDefined();
+        expect(editorB?.id).toBeDefined();
+
+        await $api.collaboration.toggleUserRoles({
+            goalId: projectA!.id,
+            userId: collabA!.id,
+            roles: [editorA!.id],
+        });
+        await $api.collaboration.toggleUserRoles({
+            goalId: projectB!.id,
+            userId: collabA!.id,
+            roles: [editorB!.id],
+        });
+
+        // ...the admin now creates his own project INSIDE the owner's organization
+        const ownProject = await $tvApiForSecondUser.goals.createGoal({
+            name: 'Project created by the org admin',
+            organizationId: org.id,
+        });
+        expect(ownProject?.id).toBeDefined();
+
+        // roles in the pre-existing projects must survive
+        const usersA = await $api.collaboration.fetchUsersForGoal(projectA!.id);
+        const usersB = await $api.collaboration.fetchUsersForGoal(projectB!.id);
+        expect(usersA?.find((u) => u.email === user2Email)?.roles).toEqual([editorA!.id]);
+        expect(usersB?.find((u) => u.email === user2Email)?.roles).toEqual([editorB!.id]);
+
+        // and the new project is still usable by its creator
+        const ownGoals = await $tvApiForSecondUser.goals.fetchGoals(org.id);
+        expect(ownGoals?.some((g) => g.id === ownProject!.id)).toBe(true);
+
+        await $api.organizations.delete(org.id).catch(() => { });
+    });
+
+    // Regression for #98: toggling roles in one goal wiped the user's roles in every other goal
+    it('toggling roles in one goal must not touch the same user roles in another goal', async () => {
+        const email = `multi-goal-${Date.now()}@fff.com`;
+
+        const goalA = await $api.goals.createGoal({ name: 'Roles isolation goal A' });
+        const goalB = await $api.goals.createGoal({ name: 'Roles isolation goal B' });
+        expect(goalA).toBeTruthy();
+        expect(goalB).toBeTruthy();
+
+        const userInA = await $api.collaboration.inviteUserToGoal({ goalId: goalA!.id, email });
+        const userInB = await $api.collaboration.inviteUserToGoal({ goalId: goalB!.id, email });
+        expect(userInA?.id).toBeDefined();
+        // the same collaboration user is shared between goals
+        expect(userInB?.id).toEqual(userInA?.id);
+
+        const rolesA = await $api.collaboration.fetchRolesForGoal(goalA!.id);
+        const rolesB = await $api.collaboration.fetchRolesForGoal(goalB!.id);
+        const editorA = rolesA?.find((r) => r.name === 'editor');
+        const editorB = rolesB?.find((r) => r.name === 'editor');
+        expect(editorA?.id).toBeDefined();
+        expect(editorB?.id).toBeDefined();
+
+        // assign a role in goal B first
+        const toggledB = await $api.collaboration.toggleUserRoles({
+            goalId: goalB!.id,
+            userId: userInA?.id!,
+            roles: [editorB?.id!],
+        });
+        expect(toggledB).toEqual([editorB?.id!]);
+
+        // toggling roles in goal A must not clear the role in goal B
+        const toggledA = await $api.collaboration.toggleUserRoles({
+            goalId: goalA!.id,
+            userId: userInA?.id!,
+            roles: [editorA?.id!],
+        });
+        expect(toggledA).toEqual([editorA?.id!]);
+
+        const usersInB = await $api.collaboration.fetchUsersForGoal(goalB!.id);
+        expect(usersInB?.find((u) => u.email === email)?.roles).toEqual([editorB?.id!]);
+
+        // each goal's collaborator list shows only that goal's roles
+        const usersInA = await $api.collaboration.fetchUsersForGoal(goalA!.id);
+        expect(usersInA?.find((u) => u.email === email)?.roles).toEqual([editorA?.id!]);
+
+        // a role id belonging to another goal must not be assignable through this goal
+        const toggledForeign = await $api.collaboration.toggleUserRoles({
+            goalId: goalA!.id,
+            userId: userInA?.id!,
+            roles: [editorB?.id!],
+        }).catch(() => null);
+        expect(toggledForeign ?? []).toEqual([]);
+
+        const usersInB2 = await $api.collaboration.fetchUsersForGoal(goalB!.id);
+        expect(usersInB2?.find((u) => u.email === email)?.roles).toEqual([editorB?.id!]);
+    });
+
     it('should handle inviting already existing collaborator', async () => {
         const addResult1 = await $api.collaboration.inviteUserToGoal({
             goalId: collaborationGoal?.id!,
