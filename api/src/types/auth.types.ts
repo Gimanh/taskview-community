@@ -115,6 +115,12 @@ export type UpdateUserCredentialsArgs = {
     passwordHash: string;
 };
 
+export type UpdateUserEmailArgs = {
+    userId: number;
+    oldEmail: string;
+    email: string;
+};
+
 export type UpdateUserCredentialsResult = 'ok' | 'conflict' | 'error';
 
 export const RefreshTokenSchema = z.object({

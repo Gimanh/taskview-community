@@ -29,6 +29,15 @@ export function generateString(length: number) {
     return result
 }
 
+export function generateLetters(length: number) {
+    let result = ''
+    const characters = 'abcdefghijklmnopqrstuvwxyz'
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(randomInt(characters.length))
+    }
+    return result
+}
+
 export function time() {
     return Math.floor(Date.now() / 1000);
 }

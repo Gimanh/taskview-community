@@ -49,39 +49,42 @@ onMounted(async () => {
     return
   }
 
-  // If user already has a valid token, redirect to dashboard
+  // Handle SSO error redirect
+  if (route.query.sso_error) {
+    const ssoErrorKey = {
+      'registration-disabled': 'auth.registrationDisabled',
+      domain_unverified: 'auth.ssoDomainUnverified',
+      email_in_use: 'auth.ssoEmailInUse',
+    }[String(route.query.sso_error)] ?? 'auth.ssoError'
+
+    toast.add({
+      title: t('auth.error'),
+      description: t(ssoErrorKey),
+      color: 'error',
+    })
+  }
+
+  const tokens = route.query.tokens as string
+  if (tokens) {
+    try {
+      const result = JSON.parse(decodeURIComponent(tokens)) as LoginTokens
+      await loginByCode(result.code, result.email)
+      return
+    } catch (error) {
+      console.error('Failed to process tokens from URL:', error)
+      toast.add({
+        title: t('auth.error'),
+        description: t('auth.loginFailed'),
+        color: 'error',
+      })
+      return
+    }
+  }
+
   const existingToken = await $ls.getToken()
   if (existingToken) {
     await $ls.updateUserStoreByToken()
     await redirectToUser(router)
-    return
-  }
-
-  // Handle SSO error redirect
-  if (route.query.sso_error) {
-    toast.add({
-      title: t('auth.error'),
-      description: route.query.sso_error === 'registration-disabled'
-        ? t('auth.registrationDisabled')
-        : t('auth.ssoError'),
-      color: 'error',
-    })
-  }
-
-  // Handle OAuth callback tokens from URL
-  try {
-    const tokens = route.query.tokens as string
-    if (!tokens) return
-
-    const result = JSON.parse(decodeURIComponent(tokens)) as LoginTokens
-    await loginByCode(result.code, result.email)
-  } catch (error) {
-    console.error('Failed to process tokens from URL:', error)
-    toast.add({
-      title: t('auth.error'),
-      description: t('auth.loginFailed'),
-      color: 'error',
-    })
   }
 })
 

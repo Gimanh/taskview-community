@@ -41,6 +41,8 @@ services:
         condition: service_completed_successfully
     env_file:
       - ../../dockers-check/.env.taskview
+    environment:
+      SSO_TRUSTED_DOMAINS: sso-e2e.test,auto.sso-e2e.test
     volumes:
       - ./e2e_logs:/usr/src/app/logs
       - ./e2e_updates:/usr/src/app/updates

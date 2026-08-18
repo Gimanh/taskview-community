@@ -737,5 +737,18 @@
         "description": [
             "Log of sent project-invite emails (collaboration.invite_emails) backing the per-recipient cooldown and the hourly per-initiator sending cap"
         ]
+    },
+    "58": {
+        "version": "1.63.0",
+        "name": "SSO domain verification",
+        "releaseDate": "20260813",
+        "scripts": [
+            "/1.63.0/0.sso-domain-verification.sql",
+            "/1.63.0/1.sso-domain-verified-unique.sql"
+        ],
+        "description": [
+            "SSO configs require proving ownership of email_domain_restriction before login is allowed: DNS TXT taskview-sso-verify=<token> or https://<domain>/.well-known/taskview-sso-verify.txt. Air-gapped installs can skip this for listed domains via SSO_TRUSTED_DOMAINS.",
+            "Replaces the plain UNIQUE(email_domain_restriction) with a partial unique index over verified configs only, so an unverified config can no longer squat a domain and block its real owner — multiple orgs may hold a pending config for the same domain, but only one can verify it (first-to-verify wins)."
+        ]
     }
 }

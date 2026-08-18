@@ -2,7 +2,7 @@ import { eq, sql } from 'drizzle-orm';
 import { CollaborationUsersSchema, OrganizationMembersSchema, SsoIdentitiesSchema, UsersSchema } from 'taskview-db-schemas';
 import { Database } from '../../modules/db';
 import { $logger } from '../../modules/logget';
-import type { RegisterUserInDb, UpdateUserCredentialsArgs, UpdateUserCredentialsResult, UserDbRecord } from '../../types/auth.types';
+import type { RegisterUserInDb, UpdateUserCredentialsArgs, UpdateUserEmailArgs, UpdateUserCredentialsResult, UserDbRecord } from '../../types/auth.types';
 
 export default class AuthModel {
     private readonly db: Database;
@@ -185,6 +185,37 @@ export default class AuthModel {
                 return 'conflict';
             }
             $logger.error(error, `Can not update credentials for user ${args.userId}`);
+            return 'error';
+        }
+    }
+
+    async updateUserEmail(args: UpdateUserEmailArgs): Promise<UpdateUserCredentialsResult> {
+        try {
+            await this.db.dbDrizzle.transaction(async (tx) => {
+                await tx
+                    .update(UsersSchema)
+                    .set({ email: args.email })
+                    .where(eq(UsersSchema.id, args.userId));
+                await tx
+                    .update(OrganizationMembersSchema)
+                    .set({ email: args.email })
+                    .where(eq(OrganizationMembersSchema.email, args.oldEmail));
+                await tx
+                    .update(CollaborationUsersSchema)
+                    .set({ email: args.email })
+                    .where(eq(CollaborationUsersSchema.email, args.oldEmail));
+                await tx
+                    .update(SsoIdentitiesSchema)
+                    .set({ email: args.email })
+                    .where(eq(SsoIdentitiesSchema.userId, args.userId));
+            });
+            return 'ok';
+        } catch (error) {
+            const pgCode = (error as { code?: string })?.code ?? (error as { cause?: { code?: string } })?.cause?.code;
+            if (pgCode === '23505') {
+                return 'conflict';
+            }
+            $logger.error(error, `Can not update email for user ${args.userId}`);
             return 'error';
         }
     }

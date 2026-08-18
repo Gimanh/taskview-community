@@ -4,6 +4,7 @@ export type SsoAuthResult = {
   email: string
   externalId: string
   displayName?: string
+  preferredUsername?: string
   provider: string
 }
 

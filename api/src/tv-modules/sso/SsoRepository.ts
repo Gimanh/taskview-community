@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, isNotNull } from 'drizzle-orm'
 import {
   SsoConfigsSchema,
   SsoIdentitiesSchema,
@@ -8,12 +8,50 @@ import {
 } from 'taskview-db-schemas'
 import { Database } from '../../modules/db'
 import { callWithCatch } from '../../utils/helpers'
+import type {
+  FindSsoConfigByDomainAndOrgArgs,
+  FindSsoIdentityArgs,
+  FindSsoIdentityByUserArgs,
+  UpsertSsoIdentityArgs,
+} from './types'
 
 export class SsoRepository {
   private readonly db: Database
 
   constructor() {
     this.db = Database.getInstance()
+  }
+
+  async findVerifiedByDomain(domain: string): Promise<SsoConfigsSchemaTypeForSelect | null> {
+    const result = await callWithCatch(() =>
+      this.db.dbDrizzle
+        .select()
+        .from(SsoConfigsSchema)
+        .where(
+          and(
+            eq(SsoConfigsSchema.emailDomainRestriction, domain.toLowerCase()),
+            isNotNull(SsoConfigsSchema.domainVerifiedAt),
+          )
+        )
+    )
+    if (!result || result.length === 0) return null
+    return result[0]
+  }
+
+  async findByDomainAndOrg(args: FindSsoConfigByDomainAndOrgArgs): Promise<SsoConfigsSchemaTypeForSelect | null> {
+    const result = await callWithCatch(() =>
+      this.db.dbDrizzle
+        .select()
+        .from(SsoConfigsSchema)
+        .where(
+          and(
+            eq(SsoConfigsSchema.emailDomainRestriction, args.domain.toLowerCase()),
+            eq(SsoConfigsSchema.organizationId, args.organizationId),
+          )
+        )
+    )
+    if (!result || result.length === 0) return null
+    return result[0]
   }
 
   async findEnabledByDomain(domain: string): Promise<SsoConfigsSchemaTypeForSelect | null> {
@@ -146,12 +184,41 @@ export class SsoRepository {
     return !!(result?.rowCount && result.rowCount > 0)
   }
 
-  async upsertIdentity(data: {
-    userId: number
-    ssoConfigId: number
-    externalId: string
-    email: string
-  }): Promise<SsoIdentitiesSchemaTypeForSelect | null> {
+  async findIdentity(args: FindSsoIdentityArgs): Promise<SsoIdentitiesSchemaTypeForSelect | null> {
+    const result = await this.db.dbDrizzle
+      .select()
+      .from(SsoIdentitiesSchema)
+      .where(
+        and(
+          eq(SsoIdentitiesSchema.ssoConfigId, args.ssoConfigId),
+          eq(SsoIdentitiesSchema.externalId, args.externalId),
+        )
+      )
+    if (result.length === 0) return null
+    return result[0]
+  }
+
+  async findIdentityByUser(args: FindSsoIdentityByUserArgs): Promise<SsoIdentitiesSchemaTypeForSelect | null> {
+    const result = await this.db.dbDrizzle
+      .select()
+      .from(SsoIdentitiesSchema)
+      .where(
+        and(
+          eq(SsoIdentitiesSchema.ssoConfigId, args.ssoConfigId),
+          eq(SsoIdentitiesSchema.userId, args.userId),
+        )
+      )
+    if (result.length === 0) return null
+    return result[0]
+  }
+
+  async deleteIdentitiesByConfig(ssoConfigId: number): Promise<void> {
+    await this.db.dbDrizzle
+      .delete(SsoIdentitiesSchema)
+      .where(eq(SsoIdentitiesSchema.ssoConfigId, ssoConfigId))
+  }
+
+  async upsertIdentity(data: UpsertSsoIdentityArgs): Promise<SsoIdentitiesSchemaTypeForSelect | null> {
     const existing = await callWithCatch(() =>
       this.db.dbDrizzle
         .select()
