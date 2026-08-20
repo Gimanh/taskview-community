@@ -881,6 +881,8 @@ export default {
     callbackUrlAutoHint: 'Leave empty to detect automatically',
     enabled: 'Enabled',
     disabled: 'Disabled',
+    toggleFailed: 'Failed to change SSO status',
+    enableRequiresVerifiedDomain: 'Verify the email domain before enabling this provider',
     callbackUrlLabel: 'Callback URL (use this in your IdP)',
     copied: 'Copied to clipboard',
     copyFailed: 'Failed to copy',

@@ -854,6 +854,8 @@ export default {
     callbackUrlAutoHint: 'Можно оставить пустым — адрес будет определён автоматически',
     enabled: 'Включён',
     disabled: 'Выключен',
+    toggleFailed: 'Не удалось изменить статус SSO',
+    enableRequiresVerifiedDomain: 'Перед включением провайдера подтвердите домен почты',
     callbackUrlLabel: 'Callback URL (укажи в настройках IdP)',
     copied: 'Скопировано',
     copyFailed: 'Не удалось скопировать',

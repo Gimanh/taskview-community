@@ -867,6 +867,8 @@ export default {
     callbackUrlAutoHint: 'Déjalo vacío para detectarla automáticamente',
     enabled: 'Activado',
     disabled: 'Desactivado',
+    toggleFailed: 'No se pudo cambiar el estado de SSO',
+    enableRequiresVerifiedDomain: 'Verifica el dominio de correo antes de activar este proveedor',
     callbackUrlLabel: 'URL de Callback (úsala en tu IdP)',
     copied: 'Copiado al portapapeles',
     copyFailed: 'Error al copiar',

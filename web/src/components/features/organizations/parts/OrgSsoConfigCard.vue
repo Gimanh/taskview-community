@@ -10,9 +10,17 @@
         </p>
       </div>
       <div class="flex items-center gap-2">
-        <UBadge :color="config.enabled ? 'success' : 'neutral'">
+        <span
+          class="text-xs"
+          :class="config.enabled ? 'text-success' : 'text-dimmed'"
+        >
           {{ config.enabled ? t('sso.enabled') : t('sso.disabled') }}
-        </UBadge>
+        </span>
+        <USwitch
+          :model-value="!!config.enabled"
+          :loading="toggling"
+          @update:model-value="toggleEnabled"
+        />
         <UButton
           icon="i-lucide-pencil"
           size="xs"
@@ -58,18 +66,20 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { $tvApi } from '@/plugins/axios'
 import type { SsoConfig } from 'taskview-api'
 import OrgSsoScimSection from './OrgSsoScimSection.vue'
 import OrgSsoDomainSection from './OrgSsoDomainSection.vue'
 
-defineProps<{
+const props = defineProps<{
   config: SsoConfig
   callbackUrl: string
   scimEndpointUrl: string
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   edit: []
   delete: []
   updated: []
@@ -77,6 +87,24 @@ defineEmits<{
 
 const { t } = useI18n()
 const toast = useToast()
+
+const toggling = ref(false)
+
+async function toggleEnabled(enabled: boolean) {
+  toggling.value = true
+  try {
+    await $tvApi.sso.updateConfig(props.config.id, { enabled: enabled ? 1 : 0 })
+    emit('updated')
+  } catch (error) {
+    const status = (error as { response?: { status?: number } })?.response?.status
+    toast.add({
+      title: status === 403 ? t('sso.enableRequiresVerifiedDomain') : t('sso.toggleFailed'),
+      color: 'error',
+    })
+  } finally {
+    toggling.value = false
+  }
+}
 
 async function copyToClipboard(text: string) {
   try {

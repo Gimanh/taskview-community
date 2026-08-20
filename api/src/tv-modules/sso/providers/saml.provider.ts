@@ -2,6 +2,7 @@ import { SAML, ValidateInResponseTo } from '@node-saml/node-saml'
 import type { Request, Response } from 'express'
 import type { SsoConfigsSchemaTypeForSelect } from 'taskview-db-schemas'
 import { PublicApiUrl } from '../../../modules/public-url'
+import { deriveSamlEmail } from '../sso.utils'
 import type { SamlOptionsArgs } from '../types'
 import type { SsoProvider, SsoAuthResult } from './sso-provider.interface'
 import { SamlDbCacheProvider } from './saml-cache-provider'
@@ -72,14 +73,13 @@ export class SamlProvider implements SsoProvider {
       throw new Error('SAML response missing nameID')
     }
 
-    const email = (
-      profile.email
-      ?? profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
-      ?? profile.nameID
-    ) as string
+    const email = deriveSamlEmail(profile as Record<string, unknown>)
+    if (!email) {
+      throw new Error('SAML response missing email attribute')
+    }
 
     return {
-      email: email.toLowerCase(),
+      email,
       externalId: profile.nameID,
       displayName: (profile.displayName
         ?? profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']) as string | undefined,
