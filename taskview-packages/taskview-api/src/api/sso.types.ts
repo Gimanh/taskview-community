@@ -25,9 +25,28 @@ export type SsoConfig = {
   hasSamlSigningCert: boolean
   hasOidcClientSecret: boolean
   hasScimToken: boolean
+  domainVerifyToken: string | null
+  domainVerifiedAt: string | null
+  isDomainVerified: boolean
+  isDomainTrusted: boolean
+  domainVerifyDnsRecord: string | null
+  domainVerifyHttpUrl: string
 
   createdAt: string
   updatedAt: string
+}
+
+export type SsoDomainVerificationStart = {
+  token: string
+  dnsRecord: string
+  httpUrl: string
+  isDomainVerified: boolean
+  isDomainTrusted: boolean
+}
+
+export type SsoDomainVerificationCheck = {
+  verified: boolean
+  method: 'dns' | 'http' | 'trusted' | null
 }
 
 export type SsoConfigArgCreate = {

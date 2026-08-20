@@ -1,4 +1,5 @@
-import { bigint, integer, pgSchema, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
+import { bigint, integer, pgSchema, text, timestamp, unique, uniqueIndex, varchar } from 'drizzle-orm/pg-core'
 import { UsersSchema } from './users.schema'
 import { OrganizationsSchema } from './organizations.schema'
 
@@ -24,14 +25,21 @@ export const SsoConfigsSchema = pgSchema('tv_auth').table('sso_configs', {
   oidcScope: varchar('oidc_scope'),
 
   defaultOrgRole: varchar('default_org_role').notNull().default('member'),
-  emailDomainRestriction: varchar('email_domain_restriction').notNull().unique(),
+  emailDomainRestriction: varchar('email_domain_restriction').notNull(),
 
   scimToken: varchar('scim_token'),
   scimEnabled: integer('scim_enabled').notNull().default(0),
 
+  domainVerifyToken: varchar('domain_verify_token'),
+  domainVerifiedAt: timestamp('domain_verified_at'),
+
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
-})
+}, (table) => [
+  uniqueIndex('sso_configs_verified_domain_uniq')
+    .on(table.emailDomainRestriction)
+    .where(sql`${table.domainVerifiedAt} IS NOT NULL`),
+])
 
 export type SsoConfigsSchemaTypeForSelect = typeof SsoConfigsSchema.$inferSelect
 export type SsoConfigsSchemaTypeForInsert = typeof SsoConfigsSchema.$inferInsert

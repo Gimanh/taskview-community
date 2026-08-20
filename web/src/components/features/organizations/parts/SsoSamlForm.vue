@@ -49,7 +49,10 @@
       </template>
     </UFormField>
 
-    <UFormField :label="t('sso.samlCallbackUrl')">
+    <UFormField
+      :label="t('sso.samlCallbackUrl')"
+      :description="t('sso.callbackUrlAutoHint')"
+    >
       <UInput
         v-model="form.samlCallbackUrl"
         :placeholder="callbackUrlPlaceholder"

@@ -1,6 +1,8 @@
 import { SAML, ValidateInResponseTo } from '@node-saml/node-saml'
 import type { Request, Response } from 'express'
 import type { SsoConfigsSchemaTypeForSelect } from 'taskview-db-schemas'
+import { PublicApiUrl } from '../../../modules/public-url'
+import type { SamlOptionsArgs } from '../types'
 import type { SsoProvider, SsoAuthResult } from './sso-provider.interface'
 import { SamlDbCacheProvider } from './saml-cache-provider'
 
@@ -11,12 +13,12 @@ function normalizeCert(cert: string): string {
     .replace(/[\s\r\n]/g, '')
 }
 
-function buildSamlOptions(config: SsoConfigsSchemaTypeForSelect, mode: 'assertion' | 'response') {
+function buildSamlOptions({ config, mode, callbackUrl }: SamlOptionsArgs) {
   return {
     entryPoint: config.samlEntryPoint!,
     issuer: config.samlIssuer!,
     idpCert: normalizeCert(config.samlCert!),
-    callbackUrl: config.samlCallbackUrl!,
+    callbackUrl,
     wantAssertionsSigned: mode === 'assertion',
     wantAuthnResponseSigned: mode === 'response',
     validateInResponseTo: ValidateInResponseTo.always,
@@ -31,29 +33,38 @@ function buildSamlOptions(config: SsoConfigsSchemaTypeForSelect, mode: 'assertio
 }
 
 export class SamlProvider implements SsoProvider {
-  private readonly samlAssertion: SAML
-  private readonly samlResponse: SAML
   private readonly config: SsoConfigsSchemaTypeForSelect
 
   constructor(config: SsoConfigsSchemaTypeForSelect) {
     this.config = config
-    this.samlAssertion = new SAML(buildSamlOptions(config, 'assertion'))
-    this.samlResponse = new SAML(buildSamlOptions(config, 'response'))
+  }
+
+  private resolveCallbackUrl(req: Request): string {
+    return this.config.samlCallbackUrl?.trim()
+      || `${PublicApiUrl.base(req)}/module/sso/callback/${this.config.id}`
   }
 
   async initiateLogin(req: Request, res: Response, relayState?: string): Promise<void> {
-    const loginUrl = await this.samlAssertion.getAuthorizeUrlAsync(relayState ?? '', req.hostname, {})
+    const saml = new SAML(buildSamlOptions({
+      config: this.config,
+      mode: 'assertion',
+      callbackUrl: this.resolveCallbackUrl(req),
+    }))
+    const loginUrl = await saml.getAuthorizeUrlAsync(relayState ?? '', req.hostname, {})
     res.redirect(loginUrl)
   }
 
   async handleCallback(req: Request): Promise<SsoAuthResult> {
+    const callbackUrl = this.resolveCallbackUrl(req)
     let profile
 
     try {
-      const result = await this.samlAssertion.validatePostResponseAsync(req.body)
+      const saml = new SAML(buildSamlOptions({ config: this.config, mode: 'assertion', callbackUrl }))
+      const result = await saml.validatePostResponseAsync(req.body)
       profile = result.profile
     } catch {
-      const result = await this.samlResponse.validatePostResponseAsync(req.body)
+      const saml = new SAML(buildSamlOptions({ config: this.config, mode: 'response', callbackUrl }))
+      const result = await saml.validatePostResponseAsync(req.body)
       profile = result.profile
     }
 

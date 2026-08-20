@@ -2,6 +2,7 @@ import { randomBytes } from 'crypto'
 import * as client from 'openid-client'
 import type { Request, Response } from 'express'
 import type { SsoConfigsSchemaTypeForSelect } from 'taskview-db-schemas'
+import { PublicApiUrl } from '../../../modules/public-url'
 import type { SsoProvider, SsoAuthResult } from './sso-provider.interface'
 
 export class OidcProvider implements SsoProvider {
@@ -28,7 +29,12 @@ export class OidcProvider implements SsoProvider {
     return this.oidcConfig
   }
 
-  async initiateLogin(_req: Request, res: Response, relayState?: string): Promise<void> {
+  private resolveCallbackUrl(req: Request): string {
+    return this.config.oidcCallbackUrl?.trim()
+      || `${PublicApiUrl.base(req)}/module/sso/callback/${this.config.id}`
+  }
+
+  async initiateLogin(req: Request, res: Response, relayState?: string): Promise<void> {
     const config = await this.getOidcConfig()
     const scope = this.config.oidcScope ?? 'openid email profile'
     const codeVerifier = client.randomPKCECodeVerifier()
@@ -63,7 +69,7 @@ export class OidcProvider implements SsoProvider {
     })
 
     const params = new URLSearchParams({
-      redirect_uri: this.config.oidcCallbackUrl!,
+      redirect_uri: this.resolveCallbackUrl(req),
       scope,
       code_challenge: codeChallenge,
       code_challenge_method: 'S256',
@@ -110,7 +116,7 @@ export class OidcProvider implements SsoProvider {
       throw new Error('CSRF state mismatch — possible CSRF attack')
     }
 
-    const callbackOrigin = new URL(this.config.oidcCallbackUrl!).origin
+    const callbackOrigin = new URL(this.resolveCallbackUrl(req)).origin
     const currentUrl = new URL(req.originalUrl, callbackOrigin)
     const tokens = await client.authorizationCodeGrant(config, currentUrl, {
       pkceCodeVerifier: codeVerifier,
@@ -128,6 +134,7 @@ export class OidcProvider implements SsoProvider {
       email: (claims.email as string).toLowerCase(),
       externalId: claims.sub,
       displayName: claims.name as string | undefined,
+      preferredUsername: claims.preferred_username as string | undefined,
       provider: `oidc-${this.config.id}`,
     }
   }

@@ -44,6 +44,11 @@
       </div>
     </div>
 
+    <OrgSsoDomainSection
+      :config="config"
+      @updated="$emit('updated')"
+    />
+
     <OrgSsoScimSection
       :config="config"
       :endpoint-url="scimEndpointUrl"
@@ -56,6 +61,7 @@
 import { useI18n } from 'vue-i18n'
 import type { SsoConfig } from 'taskview-api'
 import OrgSsoScimSection from './OrgSsoScimSection.vue'
+import OrgSsoDomainSection from './OrgSsoDomainSection.vue'
 
 defineProps<{
   config: SsoConfig

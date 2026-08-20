@@ -1,4 +1,12 @@
 import { type } from 'arktype'
+import type { SsoConfigsSchemaTypeForSelect } from 'taskview-db-schemas'
+import type { UserDbRecord } from '../../types/auth.types'
+
+export type SamlOptionsArgs = {
+  config: SsoConfigsSchemaTypeForSelect
+  mode: 'assertion' | 'response'
+  callbackUrl: string
+}
 
 export const SsoProtocols = {
   SAML: 'saml',
@@ -52,7 +60,76 @@ export const SsoConfigArkTypeUpdate = type({
   'oidcScope?': 'string',
 
   'defaultOrgRole?': "'admin' | 'member'",
-  'emailDomainRestriction?': 'string',
+  'emailDomainRestriction?': 'string > 0',
 })
 
 export type SsoConfigArgUpdate = typeof SsoConfigArkTypeUpdate.infer
+
+export type CheckSsoDomainProofArgs = {
+  domain: string
+  token: string
+}
+
+export type SsoDomainVerificationMethod = 'dns' | 'http' | 'trusted'
+
+export type StartDomainVerificationResult = {
+  token: string
+  dnsRecord: string
+  httpUrl: string
+  isDomainVerified: boolean
+  isDomainTrusted: boolean
+}
+
+export type CheckDomainVerificationResult = {
+  verified: boolean
+  method: SsoDomainVerificationMethod | null
+}
+
+export class SsoDomainNotVerifiedError extends Error {
+  readonly code = 'domain_unverified'
+
+  constructor() {
+    super('SSO domain is not verified')
+    this.name = 'SsoDomainNotVerifiedError'
+  }
+}
+
+export type FindSsoConfigByDomainAndOrgArgs = {
+  domain: string
+  organizationId: number
+}
+
+export type FindSsoIdentityArgs = {
+  ssoConfigId: number
+  externalId: string
+}
+
+export type FindSsoIdentityByUserArgs = {
+  ssoConfigId: number
+  userId: number
+}
+
+export type UpsertSsoIdentityArgs = {
+  userId: number
+  ssoConfigId: number
+  externalId: string
+  email: string
+}
+
+export type ResolveSsoUserArgs = {
+  ssoConfigId: number
+  email: string
+  externalId: string
+  preferredUsername?: string
+}
+
+export type ApplySsoIdpEmailArgs = {
+  user: UserDbRecord
+  email: string
+}
+
+export type SsoCallbackError = 'authentication_failed' | 'email_in_use'
+
+export type ResolveSsoUserResult =
+  | { ok: true, user: UserDbRecord }
+  | { ok: false, error: SsoCallbackError }

@@ -30,7 +30,10 @@
       </template>
     </UFormField>
 
-    <UFormField :label="t('sso.oidcCallbackUrl')">
+    <UFormField
+      :label="t('sso.oidcCallbackUrl')"
+      :description="t('sso.callbackUrlAutoHint')"
+    >
       <UInput
         v-model="form.oidcCallbackUrl"
         :placeholder="callbackUrlPlaceholder"

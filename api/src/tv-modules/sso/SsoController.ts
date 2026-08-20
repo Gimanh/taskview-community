@@ -5,15 +5,24 @@ import type { Request, Response } from 'express'
 import { $logger } from '../../modules/logget'
 import { PublicApiUrl } from '../../modules/public-url'
 import { logError } from '../../utils/api'
-import { generateString, isEmail } from '../../utils/helpers'
+import { generateLetters, generateString } from '../../utils/helpers'
 import AuthModel from '../auth/AuthModel'
 import { GoalsRepository } from '../goals/GoalsRepository'
 import { OrganizationRepository } from '../organizations/OrganizationRepository'
 import { createSsoProvider } from './providers/provider-factory'
 import { SsoRepository } from './SsoRepository'
 import { parseSamlMetadata } from './saml-metadata-parser'
-import { generateLoginCode, stripSecrets, validateMetadataUrl } from './sso.utils'
-import { SsoConfigArkTypeCreate, SsoConfigArkTypeUpdate } from './types'
+import { generateLoginCode, isSsoDomainVerified, stripSecrets, validateMetadataUrl } from './sso.utils'
+import {
+  SsoConfigArkTypeCreate,
+  SsoConfigArkTypeUpdate,
+  SsoDomainNotVerifiedError,
+  type ApplySsoIdpEmailArgs,
+  type ResolveSsoUserArgs,
+  type ResolveSsoUserResult,
+  type SsoCallbackError,
+} from './types'
+import type { UserDbRecord } from '../../types/auth.types'
 
 export class SsoController {
   private readonly ssoRepo = new SsoRepository()
@@ -21,12 +30,113 @@ export class SsoController {
   private readonly orgRepo = new OrganizationRepository()
   private readonly goalsRepo = new GoalsRepository()
 
+  private async resolveLogin(preferredUsername?: string): Promise<string> {
+    const base = preferredUsername?.trim().slice(0, 50)
+    if (!base) return generateString(7)
+
+    if (!(await this.authModel.getUserByLogin(base))) return base
+
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const suffix = `.${generateLetters(3)}`
+      const candidate = `${base.slice(0, 50 - suffix.length)}${suffix}`
+      if (!(await this.authModel.getUserByLogin(candidate))) return candidate
+    }
+
+    return generateString(7)
+  }
+
+  private redirectSsoError(res: Response, error: SsoCallbackError) {
+    return res.redirect(`${process.env.APP_URL}/login?sso_error=${error}`)
+  }
+
+  private async createSsoUser(args: ResolveSsoUserArgs): Promise<UserDbRecord | false> {
+    const password = generateString(16)
+    const login = await this.resolveLogin(args.preferredUsername)
+    const id = await this.authModel.registerUserInDb({
+      login,
+      email: args.email,
+      password: hashSync(password, 10),
+      block: 0,
+      confirmEmailCode: '',
+    })
+
+    if (!id) {
+      $logger.error('Failed to create user during SSO login')
+      return false
+    }
+
+    const personalOrgSlug = `org-${crypto.randomUUID().slice(0, 8)}`
+    const personalOrg = await this.orgRepo.create({ name: `${login}'s workspace`, slug: personalOrgSlug }, id, true)
+    if (personalOrg) {
+      await this.orgRepo.addMember(personalOrg.id, args.email, 'owner')
+      await this.goalsRepo.createInboxGoal({ ownerId: id, organizationId: personalOrg.id })
+    }
+
+    return await this.authModel.fetchUserById(id)
+  }
+
+  private async applyIdpEmail(args: ApplySsoIdpEmailArgs): Promise<'ok' | 'email_in_use' | 'error'> {
+    if (args.user.email.toLowerCase() === args.email) return 'ok'
+
+    const taken = await this.authModel.getUserByLogin(args.email, true)
+    if (taken && taken.id !== args.user.id) return 'email_in_use'
+
+    const result = await this.authModel.updateUserEmail({
+      userId: args.user.id,
+      oldEmail: args.user.email,
+      email: args.email,
+    })
+    if (result === 'conflict') return 'email_in_use'
+    if (result !== 'ok') return 'error'
+    return 'ok'
+  }
+
+  private async resolveSsoUser(args: ResolveSsoUserArgs): Promise<ResolveSsoUserResult> {
+    const identity = await this.ssoRepo.findIdentity({
+      ssoConfigId: args.ssoConfigId,
+      externalId: args.externalId,
+    })
+
+    if (identity) {
+      const user = await this.authModel.fetchUserById(identity.userId)
+      if (!user) return { ok: false, error: 'authentication_failed' }
+
+      const emailResult = await this.applyIdpEmail({ user, email: args.email })
+      if (emailResult === 'email_in_use') return { ok: false, error: 'email_in_use' }
+      if (emailResult !== 'ok') return { ok: false, error: 'authentication_failed' }
+
+      const refreshed = await this.authModel.fetchUserById(user.id)
+      if (!refreshed) return { ok: false, error: 'authentication_failed' }
+      return { ok: true, user: refreshed }
+    }
+
+    const existing = await this.authModel.getUserByLogin(args.email, true)
+    if (existing) {
+      const linked = await this.ssoRepo.findIdentityByUser({
+        ssoConfigId: args.ssoConfigId,
+        userId: existing.id,
+      })
+      if (linked && linked.externalId !== args.externalId) {
+        return { ok: false, error: 'email_in_use' }
+      }
+      return { ok: true, user: existing }
+    }
+
+    const created = await this.createSsoUser(args)
+    if (!created) return { ok: false, error: 'authentication_failed' }
+    return { ok: true, user: created }
+  }
+
   initiateLogin = async (req: Request, res: Response) => {
     const configId = Number(req.params.configId)
     if (!configId) return res.status(400).tvJson({ message: 'Invalid config ID' })
 
     const config = await this.ssoRepo.findEnabledById(configId)
     if (!config) return res.status(404).tvJson({ message: 'SSO provider not found' })
+
+    if (!isSsoDomainVerified(config)) {
+      return res.redirect(`${process.env.APP_URL}/login?sso_error=domain_unverified`)
+    }
 
     try {
       const provider = createSsoProvider(config)
@@ -45,50 +155,36 @@ export class SsoController {
     const config = await this.ssoRepo.findEnabledById(configId)
     if (!config) return res.status(404).tvJson({ message: 'SSO provider not found' })
 
+    if (!isSsoDomainVerified(config)) {
+      return res.redirect(`${process.env.APP_URL}/login?sso_error=domain_unverified`)
+    }
+
     try {
       const provider = createSsoProvider(config)
       const ssoResult = await provider.handleCallback(req)
 
-      if (config.emailDomainRestriction) {
-        const domain = ssoResult.email.split('@')[1]
-        if (domain !== config.emailDomainRestriction) {
-          return res.status(403).tvJson({ message: 'Email domain not allowed for this SSO provider' })
-        }
+      if (!config.emailDomainRestriction) {
+        return this.redirectSsoError(res, 'authentication_failed')
       }
 
-      let userData = await this.authModel.getUserByLogin(ssoResult.email, isEmail(ssoResult.email))
-
-      if (!userData) {
-        const password = generateString(16)
-        const login = generateString(7)
-        const id = await this.authModel.registerUserInDb({
-          login,
-          email: ssoResult.email,
-          password: hashSync(password, 10),
-          block: 0,
-          confirmEmailCode: '',
-        })
-
-        if (!id) {
-          $logger.error('Failed to create user during SSO login')
-          return res.status(500).tvJson({ message: 'Failed to create user' })
-        }
-
-        const personalOrgSlug = `org-${crypto.randomUUID().slice(0, 8)}`
-        const personalOrg = await this.orgRepo.create({ name: `${login}'s workspace`, slug: personalOrgSlug }, id, true)
-        if (personalOrg) {
-          await this.orgRepo.addMember(personalOrg.id, ssoResult.email, 'owner')
-          await this.goalsRepo.createInboxGoal({ ownerId: id, organizationId: personalOrg.id })
-        }
-
-        userData = await this.authModel.getUserByLogin(ssoResult.email, isEmail(ssoResult.email))
+      const domain = ssoResult.email.split('@')[1]
+      if (domain !== config.emailDomainRestriction) {
+        return res.status(403).tvJson({ message: 'Email domain not allowed for this SSO provider' })
       }
 
-      if (!userData) {
-        return res.status(500).tvJson({ message: 'Failed to resolve user after SSO login' })
+      const resolved = await this.resolveSsoUser({
+        ssoConfigId: config.id,
+        email: ssoResult.email,
+        externalId: ssoResult.externalId,
+        preferredUsername: ssoResult.preferredUsername,
+      })
+      if (!resolved.ok) {
+        return this.redirectSsoError(res, resolved.error)
       }
 
-      await this.orgRepo.addMember(config.organizationId, ssoResult.email, config.defaultOrgRole)
+      const userData = resolved.user
+
+      await this.orgRepo.addMember(config.organizationId, userData.email, config.defaultOrgRole)
 
       await this.ssoRepo.upsertIdentity({
         userId: userData.id,
@@ -132,7 +228,7 @@ export class SsoController {
     if (!domain) return res.tvJson(null)
 
     const config = await this.ssoRepo.findEnabledByDomain(domain)
-    if (!config) return res.tvJson(null)
+    if (!config || !isSsoDomainVerified(config)) return res.tvJson(null)
 
     return res.tvJson({
       id: config.id,
@@ -165,9 +261,16 @@ export class SsoController {
       return res.status(400).send(out.summary)
     }
 
-    const existing = await this.ssoRepo.findEnabledByDomain(out.emailDomainRestriction)
-    if (existing) {
+    const domain = out.emailDomainRestriction.toLowerCase()
+
+    const sameOrg = await this.ssoRepo.findByDomainAndOrg({ domain, organizationId: out.organizationId })
+    if (sameOrg) {
       return res.status(409).tvJson({ message: 'SSO config for this domain already exists' })
+    }
+
+    const verified = await this.ssoRepo.findVerifiedByDomain(domain)
+    if (verified) {
+      return res.status(409).tvJson({ message: 'This domain is already verified by another organization' })
     }
 
     const config = await req.appUser.ssoManager.createConfig(out).catch(logError)
@@ -186,8 +289,33 @@ export class SsoController {
       return res.status(400).send(out.summary)
     }
 
-    const config = await req.appUser.ssoManager.updateConfig(configId, out).catch(logError)
-    return res.tvJson(config ? stripSecrets(config) : null)
+    if (out.emailDomainRestriction) {
+      const domain = out.emailDomainRestriction.toLowerCase()
+
+      const verified = await this.ssoRepo.findVerifiedByDomain(domain)
+      if (verified && verified.id !== configId) {
+        return res.status(409).tvJson({ message: 'This domain is already verified by another organization' })
+      }
+
+      const current = await this.ssoRepo.findById(configId)
+      if (current) {
+        const sameOrg = await this.ssoRepo.findByDomainAndOrg({ domain, organizationId: current.organizationId })
+        if (sameOrg && sameOrg.id !== configId) {
+          return res.status(409).tvJson({ message: 'SSO config for this domain already exists' })
+        }
+      }
+    }
+
+    try {
+      const config = await req.appUser.ssoManager.updateConfig(configId, out)
+      return res.tvJson(config ? stripSecrets(config) : null)
+    } catch (error) {
+      if (error instanceof SsoDomainNotVerifiedError) {
+        return res.status(403).tvJson({ message: 'Domain is not verified' })
+      }
+      logError(error)
+      return res.tvJson(null)
+    }
   }
 
   parseMetadata = async (req: Request, res: Response) => {
@@ -211,6 +339,28 @@ export class SsoController {
       $logger.error(error, 'Failed to parse SAML metadata')
       return res.status(400).tvJson({ message: 'Failed to fetch or parse metadata' })
     }
+  }
+
+  startDomainVerification = async (req: Request, res: Response) => {
+    const configId = Number(req.params.configId)
+    if (!configId) return res.status(400).end()
+
+    const result = await req.appUser.ssoManager.startDomainVerification(configId).catch(logError)
+    if (!result) {
+      return res.status(404).tvJson({ message: 'SSO config not found' })
+    }
+    return res.tvJson(result)
+  }
+
+  checkDomainVerification = async (req: Request, res: Response) => {
+    const configId = Number(req.params.configId)
+    if (!configId) return res.status(400).end()
+
+    const result = await req.appUser.ssoManager.checkDomainVerification(configId).catch(logError)
+    if (!result) {
+      return res.status(404).tvJson({ message: 'SSO config not found' })
+    }
+    return res.tvJson(result)
   }
 
   generateScimToken = async (req: Request, res: Response) => {

@@ -38,6 +38,9 @@ services:
       ALLOW_PUBLIC_REGISTRATION: "false"
       # IdP-facing URLs are built from this base (see sso-public-urls.test.ts)
       API_PUBLIC_URL: "https://api.public.example"
+      # Domains that skip DNS/HTTP ownership proof — used by sso.test.ts to
+      # deterministically produce a *verified* config (method 'trusted').
+      SSO_TRUSTED_DOMAINS: "owned-sso.example"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:

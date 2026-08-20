@@ -4,6 +4,8 @@ import type {
   SsoConfig,
   SsoConfigArgCreate,
   SsoConfigArgUpdate,
+  SsoDomainVerificationCheck,
+  SsoDomainVerificationStart,
   SsoProviderPublic,
   SsoPublicUrls,
 } from './sso.types'
@@ -60,6 +62,18 @@ export default class TvSsoApi extends TvApiBase {
   public async toggleScim(configId: number, enabled: boolean) {
     return this.request(
       this.$axios.patch<AppResponse<{ scimEnabled: number }>>(`${this.moduleUrl}/admin/configs/${configId}/scim`, { enabled })
+    )
+  }
+
+  public async startDomainVerification(configId: number) {
+    return this.request(
+      this.$axios.post<AppResponse<SsoDomainVerificationStart>>(`${this.moduleUrl}/admin/configs/${configId}/verify-domain`)
+    )
+  }
+
+  public async checkDomainVerification(configId: number) {
+    return this.request(
+      this.$axios.post<AppResponse<SsoDomainVerificationCheck>>(`${this.moduleUrl}/admin/configs/${configId}/verify-domain/check`)
     )
   }
 
