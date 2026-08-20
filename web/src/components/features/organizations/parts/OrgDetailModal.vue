@@ -34,6 +34,7 @@
         </template>
 
         <UTabs
+          v-model="activeTab"
           :items="tabs"
           class="w-full"
           :ui="{ list: 'rounded-2xl', indicator: 'rounded-xl' }"
@@ -106,6 +107,7 @@
 import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Organization } from 'taskview-api'
+import type { OrgDetailTab } from '../types'
 import { useOrganizationStore } from '@/stores/organization.store'
 import { useTaskView } from '@/composables/useTaskView'
 import { useOrgPermissions } from '@/composables/useOrgPermissions'
@@ -115,6 +117,7 @@ import OrgSsoSettings from './OrgSsoSettings.vue'
 const open = defineModel<boolean>({ default: false })
 const props = defineProps<{
   organization: Organization | null
+  initialTab?: OrgDetailTab
 }>()
 
 const { t } = useI18n()
@@ -127,15 +130,24 @@ const editName = ref('')
 const editSlug = ref('')
 const saving = ref(false)
 
+const activeTab = ref<OrgDetailTab>('general')
+
 const tabs = computed(() => {
   const items = [
-    { label: t('organizations.general'), slot: 'general' },
+    { label: t('organizations.general'), slot: 'general', value: 'general' },
   ]
   if (isAdmin.value) {
-    items.push({ label: t('organizations.members'), slot: 'members' })
-    items.push({ label: 'SSO', slot: 'sso' })
+    items.push({ label: t('organizations.members'), slot: 'members', value: 'members' })
+    items.push({ label: 'SSO', slot: 'sso', value: 'sso' })
   }
   return items
+})
+
+watch(open, (isOpen) => {
+  if (isOpen) {
+    const requested = props.initialTab ?? 'general'
+    activeTab.value = tabs.value.some(tab => tab.value === requested) ? requested : 'general'
+  }
 })
 
 watch(() => props.organization, (org) => {

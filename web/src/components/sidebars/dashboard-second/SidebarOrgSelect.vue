@@ -54,12 +54,13 @@
       class="flex items-center justify-center gap-2 mb-3"
     >
       <UButton
+        v-if="isAdmin"
         icon="i-lucide-user-plus"
         color="neutral"
         variant="soft"
         size="sm"
         :ui="{ base: 'rounded-lg' }"
-        @click="isDetailOpen = true"
+        @click="openDetail('members')"
       />
       <UButton
         icon="i-lucide-pencil"
@@ -67,15 +68,16 @@
         variant="soft"
         size="sm"
         :ui="{ base: 'rounded-lg' }"
-        @click="isDetailOpen = true"
+        @click="openDetail('general')"
       />
       <UButton
+        v-if="isAdmin"
         icon="i-lucide-shield"
         color="neutral"
         variant="soft"
         size="sm"
         :ui="{ base: 'rounded-lg' }"
-        @click="isDetailOpen = true"
+        @click="openDetail('sso')"
       />
     </div>
 
@@ -86,6 +88,7 @@
     <OrgDetailModal
       v-model="isDetailOpen"
       :organization="currentOrg"
+      :initial-tab="detailTab"
     />
   </div>
 </template>
@@ -95,8 +98,10 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import type { Organization } from 'taskview-api'
+import type { OrgDetailTab } from '@/components/features/organizations/types'
 import { useOrganizationStore } from '@/stores/organization.store'
 import { useOrgSwitcher } from '@/composables/useOrgSwitcher'
+import { useOrgPermissions } from '@/composables/useOrgPermissions'
 import OrgCreateModal from '@/components/features/organizations/parts/OrgCreateModal.vue'
 import OrgDetailModal from '@/components/features/organizations/parts/OrgDetailModal.vue'
 
@@ -105,9 +110,17 @@ const orgStore = useOrganizationStore()
 const { organizations, currentOrg } = storeToRefs(orgStore)
 const { switchOrg } = useOrgSwitcher()
 
+const { isAdmin } = useOrgPermissions(() => currentOrg.value)
+
 const open = ref(false)
 const isCreateOpen = ref(false)
 const isDetailOpen = ref(false)
+const detailTab = ref<OrgDetailTab>('general')
+
+function openDetail(tab: OrgDetailTab) {
+  detailTab.value = tab
+  isDetailOpen.value = true
+}
 
 function selectOrg(org: Organization) {
   open.value = false
