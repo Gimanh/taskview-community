@@ -69,6 +69,7 @@ export default {
     ssoError: 'Error de autenticación SSO. Inténtalo de nuevo.',
     ssoDomainUnverified: 'SSO no está disponible hasta que la organización verifique este dominio de correo.',
     ssoEmailInUse: 'Este correo ya está usado por otra cuenta de TaskView.',
+    ssoAccountBlocked: 'Esta cuenta está bloqueada. Contacta con tu administrador.',
     invalidEmail: 'Dirección de correo electrónico inválida',
     loginRequired: 'El usuario es obligatorio',
     passwordRequired: 'La contraseña es obligatoria',

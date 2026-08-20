@@ -128,7 +128,7 @@ export type ApplySsoIdpEmailArgs = {
   email: string
 }
 
-export type SsoCallbackError = 'authentication_failed' | 'email_in_use'
+export type SsoCallbackError = 'authentication_failed' | 'email_in_use' | 'account_blocked'
 
 export type ResolveSsoUserResult =
   | { ok: true, user: UserDbRecord }

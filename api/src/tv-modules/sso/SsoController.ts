@@ -184,6 +184,10 @@ export class SsoController {
 
       const userData = resolved.user
 
+      if (userData.block && !userData.confirm_email_code) {
+        return this.redirectSsoError(res, 'account_blocked')
+      }
+
       await this.orgRepo.addMember(config.organizationId, userData.email, config.defaultOrgRole)
 
       await this.ssoRepo.upsertIdentity({

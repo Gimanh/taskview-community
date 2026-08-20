@@ -367,6 +367,16 @@ export default class AuthController {
         // Invalidate code immediately to prevent replay attacks
         await req.appUser.authManager.repository.updateLoginCode(null, userData.email);
 
+        if (userData.block) {
+            if (!userData.confirm_email_code) {
+                return res.status(403).send({ message: 'account_blocked' });
+            }
+            const confirmed = await req.appUser.authManager.repository.markEmailConfirmed(userData.email);
+            if (!confirmed) {
+                return res.status(500).end();
+            }
+        }
+
         const sessionId = await req.appUser.authManager.sessionStorage.createSession(
             userData.id,
             req.ip,

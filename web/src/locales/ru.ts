@@ -81,6 +81,7 @@ export default {
     ssoError: 'Ошибка SSO авторизации. Попробуйте снова.',
     ssoDomainUnverified: 'SSO недоступен, пока организация не подтвердит этот email-домен.',
     ssoEmailInUse: 'Эта почта уже занята другим аккаунтом TaskView.',
+    ssoAccountBlocked: 'Аккаунт заблокирован. Обратитесь к администратору.',
 
     // Validation
     invalidEmail: 'Неверный email адрес',

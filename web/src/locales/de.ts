@@ -69,6 +69,7 @@ export default {
     ssoError: 'SSO-Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.',
     ssoDomainUnverified: 'SSO ist nicht verfügbar, bis die Organisation diese E-Mail-Domain bestätigt.',
     ssoEmailInUse: 'Diese E-Mail wird bereits von einem anderen TaskView-Konto verwendet.',
+    ssoAccountBlocked: 'Dieses Konto ist gesperrt. Wenden Sie sich an Ihren Administrator.',
     invalidEmail: 'Ungültige E-Mail-Adresse',
     loginRequired: 'Anmeldung erforderlich',
     passwordRequired: 'Passwort erforderlich',

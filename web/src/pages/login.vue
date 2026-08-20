@@ -55,6 +55,7 @@ onMounted(async () => {
       'registration-disabled': 'auth.registrationDisabled',
       domain_unverified: 'auth.ssoDomainUnverified',
       email_in_use: 'auth.ssoEmailInUse',
+      account_blocked: 'auth.ssoAccountBlocked',
     }[String(route.query.sso_error)] ?? 'auth.ssoError'
 
     toast.add({
