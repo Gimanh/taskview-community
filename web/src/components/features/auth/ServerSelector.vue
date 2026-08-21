@@ -68,6 +68,10 @@
               placeholder="https://api.example.com"
               class="w-full"
               autofocus
+              autocapitalize="none"
+              autocorrect="off"
+              spellcheck="false"
+              inputmode="url"
               @keyup.enter="handleAddServer"
             />
           </UFormField>
@@ -104,6 +108,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBreakpoints, breakpointsTailwind } from '@vueuse/core'
 import { useAdditionalServer } from '@/composables/useAdditionalServer'
+import { normalizeServerUrl } from '@/helpers/serverUrl'
 
 const { t } = useI18n()
 const bp = useBreakpoints({ ...breakpointsTailwind, fullscreenModalMax: 1366 })
@@ -153,15 +158,7 @@ const serverOptions = computed(() => {
   return options
 })
 
-const isValidUrl = computed(() => {
-  if (!newServerUrl.value) return false
-  try {
-    const url = new URL(newServerUrl.value)
-    return url.protocol === 'http:' || url.protocol === 'https:'
-  } catch {
-    return false
-  }
-})
+const isValidUrl = computed(() => normalizeServerUrl(newServerUrl.value) !== null)
 
 watch(selectedServer, (newServer) => {
   if (newServer && newServer !== mainServer.value) {
@@ -171,9 +168,8 @@ watch(selectedServer, (newServer) => {
 })
 
 function handleAddServer() {
-  if (!isValidUrl.value) return
-
-  const url = newServerUrl.value.trim().replace(/\/$/, '')
+  const url = normalizeServerUrl(newServerUrl.value)
+  if (!url) return
 
   if (!allServers.value.includes(url) && url !== systemServer.value) {
     addServerFn.value(url)

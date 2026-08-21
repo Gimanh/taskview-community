@@ -4,6 +4,7 @@ import $api from '@/helpers/axios'
 import { $ls, $tvApi } from '@/plugins/axios'
 import { additionalUrlStore } from '@/stores/additional-url.store'
 import { getConfiguredApiUrl } from '@/helpers/serverConfig'
+import { normalizeServerUrl } from '@/helpers/serverUrl'
 
 export const LS_KEY_ADDITIONAL_SERVERS = 'additionalServers'
 export const LS_KEY_MAIN_SERVER = 'mainServer'
@@ -32,14 +33,16 @@ export const useAdditionalServer = async () => {
     (process.env.NODE_ENV !== 'production' ? 'http://localhost:1401' : 'https://api.taskview.tech')
 
   const setMainServer = (server: string) => {
-    mainServer.value = server
-    $ls.setValue(LS_KEY_MAIN_SERVER, server)
-    $api.defaults.baseURL = server
-    $tvApi?.setBaseUrl(server)
+    const normalized = normalizeServerUrl(server) ?? server
+    mainServer.value = normalized
+    $ls.setValue(LS_KEY_MAIN_SERVER, normalized)
+    $api.defaults.baseURL = normalized
+    $tvApi?.setBaseUrl(normalized)
   }
 
   const addServer = (server: string) => {
-    allServers.value.push(server)
+    const normalized = normalizeServerUrl(server) ?? server
+    allServers.value.push(normalized)
     $ls.setValue(LS_KEY_ADDITIONAL_SERVERS, allServers.value)
   }
 
