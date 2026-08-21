@@ -5,18 +5,14 @@ import { OverdueKpi } from './kpi/OverdueKpi'
 import { ThroughputSection } from './productivity/ThroughputSection'
 import { PriorityMixOverTimeSection } from './productivity/PriorityMixOverTimeSection'
 import { WorkloadByAssigneeSection } from './workload/WorkloadByAssigneeSection'
-import { BlockedByDependenciesSection } from './workload/BlockedByDependenciesSection'
-import { OverdueByAgeSection } from './quality/OverdueByAgeSection'
 import { StaleTasksSection } from './quality/StaleTasksSection'
 import { StatusDistributionSection } from './usage/StatusDistributionSection'
-import { ActiveProjectsSection } from './usage/ActiveProjectsSection'
 import { IncomeExpenseMonthSection } from './financial/IncomeExpenseMonthSection'
 import { IncomeExpensePerProjectSection } from './financial/IncomeExpensePerProjectSection'
 import { IncomePerProjectMonthSection } from './financial/IncomePerProjectMonthSection'
 import { ExpensePerProjectMonthSection } from './financial/ExpensePerProjectMonthSection'
 import { IncomePerTagMonthSection } from './financial/IncomePerTagMonthSection'
 import { ExpensePerTagMonthSection } from './financial/ExpensePerTagMonthSection'
-import { TopProjectsByAmountSection } from './financial/TopProjectsByAmountSection'
 import { AmountCoverageKpi } from './financial/AmountCoverageKpi'
 import { TotalIncomeKpi } from './financial/TotalIncomeKpi'
 import { TotalExpenseKpi } from './financial/TotalExpenseKpi'
@@ -59,6 +55,10 @@ import { sectionLocales } from './locales'
 //    - entered_at) for rows in that status. Without a transition log, this
 //    metric cannot be computed correctly.
 // ---------------------------------------------------------------------------
+// import { BlockedByDependenciesSection } from './workload/BlockedByDependenciesSection'
+// import { ActiveProjectsSection } from './usage/ActiveProjectsSection'
+// import { OverdueByAgeSection } from './quality/OverdueByAgeSection'
+// import { TopProjectsByAmountSection } from './financial/TopProjectsByAmountSection'
 // import { AgingOpenTasksSection } from './workload/AgingOpenTasksSection'
 // import { TimeInKanbanStatusSection } from './workload/TimeInKanbanStatusSection'
 // import { CycleTimeKpi } from './kpi/CycleTimeKpi'
@@ -82,17 +82,17 @@ const builders: SectionBuilder[] = [
   new PriorityMixOverTimeSection(),
   // Workload
   new WorkloadByAssigneeSection(),
-  new BlockedByDependenciesSection(),
+  // new BlockedByDependenciesSection(), // disabled
   // new TimeInKanbanStatusSection(), // disabled — see top-of-file comment
   // new AgingOpenTasksSection(), // disabled — see top-of-file comment
   // Quality
-  new OverdueByAgeSection(),
+  // new OverdueByAgeSection(), // disabled
   // new CycleTimeHistogramSection(), // disabled — see top-of-file comment
   new StaleTasksSection(),
   // new CycleTimePerProjectSection(), // disabled — see top-of-file comment
   // Usage
   new StatusDistributionSection(),
-  new ActiveProjectsSection(),
+  // new ActiveProjectsSection(), // disabled
   // Financial
   new IncomeExpenseMonthSection(),
   new IncomeExpensePerProjectSection(),
@@ -100,7 +100,7 @@ const builders: SectionBuilder[] = [
   new ExpensePerProjectMonthSection(),
   new IncomePerTagMonthSection(),
   new ExpensePerTagMonthSection(),
-  new TopProjectsByAmountSection(),
+  // new TopProjectsByAmountSection(), // disabled
 ]
 
 export class SectionRegistry {
