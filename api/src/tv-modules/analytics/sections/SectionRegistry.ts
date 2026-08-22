@@ -11,8 +11,6 @@ import { IncomeExpenseMonthSection } from './financial/IncomeExpenseMonthSection
 import { IncomeExpensePerProjectSection } from './financial/IncomeExpensePerProjectSection'
 import { IncomePerProjectMonthSection } from './financial/IncomePerProjectMonthSection'
 import { ExpensePerProjectMonthSection } from './financial/ExpensePerProjectMonthSection'
-import { IncomePerTagMonthSection } from './financial/IncomePerTagMonthSection'
-import { ExpensePerTagMonthSection } from './financial/ExpensePerTagMonthSection'
 import { AmountCoverageKpi } from './financial/AmountCoverageKpi'
 import { TotalIncomeKpi } from './financial/TotalIncomeKpi'
 import { TotalExpenseKpi } from './financial/TotalExpenseKpi'
@@ -59,6 +57,8 @@ import { sectionLocales } from './locales'
 // import { ActiveProjectsSection } from './usage/ActiveProjectsSection'
 // import { OverdueByAgeSection } from './quality/OverdueByAgeSection'
 // import { TopProjectsByAmountSection } from './financial/TopProjectsByAmountSection'
+// import { IncomePerTagMonthSection } from './financial/IncomePerTagMonthSection'
+// import { ExpensePerTagMonthSection } from './financial/ExpensePerTagMonthSection'
 // import { AgingOpenTasksSection } from './workload/AgingOpenTasksSection'
 // import { TimeInKanbanStatusSection } from './workload/TimeInKanbanStatusSection'
 // import { CycleTimeKpi } from './kpi/CycleTimeKpi'
@@ -98,8 +98,8 @@ const builders: SectionBuilder[] = [
   new IncomeExpensePerProjectSection(),
   new IncomePerProjectMonthSection(),
   new ExpensePerProjectMonthSection(),
-  new IncomePerTagMonthSection(),
-  new ExpensePerTagMonthSection(),
+  // new IncomePerTagMonthSection(), // disabled
+  // new ExpensePerTagMonthSection(), // disabled
   // new TopProjectsByAmountSection(), // disabled
 ]
 
