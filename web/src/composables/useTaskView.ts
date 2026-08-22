@@ -13,7 +13,8 @@ export const useTaskView = () => {
   const isFullscreenModal = bp.smallerOrEqual('fullscreenModalMax')
 
   return {
-    hasActiveGoals: computed(() => goalsStore.goals.some(g => !g.isInbox)),
+    // Any non-archived project counts, including the Inbox — tasks can be added there too
+    hasActiveGoals: computed(() => goalsStore.goals.some(g => !g.archive)),
     isMobile,
     isDesktop,
     isFullscreenModal,
