@@ -26,7 +26,7 @@
           v-for="project in projects"
           :key="project.id"
           variant="taskview"
-          :to="{ name: 'user', params: { projectId: project.id, listId: '-1401' } }"
+          :to="projectRoute(project)"
           :active="currentProjectId === project.id"
         >
           <div
@@ -209,6 +209,7 @@ import ProjectDeleteDialog from '@/components/features/projects/parts/ProjectDel
 import ProjectAddInput from '@/components/features/projects/parts/ProjectAddInput.vue'
 import type { Project, ProjectSaveData } from '@/components/features/projects/types'
 import { useGoalPermissionsFor } from '@/composables/useGoalPermissions'
+import { useProjectRoute } from '@/composables/useProjectRoute'
 import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
@@ -234,6 +235,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { projectRoute } = useProjectRoute()
 
 const isOpen = defineModel<boolean>('open', { required: false, default: true })
 

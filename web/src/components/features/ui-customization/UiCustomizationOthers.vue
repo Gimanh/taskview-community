@@ -38,7 +38,7 @@
         v-model="defaultView"
         :items="viewItems"
         value-key="value"
-        :disabled="defaultProject === NONE"
+        data-testid="default-view-select"
         variant="soft"
         class="w-full lg:w-72"
         size="xl"
@@ -70,7 +70,6 @@ const defaultProject = computed<number>({
   get: () => store.settings.defaultProjectId ?? NONE,
   set: (value) => {
     store.setSetting('defaultProjectId', value === NONE ? undefined : value)
-    if (value === NONE) store.setSetting('defaultView', undefined)
   },
 })
 

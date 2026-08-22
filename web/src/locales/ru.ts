@@ -797,7 +797,7 @@ export default {
       defaultProjectHint: 'Открывать этот проект сразу после входа.',
       defaultProjectNone: 'Главный экран (по умолчанию)',
       defaultView: 'Вид по умолчанию',
-      defaultViewHint: 'Какой вид проекта открывать.',
+      defaultViewHint: 'Какой вид открывать при переходе в проект.',
       viewTasks: 'Задачи',
       viewKanban: 'Канбан',
       viewGraph: 'Граф',

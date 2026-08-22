@@ -150,9 +150,9 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { ALL_TASKS_LIST_ID } from 'taskview-api'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useGoalPermissionsFor } from '@/composables/useGoalPermissions'
+import { useProjectRoute } from '@/composables/useProjectRoute'
 import type { Project, ProjectSaveData } from '@/components/features/projects/types'
 import ProjectEditModal from '@/components/features/projects/parts/ProjectEditModal.vue'
 import ProjectDeleteDialog from '@/components/features/projects/parts/ProjectDeleteDialog.vue'
@@ -160,6 +160,7 @@ import ProjectDeleteDialog from '@/components/features/projects/parts/ProjectDel
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
+const { projectRoute } = useProjectRoute()
 const goalsStore = useGoalsStore()
 const { goals } = storeToRefs(goalsStore)
 
@@ -186,7 +187,7 @@ const { canEditGoal, canDeleteGoal } = useGoalPermissionsFor(currentProject)
 
 function selectProject(project: Project) {
   open.value = false
-  router.push({ name: 'user', params: { projectId: project.id, listId: ALL_TASKS_LIST_ID } })
+  router.push(projectRoute(project))
 }
 
 async function archive() {

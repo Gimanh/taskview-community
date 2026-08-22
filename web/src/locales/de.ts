@@ -810,7 +810,7 @@ export default {
       defaultProjectHint: 'Dieses Projekt direkt nach der Anmeldung öffnen.',
       defaultProjectNone: 'Startbildschirm (Standard)',
       defaultView: 'Standardansicht',
-      defaultViewHint: 'Welche Ansicht des Projekts geöffnet wird.',
+      defaultViewHint: 'Welche Ansicht beim Öffnen eines Projekts angezeigt wird.',
       viewTasks: 'Aufgaben',
       viewKanban: 'Kanban',
       viewGraph: 'Graph',

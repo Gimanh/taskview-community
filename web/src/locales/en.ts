@@ -824,7 +824,7 @@ export default {
       defaultProjectHint: 'Open this project right after signing in.',
       defaultProjectNone: 'Home screen (default)',
       defaultView: 'Default view',
-      defaultViewHint: 'Which view of the default project to open.',
+      defaultViewHint: 'Which view to open when you enter a project.',
       viewTasks: 'Tasks',
       viewKanban: 'Kanban',
       viewGraph: 'Graph',
