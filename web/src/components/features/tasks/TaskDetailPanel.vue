@@ -103,6 +103,12 @@
               :class="colClass(fieldId)"
             />
           </template>
+          <TaskDependencies
+            v-else-if="fieldId === 'dependencies'"
+            :task-id="task.id"
+            :goal-id="task.goalId"
+            :class="colClass(fieldId)"
+          />
           <TaskAmountEditor
             v-else-if="fieldId === 'amount'"
             :task-id="task.id"
@@ -169,6 +175,7 @@ import TvDeadlineSelect from '@/components/features/base/TvDeadlineSelect.vue'
 import TaskRecurrence from '@/components/features/tasks/parts/TaskRecurrence.vue'
 import TaskSourceLink from '@/components/features/tasks/parts/TaskSourceLink.vue'
 import TaskSubtasks from '@/components/features/tasks/parts/TaskSubtasks.vue'
+import TaskDependencies from '@/components/features/tasks/parts/TaskDependencies.vue'
 import TaskIdCopy from '@/components/features/tasks/parts/TaskIdCopy.vue'
 import TvSprintSelect from '@/components/features/base/TvSprintSelect.vue'
 import TaskEstimateInput from '@/components/features/tasks/parts/TaskEstimateInput.vue'

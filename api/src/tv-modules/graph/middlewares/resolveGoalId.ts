@@ -15,6 +15,14 @@ export async function resolveGoalId(req: Request): Promise<number | null> {
         return isNaN(id) ? null : id;
     }
 
+    if (req.params.taskId) {
+        const taskId = Number(req.params.taskId);
+        if (isNaN(taskId)) return null;
+        const tasksRepo = new TasksRepository();
+        const task = await tasksRepo.fetchTaskByIdNew(taskId);
+        return task?.goalId ?? null;
+    }
+
     // addEdge: resolve goalId from task
     if (req.body?.source) {
         const taskId = Number(req.body.source);

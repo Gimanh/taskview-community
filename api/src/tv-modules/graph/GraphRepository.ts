@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 import { GraphRelationsSchema } from 'taskview-db-schemas';
 import { Database } from '../../modules/db';
 import { callWithCatch } from '../../utils/helpers';
@@ -28,6 +28,16 @@ export class GraphRepository {
     public async fetchAllEdges(goalId: number): Promise<GraphReturnRelationsType[]> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.select().from(GraphRelationsSchema).where(eq(GraphRelationsSchema.goalId, goalId))
+        );
+        return result ?? [];
+    }
+
+    public async fetchEdgesForTask(taskId: number): Promise<GraphReturnRelationsType[]> {
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select()
+                .from(GraphRelationsSchema)
+                .where(or(eq(GraphRelationsSchema.fromTaskId, taskId), eq(GraphRelationsSchema.toTaskId, taskId)))
         );
         return result ?? [];
     }

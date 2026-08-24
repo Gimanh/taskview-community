@@ -16,6 +16,7 @@ export const TASK_DETAIL_FIELDS = [
   { id: 'estimate', width: 'narrow' },
   { id: 'tags', width: 'narrow' },
   { id: 'deadline', width: 'narrow' },
+  { id: 'dependencies', width: 'wide' },
   { id: 'amount', width: 'wide' },
   { id: 'timeTracking', width: 'wide' },
   { id: 'history', width: 'wide' },

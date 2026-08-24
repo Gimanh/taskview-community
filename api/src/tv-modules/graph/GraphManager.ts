@@ -19,6 +19,10 @@ export class GraphManager {
         return await this.repository.fetchAllEdges(goalId);
     }
 
+    async fetchEdgesForTask(taskId: number) {
+        return await this.repository.fetchEdgesForTask(taskId);
+    }
+
     async deleteEdge(id: number) {
         return await this.repository.deleteEdge(id);
     }

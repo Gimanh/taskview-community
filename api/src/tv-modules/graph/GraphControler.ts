@@ -33,6 +33,15 @@ export class GraphController {
         return res.tvJson(edges);
     };
 
+    fetchTaskEdges = async (req: Request, res: Response) => {
+        const taskId = Number(req.params.taskId);
+        if (!Number.isFinite(taskId)) {
+            return res.status(400).send('Task ID is required');
+        }
+        const edges = await req.appUser.graphManager.fetchEdgesForTask(taskId);
+        return res.tvJson(edges);
+    };
+
     deleteEdge = async (req: Request, res: Response) => {
         if (!req.params.id) {
             return res.status(400).send('Edge ID is required');
