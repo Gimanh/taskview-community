@@ -5,7 +5,7 @@ import { IsOrgMemberIfProvided } from '../../middlewares/is-org-member';
 import { CollaborationController } from './CollaborationController';
 import { CanAddUserCollaboration } from './middlewares/CanAddUserCollaboration';
 import { CanDeleteUserCollaboration } from './middlewares/CanDeleteUserCollaboration';
-// import { CanFetchUsersCollaboration } from './middlewares/CanFetchUsersCollaboration';
+import { CanFetchUsersCollaboration } from './middlewares/CanFetchUsersCollaboration';
 import { CanToggleRolesCollaboration } from './middlewares/CanToggleRolesCollaboration';
 
 export default class CollaborationRoutes implements Routable {
@@ -56,6 +56,10 @@ export default class CollaborationRoutes implements Routable {
         /**
          * Fetch users for goal for collaboration
          */
-        this.router.get('/:goalId', [IsLoggedIn], this.collaborationController.fetchUsersForGoalNew);
+        this.router.get(
+            '/:goalId',
+            [IsLoggedIn, CanFetchUsersCollaboration],
+            this.collaborationController.fetchUsersForGoalNew
+        );
     }
 }

@@ -21,7 +21,8 @@ export const CanFetchUsersCollaboration = async (req: Request, res: Response, ne
 
     if (
         permissions.hasPermissions(GoalPermissions.TASKS_CAN_ASSIGN_USERS) ||
-        permissions.hasPermissions(GoalPermissions.GOAL_CAN_MANAGE_USERS)
+        permissions.hasPermissions(GoalPermissions.GOAL_CAN_MANAGE_USERS) ||
+        permissions.hasPermissions(GoalPermissions.TASKS_CAN_WATCH_ASSIGNED_USERS)
     ) {
         return next();
     }

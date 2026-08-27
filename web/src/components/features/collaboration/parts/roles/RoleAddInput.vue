@@ -2,6 +2,7 @@
   <UInput
     v-model="name"
     :placeholder="t('collaboration.roles.namePlaceholder')"
+    data-testid="collab-role-name-input"
     size="xl"
     variant="soft"
     class="w-full"
@@ -18,6 +19,7 @@
         variant="ghost"
         size="xs"
         :aria-label="t('collaboration.roles.create')"
+        data-testid="collab-role-add-button"
         @click="addRole"
       />
       <UIcon

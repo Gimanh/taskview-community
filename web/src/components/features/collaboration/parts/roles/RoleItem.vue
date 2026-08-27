@@ -1,5 +1,8 @@
 <template>
-  <div class="flex items-center justify-between p-3 rounded-2xl border border-default hover:bg-elevated transition-colors">
+  <div
+    :data-testid="`collab-role-${role.name}`"
+    class="flex items-center justify-between p-3 rounded-2xl border border-default hover:bg-elevated transition-colors"
+  >
     <div class="flex items-center gap-2">
       <UIcon
         name="i-lucide-shield"
@@ -18,6 +21,7 @@
       color="neutral"
       variant="ghost"
       size="xs"
+      data-testid="collab-role-menu-trigger"
       @click.stop="$emit('menu', $event)"
     />
   </div>

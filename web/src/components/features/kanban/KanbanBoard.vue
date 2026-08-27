@@ -11,6 +11,7 @@
     <div
       v-for="status in kanbanStore.statuses"
       :key="status.id"
+      :data-testid="`kanban-column-${t(status.name)}`"
       class="h-full max-w-[340px] min-w-[272px] shadow-lg gap-2 flex flex-col w-[91.666667%] rounded-lg"
     >
       <div class="bg-elevated rounded-lg p-2 px-3 flex items-center text-base h-10 rounded-b-none">
@@ -46,6 +47,7 @@
           <div
             :data-order="element.kanbanOrder"
             :data-task-id="element.id"
+            data-testid="kanban-task-card"
           >
             <TaskItem
               :task="element"

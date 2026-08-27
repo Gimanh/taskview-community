@@ -47,6 +47,7 @@
       <div class="p-1 flex flex-col gap-1">
         <UButton
           :label="t('collaboration.roles.assignPermissions')"
+          data-testid="collab-role-assign-permissions"
           icon="i-lucide-shield-check"
           variant="ghost"
           color="neutral"
@@ -56,6 +57,7 @@
         <USeparator class="my-1" />
         <UButton
           :label="t('contextMenu.delete')"
+          data-testid="collab-role-delete"
           icon="i-lucide-trash-2"
           variant="ghost"
           color="error"

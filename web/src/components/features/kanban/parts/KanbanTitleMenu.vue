@@ -9,6 +9,7 @@
       color="neutral"
       variant="ghost"
       size="sm"
+      data-testid="kanban-column-menu-trigger"
     />
   </UDropdownMenu>
 
@@ -48,6 +49,7 @@ const menuItems = computed<DropdownMenuItem[][]>(() => [
       label: t('kanban.edit'),
       icon: 'i-lucide-pencil',
       ui,
+      'data-testid': 'kanban-menu-edit',
       // size: 'lg',
       onSelect: () => {
         editOpen.value = true
@@ -58,6 +60,7 @@ const menuItems = computed<DropdownMenuItem[][]>(() => [
       icon: 'i-lucide-trash-2',
       color: 'error' as const,
       ui,
+      'data-testid': 'kanban-menu-delete',
       onSelect: () => {
         deleteOpen.value = true
       },

@@ -19,6 +19,7 @@
         />
         <UButton
           :label="t('contextMenu.delete')"
+          data-testid="collab-role-delete-confirm"
           color="error"
           variant="soft"
           @click="handleDelete"

@@ -20,6 +20,7 @@
           <UInput
             v-model="name"
             :placeholder="t('kanban.columnName')"
+            data-testid="kanban-edit-name"
             class="w-full"
           />
         </UFormField>
@@ -35,6 +36,7 @@
             </UButton>
             <UButton
               variant="outline"
+              data-testid="kanban-edit-save"
               @click="save"
             >
               {{ t('common.save') }}

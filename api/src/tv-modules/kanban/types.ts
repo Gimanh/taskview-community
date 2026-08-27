@@ -1,6 +1,8 @@
 import { type } from 'arktype';
+import type { Request } from 'express';
 import { z } from 'zod';
 import { StringToNumber } from '../../types/app.types';
+import type { GoalPermissionType } from '../../types/auth.types';
 
 // ============ Arktype schemas ============
 
@@ -102,11 +104,13 @@ export const KanbanArkTypeUpdateTasksOrder = type({
 
 export type KanbanArgUpdateTasksOrder = typeof KanbanArkTypeUpdateTasksOrder.infer;
 
-export const KanbanArkTypeCanManageKanban = type({
-    goalId: NumberFromString,
-});
+export type KanbanGoalIdResolver = (req: Request) => Promise<number | null> | number | null;
 
-export type KanbanArgCanManageKanban = typeof KanbanArkTypeCanManageKanban.infer;
+export type RequireKanbanPermissionArgs = {
+    /** the caller must hold at least ONE of these */
+    anyOf: GoalPermissionType[];
+    resolveGoalId: KanbanGoalIdResolver;
+};
 
 // ============ Deprecated Zod schemas ============
 
