@@ -8,6 +8,7 @@
           :color="hasActiveFilters ? 'primary' : 'info'"
           variant="soft"
           size="sm"
+          data-testid="tasks-filter-button"
           @click="isFilterDrawerOpen = true"
         />
       </UTooltip>

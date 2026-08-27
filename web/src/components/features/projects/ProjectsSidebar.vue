@@ -25,9 +25,10 @@ import { useOrganizationStore } from '@/stores/organization.store'
 import ProjectsList from '@/components/features/projects/ProjectsList.vue'
 import ArchiveList from '@/components/features/projects/ArchiveList.vue'
 import type { Project, ProjectSaveData } from '@/components/features/projects/types'
-import { ALL_TASKS_LIST_ID } from 'taskview-api'
+import { useProjectRoute } from '@/composables/useProjectRoute'
 
 const router = useRouter()
+const { projectRoute } = useProjectRoute()
 
 const goalsStore = useGoalsStore()
 const orgStore = useOrganizationStore()
@@ -75,7 +76,7 @@ async function handleAdd(name: string) {
     ...(orgStore.currentOrg && { organizationId: orgStore.currentOrg.id }),
   })
   if (newProject) {
-    router.push({ name: 'user', params: { projectId: newProject.id, listId: ALL_TASKS_LIST_ID } })
+    router.push(projectRoute(newProject))
   }
 }
 </script>

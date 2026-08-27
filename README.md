@@ -428,7 +428,7 @@ For commercial licensing questions, hosted service permissions, or other use cas
 
 Do not publish security vulnerabilities in public GitHub issues.
 
-Report security issues privately using the contact information provided in the repository or on the TaskView website.
+Report security issues privately — see [SECURITY.md](SECURITY.md) for the reporting channels, response times, scope, and safe-harbor terms.
 
 When running TaskView in production:
 

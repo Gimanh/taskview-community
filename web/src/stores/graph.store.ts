@@ -30,6 +30,7 @@ export const useGraphStore = defineStore('use-graph-store', {
       await Promise.all([
         goalListsStore.fetchLists(goalId),
         tasksStore.fetchAllTasks(goalId, 1, 1, true),
+        this.fetchAllEdges(goalId),
       ])
 
       const nodes = tasksStore.tasks.map((task) => ({
@@ -41,7 +42,6 @@ export const useGraphStore = defineStore('use-graph-store', {
       }))
       this.allNodes = nodes
       this.nodes = [...nodes]
-      await this.fetchAllEdges(goalId)
     },
 
     async addNode(task: TaskItem) {

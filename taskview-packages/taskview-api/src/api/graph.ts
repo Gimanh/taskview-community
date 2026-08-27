@@ -13,6 +13,14 @@ export default class TvGraph extends TvApiBase {
         );
     }
 
+    public async fetchTaskEdges(taskId: number) {
+        return this.request(
+            this.$axios.get<AppResponse<GraphResponseAddEdge[]>>(
+                `${this.moduleUrl}/task/${taskId}`
+            )
+        );
+    }
+
     public async fetchAllEdges(goalId: number) {
         return this.request(
             this.$axios.get<AppResponse<GraphResponseAddEdge[]>>(

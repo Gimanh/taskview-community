@@ -1,5 +1,8 @@
 <template>
-  <div class="flex items-center justify-between p-3 rounded-2xl border border-default hover:bg-elevated transition-colors">
+  <div
+    :data-testid="`collab-member-${member.email}`"
+    class="flex items-center justify-between p-3 rounded-2xl border border-default hover:bg-elevated transition-colors"
+  >
     <div class="flex items-center gap-3">
       <UAvatar
         :alt="member.email"
@@ -42,6 +45,7 @@
         color="neutral"
         variant="ghost"
         size="xs"
+        data-testid="collab-member-menu-trigger"
         @click.stop="$emit('menu', $event)"
       />
     </div>

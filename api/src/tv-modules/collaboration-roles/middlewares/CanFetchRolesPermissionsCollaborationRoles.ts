@@ -5,7 +5,8 @@ import { GoalPermissions } from '../../../types/auth.types';
 import { logError } from '../../../utils/api';
 
 export const CanFetchRolesPermissionsCollaborationRoles = async (req: Request, res: Response, next: NextFunction) => {
-    const goalId = req.body.goalId ? req.body.goalId : req.params.goalId;
+    // the only route using this guard names the goal in the path
+    const goalId = req.params.goalId;
 
     if (!goalId) {
         return res.status(400).end();

@@ -21,6 +21,7 @@ export default class GraphRoutes implements Routable {
 
     initRoutes() {
         this.router.post('', [IsLoggedIn, CanManageGraph], this.graphController.addEdge);
+        this.router.get('/task/:taskId', [IsLoggedIn, CanViewGraph], this.graphController.fetchTaskEdges);
         this.router.get('/:goalId', [IsLoggedIn, CanViewGraph], this.graphController.fetchAllEdges);
         this.router.delete('/:id', [IsLoggedIn, CanManageGraph], this.graphController.deleteEdge);
     }

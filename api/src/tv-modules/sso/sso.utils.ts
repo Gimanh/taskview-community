@@ -14,6 +14,21 @@ export function generateDomainVerifyToken(): string {
   return `tvdom_${randomBytes(32).toString('hex')}`
 }
 
+const SAML_EMAIL_NAMEID_FORMAT = 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress'
+const SAML_EMAIL_CLAIM = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
+
+export function deriveSamlEmail(profile: Record<string, unknown>): string | null {
+  const fromAttribute = profile.email ?? profile[SAML_EMAIL_CLAIM]
+  if (typeof fromAttribute === 'string' && fromAttribute.trim()) {
+    return fromAttribute.trim().toLowerCase()
+  }
+  if (profile.nameIDFormat === SAML_EMAIL_NAMEID_FORMAT
+    && typeof profile.nameID === 'string' && profile.nameID.trim()) {
+    return profile.nameID.trim().toLowerCase()
+  }
+  return null
+}
+
 export function trustedSsoDomains(): string[] {
   const raw = process.env.SSO_TRUSTED_DOMAINS
   if (!raw?.trim()) return []
@@ -80,9 +95,9 @@ export async function checkSsoDomainHttpFile(args: CheckSsoDomainProofArgs): Pro
   const urls = process.env.NODE_ENV === 'production'
     ? [`https://${args.domain}${SSO_DOMAIN_WELL_KNOWN_PATH}`]
     : [
-        `https://${args.domain}${SSO_DOMAIN_WELL_KNOWN_PATH}`,
-        `http://${args.domain}${SSO_DOMAIN_WELL_KNOWN_PATH}`,
-      ]
+      `https://${args.domain}${SSO_DOMAIN_WELL_KNOWN_PATH}`,
+      `http://${args.domain}${SSO_DOMAIN_WELL_KNOWN_PATH}`,
+    ]
 
   for (const url of urls) {
     const urlError = validateMetadataUrl(url)

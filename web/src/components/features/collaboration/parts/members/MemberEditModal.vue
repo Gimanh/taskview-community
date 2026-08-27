@@ -24,6 +24,7 @@
             <label
               v-for="role in roles"
               :key="role.id"
+              :data-testid="`collab-member-role-${role.name}`"
               class="flex items-center gap-3 p-2 rounded hover:bg-elevated cursor-pointer"
             >
               <UCheckbox
@@ -51,6 +52,7 @@
         />
         <UButton
           :label="t('common.save')"
+          data-testid="collab-member-roles-save"
           color="primary"
           variant="soft"
           @click="handleSave"

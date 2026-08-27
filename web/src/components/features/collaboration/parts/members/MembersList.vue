@@ -47,6 +47,7 @@
       <div class="p-1 flex flex-col gap-1">
         <UButton
           :label="t('collaboration.members.assignRoles')"
+          data-testid="collab-member-assign-roles"
           icon="i-lucide-user-cog"
           variant="ghost"
           color="neutral"
@@ -56,6 +57,7 @@
         <USeparator class="my-1" />
         <UButton
           :label="t('collaboration.members.remove')"
+          data-testid="collab-member-remove"
           icon="i-lucide-user-minus"
           variant="ghost"
           color="error"

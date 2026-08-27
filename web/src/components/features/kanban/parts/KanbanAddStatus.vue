@@ -4,6 +4,7 @@
       <UInput
         v-model="statusName"
         :placeholder="t('kanban.addColumn')"
+        data-testid="kanban-add-column-input"
         icon="i-lucide-plus"
         size="xl"
         variant="soft"
@@ -12,6 +13,7 @@
 
       <UButton
         v-if="statusName.trim()"
+        data-testid="kanban-add-column-submit"
         @click="addStatus"
       >
         {{ t('kanban.addColumn') }}

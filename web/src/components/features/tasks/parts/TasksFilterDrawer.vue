@@ -11,7 +11,10 @@
       <USeparator />
     </template>
     <template #body>
-      <div class="flex flex-col gap-4">
+      <div
+        class="flex flex-col gap-4"
+        data-testid="tasks-filter-drawer"
+      >
         <!-- User Filter -->
         <UFormField
           :label="t('filters.assignee')"
@@ -158,7 +161,7 @@ watch(isOpen, (open) => {
     // Fetch users for current project
     const projectId = route.params.projectId
     if (projectId) {
-      collaborationStore.fetchCollaborationUsersForGoal(Number(projectId))
+      collaborationStore.fetchCollaborationUsersForGoal(Number(projectId)).catch(() => null)
     }
   }
 })

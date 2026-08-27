@@ -32,6 +32,7 @@
             <UButton
               color="error"
               variant="soft"
+              data-testid="kanban-delete-confirm"
               @click="confirmDelete"
             >
               {{ t('common.delete') }}

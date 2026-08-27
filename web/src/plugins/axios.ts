@@ -5,6 +5,7 @@ import $api from '@/helpers/axios'
 import LocalStorage from '@/helpers/LocalStorage'
 import { LS_KEY_MAIN_SERVER } from '@/composables/useAdditionalServer'
 import { getConfiguredApiUrl } from '@/helpers/serverConfig'
+import { normalizeServerUrl } from '@/helpers/serverUrl'
 
 let $ls: LocalStorage
 const $tvApi: TvApi = new TvApi($api)
@@ -21,7 +22,8 @@ const api = {
     $ls = app.config.globalProperties.$ls
 
     // A deploy-time API URL (config.js) always wins over a server saved in local storage
-    const savedServer = getConfiguredApiUrl() ? null : await $ls.getValue(LS_KEY_MAIN_SERVER)
+    const savedRaw = getConfiguredApiUrl() ? null : await $ls.getValue(LS_KEY_MAIN_SERVER)
+    const savedServer = savedRaw ? (normalizeServerUrl(savedRaw) ?? savedRaw) : null
     if (savedServer) {
       $api.defaults.baseURL = savedServer
       $api.defaults.headers.common['ngrok-skip-browser-warning'] = '1'

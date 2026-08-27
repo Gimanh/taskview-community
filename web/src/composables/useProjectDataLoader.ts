@@ -17,7 +17,7 @@ export function useProjectDataLoader(projectId: Ref<number>) {
     if (id > 0) {
       Promise.all([
         kanbanStore.fetchStatuses(id),
-        collaborationStore.fetchCollaborationUsersForGoal(id),
+        collaborationStore.fetchCollaborationUsersForGoal(id).catch(() => null),
         goalListsStore.fetchLists(id),
       ])
     }

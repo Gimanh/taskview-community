@@ -29,9 +29,9 @@
       <div class="relative h-full">
         <div
           v-if="showFilters"
-          class="rounded absolute top-0 left-0 right-0 z-10 overflow-x-auto border-b border-default bg-elevated/90 backdrop-blur-sm px-3 py-2"
+          class="rounded-3xl absolute top-0 left-0 right-0 z-10 overflow-x-auto border-b border-default bg-elevated/90 backdrop-blur-sm "
         >
-          <div class="flex items-center justify-end gap-2 w-fit ml-auto">
+          <div class="flex items-center justify-end gap-2 w-fit ml-auto p-2 px-2.5">
             <TvKanbanFilters
               v-model:list-ids="selectedListIds"
               v-model:assignee-ids="selectedAssigneeIds"

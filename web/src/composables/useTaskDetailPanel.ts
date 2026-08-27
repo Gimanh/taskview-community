@@ -46,10 +46,14 @@ const _useTaskDetailPanel = () => {
       const taskId = String(task.id)
 
       if (route.params.taskId !== taskId) {
-        router.push({
-          name: 'user',
-          params: { projectId, listId, taskId },
-        })
+        // Switching from one open task to another (e.g. via dependencies) replaces
+        // the history entry, so back/close returns to the list, not the previous task
+        const target = { name: 'user', params: { projectId, listId, taskId } }
+        if (route.params.taskId) {
+          router.replace(target)
+        } else {
+          router.push(target)
+        }
       }
     }
   }

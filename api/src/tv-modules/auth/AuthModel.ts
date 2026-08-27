@@ -119,6 +119,21 @@ export default class AuthModel {
         }
     }
 
+    async markEmailConfirmed(email: string): Promise<boolean> {
+        if (!email) return false;
+
+        try {
+            const result = await this.db.dbDrizzle
+                .update(UsersSchema)
+                .set({ confirmEmailCode: null, block: 0 })
+                .where(eq(UsersSchema.email, email));
+            return (result.rowCount ?? 0) > 0;
+        } catch (error) {
+            $logger.error(error, `Error marking email confirmed for ${email}`);
+            return false;
+        }
+    }
+
     async confirmEmail(login: string, code: string, block: number): Promise<boolean> {
         const query = `UPDATE tv_auth.users 
                    SET confirm_email_code = NULL, block = $1 

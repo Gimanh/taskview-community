@@ -15,7 +15,7 @@ const LANGUAGE_OPTIONS = [
   { label: 'Русский', value: 'ru' },
   { label: 'Deutsch', value: 'de' },
   { label: 'Español', value: 'es' },
-  { label: 'Português do Brasil', value: 'ptBR' },
+  { label: 'Português do Brasil', value: 'pt-BR' },
 ]
 
 export function useSettingsHub() {

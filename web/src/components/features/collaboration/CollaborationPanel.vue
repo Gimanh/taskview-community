@@ -18,6 +18,10 @@
         class="w-full"
         :ui="{ list: 'rounded-2xl', trigger: 'rounded-xl', indicator: 'rounded-xl' }"
       >
+        <template #default="{ item }">
+          <span :data-testid="`collab-tab-${item.value}`">{{ item.label }}</span>
+        </template>
+
         <template #members>
           <MembersList
             :members="users"

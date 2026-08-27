@@ -4,7 +4,7 @@
     v-model:nodes="store.nodes"
     v-model:edges="store.edges"
     :min-zoom="-2"
-    fit-view-on-init
+    only-render-visible-elements
     elevate-edges-on-select
     elevate-nodes-on-select
     :pan-on-scroll-mode="PanOnScrollMode.Free"
@@ -14,6 +14,7 @@
     :nodes-connectable="canManageGraph"
     :nodes-draggable="canManageGraph"
     class="h-full w-full"
+    :class="{ 'opacity-0': !layoutReady }"
     @connect-start="onConnectStart"
     @connect-end="onConnectEnd"
   >
@@ -118,7 +119,9 @@ const applyFilters = () => {
   const nodeIds = new Set(filtered.map((n) => n.id))
   store.nodes = filtered
   store.edges = store.allEdges.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target))
-  setTimeout(() => layoutGraph(layoutDirection.value), 50)
+  // Node sizes are estimated from data, so the layout can run right away —
+  // no need to wait for nodes to render and be measured
+  layoutGraph(layoutDirection.value)
 }
 
 watch(listIds, applyFilters, { deep: true })
@@ -132,8 +135,6 @@ const {
   onEdgesChange,
   onEdgeClick,
   onNodeDragStop,
-  getEdges,
-  updateEdgeData,
   removeEdges,
   screenToFlowCoordinate,
 } = useVueFlow()
@@ -144,6 +145,8 @@ const store = useGraphStore()
 const { t } = useI18n()
 const { canManageGraph, canViewGraph } = useGoalPermissions()
 
+const layoutReady = ref(false)
+
 const addNewTaskToGraph = ref(false)
 const currentSession = ref<number | null>(null)
 const successfulSession = ref<number | null>(null)
@@ -152,7 +155,7 @@ const nodePosition = ref<{ x: number; y: number } | undefined>(undefined)
 
 const defaultEdgeOptions: DefaultEdgeOptions = {
   type: 'smoothstep',
-  animated: true,
+  animated: false,
   style: {
     strokeWidth: 3,
   },
@@ -170,6 +173,7 @@ watch(
   projectId,
   (id) => {
     if (!id) return
+    layoutReady.value = false
     store.fetchAllTasksAndLists(id).then(() => {
       applyFilters()
     })
@@ -199,10 +203,15 @@ onConnect(async (params) => {
   addEdges([newEdge])
 })
 
+function setAnimatedEdge(id: string | null) {
+  store.edges = store.edges.map((edge) => ({ ...edge, animated: edge.id === id }))
+}
+
 onEdgesChange((params) => {
   params.forEach((param) => {
     if (param.type === 'select' && !param.selected) {
       selectedEdge.value = null
+      setAnimatedEdge(null)
     }
     if (param.type === 'remove') {
       deleteSelectedEdge(+param.id)
@@ -213,6 +222,7 @@ onEdgesChange((params) => {
 
 onEdgeClick((params) => {
   selectedEdge.value = params.edge
+  setAnimatedEdge(params.edge.id)
 })
 
 const newToken = () => {
@@ -285,9 +295,7 @@ const layoutGraph = async (direction: 'LR' | 'TB') => {
   store.nodes = layout(store.nodes, store.edges, direction)
   nextTick(() => {
     fitView()
-    getEdges.value.forEach((edge) => {
-      updateEdgeData(edge.id, edge)
-    })
+    layoutReady.value = true
   })
 }
 </script>

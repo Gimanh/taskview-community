@@ -512,4 +512,65 @@ describe('Login API', () => {
 
         expect(te).toBe(0);
     });
+
+    it('loginByCode confirms and admits a blocked-unconfirmed account', async () => {
+        deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        const email = deleteTestUserEmail;
+
+        await axios.post(`${url}/module/auth/registration`, {
+            email,
+            password: 'user1!#Q',
+            passwordRepeat: 'user1!#Q',
+        });
+
+        const userModel = new AuthModel();
+        const before = await userModel.getUserByLogin(email, true);
+        expect(before).toBeTruthy();
+        expect((before as any).block).toBe(1);
+        expect((before as any).confirm_email_code).toBeTruthy();
+
+        const code = '654321';
+        await userModel.updateLoginCode(`${code}:${Date.now()}`, email);
+
+        const response = await axios.post(`${url}/module/auth/login-by-code`, { email, code });
+
+        expect(response.status).toBe(200);
+        expect(response.data.access).toBeTruthy();
+        expect(response.data.refresh).toBeTruthy();
+
+        const after = await userModel.getUserByLogin(email, true);
+        expect((after as any).block).toBe(0);
+        expect((after as any).confirm_email_code).toBeNull();
+    });
+
+    it('loginByCode rejects a banned account (blocked, no confirm code)', async () => {
+        deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        const email = deleteTestUserEmail;
+
+        await axios.post(`${url}/module/auth/registration`, {
+            email,
+            password: 'user1!#Q',
+            passwordRepeat: 'user1!#Q',
+        });
+
+        const db = Database.getInstance();
+        await db.query('update tv_auth.users set block = 1, confirm_email_code = null where email = $1', [email]);
+
+        const userModel = new AuthModel();
+        const code = '112233';
+        await userModel.updateLoginCode(`${code}:${Date.now()}`, email);
+
+        let status = 0;
+        let message = '';
+        await axios.post(`${url}/module/auth/login-by-code`, { email, code }).catch((err) => {
+            status = err.response.status;
+            message = err.response.data.message;
+        });
+
+        expect(status).toBe(403);
+        expect(message).toBe('account_blocked');
+
+        const after = await userModel.getUserByLogin(email, true);
+        expect((after as any).block).toBe(1);
+    });
 });

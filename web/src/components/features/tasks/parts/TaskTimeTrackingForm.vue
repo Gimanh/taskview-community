@@ -123,9 +123,11 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
+// Keep seconds: a timer entry started and stopped within the same minute
+// otherwise collapses to start == end and can never pass validation
 const fromDate = (d: Date): { date: CalendarDate; time: Time } => ({
   date: new CalendarDate(d.getFullYear(), d.getMonth() + 1, d.getDate()),
-  time: new Time(d.getHours(), d.getMinutes()),
+  time: new Time(d.getHours(), d.getMinutes(), d.getSeconds()),
 })
 
 const fromIso = (iso: string | undefined): { date?: CalendarDate; time?: Time } => {
@@ -152,7 +154,7 @@ const endOpen = ref(false)
 
 const toJsDate = (date: CalendarDate | undefined, time: Time | undefined): Date | null => {
   if (!date) return null
-  return new Date(date.year, date.month - 1, date.day, time?.hour ?? 0, time?.minute ?? 0)
+  return new Date(date.year, date.month - 1, date.day, time?.hour ?? 0, time?.minute ?? 0, time?.second ?? 0)
 }
 
 const startJs = computed(() => toJsDate(startDate.value, startTime.value))

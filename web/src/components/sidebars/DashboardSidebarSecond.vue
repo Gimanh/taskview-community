@@ -50,8 +50,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { ALL_TASKS_LIST_ID } from 'taskview-api'
 import { useDashboard } from '@/composables/useDashboard'
+import { useProjectRoute } from '@/composables/useProjectRoute'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useOrganizationStore } from '@/stores/organization.store'
 import SearchActivator from '@/components/features/main/screen-main/parts/SearchActivator.vue'
@@ -69,6 +69,7 @@ import SidebarOrgSelect from './dashboard-second/SidebarOrgSelect.vue'
 
 const { t } = useI18n()
 const router = useRouter()
+const { projectRoute } = useProjectRoute()
 const { isSidebarOpen, isSidebarCollapsed } = useDashboard()
 const goalsStore = useGoalsStore()
 const orgStore = useOrganizationStore()
@@ -79,7 +80,7 @@ async function handleAddProject(name: string) {
     ...(orgStore.currentOrg && { organizationId: orgStore.currentOrg.id }),
   })
   if (newProject) {
-    router.push({ name: 'user', params: { projectId: newProject.id, listId: ALL_TASKS_LIST_ID } })
+    router.push(projectRoute(newProject))
   }
 }
 </script>

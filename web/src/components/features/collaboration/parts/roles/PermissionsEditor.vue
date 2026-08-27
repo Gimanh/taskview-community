@@ -3,6 +3,7 @@
     <UInput
       v-model="searchQuery"
       :placeholder="t('collaboration.permissions.searchPlaceholder')"
+      data-testid="collab-permission-search"
       size="xl"
       variant="soft"
       class="w-full"
@@ -39,6 +40,7 @@
         <label
           v-for="permission in group.permissions"
           :key="permission.id"
+          :data-testid="`collab-permission-${permission.name}`"
           class="flex items-start gap-3 p-2 rounded hover:bg-elevated cursor-pointer"
         >
           <UCheckbox

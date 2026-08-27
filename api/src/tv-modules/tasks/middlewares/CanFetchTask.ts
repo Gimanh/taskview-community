@@ -5,7 +5,7 @@ import { GoalPermissions } from '../../../types/auth.types';
 import { logError } from '../../../utils/api';
 
 export const CanFetchTask = async (req: Request, res: Response, next: NextFunction) => {
-    const taskId = req.query.taskId || req.params.taskId;
+    const taskId = req.params.taskId;
 
     if (!taskId) {
         return res.status(400).end();
