@@ -14,6 +14,7 @@ import { i18n, restoreSavedLocale } from './plugins/i18n'
 import { storeResetPlugin } from './plugins/pinia'
 import App from './App.vue'
 import authenticated from './middleware/authenticated'
+import authenticatedWithReturn from './middleware/authenticated-with-return'
 import syncSelectedProject from './middleware/syncSelectedProject'
 import api from './plugins/axios'
 import LoginPage from './pages/login.vue'
@@ -36,6 +37,15 @@ function buildRoutes(extensions: TvWebExtension[]): RouteRecordRaw[] {
       path: '/reset-password',
       name: 'reset-password',
       component: () => import('./pages/reset-password.vue'),
+    },
+    {
+      // Outside /:orgSlug on purpose — the OAuth flow lands here before any
+      // organization is chosen. The guard sends an unauthenticated user to
+      // login and back, so consent is always given by a real browser session.
+      path: '/oauth/consent',
+      name: 'oauth-consent',
+      component: () => import('./pages/oauth-consent.vue'),
+      beforeEnter: [authenticatedWithReturn],
     },
     ...extensionRoutes,
     {

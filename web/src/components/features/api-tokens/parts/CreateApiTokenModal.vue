@@ -49,26 +49,7 @@
               class="underline underline-offset-2 hover:text-default"
             >{{ t('apiTokens.permissionsDocs') }}</a>
           </p>
-          <div class="max-h-64 overflow-y-auto border border-default rounded-lg p-3">
-            <div
-              v-for="(group, groupId) in groupedPermissions"
-              :key="groupId"
-              class="mb-3 last:mb-0"
-            >
-              <p class="text-xs font-semibold text-muted mb-1 uppercase">
-                {{ group.name }}
-              </p>
-              <div class="flex flex-col gap-1">
-                <UCheckbox
-                  v-for="perm in group.items"
-                  :key="perm.id"
-                  :model-value="selectedPermissions.includes(perm.name)"
-                  :label="perm.description || perm.name"
-                  @update:model-value="togglePermission(perm.name)"
-                />
-              </div>
-            </div>
-          </div>
+          <TvPermissionPicker v-model="selectedPermissions" />
         </UFormField>
       </div>
     </template>
@@ -129,12 +110,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useClipboard } from '@vueuse/core'
 import { useApiTokensStore } from '@/stores/api-tokens.store'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useTaskView } from '@/composables/useTaskView'
+import TvPermissionPicker from '@/components/features/base/TvPermissionPicker.vue'
 
 const isOpen = defineModel<boolean>('open', { default: false })
 
@@ -170,34 +152,6 @@ const goalOptions = computed(() =>
     .map((g) => ({ label: g.name, value: g.id })),
 )
 
-const permissionGroupNames: Record<number, string> = {
-  1: 'Application level',
-  2: 'Project',
-  3: 'Lists',
-  4: 'Tasks',
-}
-
-const groupedPermissions = computed(() => {
-  const groups: Record<number, { name: string; items: typeof store.permissions }> = {}
-  for (const perm of store.permissions) {
-    const gid = perm.permissionGroup
-    if (!groups[gid]) {
-      groups[gid] = { name: permissionGroupNames[gid] || `Group ${gid}`, items: [] }
-    }
-    groups[gid].items.push(perm)
-  }
-  return groups
-})
-
-function togglePermission(permName: string) {
-  const idx = selectedPermissions.value.indexOf(permName)
-  if (idx === -1) {
-    selectedPermissions.value.push(permName)
-  } else {
-    selectedPermissions.value.splice(idx, 1)
-  }
-}
-
 function getExpiresAt(): string | null {
   if (expiration.value === 'none') return null
   const days = parseInt(expiration.value)
@@ -231,9 +185,4 @@ async function handleCreate() {
   }
 }
 
-onMounted(() => {
-  if (store.permissions.length === 0) {
-    store.fetchPermissions()
-  }
-})
 </script>

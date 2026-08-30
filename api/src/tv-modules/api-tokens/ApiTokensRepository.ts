@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { ApiTokensSchema, type ApiTokensSchemaTypeForSelect } from 'taskview-db-schemas';
 import { Database } from '../../modules/db';
 import { callWithCatch } from '../../utils/helpers';
@@ -20,15 +20,21 @@ export class ApiTokensRepository {
     async delete(id: number, userId: number): Promise<boolean> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.delete(ApiTokensSchema).where(
-                and(eq(ApiTokensSchema.id, id), eq(ApiTokensSchema.userId, userId))
+                and(eq(ApiTokensSchema.id, id), eq(ApiTokensSchema.userId, userId), isNull(ApiTokensSchema.grantId))
             )
         );
         return !!result?.rowCount;
     }
 
+    /**
+     * Only manually issued tokens. OAuth access tokens live in the same table but
+     * belong to a grant - they are listed and revoked as connected apps instead.
+     */
     async fetchByUserId(userId: number): Promise<ApiTokensSchemaTypeForSelect[]> {
         const result = await callWithCatch(() =>
-            this.db.dbDrizzle.select().from(ApiTokensSchema).where(eq(ApiTokensSchema.userId, userId))
+            this.db.dbDrizzle.select().from(ApiTokensSchema).where(
+                and(eq(ApiTokensSchema.userId, userId), isNull(ApiTokensSchema.grantId))
+            )
         );
         return result ?? [];
     }

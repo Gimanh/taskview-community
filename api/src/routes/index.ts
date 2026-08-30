@@ -8,6 +8,8 @@ import NotificationsRoutes from '../tv-modules/notifications/NotificationsRoutes
 import WebhooksRoutes from '../tv-modules/webhooks/WebhooksRoutes';
 import MessagingRoutes from '../tv-modules/messaging/MessagingRoutes';
 import ApiTokensRoutes from '../tv-modules/api-tokens/ApiTokensRoutes';
+import OAuthRoutes from '../tv-modules/oauth/OAuthRoutes';
+import OAuthWellKnownRoutes from '../tv-modules/oauth/OAuthWellKnownRoutes';
 import SessionsRoutes from '../tv-modules/sessions/SessionsRoutes';
 import KanbanRoutes from '../tv-modules/kanban/KanbanRoutes';
 import GoalListRoutes from '../tv-modules/lists/GoalListRoutes';
@@ -42,6 +44,7 @@ const routes: Record<string, RoutableConstructor> = {
     '/module/webhooks': WebhooksRoutes,
     '/module/messaging': MessagingRoutes,
     '/module/api-tokens': ApiTokensRoutes,
+    '/module/oauth': OAuthRoutes,
     '/module/sessions': SessionsRoutes,
     '/module/organizations': OrganizationRoutes,
     '/module/sso': SsoRoutes,
@@ -51,6 +54,7 @@ const routes: Record<string, RoutableConstructor> = {
     '/module/sprints': SprintsRoutes,
     '/module/recurrence': RecurrenceRoutes,
     '/scim/v2': ScimRoutes,
+    '/.well-known': OAuthWellKnownRoutes,
 };
 
 export default routes;
