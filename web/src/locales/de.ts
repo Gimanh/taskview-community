@@ -922,6 +922,8 @@ export default {
     2: 'Projekt',
     3: 'Listen',
     4: 'Aufgaben',
+    5: 'Sprints',
+    6: 'Organisation',
   },
   oauth: {
     consent: {

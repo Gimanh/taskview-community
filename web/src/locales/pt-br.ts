@@ -933,6 +933,8 @@ export default {
     2: 'Projeto',
     3: 'Listas',
     4: 'Tarefas',
+    5: 'Sprints',
+    6: 'Organização',
   },
   oauth: {
     consent: {

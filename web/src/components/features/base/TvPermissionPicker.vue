@@ -13,7 +13,7 @@
           v-for="perm in group.items"
           :key="perm.id"
           :model-value="selected.includes(perm.name)"
-          :label="perm.description || perm.name"
+          :label="describe(perm)"
           @update:model-value="toggle(perm.name)"
         />
       </div>
@@ -29,8 +29,16 @@ import type { ApiTokenPermission } from 'taskview-api'
 
 const selected = defineModel<string[]>({ default: () => [] })
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const store = useApiTokensStore()
+
+// The table carries a per-locale description; fall back to the English column,
+// then to the raw key, so a permission added without translations still reads.
+function describe(permission: ApiTokenPermission): string {
+  return permission.descriptionLocales?.[locale.value]
+    || permission.description
+    || permission.name
+}
 
 const groupedPermissions = computed(() => {
   const groups: Record<number, { name: string; items: ApiTokenPermission[] }> = {}

@@ -132,6 +132,8 @@ export type RotateRefreshTokenArgs = {
     refreshTokenHash: string
     prevHash: string | null
     refreshExpiresAt: Date
+    /** Hash the caller presented; null on the first issue, when the grant has none yet. */
+    presentedHash: string | null
 }
 
 export type RevokeGrantArgs = {

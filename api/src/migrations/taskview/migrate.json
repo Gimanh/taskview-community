@@ -767,5 +767,18 @@
             "tv_auth.oauth_auth_codes holds single-use 60-second authorization codes; tv_auth.oauth_grants is one row per connected app and owns the rotating refresh token, with the previous hash kept to detect replay.",
             "Access tokens reuse tv_auth.api_tokens (new grant_id column) so validation, permission intersection and RejectApiTokenAuth all keep working unchanged; revoking a grant cascades to its live access tokens."
         ]
+    },
+    "60": {
+        "version": "1.65.0",
+        "name": "Organization-level permissions",
+        "releaseDate": "20260830",
+        "scripts": [
+            "/1.65.0/0.organization-permissions.sql"
+        ],
+        "description": [
+            "New permission group 'organization' with org_can_view, org_can_manage, org_can_manage_members, sso_can_manage and webhooks_can_manage.",
+            "These surfaces were guarded only by an organization role or by project ownership, so they ignored the scope of an API or OAuth token: a token issued with a single permission could still create organizations, add admins, change SSO settings and create webhooks. The new keys make those actions narrowable like every other permission.",
+            "Backwards compatible: a token with an empty permission list stays unrestricted, so existing integrations keep working."
+        ]
     }
 }

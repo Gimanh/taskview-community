@@ -227,6 +227,7 @@ export class OAuthManager {
             refreshTokenHash: sha256Hex(refreshToken),
             prevHash: args.prevRefreshHash ?? null,
             refreshExpiresAt: new Date(now + OAUTH_REFRESH_TOKEN_TTL_SECONDS * 1000),
+            presentedHash: args.prevRefreshHash ?? null,
         })
         if (!rotated) {
             return { ok: false, error: 'invalid_grant', description: 'This authorization has been revoked' }

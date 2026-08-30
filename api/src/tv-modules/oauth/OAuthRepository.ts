@@ -92,13 +92,6 @@ export class OAuthRepository {
         return result?.[0] ?? null
     }
 
-    async findGrantById(id: number): Promise<OAuthGrantsSchemaTypeForSelect | null> {
-        const result = await callWithCatch(() =>
-            this.db.dbDrizzle.select().from(OAuthGrantsSchema).where(eq(OAuthGrantsSchema.id, id)),
-        )
-        return result?.[0] ?? null
-    }
-
     /** Matches the current refresh token or the previous one, so replay is detectable. */
     async findGrantByRefreshHash(refreshTokenHash: string): Promise<OAuthGrantsSchemaTypeForSelect | null> {
         const result = await callWithCatch(() =>
@@ -121,7 +114,16 @@ export class OAuthRepository {
                     refreshExpiresAt: args.refreshExpiresAt,
                     lastUsedAt: new Date(),
                 })
-                .where(and(eq(OAuthGrantsSchema.id, args.grantId), isNull(OAuthGrantsSchema.revokedAt))),
+                .where(and(
+                    eq(OAuthGrantsSchema.id, args.grantId),
+                    isNull(OAuthGrantsSchema.revokedAt),
+                    // The presented token must still be the current one. Without this,
+                    // two concurrent refreshes both succeed and the second overwrites
+                    // the first, silently orphaning the refresh token it just handed out.
+                    args.presentedHash
+                        ? eq(OAuthGrantsSchema.refreshTokenHash, args.presentedHash)
+                        : isNull(OAuthGrantsSchema.refreshTokenHash),
+                )),
         )
         return !!result?.rowCount
     }
@@ -170,12 +172,6 @@ export class OAuthRepository {
             this.db.dbDrizzle.insert(ApiTokensSchema).values(data).returning(),
         )
         return !!result?.length
-    }
-
-    async deleteAccessTokensForGrant(grantId: number): Promise<void> {
-        await callWithCatch(() =>
-            this.db.dbDrizzle.delete(ApiTokensSchema).where(eq(ApiTokensSchema.grantId, grantId)),
-        )
     }
 
     async findGrantIdByAccessTokenHash(tokenHash: string): Promise<number | null> {

@@ -1,5 +1,10 @@
-import { and, eq, isNull } from 'drizzle-orm';
-import { ApiTokensSchema, type ApiTokensSchemaTypeForSelect } from 'taskview-db-schemas';
+import { and, asc, eq, isNull, ne } from 'drizzle-orm';
+import {
+    ApiTokensSchema,
+    PermissionsSchema,
+    type ApiTokensSchemaTypeForSelect,
+    type PermissionsSchemaTypeForSelect,
+} from 'taskview-db-schemas';
 import { Database } from '../../modules/db';
 import { callWithCatch } from '../../utils/helpers';
 
@@ -44,6 +49,21 @@ export class ApiTokensRepository {
             this.db.dbDrizzle.select().from(ApiTokensSchema).where(eq(ApiTokensSchema.tokenHash, tokenHash))
         );
         return result?.[0] ?? null;
+    }
+
+    /**
+     * Permissions offered when scoping a token. Group 1 is excluded: those keys
+     * exist in the table but are enforced nowhere in the code, so offering them
+     * would promise a restriction that never happens.
+     */
+    async fetchSelectablePermissions(): Promise<PermissionsSchemaTypeForSelect[]> {
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle.select()
+                .from(PermissionsSchema)
+                .where(ne(PermissionsSchema.permissionGroup, 1))
+                .orderBy(asc(PermissionsSchema.permissionGroup), asc(PermissionsSchema.id))
+        );
+        return result ?? [];
     }
 
     async updateLastUsedAt(id: number): Promise<void> {
