@@ -73,6 +73,8 @@ Then use `"command": "taskview-mcp"` (no `args` needed).
 | `TASKVIEW_URL` | yes | TaskView API server URL (e.g. `https://api.taskview.tech`) |
 | `TASKVIEW_TOKEN` | yes (stdio mode) | API token with `tvk_` prefix. Not used in HTTP mode — each caller sends their own token |
 | `MCP_HTTP_PORT` | no (HTTP mode) | Port for the HTTP server, default `3100` |
+| `MCP_PUBLIC_URL` | no (HTTP mode) | Public URL of this server as clients reach it — the OAuth resource identifier. Include the path when the server is mounted under one (`https://api.example.com/mcp`); derived from the request host when unset |
+| `MCP_ALLOWED_ORIGINS` | no (HTTP mode) | Comma-separated browser origins allowed to call `/mcp`. Unset means no browser origin is allowed; non-browser clients send no `Origin` and are unaffected |
 
 ## HTTP server (remote / self-hosted)
 
@@ -112,6 +114,45 @@ Self-hosted instances run their own copy next to their API (see `Dockerfile`
 in this package) — point `TASKVIEW_URL` at your API server and put the MCP
 port behind your reverse proxy with HTTPS.
 
+### OAuth (ChatGPT and other cloud clients)
+
+Clients that will not accept a pasted API token — ChatGPT connectors among
+them — authorize over OAuth 2.1 instead. Nothing extra runs here: this server
+advertises itself as the protected resource and points at your TaskView API,
+which is the authorization server.
+
+- `GET /.well-known/oauth-protected-resource` returns the resource metadata
+  (RFC 9728), naming `TASKVIEW_URL` as the authorization server.
+- A request with no token answers `401` with
+  `WWW-Authenticate: Bearer resource_metadata="…"`, which is what starts
+  discovery in the client.
+- The client then registers, sends the user to the TaskView consent screen,
+  and comes back with a `tvo_` access token that it sends here like any other
+  bearer token.
+
+Set `MCP_PUBLIC_URL` to the externally reachable URL of this server so the
+advertised resource identifier matches what clients actually request.
+
+**Mounted under a path.** When the server sits behind a reverse proxy at
+`https://api.example.com/mcp` rather than on its own host, put the full path in
+`MCP_PUBLIC_URL`. RFC 9728 then places the metadata at
+`/.well-known/oauth-protected-resource/mcp`, which is where a client that
+computes the address from the spec — instead of trusting the `WWW-Authenticate`
+header — will look. The server publishes it at both that address and the root
+one, but the proxy has to route the path-inserted address here too:
+
+```nginx
+location = /.well-known/oauth-protected-resource/mcp {
+    proxy_pass http://127.0.0.1:3100/.well-known/oauth-protected-resource/mcp;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+Manually issued `tvk_` tokens keep working exactly as before — OAuth is an
+additional way in, not a replacement. Use `tvk_` for stdio, CLIs and CI, where
+there is no browser to complete an authorization flow.
+
 ## Available tools
 
 61 tools covering the full TaskView surface.
@@ -121,6 +162,8 @@ port behind your reverse proxy with HTTPS.
 **Lists** — `list_lists`, `create_list`, `update_list`, `delete_list`
 
 **Tasks** — `list_tasks`, `get_task`, `create_task`, `update_task`, `delete_task`, `toggle_task_assignees`, `get_task_history`, `restore_task_from_history`
+
+**Agenda** — `get_agenda` (today, upcoming and recently completed across all projects in one call)
 
 **Tags** — `list_tags`, `create_tag`, `update_tag`, `delete_tag`, `toggle_task_tag`
 

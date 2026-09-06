@@ -5,9 +5,22 @@ import { useOrganizationStore } from '@/stores/organization.store'
 import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
 import { useProjectRoute } from '@/composables/useProjectRoute'
 
+/** Only internal absolute paths — never an absolute URL, which would be an open redirect. */
+const safeReturnPath = (raw: unknown): string | null => {
+  if (typeof raw !== 'string') return null
+  if (!raw.startsWith('/') || raw.startsWith('//')) return null
+  return raw
+}
+
 export const redirectToUser = async (router: Router) => {
   const userStore = useUserStore()
   if (!userStore.accessToken) return
+
+  const returnPath = safeReturnPath(router.currentRoute.value.query.redirect)
+  if (returnPath) {
+    await router.replace(returnPath)
+    return
+  }
 
   const orgStore = useOrganizationStore()
   if (!orgStore.organizations.length) {

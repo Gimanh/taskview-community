@@ -1,7 +1,7 @@
 import { randomBytes, createHash } from 'crypto';
 import { ApiTokensRepository } from './ApiTokensRepository';
 import { TOKEN_PREFIX, type ApiTokenArgCreate } from './types';
-import type { ApiTokensSchemaTypeForSelect } from 'taskview-db-schemas';
+import type { ApiTokensSchemaTypeForSelect, PermissionsSchemaTypeForSelect } from 'taskview-db-schemas';
 
 export type ApiTokenForClient = Omit<ApiTokensSchemaTypeForSelect, 'tokenHash'>;
 
@@ -40,6 +40,10 @@ export class ApiTokensManager {
     async fetchAll(userId: number): Promise<ApiTokenForClient[]> {
         const tokens = await this.repository.fetchByUserId(userId);
         return tokens.map((t) => this.toClient(t));
+    }
+
+    async fetchSelectablePermissions(): Promise<PermissionsSchemaTypeForSelect[]> {
+        return this.repository.fetchSelectablePermissions();
     }
 
     async validateToken(fullToken: string): Promise<ApiTokensSchemaTypeForSelect | null> {

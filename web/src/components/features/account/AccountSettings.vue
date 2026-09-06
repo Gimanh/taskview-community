@@ -17,6 +17,13 @@
     </UPageCard>
 
     <UPageCard
+      variant="soft"
+      class="w-full rounded-3xl"
+    >
+      <ConnectedAppsPanel />
+    </UPageCard>
+
+    <UPageCard
       v-if="isDefaultUser"
       variant="soft"
       class="w-full rounded-3xl bg-warning/10 ring-2 ring-warning/60"
@@ -68,6 +75,7 @@ import PasswordSettings from './parts/PasswordSettings.vue'
 import DefaultUserCredentials from './parts/DefaultUserCredentials.vue'
 import SessionsPanel from '@/components/features/sessions/SessionsPanel.vue'
 import ApiTokensPanel from '@/components/features/api-tokens/ApiTokensPanel.vue'
+import ConnectedAppsPanel from '@/components/features/oauth/ConnectedAppsPanel.vue'
 
 const { t } = useI18n()
 const userStore = useUserStore()

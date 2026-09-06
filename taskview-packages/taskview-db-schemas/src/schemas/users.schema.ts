@@ -17,7 +17,7 @@ export const PermissionsSchema = pgSchema('tv_auth').table('permissions', {
     name: varchar().notNull(),
     description: varchar(),
     permissionGroup: integer('permission_group'),
-    descriptionLocales: jsonb('description_locales'),
+    descriptionLocales: jsonb('description_locales').$type<Record<string, string> | null>(),
 });
 
 export type PermissionsSchemaTypeForSelect = typeof PermissionsSchema.$inferSelect;

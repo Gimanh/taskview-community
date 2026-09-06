@@ -4,6 +4,7 @@ import { $logger } from '../modules/logget';
 import AuthController from '../tv-modules/auth/AuthController';
 import { getApiTokensManager } from '../tv-modules/api-tokens/ApiTokensManager';
 import { TOKEN_PREFIX } from '../tv-modules/api-tokens/types';
+import { OAUTH_ACCESS_TOKEN_PREFIX } from '../tv-modules/oauth/types';
 
 export const appUserMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     if (req.method === 'OPTIONS') {
@@ -13,7 +14,7 @@ export const appUserMiddleware = async (req: Request, res: Response, next: NextF
 
     const token = req.headers['authorization']?.split(' ')[1];
 
-    if (token && token.startsWith(TOKEN_PREFIX)) {
+    if (token && (token.startsWith(TOKEN_PREFIX) || token.startsWith(OAUTH_ACCESS_TOKEN_PREFIX))) {
         const record = await getApiTokensManager().validateToken(token);
         if (record) {
             const authManager = new AppUser().authManager;

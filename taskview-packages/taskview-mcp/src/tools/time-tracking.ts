@@ -1,12 +1,14 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { TvApi } from 'taskview-api'
 import { z } from 'zod'
-import { ok, err } from './helpers.js'
+import { ok, err, toolAnnotations } from './helpers.js'
 
 export function registerTimeTrackingTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'start_timer',
     {
+      title: 'Start timer',
+      annotations: toolAnnotations.write,
       description: 'Start a timer for the given task. Returns {entry, autoStoppedEntry} — autoStoppedEntry is the previous active timer that was stopped (null if there was no active timer).',
       inputSchema: {
         taskId: z.coerce.number().describe('Task ID to track time for'),
@@ -27,6 +29,8 @@ export function registerTimeTrackingTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'stop_timer',
     {
+      title: 'Stop timer',
+      annotations: toolAnnotations.write,
       description: 'Stop the active timer (or specific entry by id) and return the closed entry.',
       inputSchema: {
         entryId: z.coerce.number().optional().describe('Specific entry ID; if omitted, stops the user\'s active timer'),
@@ -43,6 +47,8 @@ export function registerTimeTrackingTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'get_active_timer',
     {
+      title: 'Get active timer',
+      annotations: toolAnnotations.readOnly,
       description: 'Get the user\'s currently running timer (if any).',
     },
     async () => {
@@ -56,6 +62,8 @@ export function registerTimeTrackingTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'log_time',
     {
+      title: 'Log time',
+      annotations: toolAnnotations.write,
       description: 'Log a manual time entry retroactively (no time-period restrictions).',
       inputSchema: {
         taskId: z.coerce.number().describe('Task ID'),
@@ -82,6 +90,8 @@ export function registerTimeTrackingTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'list_time_entries',
     {
+      title: 'List time entries',
+      annotations: toolAnnotations.readOnly,
       description: 'List time entries with optional filters (goalId, taskId, userId, date range).',
       inputSchema: {
         goalId: z.coerce.number().optional().describe('Filter by project'),
@@ -104,6 +114,8 @@ export function registerTimeTrackingTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'get_time_summary',
     {
+      title: 'Get time summary',
+      annotations: toolAnnotations.readOnly,
       description: 'Get aggregated time summary for a task or a project (goal).',
       inputSchema: {
         scope: z.enum(['task', 'goal']).describe('Aggregation scope'),
@@ -124,6 +136,8 @@ export function registerTimeTrackingTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'update_time_entry',
     {
+      title: 'Update time entry',
+      annotations: toolAnnotations.write,
       description: 'Update fields of an existing time entry (cannot edit started/ended of a running timer).',
       inputSchema: {
         id: z.coerce.number().describe('Time entry ID'),
@@ -144,6 +158,8 @@ export function registerTimeTrackingTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'get_time_report',
     {
+      title: 'Get time report',
+      annotations: toolAnnotations.readOnly,
       description:
         'Aggregated time report. Choose scope: by-day (daily totals), by-user (per member), by-task (per task), summary (totals + billable). Filter by org, optional projects, optional user, date range.',
       inputSchema: {
@@ -181,6 +197,8 @@ export function registerTimeTrackingTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'get_time_contributors',
     {
+      title: 'Get time contributors',
+      annotations: toolAnnotations.readOnly,
       description:
         'List users who logged time in the given projects and date range, with total seconds and entry counts. Useful for "who worked on this project last month".',
       inputSchema: {
@@ -208,6 +226,8 @@ export function registerTimeTrackingTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'delete_time_entry',
     {
+      title: 'Delete time entry',
+      annotations: toolAnnotations.destructive,
       description: 'Delete a time entry (writes a record to history.time_entries before deletion).',
       inputSchema: {
         id: z.coerce.number().describe('Time entry ID'),

@@ -7,6 +7,7 @@ export const ApiTokensSchema = pgSchema('tv_auth').table('api_tokens', {
     tokenHash: varchar('token_hash', { length: 64 }).notNull().unique(),
     allowedPermissions: varchar('allowed_permissions').array().notNull().default([]),
     allowedGoalIds: integer('allowed_goal_ids').array().notNull().default([]),
+    grantId: integer('grant_id'),
     lastUsedAt: timestamp('last_used_at'),
     expiresAt: timestamp('expires_at'),
     createdAt: timestamp('created_at').defaultNow(),

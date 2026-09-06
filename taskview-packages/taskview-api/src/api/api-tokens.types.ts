@@ -26,4 +26,6 @@ export type ApiTokenPermission = {
     name: string;
     description: string;
     permissionGroup: number;
+    /** Per-locale description; keys match the app locales ('en', 'ru', 'de', 'es', 'pt-BR'). */
+    descriptionLocales?: Record<string, string> | null;
 };

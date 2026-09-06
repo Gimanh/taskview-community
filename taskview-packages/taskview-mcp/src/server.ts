@@ -8,6 +8,7 @@ import { registerKanbanTools } from './tools/kanban.js'
 import { registerCollaborationTools } from './tools/collaboration.js'
 import { registerGraphTools } from './tools/graph.js'
 import { registerNotificationsTools } from './tools/notifications.js'
+import { registerStartTools } from './tools/start.js'
 import { registerOrganizationsTools } from './tools/organizations.js'
 import { registerTimeTrackingTools } from './tools/time-tracking.js'
 
@@ -23,7 +24,9 @@ DATA MODEL (top to bottom):
 
 WORKFLOW: all IDs are numeric and must be resolved first — never guess them. Map a name to its id with the matching list_* tool (project → list_goals, list → list_lists, members → list_collaborators_for_goal, kanban columns → list_kanban_columns, tags → list_tags), then pass that id to the create/update/delete tools.
 
-list_tasks is paginated: page is 0-based, ~30 tasks per page — request the next page until one returns fewer than 30. Completed tasks are hidden unless showCompleted is set. Use sortBy ("date" or "priority") with descending to control ordering.`
+list_tasks is paginated: page is 0-based, ~30 tasks per page — request the next page until one returns fewer than 30. Completed tasks are hidden unless showCompleted is set. Use sortBy ("date" or "priority") with descending to control ordering.
+
+AGENDA: for "what do I have today", "what is coming up" or "what did I finish recently", call get_agenda. It returns today, upcoming, recently completed and undated tasks across every project in a single request, with the day boundary computed on the server. Do NOT answer those questions by listing projects and walking their tasks — that is many times slower and gets the day wrong for anyone outside UTC. Pass the user's IANA timezone when you know it.`
 
 export function createMcpServer(api: TvApi) {
   const server = new McpServer(
@@ -42,6 +45,7 @@ export function createMcpServer(api: TvApi) {
   registerCollaborationTools(server, api)
   registerGraphTools(server, api)
   registerNotificationsTools(server, api)
+  registerStartTools(server, api)
   registerOrganizationsTools(server, api)
   registerTimeTrackingTools(server, api)
 

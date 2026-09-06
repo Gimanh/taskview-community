@@ -1,12 +1,14 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { type TvApi, ALL_TASKS_LIST_ID } from 'taskview-api'
 import { z } from 'zod'
-import { ok, err } from './helpers.js'
+import { ok, err, toolAnnotations } from './helpers.js'
 
 export function registerTasksTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'list_tasks',
     {
+      title: 'List tasks',
+      annotations: toolAnnotations.readOnly,
       description: 'List tasks for a specific project (goal). Returns paginated results.',
       inputSchema: {
         goalId: z.coerce.number().describe('Project (goal) ID'),
@@ -39,6 +41,8 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'get_task',
     {
+      title: 'Get task',
+      annotations: toolAnnotations.readOnly,
       description: 'Get a single task by its ID with full details',
       inputSchema: {
         taskId: z.coerce.number().describe('Task ID'),
@@ -56,6 +60,8 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'create_task',
     {
+      title: 'Create task',
+      annotations: toolAnnotations.write,
       description: 'Create a new task in a project',
       inputSchema: {
         goalId: z.coerce.number().describe('Project (goal) ID'),
@@ -81,6 +87,8 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'update_task',
     {
+      title: 'Update task',
+      annotations: toolAnnotations.write,
       description: 'Update an existing task (description, status, priority, dates, cost, etc.)',
       inputSchema: {
         id: z.coerce.number().describe('Task ID to update'),
@@ -111,6 +119,8 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'delete_task',
     {
+      title: 'Delete task',
+      annotations: toolAnnotations.destructive,
       description: 'Delete a task',
       inputSchema: {
         taskId: z.coerce.number().describe('Task ID to delete'),
@@ -127,6 +137,8 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'toggle_task_assignees',
     {
+      title: 'Toggle task assignees',
+      annotations: toolAnnotations.write,
       description: 'Assign or unassign users to/from a task',
       inputSchema: {
         taskId: z.coerce.number().describe('Task ID'),
@@ -144,6 +156,8 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'get_task_history',
     {
+      title: 'Get task history',
+      annotations: toolAnnotations.readOnly,
       description: 'Get the change history of a task',
       inputSchema: {
         taskId: z.coerce.number().describe('Task ID'),
@@ -160,6 +174,8 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'restore_task_from_history',
     {
+      title: 'Restore task from history',
+      annotations: toolAnnotations.destructive,
       description: 'Restore a task to a previous state from its history',
       inputSchema: {
         taskId: z.coerce.number().describe('Task ID'),

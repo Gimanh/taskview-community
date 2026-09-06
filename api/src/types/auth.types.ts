@@ -194,6 +194,12 @@ export const GoalPermissions = {
     TIMETRACKING_CAN_LOG: 'timetracking_can_log',
     TIMETRACKING_CAN_MANAGE_ALL: 'timetracking_can_manage_all',
 
+    ORG_CAN_VIEW: 'org_can_view',
+    ORG_CAN_MANAGE: 'org_can_manage',
+    ORG_CAN_MANAGE_MEMBERS: 'org_can_manage_members',
+    SSO_CAN_MANAGE: 'sso_can_manage',
+    WEBHOOKS_CAN_MANAGE: 'webhooks_can_manage',
+
     SPRINT_CAN_VIEW: 'sprint_can_view',
     SPRINT_CAN_MANAGE: 'sprint_can_manage',
     SPRINT_CAN_ASSIGN_TASKS: 'sprint_can_assign_tasks',

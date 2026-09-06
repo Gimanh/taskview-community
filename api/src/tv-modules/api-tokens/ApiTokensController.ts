@@ -2,7 +2,6 @@ import type { Request, Response } from 'express';
 import { ArkErrors } from 'arktype';
 import { getApiTokensManager } from './ApiTokensManager';
 import { ApiTokenArkTypeCreate, ApiTokenArkTypeDelete } from './types';
-import { Database } from '../../modules/db';
 
 export class ApiTokensController {
     private get manager() { return getApiTokensManager(); }
@@ -44,10 +43,7 @@ export class ApiTokensController {
     };
 
     fetchPermissions = async (_req: Request, res: Response) => {
-        const db = Database.getInstance();
-        const result = await db.query<{ id: number; name: string; description: string; permissionGroup: number }>(
-            `SELECT id, name, description, permission_group as "permissionGroup" FROM tv_auth.permissions WHERE permission_group <> 1 ORDER BY permission_group, id`
-        );
-        return res.tvJson(result?.rows ?? []);
+        const result = await this.manager.fetchSelectablePermissions();
+        return res.tvJson(result);
     };
 }
