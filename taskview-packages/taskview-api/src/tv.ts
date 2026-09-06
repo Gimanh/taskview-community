@@ -21,6 +21,8 @@ import TvTimeTrackingApi from "./api/time-tracking";
 import TvUiPreferencesApi from "./api/ui-preferences";
 import TvSprintApi from "./api/sprints";
 import TvRecurrenceApi from "./api/recurrence";
+import TvBillingApi from "./api/billing";
+import TvInvoicesApi from "./api/invoices";
 
 export class TvApi {
 
@@ -68,6 +70,10 @@ export class TvApi {
 
     public recurrence: TvRecurrenceApi;
 
+    public billing: TvBillingApi;
+
+    public invoices: TvInvoicesApi;
+
     constructor($axios: AxiosInstance) {
         this.$axios = $axios;
 
@@ -112,6 +118,10 @@ export class TvApi {
         this.sprints = new TvSprintApi(this.$axios);
 
         this.recurrence = new TvRecurrenceApi(this.$axios);
+
+        this.billing = new TvBillingApi(this.$axios);
+
+        this.invoices = new TvInvoicesApi(this.$axios);
     }
 
     public setBaseUrl(baseUrl: string) {
