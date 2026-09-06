@@ -24,6 +24,8 @@ import TimeTrackingRoutes from '../tv-modules/time-tracking/TimeTrackingRoutes';
 import UiPreferencesRoutes from '../tv-modules/ui-preferences/UiPreferencesRoutes';
 import SprintsRoutes from '../tv-modules/sprints/SprintsRoutes';
 import RecurrenceRoutes from '../tv-modules/recurrence/RecurrenceRoutes';
+import BillingRoutes from '../tv-modules/billing/BillingRoutes';
+import InvoicesRoutes from '../tv-modules/invoices/InvoicesRoutes';
 import type { Routable } from '../types/routable.type';
 
 type RoutableConstructor = new (...args: any[]) => Routable;
@@ -53,6 +55,8 @@ const routes: Record<string, RoutableConstructor> = {
     '/module/ui-preferences': UiPreferencesRoutes,
     '/module/sprints': SprintsRoutes,
     '/module/recurrence': RecurrenceRoutes,
+    '/module/billing': BillingRoutes,
+    '/module/invoices': InvoicesRoutes,
     '/scim/v2': ScimRoutes,
     '/.well-known': OAuthWellKnownRoutes,
 };

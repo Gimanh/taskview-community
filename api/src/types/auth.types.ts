@@ -199,6 +199,7 @@ export const GoalPermissions = {
     ORG_CAN_MANAGE_MEMBERS: 'org_can_manage_members',
     SSO_CAN_MANAGE: 'sso_can_manage',
     WEBHOOKS_CAN_MANAGE: 'webhooks_can_manage',
+    BILLING_CAN_MANAGE: 'billing_can_manage',
 
     SPRINT_CAN_VIEW: 'sprint_can_view',
     SPRINT_CAN_MANAGE: 'sprint_can_manage',
