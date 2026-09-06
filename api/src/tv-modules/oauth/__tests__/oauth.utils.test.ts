@@ -98,8 +98,30 @@ describe('isAcceptableRedirectUri', () => {
         expect(isAcceptableRedirectUri('https://example.com/cb#token')).toBe(false)
     })
 
-    it('rejects a non-http scheme', () => {
+    it('accepts a private-use scheme, which is how native apps come back (RFC 8252)', () => {
+        expect(isAcceptableRedirectUri('com.example.app://oauth/callback')).toBe(true)
+        expect(isAcceptableRedirectUri('myapp://callback')).toBe(true)
+    })
+
+    it('rejects schemes where redirecting would execute something', () => {
         expect(isAcceptableRedirectUri('javascript:alert(1)')).toBe(false)
+        expect(isAcceptableRedirectUri('data:text/html,<script>alert(1)</script>')).toBe(false)
+        expect(isAcceptableRedirectUri('vbscript:msgbox(1)')).toBe(false)
+        expect(isAcceptableRedirectUri('file:///etc/passwd')).toBe(false)
+        expect(isAcceptableRedirectUri('blob:https://example.com/x')).toBe(false)
+        expect(isAcceptableRedirectUri('about:blank')).toBe(false)
+    })
+
+    it('still refuses plaintext http off loopback', () => {
+        expect(isAcceptableRedirectUri('http://evil.example.com/cb')).toBe(false)
+    })
+
+    it('still refuses a fragment on any scheme', () => {
+        expect(isAcceptableRedirectUri('com.example.app://cb#token')).toBe(false)
+    })
+
+    it('rejects a string that is not a URL at all', () => {
+        expect(isAcceptableRedirectUri('not a url')).toBe(false)
     })
 })
 

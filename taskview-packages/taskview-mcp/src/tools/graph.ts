@@ -1,12 +1,14 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { TvApi } from 'taskview-api'
 import { z } from 'zod'
-import { ok, err } from './helpers.js'
+import { ok, err, toolAnnotations } from './helpers.js'
 
 export function registerGraphTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'list_task_dependencies',
     {
+      title: 'List task dependencies',
+      annotations: toolAnnotations.readOnly,
       description: 'List all task dependency edges in a project',
       inputSchema: {
         goalId: z.coerce.number().describe('Project (goal) ID'),
@@ -23,6 +25,8 @@ export function registerGraphTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'add_task_dependency',
     {
+      title: 'Add task dependency',
+      annotations: toolAnnotations.write,
       description: 'Create a dependency between two tasks',
       inputSchema: {
         source: z.coerce.number().describe('Source task ID'),
@@ -40,6 +44,8 @@ export function registerGraphTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'delete_task_dependency',
     {
+      title: 'Delete task dependency',
+      annotations: toolAnnotations.destructive,
       description: 'Delete a task dependency edge',
       inputSchema: {
         id: z.coerce.number().describe('Dependency edge ID'),

@@ -26,6 +26,7 @@ export function mockApi(overrides: Record<string, Record<string, unknown>> = {})
     },
     graph: { fetchAllEdges: noop, addEdge: noop, deleteEdge: noop },
     notifications: { fetch: noop, markRead: noop, markAllRead: noop },
+    start: { fetchAllState: noop },
     timeTracking: {
       start: noop, stop: noop, getActive: noop, createManual: noop, update: noop, delete: noop,
       fetchEntries: noop, summaryByTask: noop, summaryByGoal: noop,
@@ -52,7 +53,7 @@ export function apiThrow(message: string) {
 
 type ToolEntry = {
   name: string
-  config: { description?: string; inputSchema?: Record<string, unknown> }
+  config: { title?: string; description?: string; inputSchema?: Record<string, unknown>; annotations?: Record<string, unknown> }
   cb: (args: Record<string, unknown>) => Promise<{ content: { type: string; text: string }[]; isError?: boolean }>
 }
 

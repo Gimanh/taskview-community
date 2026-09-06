@@ -1,12 +1,14 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { TvApi } from 'taskview-api'
 import { z } from 'zod'
-import { ok, err } from './helpers.js'
+import { ok, err, toolAnnotations } from './helpers.js'
 
 export function registerListsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'list_lists',
     {
+      title: 'List lists in project',
+      annotations: toolAnnotations.readOnly,
       description: 'Get all task lists within a project',
       inputSchema: {
         goalId: z.coerce.number().describe('Project (goal) ID'),
@@ -23,6 +25,8 @@ export function registerListsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'create_list',
     {
+      title: 'Create list',
+      annotations: toolAnnotations.write,
       description: 'Create a new task list within a project',
       inputSchema: {
         goalId: z.coerce.number().describe('Project (goal) ID'),
@@ -41,6 +45,8 @@ export function registerListsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'update_list',
     {
+      title: 'Update list',
+      annotations: toolAnnotations.write,
       description: 'Update a task list',
       inputSchema: {
         id: z.coerce.number().describe('List ID'),
@@ -60,6 +66,8 @@ export function registerListsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'delete_list',
     {
+      title: 'Delete list',
+      annotations: toolAnnotations.destructive,
       description: 'Delete a task list',
       inputSchema: {
         id: z.coerce.number().describe('List ID to delete'),

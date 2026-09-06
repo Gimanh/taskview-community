@@ -15,6 +15,7 @@ export * from '@/api/webhooks.types';
 export * from '@/api/messaging.types';
 export * from '@/api/api-tokens.types';
 export * from '@/api/oauth.types';
+export * from '@/api/start.types';
 export * from '@/api/sessions.types';
 export * from '@/api/organizations.types';
 export * from '@/api/sso.types';

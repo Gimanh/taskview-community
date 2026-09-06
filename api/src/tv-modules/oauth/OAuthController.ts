@@ -183,7 +183,7 @@ export class OAuthController {
         if (rejected) {
             return res.status(400).json({
                 error: 'invalid_redirect_uri',
-                error_description: `redirect_uri must be https or loopback http: ${rejected}`,
+                error_description: `redirect_uri must be https, loopback http, or an app scheme, and carry no fragment: ${rejected}`,
             })
         }
 
@@ -200,7 +200,12 @@ export class OAuthController {
 
         return res.status(201).json({
             client_id: result.value.clientId,
-            ...(result.value.clientSecret ? { client_secret: result.value.clientSecret } : {}),
+            // RFC 7591 §3.2.1: client_secret_expires_at is REQUIRED whenever a
+            // secret is issued. 0 means it does not expire.
+            ...(result.value.clientSecret
+                ? { client_secret: result.value.clientSecret, client_secret_expires_at: 0 }
+                : {}),
+            client_id_issued_at: Math.floor(Date.now() / 1000),
             client_name: name,
             redirect_uris: data.redirect_uris,
             token_endpoint_auth_method: isPublic ? 'none' : 'client_secret_post',

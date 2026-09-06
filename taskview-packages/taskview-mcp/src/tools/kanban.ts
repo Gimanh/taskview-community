@@ -1,12 +1,14 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { TvApi } from 'taskview-api'
 import { z } from 'zod'
-import { ok, err } from './helpers.js'
+import { ok, err, toolAnnotations } from './helpers.js'
 
 export function registerKanbanTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'list_kanban_columns',
     {
+      title: 'List kanban columns',
+      annotations: toolAnnotations.readOnly,
       description: 'Get all kanban columns for a project',
       inputSchema: {
         goalId: z.coerce.number().describe('Project (goal) ID'),
@@ -23,6 +25,8 @@ export function registerKanbanTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'create_kanban_column',
     {
+      title: 'Create kanban column',
+      annotations: toolAnnotations.write,
       description: 'Create a new kanban column in a project',
       inputSchema: {
         goalId: z.coerce.number().describe('Project (goal) ID'),
@@ -40,6 +44,8 @@ export function registerKanbanTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'update_kanban_column',
     {
+      title: 'Update kanban column',
+      annotations: toolAnnotations.write,
       description: 'Update a kanban column',
       inputSchema: {
         id: z.coerce.number().describe('Column ID'),
@@ -58,6 +64,8 @@ export function registerKanbanTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'delete_kanban_column',
     {
+      title: 'Delete kanban column',
+      annotations: toolAnnotations.destructive,
       description: 'Delete a kanban column',
       inputSchema: {
         id: z.coerce.number().describe('Column ID to delete'),

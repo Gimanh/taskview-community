@@ -1,12 +1,14 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { TvApi } from 'taskview-api'
 import { z } from 'zod'
-import { ok, err } from './helpers.js'
+import { ok, err, toolAnnotations } from './helpers.js'
 
 export function registerNotificationsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'list_notifications',
     {
+      title: 'List notifications',
+      annotations: toolAnnotations.readOnly,
       description: 'Get user notifications',
       inputSchema: {
         cursor: z.coerce.number().optional().describe('Pagination cursor'),
@@ -23,6 +25,8 @@ export function registerNotificationsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'mark_notification_read',
     {
+      title: 'Mark notification as read',
+      annotations: toolAnnotations.write,
       description: 'Mark a notification as read',
       inputSchema: {
         notificationId: z.coerce.number().describe('Notification ID'),
@@ -39,6 +43,8 @@ export function registerNotificationsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'mark_all_notifications_read',
     {
+      title: 'Mark all notifications as read',
+      annotations: toolAnnotations.write,
       description: 'Mark all notifications as read',
     },
     async () => {

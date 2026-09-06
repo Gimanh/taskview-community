@@ -193,8 +193,49 @@ describe('OAuth 2.1 authorization server', () => {
             expect(response.data.token_endpoint_auth_method).toBe('none');
         });
 
+        it('reports when the client_id was issued (RFC 7591)', async () => {
+            const before = Math.floor(Date.now() / 1000);
+            const response = await registerClient();
+
+            expect(response.status).toBe(201);
+            expect(response.data.client_id_issued_at).toBeGreaterThanOrEqual(before - 5);
+            expect(response.data.client_id_issued_at).toBeLessThanOrEqual(Math.floor(Date.now() / 1000) + 5);
+        });
+
+        it('omits client_secret_expires_at when no secret is issued', async () => {
+            const response = await registerClient();
+
+            expect(response.data.client_secret).toBeUndefined();
+            expect(response.data.client_secret_expires_at).toBeUndefined();
+        });
+
+        it('states that an issued secret does not expire', async () => {
+            const response = await registerClient({ token_endpoint_auth_method: 'client_secret_post' });
+
+            expect(response.status).toBe(201);
+            expect(response.data.client_secret).toBeTruthy();
+            expect(response.data.client_secret_expires_at).toBe(0);
+        });
+
         it('refuses a non-https redirect_uri', async () => {
             const response = await registerClient({ redirect_uris: ['http://evil.example.com/cb'] });
+
+            expect(response.status).toBe(400);
+            expect(response.data.error).toBe('invalid_redirect_uri');
+        });
+
+        it('registers a native app returning through its own scheme', async () => {
+            const response = await registerClient({
+                client_name: 'Native client',
+                redirect_uris: ['com.example.app://oauth/callback'],
+            });
+
+            expect(response.status).toBe(201);
+            expect(response.data.client_id).toBeTruthy();
+        });
+
+        it('refuses a scheme where redirecting would execute code', async () => {
+            const response = await registerClient({ redirect_uris: ['javascript:alert(1)'] });
 
             expect(response.status).toBe(400);
             expect(response.data.error).toBe('invalid_redirect_uri');

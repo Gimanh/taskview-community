@@ -1,12 +1,14 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { TvApi } from 'taskview-api'
 import { z } from 'zod'
-import { ok, err } from './helpers.js'
+import { ok, err, toolAnnotations } from './helpers.js'
 
 export function registerGoalsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'list_goals',
     {
+      title: 'List projects',
+      annotations: toolAnnotations.readOnly,
       description: 'List all projects (goals) accessible to the current user. Optionally filter by organization.',
       inputSchema: {
         organizationId: z.coerce.number().optional().describe('Filter by organization ID'),
@@ -23,6 +25,8 @@ export function registerGoalsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'create_goal',
     {
+      title: 'Create project',
+      annotations: toolAnnotations.write,
       description: 'Create a new project (goal). If organizationId is provided, creates within that organization.',
       inputSchema: {
         name: z.string().describe('Project name'),
@@ -43,6 +47,8 @@ export function registerGoalsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'update_goal',
     {
+      title: 'Update project',
+      annotations: toolAnnotations.write,
       description: 'Update a project (goal) — name, description, color',
       inputSchema: {
         id: z.coerce.number().describe('Project (goal) ID'),
@@ -64,6 +70,8 @@ export function registerGoalsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'delete_goal',
     {
+      title: 'Delete project',
+      annotations: toolAnnotations.destructive,
       description: 'Delete a project (goal)',
       inputSchema: {
         goalId: z.coerce.number().describe('Project (goal) ID to delete'),

@@ -1,12 +1,14 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { TvApi } from 'taskview-api'
 import { z } from 'zod'
-import { ok, err } from './helpers.js'
+import { ok, err, toolAnnotations } from './helpers.js'
 
 export function registerTagsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'list_tags',
     {
+      title: 'List tags',
+      annotations: toolAnnotations.readOnly,
       description: 'List all tags accessible to the current user',
     },
     async () => {
@@ -20,6 +22,8 @@ export function registerTagsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'create_tag',
     {
+      title: 'Create tag',
+      annotations: toolAnnotations.write,
       description: 'Create a new tag',
       inputSchema: {
         goalId: z.coerce.number().describe('Project (goal) ID'),
@@ -38,6 +42,8 @@ export function registerTagsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'update_tag',
     {
+      title: 'Update tag',
+      annotations: toolAnnotations.write,
       description: 'Update a tag',
       inputSchema: {
         id: z.coerce.number().describe('Tag ID'),
@@ -57,6 +63,8 @@ export function registerTagsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'delete_tag',
     {
+      title: 'Delete tag',
+      annotations: toolAnnotations.destructive,
       description: 'Delete a tag',
       inputSchema: {
         tagId: z.coerce.number().describe('Tag ID to delete'),
@@ -73,6 +81,8 @@ export function registerTagsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'toggle_task_tag',
     {
+      title: 'Toggle tag on task',
+      annotations: toolAnnotations.write,
       description: 'Add or remove a tag from a task',
       inputSchema: {
         tagId: z.coerce.number().describe('Tag ID'),

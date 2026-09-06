@@ -1,12 +1,14 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { TvApi } from 'taskview-api'
 import { z } from 'zod'
-import { ok, err } from './helpers.js'
+import { ok, err, toolAnnotations } from './helpers.js'
 
 export function registerOrganizationsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'list_organizations',
     {
+      title: 'List organizations',
+      annotations: toolAnnotations.readOnly,
       description: 'List all organizations the current user belongs to',
     },
     async () => {
@@ -20,6 +22,8 @@ export function registerOrganizationsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'get_organization',
     {
+      title: 'Get organization',
+      annotations: toolAnnotations.readOnly,
       description: 'Get organization details by ID',
       inputSchema: {
         organizationId: z.coerce.number().describe('Organization ID'),
@@ -36,6 +40,8 @@ export function registerOrganizationsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'create_organization',
     {
+      title: 'Create organization',
+      annotations: toolAnnotations.write,
       description: 'Create a new organization. The creator becomes the owner.',
       inputSchema: {
         name: z.string().describe('Organization name'),
@@ -55,6 +61,8 @@ export function registerOrganizationsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'update_organization',
     {
+      title: 'Update organization',
+      annotations: toolAnnotations.write,
       description: 'Update organization name, slug, or logo. Requires admin or owner role.',
       inputSchema: {
         organizationId: z.coerce.number().describe('Organization ID'),
@@ -75,6 +83,8 @@ export function registerOrganizationsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'delete_organization',
     {
+      title: 'Delete organization',
+      annotations: toolAnnotations.destructive,
       description: 'Delete an organization. Only the owner can delete. Personal workspaces cannot be deleted.',
       inputSchema: {
         organizationId: z.coerce.number().describe('Organization ID to delete'),
@@ -91,6 +101,8 @@ export function registerOrganizationsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'list_organization_members',
     {
+      title: 'List organization members',
+      annotations: toolAnnotations.readOnly,
       description: 'List all members of an organization',
       inputSchema: {
         organizationId: z.coerce.number().describe('Organization ID'),
@@ -107,6 +119,8 @@ export function registerOrganizationsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'add_organization_member',
     {
+      title: 'Add organization member',
+      annotations: toolAnnotations.write,
       description: 'Add a member to an organization by email. Requires admin or owner role. NOTE: organization membership alone does NOT grant access to any project — the user will not see a project until they are also added to it via invite_collaborator. After adding the member, invite them to the relevant project(s).',
       inputSchema: {
         organizationId: z.coerce.number().describe('Organization ID'),
@@ -126,6 +140,8 @@ export function registerOrganizationsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'update_organization_member_role',
     {
+      title: 'Change organization member role',
+      annotations: toolAnnotations.write,
       description: 'Change a member role in an organization. Cannot change the owner role.',
       inputSchema: {
         organizationId: z.coerce.number().describe('Organization ID'),
@@ -145,6 +161,8 @@ export function registerOrganizationsTools(server: McpServer, api: TvApi) {
   server.registerTool(
     'remove_organization_member',
     {
+      title: 'Remove organization member',
+      annotations: toolAnnotations.destructive,
       description: 'Remove a member from an organization. Cannot remove the owner.',
       inputSchema: {
         organizationId: z.coerce.number().describe('Organization ID'),

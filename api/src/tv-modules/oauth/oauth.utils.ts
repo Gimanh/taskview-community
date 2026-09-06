@@ -70,6 +70,16 @@ export function matchesRegisteredRedirectUri(args: MatchRedirectUriArgs): boolea
     })
 }
 
+/**
+ * Schemes where "redirecting" means executing something rather than handing
+ * control to an application. Everything else is allowed: RFC 8252 §7.1 has
+ * native apps return through a private-use scheme (com.example.app://), and
+ * refusing those locks every mobile client out of the flow. Interception of a
+ * private-use scheme by another app on the device is what PKCE — mandatory here,
+ * S256 only — exists to make useless.
+ */
+const DANGEROUS_REDIRECT_SCHEMES = ['javascript:', 'data:', 'vbscript:', 'file:', 'blob:', 'about:']
+
 export function isAcceptableRedirectUri(raw: string): boolean {
     let parsed: URL
     try {
@@ -78,12 +88,13 @@ export function isAcceptableRedirectUri(raw: string): boolean {
         return false
     }
     if (parsed.hash) return false
+    if (DANGEROUS_REDIRECT_SCHEMES.includes(parsed.protocol)) return false
     if (parsed.protocol === 'https:') return true
-    // http is allowed only on loopback. There is deliberately no NODE_ENV escape
-    // hatch: an install running without NODE_ENV=production would otherwise let
-    // any client register a plaintext redirect to a host it does not control.
+    // http stays loopback-only. There is deliberately no NODE_ENV escape hatch:
+    // an install running without NODE_ENV=production would otherwise let any
+    // client register a plaintext redirect to a host it does not control.
     if (parsed.protocol === 'http:') return isLoopbackUrl(parsed)
-    return false
+    return true
 }
 
 export function buildRedirectUrl(args: BuildRedirectUrlArgs): string {

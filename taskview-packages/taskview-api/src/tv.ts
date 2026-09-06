@@ -12,6 +12,7 @@ import TvWebhooks from "./api/webhooks";
 import TvMessagingApi from "./api/messaging";
 import TvApiTokens from "./api/api-tokens";
 import TvOAuth from "./api/oauth";
+import TvStartApi from "./api/start";
 import TvSessions from "./api/sessions";
 import TvOrganizationsApi from "./api/organizations";
 import TvSsoApi from "./api/sso";
@@ -49,6 +50,7 @@ export class TvApi {
 
     public apiTokens: TvApiTokens;
     public oauth: TvOAuth;
+    public start: TvStartApi;
 
     public sessions: TvSessions;
 
@@ -93,6 +95,7 @@ export class TvApi {
 
         this.apiTokens = new TvApiTokens(this.$axios);
         this.oauth = new TvOAuth(this.$axios);
+        this.start = new TvStartApi(this.$axios);
 
         this.sessions = new TvSessions(this.$axios);
 
