@@ -32,7 +32,7 @@
 
     <div
       v-else
-      class="flex flex-col divide-y divide-default rounded-10 bg-elevated/50 max-h-64 overflow-y-auto"
+      class="flex flex-col divide-y divide-default rounded-lg bg-elevated/50 max-h-64 overflow-y-auto"
     >
       <label
         v-for="task in tasks"

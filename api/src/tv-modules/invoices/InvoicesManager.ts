@@ -12,6 +12,7 @@ import { InvoicesRepository } from './InvoicesRepository'
 import {
   INVOICE_TEMPLATE_VERSION,
   INVOICE_TRANSITIONS,
+  type InvoiceArgCreate,
   type InvoiceArgList,
   type InvoiceArgUpdate,
   type InvoiceCreateArgs,
@@ -105,39 +106,41 @@ export class InvoicesManager {
     }
 
     const number = await this.repository.nextNumber({ organizationId: original.organizationId, base: original.number })
+    const data: InvoiceArgCreate = {
+      organizationId: original.organizationId,
+      goalId: original.goalId,
+      sellerId: original.sellerId,
+      counterpartyId: original.counterpartyId,
+      number,
+      reference: original.reference,
+      currencyCode: original.currencyCode,
+      issueDate: new Date().toISOString().slice(0, 10),
+      paymentTerms: original.paymentTerms,
+      dueDate: original.dueDate,
+      periodFrom: original.periodFrom,
+      periodTo: original.periodTo,
+      discountType: original.discountType,
+      discountValue: Number(original.discountValue),
+      taxRate: Number(original.taxRate),
+      taxExempt: original.taxExempt,
+      taxNote: original.taxNote,
+      notes: original.notes,
+      terms: original.terms,
+      lines: original.lines.map((line) => ({
+        taskId: line.taskId,
+        description: line.description,
+        unit: line.unit,
+        quantity: Number(line.quantity),
+        unitPrice: Number(line.unitPrice),
+      })),
+    }
+    const snapshots = await this.resolveSnapshots(original.organizationId, data)
     const created = await this.repository.create({
       createdBy,
-      sellerSnapshot: original.sellerSnapshot,
-      counterpartySnapshot: original.counterpartySnapshot,
-      goalName: original.goalName,
-      data: {
-        organizationId: original.organizationId,
-        goalId: original.goalId,
-        sellerId: original.sellerId,
-        counterpartyId: original.counterpartyId,
-        number,
-        reference: original.reference,
-        currencyCode: original.currencyCode,
-        issueDate: new Date().toISOString().slice(0, 10),
-        paymentTerms: original.paymentTerms,
-        dueDate: original.dueDate,
-        periodFrom: original.periodFrom,
-        periodTo: original.periodTo,
-        discountType: original.discountType,
-        discountValue: Number(original.discountValue),
-        taxRate: Number(original.taxRate),
-        taxExempt: original.taxExempt,
-        taxNote: original.taxNote,
-        notes: original.notes,
-        terms: original.terms,
-        lines: original.lines.map((line) => ({
-          taskId: line.taskId,
-          description: line.description,
-          unit: line.unit,
-          quantity: Number(line.quantity),
-          unitPrice: Number(line.unitPrice),
-        })),
-      },
+      data,
+      ...(typeof snapshots === 'string'
+        ? { sellerSnapshot: original.sellerSnapshot, counterpartySnapshot: original.counterpartySnapshot, goalName: original.goalName }
+        : snapshots),
     })
     if (!created || created === 'duplicate_number') return { error: 'not_found' }
     await this.repository.setReplaces({ invoiceId: created.id, replacesInvoiceId: original.id })

@@ -81,7 +81,7 @@
       </UFormField>
     </div>
 
-    <dl class="grid grid-cols-[1fr_auto] gap-x-6 gap-y-1 rounded-14 bg-elevated px-4 py-3 text-sm lg:w-72">
+    <dl class="grid grid-cols-[1fr_auto] gap-x-6 gap-y-1 rounded-lg bg-elevated px-4 py-3 text-sm lg:w-72">
       <dt class="text-muted">
         {{ t('invoices.totals.subtotal') }}
       </dt>

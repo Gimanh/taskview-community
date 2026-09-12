@@ -11,6 +11,7 @@
         v-if="isAdmin"
         icon="i-lucide-plus"
         :label="t('invoices.create')"
+        variant="soft"
         @click="formOpen = true"
       />
     </template>

@@ -1,5 +1,8 @@
 <template>
-  <UDashboardPanel :id="id">
+  <UDashboardPanel
+    :id="id"
+    :ui="fillBody ? { body: 'flex flex-col' } : undefined"
+  >
     <template #header>
       <UDashboardNavbar :title="title">
         <template #leading>
@@ -44,8 +47,9 @@ withDefaults(
     id: string
     title: string
     showTabs?: boolean
+    fillBody?: boolean
   }>(),
-  { showTabs: true },
+  { showTabs: true, fillBody: false },
 )
 
 const includeArchived = defineModel<boolean | undefined>('includeArchived', { default: undefined })

@@ -3,11 +3,13 @@
     id="invoice-preview"
     :title="invoice ? invoice.number : t('invoices.page.title')"
     :show-tabs="false"
+    fill-body
   >
     <template #actions>
       <UButton
         icon="i-lucide-arrow-left"
         :label="isMobile ? undefined : t('invoices.preview.back')"
+        :aria-label="t('invoices.preview.back')"
         color="neutral"
         variant="ghost"
         :to="{ name: 'invoices' }"
@@ -25,6 +27,8 @@
         v-if="invoice"
         icon="i-lucide-download"
         :label="isMobile ? undefined : t('invoices.preview.download')"
+        :aria-label="t('invoices.preview.download')"
+        variant="soft"
         :disabled="!pdfBlob"
         @click="download"
       />
@@ -48,13 +52,14 @@
     </div>
     <div
       v-else
-      class="flex flex-col gap-3 p-2 lg:p-6"
+      class="flex min-h-0 flex-1 flex-col gap-3"
     >
       <InvoiceStatusBar :invoice="invoice" />
       <InvoicePdfViewer
         :invoice-id="invoice.id"
         :title="invoice.number"
         :version="invoice.updatedAt"
+        class="min-h-0 flex-1"
         @loaded="pdfBlob = $event"
       />
     </div>

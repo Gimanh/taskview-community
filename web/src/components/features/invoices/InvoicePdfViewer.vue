@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full min-h-[60vh] flex-col">
+  <div class="flex min-h-[60vh] flex-col">
     <div
       v-if="loading"
       class="flex flex-1 items-center justify-center text-muted"
@@ -19,7 +19,7 @@
       v-else
       :src="url"
       :title="title"
-      class="h-full min-h-[70vh] w-full flex-1 rounded-10 bg-white"
+      class="min-h-0 w-full flex-1 rounded-lg bg-white"
     />
   </div>
 </template>

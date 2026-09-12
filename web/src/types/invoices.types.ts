@@ -159,4 +159,4 @@ export const PAYMENT_TERMS_DAYS: Record<InvoicePaymentTerms, number | null> = {
   custom: null,
 }
 
-export const REQUISITE_PRESETS = ['ИНН', 'КПП', 'ОГРН', 'VAT ID', 'EIN', 'Reg. No.']
+export const REQUISITE_PRESETS = ['VAT ID', 'EIN', 'Reg. No.', 'ИНН', 'КПП', 'ОГРН']

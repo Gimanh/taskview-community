@@ -5,9 +5,9 @@
         v-model="model.kind"
         :items="kindItems"
         :content="false"
-        size="lg"
-        class="w-full lg:w-80"
-        :ui="{ list: 'rounded-14', trigger: 'rounded-10', indicator: 'rounded-10' }"
+        size="xl"
+        class="w-full"
+        :ui="{ list: 'rounded-xl p-1', trigger: 'rounded-lg', indicator: 'rounded-lg' }"
       />
     </UFormField>
 

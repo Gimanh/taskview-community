@@ -31,15 +31,7 @@
         :label="t('invoices.fields.currency')"
         class="lg:w-40"
       >
-        <USelectMenu
-          v-model="model.currencyCode"
-          :items="currencyItems"
-          value-key="value"
-          size="xl"
-          :variant="inputVariant"
-          :ui="inputUi"
-          class="w-full"
-        />
+        <CurrencySelect v-model="model.currencyCode" />
       </UFormField>
     </div>
 
@@ -122,8 +114,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useInvoiceFieldStyle } from '@/composables/useInvoiceFieldStyle'
-import { storeToRefs } from 'pinia'
-import { useCurrenciesStore } from '@/stores/currencies.store'
+import CurrencySelect from './CurrencySelect.vue'
 import type { InvoiceFormValue, InvoiceSelectOption } from '@/types/invoices.types'
 
 const model = defineModel<InvoiceFormValue>({ required: true })
@@ -144,5 +135,4 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const { inputVariant, inputUi } = useInvoiceFieldStyle()
 
-const { options: currencyItems } = storeToRefs(useCurrenciesStore())
 </script>

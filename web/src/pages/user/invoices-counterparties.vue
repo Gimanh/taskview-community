@@ -11,6 +11,7 @@
         v-if="isAdmin"
         icon="i-lucide-plus"
         :label="t('invoices.counterparty.create')"
+        variant="soft"
         @click="openCreate"
       />
     </template>
