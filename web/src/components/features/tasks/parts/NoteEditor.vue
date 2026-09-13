@@ -229,6 +229,21 @@ const toolbarItems: EditorToolbarItem[][] = [
   outline: none;
 }
 
+.note-editor :deep(.tiptap li){
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.note-editor :deep(.tiptap > p){
+  margin-bottom: 16px;
+  line-height: 24px;
+}
+.note-editor :deep(.tiptap > * + *) {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  line-height: 24px;
+}
+
 .note-editor :deep(.tiptap p.is-editor-empty:first-child::before) {
   color: var(--color-text-muted);
   content: attr(data-placeholder);
