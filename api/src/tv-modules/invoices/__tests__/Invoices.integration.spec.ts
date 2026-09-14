@@ -41,10 +41,20 @@ const counterpartyPayload = () => ({
   legalName: 'IT Client GmbH',
   address: '',
   email: 'ap@client.test',
-  phone: '',
+  phone: '+49 30 555',
   contactPerson: 'Anna',
-  requisites: [],
+  requisites: [{ key: 'vat', label: 'USt-IdNr.', value: 'DE999' }],
 })
+
+const expectedSellerSnapshot = () => {
+  const { name, legalName, address, email, phone, logoUrl, bank, requisites } = sellerPayload()
+  return { name, legalName, address, email, phone, logoUrl, bank, requisites }
+}
+
+const expectedCounterpartySnapshot = () => {
+  const { kind, name, legalName, address, email, phone, contactPerson, requisites } = counterpartyPayload()
+  return { kind, name, legalName, address, email, phone, contactPerson, requisites }
+}
 
 const invoicePayload = (number: string) => ({
   organizationId,
@@ -130,8 +140,8 @@ describe('billing and invoices', () => {
     invoiceId = invoice.id
     expect(invoice.status).toBe('draft')
     expect(invoice.goalName).toBe('billing-it-goal')
-    expect(invoice.seller.legalName).toBe('IT Seller LLC')
-    expect(invoice.counterparty.contactPerson).toBe('Anna')
+    expect(invoice.seller).toEqual(expectedSellerSnapshot())
+    expect(invoice.counterparty).toEqual(expectedCounterpartySnapshot())
     expect(invoice.lines).toHaveLength(2)
     expect(invoice.lines[1].quantity).toBe(10.5)
     expect(invoice.discountValue).toBe(10)

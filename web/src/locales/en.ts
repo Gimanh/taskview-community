@@ -1256,6 +1256,9 @@ export default {
     preview: {
       download: 'Download PDF',
       pdfFailed: 'Could not render the PDF',
+      zoomIn: 'Zoom in',
+      zoomOut: 'Zoom out',
+      fitWidth: 'Fit to width',
       back: 'Back to list',
       notFound: 'Invoice not found',
     },

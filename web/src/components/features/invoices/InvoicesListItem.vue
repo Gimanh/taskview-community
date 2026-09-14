@@ -1,7 +1,7 @@
 <template>
   <button
     type="button"
-    class="flex w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-default px-4 py-3 text-left hover:bg-elevated"
+    class="flex w-full cursor-pointer flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl px-4 py-3 text-left shadow-sm transition-colors hover:bg-elevated dark:bg-tv-ui-bg-elevated dark:hover:bg-accented/60"
     @click="emit('open', invoice)"
   >
     <UIcon

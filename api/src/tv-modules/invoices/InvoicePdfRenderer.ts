@@ -89,7 +89,7 @@ export class InvoicePdfRenderer {
     return this.pdfmake.createPdf(this.buildDocument(invoice, lang)).getBuffer()
   }
 
-  private buildDocument(invoice: InvoiceForClient, lang: InvoicePdfLang) {
+  buildDocument(invoice: InvoiceForClient, lang: InvoicePdfLang) {
     const t = LABELS[lang]
     const money = (amount: number) => this.formatMoney(amount, invoice.currencyCode, lang)
     const date = (value: string | null) => this.formatDate(value, lang)

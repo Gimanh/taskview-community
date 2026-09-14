@@ -1,5 +1,12 @@
 <template>
-  <div class="flex w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-default px-4 py-3">
+  <div
+    role="button"
+    tabindex="0"
+    class="flex w-full cursor-pointer flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl px-4 py-3 shadow-sm transition-colors hover:bg-elevated focus-visible:outline-2 focus-visible:outline-primary dark:bg-tv-ui-bg-elevated dark:hover:bg-accented/60"
+    @click="emit('edit')"
+    @keydown.enter.prevent="emit('edit')"
+    @keydown.space.prevent="emit('edit')"
+  >
     <UIcon
       :name="icon"
       class="size-5 shrink-0 text-muted"
@@ -17,7 +24,10 @@
       </span>
       <span class="truncate text-xs text-muted">{{ subtitle }}</span>
     </div>
-    <div class="ml-auto flex items-center">
+    <div
+      class="ml-auto flex items-center"
+      @click.stop
+    >
       <UButton
         icon="i-lucide-pencil"
         color="neutral"

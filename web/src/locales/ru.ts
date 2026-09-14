@@ -1189,6 +1189,9 @@ export default {
     preview: {
       download: 'Скачать PDF',
       pdfFailed: 'Не удалось собрать PDF',
+      zoomIn: 'Увеличить',
+      zoomOut: 'Уменьшить',
+      fitWidth: 'По ширине',
       back: 'К списку',
       notFound: 'Инвойс не найден',
     },

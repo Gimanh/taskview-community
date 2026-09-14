@@ -1,3 +1,4 @@
+import '@/utils/polyfills'
 import './assets/css/main.css'
 import { addCollection } from '@iconify/vue'
 import lucide from '@iconify-json/lucide/icons.json'

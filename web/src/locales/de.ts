@@ -1242,6 +1242,9 @@ export default {
     preview: {
       download: 'PDF herunterladen',
       pdfFailed: 'PDF konnte nicht erstellt werden',
+      zoomIn: 'Vergrößern',
+      zoomOut: 'Verkleinern',
+      fitWidth: 'An Breite anpassen',
       back: 'Zur Liste',
       notFound: 'Rechnung nicht gefunden',
     },

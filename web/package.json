@@ -2,7 +2,7 @@
   "name": "web-nuxt-ui",
   "private": true,
   "type": "module",
-  "version": "1.53.0",
+  "version": "1.53.4",
   "scripts": {
     "dev": "vite",
     "build:packages": "pnpm --filter taskview-db-schemas build && pnpm --filter taskview-api build && pnpm --filter capacitor-widget-bridge build",
@@ -64,6 +64,7 @@
     "chartjs-plugin-annotation": "^3.1.0",
     "date-fns": "^4.1.0",
     "firebase": "^12.10.0",
+    "pdfjs-dist": "^6.3.289",
     "pinia": "^2.3.1",
     "qs": "^6.14.1",
     "rrule": "^2.8.1",

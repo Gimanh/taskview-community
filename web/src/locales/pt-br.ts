@@ -1253,6 +1253,9 @@ export default {
     preview: {
       download: 'Baixar PDF',
       pdfFailed: 'Não foi possível gerar o PDF',
+      zoomIn: 'Aproximar',
+      zoomOut: 'Afastar',
+      fitWidth: 'Ajustar à largura',
       back: 'Voltar à lista',
       notFound: 'Fatura não encontrada',
     },
