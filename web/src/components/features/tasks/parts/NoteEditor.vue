@@ -25,7 +25,7 @@
           <UEditorToolbar
             :editor="editor"
             :items="toolbarItems"
-            class="sticky -top-4 z-10 border-b border-default overflow-x-auto shrink-0 bg-default dark:bg-tv-ui-bg-elevated"
+            class="sticky -top-5 z-10 border-b border-default overflow-x-auto shrink-0 bg-default dark:bg-tv-ui-bg-elevated"
             :ui="{base: 'p-2'}"
           />
         </UEditor>
