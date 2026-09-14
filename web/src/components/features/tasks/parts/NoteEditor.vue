@@ -1,39 +1,76 @@
 <template>
-  <div
-    class="note-editor border border-default rounded-2xl overflow-hidden dark:bg-tv-ui-bg-elevated!"
-    data-testid="task-note-editor"
-  >
-    <UEditor
-      v-if="canViewTaskNote"
-      #default="{ editor }"
-      v-model="initialContent"
-      :content-type="contentType"
-      :placeholder="placeholder"
-      :extensions="extensions"
-      :editable="canEditTaskNote"
-      class="min-h-32"
-      @update:model-value="handleUpdate"
+  <div>
+    <Teleport
+      :to="fullscreenTarget"
+      :disabled="!isTeleported"
     >
-      <UEditorToolbar
-        :editor="editor"
-        :items="toolbarItems"
-        class="border-b border-default overflow-x-auto"
-        :ui="{base: 'p-2'}"
-      />
-      <!-- <UEditorDragHandle :editor="editor" /> -->
-    </UEditor>
+      <div
+        class="note-editor overflow-clip dark:bg-tv-ui-bg-elevated!"
+        :class="isFullscreen ? 'flex flex-col flex-1 min-h-0' : 'border border-default rounded-2xl'"
+        data-testid="task-note-editor"
+      >
+        <UEditor
+          v-if="canViewTaskNote"
+          ref="editorRef"
+          #default="{ editor }"
+          v-model="initialContent"
+          :content-type="contentType"
+          :placeholder="placeholder"
+          :extensions="extensions"
+          :editable="canEditTaskNote"
+          :class="isFullscreen ? 'flex flex-col flex-1 min-h-0' : 'min-h-32'"
+          :ui="{ content: contentClass }"
+          @update:model-value="handleUpdate"
+        >
+          <UEditorToolbar
+            :editor="editor"
+            :items="toolbarItems"
+            class="sticky -top-4 z-10 border-b border-default overflow-x-auto shrink-0 bg-default dark:bg-tv-ui-bg-elevated"
+            :ui="{base: 'p-2'}"
+          />
+        </UEditor>
+        <NoteEditorFooter
+          v-if="isOverflowing"
+          :expanded="isExpanded"
+          @toggle-expand="toggleExpanded"
+          @fullscreen="toggleFullscreen"
+        />
+      </div>
+    </Teleport>
+
+    <UModal
+      v-model:open="isFullscreen"
+      fullscreen
+      :title="t('tasks.note')"
+      :ui="{ body: 'p-0! flex flex-col min-h-0' }"
+      data-testid="task-note-fullscreen"
+      @after:leave="focusEditor"
+    >
+      <template #body>
+        <div
+          ref="fullscreenTarget"
+          class="flex flex-col flex-1 min-h-0"
+        />
+      </template>
+    </UModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { EditorToolbarItem } from '@nuxt/ui'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
 import TextAlign from '@tiptap/extension-text-align'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
+import { useNoteEditorToolbar } from '@/composables/useNoteEditorToolbar'
+import { useNoteEditorCollapse } from '@/composables/useNoteEditorCollapse'
+import NoteEditorFooter from '@/components/features/tasks/parts/NoteEditorFooter.vue'
 
-const { 
-  canEditTaskNote, 
-  canViewTaskNote, 
+const { t } = useI18n()
+
+const {
+  canEditTaskNote,
+  canViewTaskNote,
 } = useGoalPermissions()
 
 const extensions = [
@@ -65,161 +102,42 @@ function handleUpdate(value: string) {
   debouncedSave(value)
 }
 
-const toolbarItemUi = {
-  leadingIcon: 'size-5',
+const editorRef = useTemplateRef('editorRef')
+const fullscreenTarget = useTemplateRef<HTMLElement>('fullscreenTarget')
+
+const isFullscreen = ref(false)
+const isTeleported = computed(() => isFullscreen.value && !!fullscreenTarget.value)
+
+function toggleFullscreen() {
+  isFullscreen.value = !isFullscreen.value
 }
 
-const toolbarItems: EditorToolbarItem[][] = [
-  // History controls
-  [{
-    kind: 'undo',
-    icon: 'i-lucide-undo',
-    tooltip: { text: 'Undo' },
-    ui: toolbarItemUi,
-  }, {
-    kind: 'redo',
-    icon: 'i-lucide-redo',
-    tooltip: { text: 'Redo' },
-    ui: toolbarItemUi,
-  }],
-  // Block types
-  [{
-    icon: 'i-lucide-heading',
-    tooltip: { text: 'Headings' },
-    content: {
-      align: 'start',
-    },
-    items: [{
-      kind: 'heading',
-      level: 1,
-      icon: 'i-lucide-heading-1',
-      label: 'Heading 1',
-      ui: toolbarItemUi,
-    }, {
-      kind: 'heading',
-      level: 2,
-      icon: 'i-lucide-heading-2',
-      label: 'Heading 2',
-      ui: toolbarItemUi,
-    }, {
-      kind: 'heading',
-      level: 3,
-      icon: 'i-lucide-heading-3',
-      label: 'Heading 3',
-      ui: toolbarItemUi,
-    }, {
-      kind: 'heading',
-      level: 4,
-      icon: 'i-lucide-heading-4',
-      label: 'Heading 4',
-      ui: toolbarItemUi,
-    }],
-  }, {
-    icon: 'i-lucide-list',
-    tooltip: { text: 'Lists' },
-    content: {
-      align: 'start',
-    },
-    items: [{
-      kind: 'bulletList',
-      icon: 'i-lucide-list',
-      label: 'Bullet List',
-      ui: toolbarItemUi,
-    }, {
-      kind: 'orderedList',
-      icon: 'i-lucide-list-ordered',
-      label: 'Ordered List',
-      ui: toolbarItemUi,
-    }],
-  }, {
-    kind: 'blockquote',
-    icon: 'i-lucide-text-quote',
-    tooltip: { text: 'Blockquote' },
-    ui: toolbarItemUi,
-  }, {
-    kind: 'codeBlock',
-    icon: 'i-lucide-square-code',
-    tooltip: { text: 'Code Block' },
-    ui: toolbarItemUi,
-  }, {
-    kind: 'horizontalRule',
-    icon: 'i-lucide-separator-horizontal',
-    tooltip: { text: 'Horizontal Rule' },
-    ui: toolbarItemUi,
-  }],
-  // Text formatting
-  [{
-    kind: 'mark',
-    mark: 'bold',
-    icon: 'i-lucide-bold',
-    tooltip: { text: 'Bold' },
-    ui: toolbarItemUi,
-  }, {
-    kind: 'mark',
-    mark: 'italic',
-    icon: 'i-lucide-italic',
-    tooltip: { text: 'Italic' },
-    ui: toolbarItemUi,
-  }, {
-    kind: 'mark',
-    mark: 'underline',
-    icon: 'i-lucide-underline',
-    tooltip: { text: 'Underline' },
-    ui: toolbarItemUi,
-  }, {
-    kind: 'mark',
-    mark: 'strike',
-    icon: 'i-lucide-strikethrough',
-    tooltip: { text: 'Strikethrough' },
-    ui: toolbarItemUi,
-  }, {
-    kind: 'mark',
-    mark: 'code',
-    icon: 'i-lucide-code',
-    tooltip: { text: 'Code' },
-    ui: toolbarItemUi,
-  }],
-  // Link
-  [{
-    kind: 'link',
-    icon: 'i-lucide-link',
-    tooltip: { text: 'Link' },
-    ui: toolbarItemUi,
-  }],
-  // Text alignment
-  [{
-    icon: 'i-lucide-align-justify',
-    tooltip: { text: 'Text Align' },
-    content: {
-      align: 'end',
-    },
-    items: [{
-      kind: 'textAlign',
-      align: 'left',
-      icon: 'i-lucide-align-left',
-      label: 'Align Left',
-      ui: toolbarItemUi,
-    }, {
-      kind: 'textAlign',
-      align: 'center',
-      icon: 'i-lucide-align-center',
-      label: 'Align Center',
-      ui: toolbarItemUi,
-    }, {
-      kind: 'textAlign',
-      align: 'right',
-      icon: 'i-lucide-align-right',
-      label: 'Align Right',
-      ui: toolbarItemUi,
-    }, {
-      kind: 'textAlign',
-      align: 'justify',
-      icon: 'i-lucide-align-justify',
-      label: 'Align Justify',
-      ui: toolbarItemUi,
-    }],
-  }],
-]
+const { toolbarItems } = useNoteEditorToolbar({
+  isFullscreen,
+  onToggleFullscreen: toggleFullscreen,
+})
+
+const contentElement = computed(() => editorRef.value?.editor?.view.dom ?? null)
+
+const { isOverflowing, isCollapsed, isExpanded, toggleExpanded } = useNoteEditorCollapse({
+  contentElement,
+  isFullscreen,
+})
+
+const contentClass = computed(() => {
+  if (isFullscreen.value) return 'flex-1 min-h-0 overflow-y-auto'
+  if (isCollapsed.value) return 'max-h-80 overflow-y-auto'
+  return ''
+})
+
+async function focusEditor() {
+  await nextTick()
+  editorRef.value?.editor?.commands.focus()
+}
+
+watch(isTeleported, (teleported) => {
+  if (teleported) focusEditor()
+})
 </script>
 
 <style scoped>
