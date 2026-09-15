@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { ArkErrors } from 'arktype';
 import { WebhooksManager } from './WebhooksManager';
+import { WebhookUrlError } from './WebhookUrlError';
 import {
     WebhookArkTypeCreate,
     WebhookArkTypeUpdate,
@@ -18,9 +19,16 @@ export class WebhooksController {
         if (data instanceof ArkErrors) {
             return res.status(400).send(data.summary);
         }
-        const result = await this.manager.create(data);
-        if (!result) return res.status(500).end();
-        return res.tvJson(result);
+        try {
+            const result = await this.manager.create(data);
+            if (!result) return res.status(500).end();
+            return res.tvJson(result);
+        } catch (err) {
+            if (err instanceof WebhookUrlError) {
+                return res.status(400).tvJson({ code: err.code, message: err.message });
+            }
+            throw err;
+        }
     };
 
     update = async (req: Request, res: Response) => {
@@ -28,9 +36,16 @@ export class WebhooksController {
         if (data instanceof ArkErrors) {
             return res.status(400).send(data.summary);
         }
-        const result = await this.manager.update(data);
-        if (!result) return res.status(404).end();
-        return res.tvJson(result);
+        try {
+            const result = await this.manager.update(data);
+            if (!result) return res.status(404).end();
+            return res.tvJson(result);
+        } catch (err) {
+            if (err instanceof WebhookUrlError) {
+                return res.status(400).tvJson({ code: err.code, message: err.message });
+            }
+            throw err;
+        }
     };
 
     delete = async (req: Request, res: Response) => {

@@ -4,6 +4,7 @@
     <USlideover
       v-if="displayMode === 'slideover'"
       v-model:open="isOpen"
+      :ui="{ body: 'p-4!' }"
     >
       <template #header>
         <div class="flex items-center justify-between w-full">

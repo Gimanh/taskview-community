@@ -10,11 +10,15 @@
     </template>
     <template #body>
       <div class="flex flex-col gap-4">
-        <UFormField :label="t('webhooks.url')">
+        <UFormField
+          :label="t('webhooks.url')"
+          :error="urlError || undefined"
+        >
           <UInput
             v-model="url"
             :placeholder="t('webhooks.urlPlaceholder')"
             class="w-full"
+            @update:model-value="resetUrlError"
           />
         </UFormField>
         <UFormField :label="t('webhooks.events')">
@@ -93,6 +97,7 @@ import { useClipboard } from '@vueuse/core'
 import { WEBHOOK_EVENTS, type WebhookEvent } from 'taskview-api'
 import { useWebhooksStore } from '@/stores/webhooks.store'
 import { useTaskView } from '@/composables/useTaskView'
+import { useWebhookUrlError } from '@/composables/useWebhookUrlError'
 
 const props = defineProps<{
   goalId: number
@@ -107,6 +112,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const { isMobile } = useTaskView()
 const webhooksStore = useWebhooksStore()
+const { message: urlError, capture: captureUrlError, reset: resetUrlError } = useWebhookUrlError()
 const { copy } = useClipboard()
 
 const url = ref('')
@@ -141,6 +147,8 @@ async function handleCreate() {
       selectedEvents.value = []
       emit('created')
     }
+  } catch (err) {
+    if (!captureUrlError(err)) throw err
   } finally {
     saving.value = false
   }

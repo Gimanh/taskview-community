@@ -64,3 +64,12 @@ export const WEBHOOK_EVENTS = [
 ] as const;
 
 export type WebhookEvent = typeof WEBHOOK_EVENTS[number];
+
+export const WEBHOOK_URL_ERROR_CODES = ['invalid', 'scheme', 'private', 'unresolvable'] as const;
+
+export type WebhookUrlErrorCode = typeof WEBHOOK_URL_ERROR_CODES[number];
+
+export type WebhookUrlErrorResponse = {
+    code: WebhookUrlErrorCode;
+    message: string;
+};

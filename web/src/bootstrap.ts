@@ -1,3 +1,4 @@
+import '@/utils/polyfills'
 import './assets/css/main.css'
 import { addCollection } from '@iconify/vue'
 import lucide from '@iconify-json/lucide/icons.json'
@@ -107,6 +108,26 @@ function buildRoutes(extensions: TvWebExtension[]): RouteRecordRaw[] {
           path: 'analytics',
           name: 'analytics',
           component: () => import('./pages/user/analytics.vue'),
+        },
+        {
+          path: 'invoices',
+          name: 'invoices',
+          component: () => import('./pages/user/invoices.vue'),
+        },
+        {
+          path: 'invoices/counterparties',
+          name: 'invoices-counterparties',
+          component: () => import('./pages/user/invoices-counterparties.vue'),
+        },
+        {
+          path: 'invoices/sellers',
+          name: 'invoices-sellers',
+          component: () => import('./pages/user/invoices-sellers.vue'),
+        },
+        {
+          path: 'invoices/:invoiceId(\\d+)',
+          name: 'invoice-preview',
+          component: () => import('./pages/user/invoice-preview.vue'),
         },
         {
           path: 'ui-customization',

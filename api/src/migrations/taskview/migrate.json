@@ -780,5 +780,25 @@
             "These surfaces were guarded only by an organization role or by project ownership, so they ignored the scope of an API or OAuth token: a token issued with a single permission could still create organizations, add admins, change SSO settings and create webhooks. The new keys make those actions narrowable like every other permission.",
             "Backwards compatible: a token with an empty permission list stays unrestricted, so existing integrations keep working."
         ]
+    },
+    "61": {
+        "version": "1.66.0",
+        "name": "Billing: currencies, sellers, clients, invoices",
+        "releaseDate": "20260904",
+        "scripts": [
+            "/1.66.0/0.create-currencies.sql",
+            "/1.66.0/1.create-billing-sellers.sql",
+            "/1.66.0/2.create-billing-counterparties.sql",
+            "/1.66.0/3.create-invoices.sql",
+            "/1.66.0/4.create-invoice-lines.sql",
+            "/1.66.0/5.billing-permission.sql",
+            "/1.66.0/6.alter-invoices-lifecycle.sql"
+        ],
+        "description": [
+            "New schema tv_billing with the reference table currencies (ISO 4217, seeded with 20 currencies), sellers (the organization's own companies that issue invoices, with bank details and free-form requisites), counterparties (clients that are invoiced) and invoices with invoice_lines.",
+            "Invoices keep JSONB snapshots of the seller and the client plus the project name, so editing a company, a client or deleting a project never changes an issued document. Companies and clients are archived rather than deleted once they have invoices.",
+            "New organization-level permission billing_can_manage (group 6) narrows what an API or OAuth token may do on the billing surfaces; access itself requires the organization owner or admin role.",
+            "Invoice lifecycle: issued_at, paid_at, voided_at, replaces_invoice_id (void and reissue chain), template_version and totals frozen at issue time (subtotal, discount_amount, tax_amount, total). Status transitions are validated by the API; only drafts can be edited or deleted."
+        ]
     }
 }

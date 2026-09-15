@@ -28,6 +28,9 @@ export const AppEnvSchema = z.object({
     // Max invite emails one user may trigger per hour (default 30)
     INVITE_EMAIL_HOURLY_LIMIT: z.string().optional(),
 
+    // Allow outgoing webhooks to target loopback/private/link-local addresses (default off, see SSRF)
+    WEBHOOKS_ALLOW_PRIVATE_URLS: z.string().optional(),
+
     // How account password changes are confirmed: code sent by email (default) or current password
     PASSWORD_CHANGE_CONFIRMATION: z.enum(['email', 'password']).optional(),
 
