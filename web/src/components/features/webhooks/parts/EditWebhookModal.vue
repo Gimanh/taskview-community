@@ -10,11 +10,15 @@
     </template>
     <template #body>
       <div class="flex flex-col gap-4">
-        <UFormField :label="t('webhooks.url')">
+        <UFormField
+          :label="t('webhooks.url')"
+          :error="urlError || undefined"
+        >
           <UInput
             v-model="url"
             :placeholder="t('webhooks.urlPlaceholder')"
             class="w-full"
+            @update:model-value="resetUrlError"
           />
         </UFormField>
         <UFormField :label="t('webhooks.events')">
@@ -55,6 +59,7 @@ import { WEBHOOK_EVENTS, type WebhookEvent } from 'taskview-api'
 import type { WebhookItem } from 'taskview-api'
 import { useWebhooksStore } from '@/stores/webhooks.store'
 import { useTaskView } from '@/composables/useTaskView'
+import { useWebhookUrlError } from '@/composables/useWebhookUrlError'
 
 const props = defineProps<{
   webhook: WebhookItem | null
@@ -69,6 +74,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const { isMobile } = useTaskView()
 const webhooksStore = useWebhooksStore()
+const { message: urlError, capture: captureUrlError, reset: resetUrlError } = useWebhookUrlError()
 
 const url = ref('')
 const selectedEvents = ref<WebhookEvent[]>([])
@@ -81,6 +87,7 @@ const eventOptions = WEBHOOK_EVENTS.map((e) => ({
 
 watch(isOpen, (open) => {
   if (open && props.webhook) {
+    resetUrlError()
     url.value = props.webhook.url
     selectedEvents.value = [...props.webhook.events] as WebhookEvent[]
   }
@@ -97,6 +104,8 @@ async function handleSave() {
     })
     isOpen.value = false
     emit('saved')
+  } catch (err) {
+    if (!captureUrlError(err)) throw err
   } finally {
     saving.value = false
   }

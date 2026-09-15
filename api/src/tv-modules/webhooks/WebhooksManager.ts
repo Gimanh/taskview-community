@@ -2,6 +2,8 @@ import { randomBytes, createHmac } from 'crypto';
 import { encrypt, decrypt } from '../../utils/crypto';
 import { $logger } from '../../modules/logget';
 import { WebhooksRepository } from './WebhooksRepository';
+import { WebhookUrlError } from './WebhookUrlError';
+import { resolveWebhookUrl } from './webhooks.utils';
 import type { WebhookArgCreate, WebhookArgUpdate } from './types';
 import type { WebhooksSchemaTypeForSelect } from 'taskview-db-schemas';
 
@@ -15,6 +17,8 @@ export class WebhooksManager {
     }
 
     async create(data: WebhookArgCreate): Promise<{ webhook: WebhookForClient; secret: string } | null> {
+        await resolveWebhookUrl(data.url);
+
         const secret = randomBytes(32).toString('hex');
         const secretEncrypted = encrypt(secret);
 
@@ -32,7 +36,10 @@ export class WebhooksManager {
 
     async update(data: WebhookArgUpdate): Promise<WebhookForClient | null> {
         const updateData: Partial<{ url: string; events: string[]; isActive: boolean }> = {};
-        if (data.url !== undefined) updateData.url = data.url;
+        if (data.url !== undefined) {
+            await resolveWebhookUrl(data.url);
+            updateData.url = data.url;
+        }
         if (data.events !== undefined) updateData.events = data.events;
         if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
@@ -73,6 +80,14 @@ export class WebhooksManager {
     }
 
     async deliver(url: string, secret: string, payload: object): Promise<{ success: boolean; responseCode?: number }> {
+        try {
+            await resolveWebhookUrl(url);
+        } catch (err) {
+            const reason = err instanceof WebhookUrlError ? err.message : String(err);
+            $logger.warn(`[Webhooks] Delivery to ${url} blocked: ${reason}`);
+            return { success: false };
+        }
+
         const body = JSON.stringify(payload);
         const signature = createHmac('sha256', secret).update(body).digest('hex');
 
@@ -84,6 +99,7 @@ export class WebhooksManager {
                     'X-Webhook-Signature': `sha256=${signature}`,
                 },
                 body,
+                redirect: 'manual',
                 signal: AbortSignal.timeout(10000),
             });
 

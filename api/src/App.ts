@@ -8,6 +8,7 @@ import passport, { initPassportLogin } from './tv-modules/auth/strategies/passpo
 import { LoginMethods } from './tv-modules/auth/LoginMethods';
 import { InviteEmailDispatcher } from './tv-modules/collaboration/InviteEmailDispatcher';
 import { PublicApiUrl } from './modules/public-url';
+import { validateWebhooksEnvOnStartup } from './tv-modules/webhooks/webhooks.utils';
 import cookieParser from 'cookie-parser';
 import { registerAllEventHandlers, startAllWorkers } from './core/all-events';
 
@@ -19,6 +20,7 @@ export default class App {
         LoginMethods.validateOnStartup();
         PublicApiUrl.validateOnStartup();
         InviteEmailDispatcher.validateOnStartup();
+        validateWebhooksEnvOnStartup();
 
         this.app = express();
         this.port = port;

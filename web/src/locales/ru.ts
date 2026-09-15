@@ -837,6 +837,14 @@ export default {
       history: 'История',
     },
   },
+  webhooks: {
+    urlErrors: {
+      invalid: 'Введите корректный URL',
+      scheme: 'Поддерживаются только http и https URL',
+      private: 'URL должен указывать на публичный адрес. Локальные и приватные сетевые адреса запрещены.',
+      unresolvable: 'Не удалось разрешить хост URL',
+    },
+  },
   sso: {
     noConfig: 'SSO не настроен для этой организации',
     configure: 'Настроить SSO',

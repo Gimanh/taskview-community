@@ -467,6 +467,12 @@ export default {
     empty: 'Noch keine Webhooks. Fügen Sie einen Webhook hinzu, um Ereignisbenachrichtigungen zu erhalten.',
     url: 'URL',
     urlPlaceholder: 'https://beispiel.com/webhook',
+    urlErrors: {
+      invalid: 'Geben Sie eine gültige URL ein',
+      scheme: 'Nur http- und https-URLs werden unterstützt',
+      private: 'Die URL muss auf eine öffentliche Adresse zeigen. Lokale und private Netzwerkadressen sind nicht erlaubt.',
+      unresolvable: 'Der Host der URL konnte nicht aufgelöst werden',
+    },
     events: 'Ereignisse',
     selectEvents: 'Ereignisse auswählen',
     test: 'Test',

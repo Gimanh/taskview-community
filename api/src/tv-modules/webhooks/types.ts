@@ -70,6 +70,10 @@ export const WEBHOOK_EVENTS = [
 
 export type WebhookEvent = typeof WEBHOOK_EVENTS[number];
 
+export const WEBHOOK_URL_ERROR_CODES = ['invalid', 'scheme', 'private', 'unresolvable'] as const;
+
+export type WebhookUrlErrorCode = typeof WEBHOOK_URL_ERROR_CODES[number];
+
 export interface WebhookDeliverJobData {
     deliveryId: number;
     webhookId: number;

@@ -481,6 +481,12 @@ export default {
     empty: 'No webhooks yet. Add a webhook to receive event notifications.',
     url: 'URL',
     urlPlaceholder: 'https://example.com/webhook',
+    urlErrors: {
+      invalid: 'Enter a valid URL',
+      scheme: 'Only http and https URLs are supported',
+      private: 'The URL must point to a public address. Local and private network addresses are not allowed.',
+      unresolvable: 'The URL host could not be resolved',
+    },
     events: 'Events',
     selectEvents: 'Select events',
     test: 'Test',
