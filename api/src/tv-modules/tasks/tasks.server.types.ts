@@ -74,6 +74,26 @@ export type TaskArgFetchTasksNew = typeof TaskArkTypeFetchTasksNew.infer;
 
 export type TaskArgUpdate = typeof TaskArkTypeUpdate.infer;
 
+export const TASK_UPDATABLE_COLUMNS = [
+    'parentId',
+    'description',
+    'complete',
+    'goalListId',
+    'note',
+    'priorityId',
+    'startDate',
+    'endDate',
+    'startTime',
+    'endTime',
+    'statusId',
+    'taskOrder',
+    'kanbanOrder',
+    'amount',
+    'transactionType',
+    'nodeGraphPosition',
+    'estimateValue',
+] as const satisfies ReadonlyArray<Exclude<keyof TaskArgUpdate, 'id'>>;
+
 /**
  * We can add task only with these fields
  * Other fields like (tags, assignedUsers)
@@ -115,9 +135,9 @@ export const TaskFieldPermissionsForEditOrCreation = {
     startTime: GoalPermissions.TASKS_CAN_EDIT_DEADLINE,
     endTime: GoalPermissions.TASKS_CAN_EDIT_DEADLINE,
 
-    
-    parentId: GoalPermissions.TASKS_CAN_ADD_SUBTASKS, 
-    statusId: GoalPermissions.TASKS_CAN_DELETE, 
+
+    parentId: GoalPermissions.TASKS_CAN_ADD_SUBTASKS,
+    statusId: GoalPermissions.TASKS_CAN_DELETE,
     taskOrder: GoalPermissions.TASKS_CAN_DELETE,
     kanbanOrder: GoalPermissions.TASKS_CAN_DELETE,
     amount: GoalPermissions.TASKS_CAN_DELETE,
@@ -138,7 +158,7 @@ export const TaskFieldPermissionsForWatching = {
     startTime: GoalPermissions.COMPONENT_CAN_WATCH_CONTENT,
     endTime: GoalPermissions.COMPONENT_CAN_WATCH_CONTENT,
 
-    
+
     parentId: GoalPermissions.TASKS_CAN_WATCH_SUBTASKS,
     statusId: GoalPermissions.COMPONENT_CAN_WATCH_CONTENT,
     taskOrder: GoalPermissions.COMPONENT_CAN_WATCH_CONTENT,

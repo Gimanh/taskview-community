@@ -87,7 +87,7 @@ describe('API token scope on organization-level surfaces', () => {
             'SELECT name FROM tv_auth.permissions WHERE permission_group = 6 ORDER BY name',
         );
         expect(result?.rows.map((row) => row.name)).toEqual([
-            'org_can_manage', 'org_can_manage_members', 'org_can_view', 'sso_can_manage', 'webhooks_can_manage',
+            'billing_can_manage', 'org_can_manage', 'org_can_manage_members', 'org_can_view', 'sso_can_manage', 'webhooks_can_manage',
         ]);
     });
 
