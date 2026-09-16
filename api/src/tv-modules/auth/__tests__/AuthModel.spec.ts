@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { Database } from '../../../modules/db';
 import type { RegisterUserInDb } from '../../../types/auth.types';
 import AuthModel from '../AuthModel';
@@ -7,9 +7,17 @@ describe('AuthModel Integration Tests', () => {
     let authModel: AuthModel;
     let emailNum: number;
 
+    const prefixes: string[] = [];
+
     beforeEach(async () => {
         authModel = new AuthModel();
         emailNum = Date.now();
+        prefixes.push(String(emailNum));
+    });
+
+    afterAll(async () => {
+        const logins = prefixes.flatMap((prefix) => [`${prefix}testuser`, `${prefix}testuser2`]);
+        await Database.getInstance().query('delete from tv_auth.users where login = any($1::text[])', [logins]);
     });
 
     it('registerUserInDb', async () => {

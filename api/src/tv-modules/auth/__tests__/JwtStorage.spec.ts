@@ -10,6 +10,7 @@ describe('SessionStorage Integration Tests', () => {
     let emailNum: number;
     let userId: number;
     let sessionId: number;
+    const createdUserIds: number[] = [];
 
     beforeEach(async () => {
         sessionStorage = new SessionStorage();
@@ -24,12 +25,15 @@ describe('SessionStorage Integration Tests', () => {
             block: 0,
         };
         userId = (await authModel.registerUserInDb(userData)) as number;
+        createdUserIds.push(userId);
         sessionId = (await sessionStorage.createSession(userId, '127.0.0.1', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120')) as number;
     });
 
     afterAll(async () => {
         const db = Database.getInstance();
-        await db.query("delete from tv_auth.users where login not in ('user', 'user1', 'user3')");
+        if (createdUserIds.length) {
+            await db.query('delete from tv_auth.users where id = any($1::int[])', [createdUserIds]);
+        }
     });
 
     it('createSession', async () => {

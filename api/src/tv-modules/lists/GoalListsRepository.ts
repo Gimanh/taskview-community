@@ -97,8 +97,19 @@ export class GoalListsRepository {
     }
 
     async updateListNew(data: GoalListArgUpdate): Promise<GoalsListSchemaTypeForSelect[]> {
+        const updates: Partial<typeof GoalsListSchema.$inferInsert> = {};
+        if (data.name !== undefined && data.name !== null) updates.name = data.name;
+        if (data.description !== undefined) updates.description = data.description;
+
+        if (Object.keys(updates).length === 0) {
+            const current = await callWithCatch(() =>
+                this.db.dbDrizzle.select().from(GoalsListSchema).where(eq(GoalsListSchema.id, data.id)).limit(1)
+            );
+            return current ?? [];
+        }
+
         const result = await callWithCatch(() =>
-            this.db.dbDrizzle.update(GoalsListSchema).set(data).where(eq(GoalsListSchema.id, data.id)).returning()
+            this.db.dbDrizzle.update(GoalsListSchema).set(updates).where(eq(GoalsListSchema.id, data.id)).returning()
         );
         if (!result) {
             return [];

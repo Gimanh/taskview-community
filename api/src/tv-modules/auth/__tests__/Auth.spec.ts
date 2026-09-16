@@ -14,6 +14,7 @@ const url = `http://localhost:${port}`;
 
 let server: http.Server;
 let deleteTestUserEmail: string = '';
+const registeredEmails: string[] = [];
 
 describe('Login API', () => {
     vi.mock('emailjs', () => ({
@@ -35,7 +36,10 @@ describe('Login API', () => {
     afterAll(async () => {
         server.close();
         const db = Database.getInstance();
-        await db.query("delete from tv_auth.users where login not in ('user', 'user1', 'user3')");
+        // Only this file's users: auth specs run in parallel against one database
+        if (registeredEmails.length) {
+            await db.query('delete from tv_auth.users where email = any($1::text[])', [registeredEmails]);
+        }
     });
 
     it('should send a login request and receive a tokens', async () => {
@@ -76,6 +80,7 @@ describe('Login API', () => {
 
     it('Registration', async () => {
         deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        registeredEmails.push(deleteTestUserEmail);
         const email = deleteTestUserEmail;
         const password = 'user1!#Q';
         const passwordRepeat = 'user1!#Q';
@@ -97,6 +102,7 @@ describe('Login API', () => {
         const userModel = new AuthModel();
 
         deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        registeredEmails.push(deleteTestUserEmail);
         const email = deleteTestUserEmail;
         const password = 'user1!#Q';
         const passwordRepeat = 'user1!#Q';
@@ -120,6 +126,7 @@ describe('Login API', () => {
 
     it('remindPassword', async () => {
         deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        registeredEmails.push(deleteTestUserEmail);
         const email = deleteTestUserEmail;
         const password = 'user1!#Q';
         const passwordRepeat = 'user1!#Q';
@@ -139,6 +146,7 @@ describe('Login API', () => {
 
     it('changeRemindedPassword', async () => {
         deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        registeredEmails.push(deleteTestUserEmail);
         const email = deleteTestUserEmail;
         const password = 'user1!#Q';
         const passwordRepeat = 'user1!#Q';
@@ -182,6 +190,7 @@ describe('Login API', () => {
 
     it('logout', async () => {
         deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        registeredEmails.push(deleteTestUserEmail);
         const email = deleteTestUserEmail;
         const password = 'user1!#Q';
         const passwordRepeat = 'user1!#Q';
@@ -218,11 +227,12 @@ describe('Login API', () => {
             }
         );
 
-        expect(response3.status).toBe(200);
+        expect(response3.status).toBe(204);
     });
 
     it('logout without token', async () => {
         deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        registeredEmails.push(deleteTestUserEmail);
         const email = deleteTestUserEmail;
         const password = 'user1!#Q';
         const passwordRepeat = 'user1!#Q';
@@ -268,6 +278,7 @@ describe('Login API', () => {
 
     it('refreshToken', async () => {
         deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        registeredEmails.push(deleteTestUserEmail);
         const email = deleteTestUserEmail;
         const password = 'user1!#Q';
         const passwordRepeat = 'user1!#Q';
@@ -317,6 +328,7 @@ describe('Login API', () => {
 
     it('Send delete code to email', async () => {
         deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        registeredEmails.push(deleteTestUserEmail);
         const email = deleteTestUserEmail;
         const password = 'user1!#Q';
         const passwordRepeat = 'user1!#Q';
@@ -358,6 +370,7 @@ describe('Login API', () => {
 
     it('Send delete code to email NO AUTH', async () => {
         deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        registeredEmails.push(deleteTestUserEmail);
         const email = deleteTestUserEmail;
         const password = 'user1!#Q';
         const passwordRepeat = 'user1!#Q';
@@ -395,6 +408,7 @@ describe('Login API', () => {
 
     it('Account deletion', async () => {
         deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        registeredEmails.push(deleteTestUserEmail);
         const email = deleteTestUserEmail;
         const password = 'user1!#Q';
         const passwordRepeat = 'user1!#Q';
@@ -459,6 +473,7 @@ describe('Login API', () => {
 
     it('Account deletion NO AUTH', async () => {
         deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        registeredEmails.push(deleteTestUserEmail);
         const email = deleteTestUserEmail;
         const password = 'user1!#Q';
         const passwordRepeat = 'user1!#Q';
@@ -515,6 +530,7 @@ describe('Login API', () => {
 
     it('loginByCode confirms and admits a blocked-unconfirmed account', async () => {
         deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        registeredEmails.push(deleteTestUserEmail);
         const email = deleteTestUserEmail;
 
         await axios.post(`${url}/module/auth/registration`, {
@@ -545,6 +561,7 @@ describe('Login API', () => {
 
     it('loginByCode rejects a banned account (blocked, no confirm code)', async () => {
         deleteTestUserEmail = `${Date.now()}test@mail.dest`;
+        registeredEmails.push(deleteTestUserEmail);
         const email = deleteTestUserEmail;
 
         await axios.post(`${url}/module/auth/registration`, {

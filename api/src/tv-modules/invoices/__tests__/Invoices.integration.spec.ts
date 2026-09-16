@@ -3,7 +3,7 @@ import type http from 'http'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import App from '../../../App'
 
-const port = 1811
+const port = 1814
 const api = axios.create({ baseURL: `http://localhost:${port}`, validateStatus: () => true })
 
 const LOGIN = 'test@mail.dest'

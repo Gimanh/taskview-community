@@ -23,12 +23,13 @@ import {
 import { logError } from '../../utils/api';
 import { updateQuery } from '../../utils/db-helper';
 import { callWithCatch, isNotNullable } from '../../utils/helpers';
-import type {
-    TaskArgAdd,
-    TaskArgDelete,
-    TaskArgFetchTasksNew,
-    TaskArgUpdate,
-    TasksArgToggleTaskUsers,
+import {
+    type TaskArgAdd,
+    type TaskArgDelete,
+    type TaskArgFetchTasksNew,
+    type TaskArgUpdate,
+    TASK_UPDATABLE_COLUMNS,
+    type TasksArgToggleTaskUsers,
 } from './tasks.server.types';
 import type { KanbanArgFilters } from '../kanban/types';
 
@@ -524,8 +525,19 @@ export class TasksRepository {
     }
 
     async updateTask(data: TaskArgUpdate): Promise<TasksSchemaTypeForSelect | null> {
+        const updates: Partial<typeof TasksSchema.$inferInsert> = {};
+        for (const column of TASK_UPDATABLE_COLUMNS) {
+            if (data[column] !== undefined) {
+                updates[column] = data[column] as never;
+            }
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return this.fetchTaskByIdNew(data.id);
+        }
+
         const result = await callWithCatch(() =>
-            this.db.dbDrizzle.update(TasksSchema).set(data).where(eq(TasksSchema.id, data.id)).returning()
+            this.db.dbDrizzle.update(TasksSchema).set(updates).where(eq(TasksSchema.id, data.id)).returning()
         );
         return result?.[0] ?? null;
     }
