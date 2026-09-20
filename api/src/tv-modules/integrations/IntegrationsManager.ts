@@ -8,8 +8,22 @@ import { $logger } from '../../modules/logget';
 import { IntegrationsRepository } from './IntegrationsRepository';
 import { TasksRepository } from '../tasks/TasksRepository';
 import type { IntegrationsSchemaTypeForSelect } from 'taskview-db-schemas';
-import type { IntegrationProvider, IntegrationsArgAdd, IntegrationsArgDelete, IntegrationsArgFetch, IntegrationsArgSelectRepo, IntegrationsArgToggle, OAuthStatePayload, RepoItemForClient } from './types';
+import {
+    INTEGRATIONS_OAUTH_STATE_TTL_SECONDS,
+    type CompleteOAuthCallbackArgs,
+    type GetOAuthUrlArgs,
+    type IntegrationProvider,
+    type IntegrationsArgAdd,
+    type IntegrationsArgDelete,
+    type IntegrationsArgFetch,
+    type IntegrationsArgSelectRepo,
+    type IntegrationsArgToggle,
+    type OAuthStatePayload,
+    type RepoItemForClient,
+    type VerifyOAuthStateArgs,
+} from './types';
 import { randomBytes } from 'crypto';
+import { safeCompareHex, sha256Hex } from '../oauth/oauth.utils';
 import { getGitHubOAuthUrl, exchangeGitHubCode, fetchGitHubRepos, fetchGitHubIssues, createGitHubWebhook, updateGitHubIssueState, GITHUB_BASE_URL } from './providers/github.provider';
 import { getGitLabOAuthUrl, exchangeGitLabCode, fetchGitLabRepos, fetchGitLabIssues, createGitLabWebhook, updateGitLabIssueState, refreshGitLabToken, GITLAB_BASE_URL } from './providers/gitlab.provider';
 import { getGiteaOAuthUrl, exchangeGiteaCode, fetchGiteaRepos, fetchGiteaIssues, createGiteaWebhook, updateGiteaIssueState, refreshGiteaToken, verifyGiteaToken, GITEA_BASE_URL } from './providers/gitea.provider';
@@ -46,32 +60,43 @@ export class IntegrationsManager {
         return this.repository.fetchByProjectId(projectId);
     }
 
-    getOAuthUrl(provider: string, projectId: number, userId: number): string {
-        const state = jwt.sign(
-            { userId, projectId, provider } as OAuthStatePayload,
-            process.env.JWT_SIGN as string,
-            { expiresIn: '10m' }
-        );
+    getOAuthUrl(args: GetOAuthUrlArgs): string {
+        const payload: OAuthStatePayload = {
+            userId: args.userId,
+            projectId: args.projectId,
+            provider: args.provider,
+            nonceHash: sha256Hex(args.nonce),
+        };
+        const state = jwt.sign(payload, process.env.JWT_SIGN as string, {
+            expiresIn: INTEGRATIONS_OAUTH_STATE_TTL_SECONDS,
+        });
 
-        if (provider === 'github') {
+        if (args.provider === 'github') {
             return getGitHubOAuthUrl(state);
-        } else if (provider === 'gitlab') {
+        } else if (args.provider === 'gitlab') {
             return getGitLabOAuthUrl(state);
-        } else if (provider === 'gitea') {
-            return getGiteaOAuthUrl(state);
         }
-        throw new Error(`Unknown provider: ${provider}`);
+        return getGiteaOAuthUrl(state);
     }
 
-    async handleOAuthCallback(provider: string, code: string, state: string): Promise<{ projectId: number; orgSlug: string }> {
-        $logger.debug({ provider }, '[integrations] handleOAuthCallback start');
-        const payload = jwt.verify(state, process.env.JWT_SIGN as string) as OAuthStatePayload;
+    verifyOAuthState(args: VerifyOAuthStateArgs): OAuthStatePayload {
+        const payload = jwt.verify(args.state, process.env.JWT_SIGN as string) as OAuthStatePayload;
         integrationsDebugLog({ step: 'callback:state-verified', data: { userId: payload.userId, projectId: payload.projectId, provider: payload.provider } });
 
-        if (payload.provider !== provider) {
-            $logger.error({ provider, payloadProvider: payload.provider }, '[integrations] provider mismatch in state');
+        if (payload.provider !== args.provider) {
+            $logger.error({ provider: args.provider, payloadProvider: payload.provider }, '[integrations] provider mismatch in state');
             throw new Error('Provider mismatch in state');
         }
+        if (!args.nonce || typeof payload.nonceHash !== 'string' || !safeCompareHex(payload.nonceHash, sha256Hex(args.nonce))) {
+            $logger.error({ provider: args.provider, userId: payload.userId }, '[integrations] OAuth callback nonce does not match the state');
+            throw new Error('OAuth callback was not started by this browser');
+        }
+        return payload;
+    }
+
+    async completeOAuthCallback(args: CompleteOAuthCallbackArgs): Promise<{ projectId: number; orgSlug: string }> {
+        const { provider, code, payload } = args;
+        $logger.debug({ provider }, '[integrations] completeOAuthCallback start');
 
         const userLogin = await this.repository.fetchUserLogin(payload.userId);
         integrationsDebugLog({ step: 'callback:user-fetched', data: { userLogin } });

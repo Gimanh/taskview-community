@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect } from 'vitest'
 import { createHash, randomBytes } from 'crypto'
 import {
     buildRedirectUrl,
     isAcceptableRedirectUri,
+    isDcrEnabled,
     matchesRegisteredRedirectUri,
     resourceMatches,
     verifyPkce,
@@ -154,5 +155,36 @@ describe('resourceMatches', () => {
 
     it('is permissive when the grant carries no audience', () => {
         expect(resourceMatches({ granted: null, requested: 'https://mcp.example.com' })).toBe(true)
+    })
+})
+
+describe('isDcrEnabled', () => {
+    const original = process.env.OAUTH_DYNAMIC_REGISTRATION
+
+    afterEach(() => {
+        if (original === undefined) delete process.env.OAUTH_DYNAMIC_REGISTRATION
+        else process.env.OAUTH_DYNAMIC_REGISTRATION = original
+    })
+
+    it('is off when the variable is not set', () => {
+        delete process.env.OAUTH_DYNAMIC_REGISTRATION
+        expect(isDcrEnabled()).toBe(false)
+    })
+
+    it('is off when the variable is empty', () => {
+        process.env.OAUTH_DYNAMIC_REGISTRATION = '  '
+        expect(isDcrEnabled()).toBe(false)
+    })
+
+    it('is on only for an explicit true, ignoring case and whitespace', () => {
+        process.env.OAUTH_DYNAMIC_REGISTRATION = ' TRUE '
+        expect(isDcrEnabled()).toBe(true)
+    })
+
+    it('is off for anything that is not true', () => {
+        process.env.OAUTH_DYNAMIC_REGISTRATION = 'false'
+        expect(isDcrEnabled()).toBe(false)
+        process.env.OAUTH_DYNAMIC_REGISTRATION = 'yes'
+        expect(isDcrEnabled()).toBe(false)
     })
 })

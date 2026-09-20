@@ -7,9 +7,7 @@ import type {
 } from './types'
 
 export function isDcrEnabled(): boolean {
-    const raw = process.env.OAUTH_DYNAMIC_REGISTRATION
-    if (raw === undefined || raw.trim() === '') return true
-    return raw.trim().toLowerCase() === 'true'
+    return (process.env.OAUTH_DYNAMIC_REGISTRATION ?? '').trim().toLowerCase() === 'true'
 }
 
 export function sha256Hex(value: string): string {

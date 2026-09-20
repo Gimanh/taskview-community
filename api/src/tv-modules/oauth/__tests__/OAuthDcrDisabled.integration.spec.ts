@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type http from 'http';
+import http from 'http';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import App from '../../../App';
 
@@ -7,26 +7,39 @@ const port = 1812;
 const url = `http://localhost:${port}`;
 
 let server: http.Server;
-const api = axios.create({ baseURL: url, validateStatus: () => true });
+// Each case boots its own server on the same port. A keep-alive socket pooled
+// against the previous server would be dead by then, so pooling is off.
+const api = axios.create({
+    baseURL: url,
+    validateStatus: () => true,
+    httpAgent: new http.Agent({ keepAlive: false }),
+});
 
 /**
- * OAUTH_DYNAMIC_REGISTRATION=false is the lever a self-hosted operator pulls to
- * keep the client registry closed. It has to do two things: refuse registration,
- * and stop advertising the endpoint — a client that reads the metadata should
- * never attempt a registration this instance will reject.
+ * Dynamic client registration is opt-in: an instance where the operator has not
+ * set OAUTH_DYNAMIC_REGISTRATION=true keeps the client registry closed. That has
+ * to do two things: refuse registration, and stop advertising the endpoint — a
+ * client that reads the metadata should never attempt a registration this
+ * instance will reject. The default (variable unset) is what a fresh install
+ * runs with, so it is the case that matters most.
  */
-describe('OAuth with dynamic client registration disabled', () => {
+describe.each([
+    { label: 'variable not set (default)', value: undefined },
+    { label: 'variable set to false', value: 'false' },
+])('OAuth with dynamic client registration disabled: $label', ({ value }) => {
     vi.mock('emailjs', () => ({
         SMTPClient: vi.fn().mockImplementation(() => ({ sendAsync: vi.fn().mockResolvedValue(true) })),
     }));
 
     beforeAll(() => {
-        process.env.OAUTH_DYNAMIC_REGISTRATION = 'false';
+        if (value === undefined) delete process.env.OAUTH_DYNAMIC_REGISTRATION;
+        else process.env.OAUTH_DYNAMIC_REGISTRATION = value;
         server = new App(port).listen();
     });
 
-    afterAll(() => {
-        server?.close();
+    afterAll(async () => {
+        // The next case listens on the same port, so wait for the socket to be released.
+        await new Promise<void>((resolve) => server.close(() => resolve()));
         delete process.env.OAUTH_DYNAMIC_REGISTRATION;
     });
 

@@ -88,6 +88,9 @@ describe('OAuth 2.1 authorization server', () => {
     }));
 
     beforeAll(async () => {
+        // Registration is opt-in; the suite exercises it, so switch it on.
+        process.env.OAUTH_DYNAMIC_REGISTRATION = 'true';
+
         const db = Database.getInstance();
         const client = await db.getClient();
 
@@ -115,6 +118,7 @@ describe('OAuth 2.1 authorization server', () => {
     });
 
     afterAll(async () => {
+        delete process.env.OAUTH_DYNAMIC_REGISTRATION;
         // HTTP cleanup has to happen while the server is still listening.
         if (goalId) {
             await api.delete('/module/goals', {
