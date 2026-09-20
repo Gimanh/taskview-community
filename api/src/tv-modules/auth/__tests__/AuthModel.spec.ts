@@ -5,14 +5,18 @@ import AuthModel from '../AuthModel';
 
 describe('AuthModel Integration Tests', () => {
     let authModel: AuthModel;
-    let emailNum: number;
+    let emailNum: string;
 
     const prefixes: string[] = [];
+    let testIndex = 0;
 
     beforeEach(async () => {
         authModel = new AuthModel();
-        emailNum = Date.now();
-        prefixes.push(String(emailNum));
+        // Date.now() alone is not unique: on a local database a whole test fits
+        // into one millisecond, and two consecutive tests then insert the same
+        // email and trip the unique constraint. The counter keeps them apart.
+        emailNum = `${Date.now()}${String(testIndex++).padStart(2, '0')}`;
+        prefixes.push(emailNum);
     });
 
     afterAll(async () => {

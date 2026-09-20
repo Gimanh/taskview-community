@@ -5,11 +5,35 @@ import { $logger } from '../../modules/logget';
 import { integrationsDebugLog } from './debugLog';
 import { decrypt } from '../../utils/crypto';
 import AuthController from '../auth/AuthController';
+import { AppUser } from '../../core/AppUser';
+import { GoalPermissions } from '../../types/auth.types';
+import { randomToken } from '../oauth/oauth.utils';
 import { IntegrationsRepository } from './IntegrationsRepository';
 import { verifyGitHubWebhookSignature, GITHUB_BASE_URL } from './providers/github.provider';
 import { verifyGitLabWebhookToken, GITLAB_BASE_URL } from './providers/gitlab.provider';
 import { verifyGiteaWebhookSignature, GITEA_BASE_URL } from './providers/gitea.provider';
-import { IntegrationsArkTypeAdd, IntegrationsArkTypeDelete, IntegrationsArkTypeFetch, IntegrationsArkTypeSelectRepo, IntegrationsArkTypeToggle } from './types';
+import {
+    INTEGRATIONS_OAUTH_NONCE_COOKIE,
+    INTEGRATIONS_OAUTH_NONCE_PATH,
+    INTEGRATIONS_OAUTH_STATE_TTL_SECONDS,
+    IntegrationProviderArkType,
+    type AppUserFromIdArgs,
+    type CanManageIntegrationsArgs,
+    IntegrationsArkTypeAdd,
+    IntegrationsArkTypeDelete,
+    IntegrationsArkTypeFetch,
+    IntegrationsArkTypeSelectRepo,
+    IntegrationsArkTypeToggle,
+} from './types';
+
+// The cookie must survive the top-level redirect back from the provider, hence
+// SameSite=Lax rather than Strict; it is never needed outside the two OAuth routes.
+const NONCE_COOKIE_OPTIONS = {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax' as const,
+    path: INTEGRATIONS_OAUTH_NONCE_PATH,
+};
 
 export default class IntegrationsController {
     createIntegration = async (req: Request, res: Response) => {
@@ -62,13 +86,33 @@ export default class IntegrationsController {
                 return res.status(401).send('Invalid token');
             }
 
-            const provider = req.params.provider;
+            const provider = IntegrationProviderArkType(req.params.provider);
+            if (provider instanceof type.errors) {
+                return res.status(400).send(provider.summary);
+            }
             const projectId = Number(req.query.projectId);
             if (!projectId || isNaN(projectId)) {
                 integrationsDebugLog({ step: 'initiate:reject', data: 'projectId is required' });
                 return res.status(400).send('projectId is required');
             }
-            const url = req.appUser.integrationsManager.getOAuthUrl(provider, projectId, userPayload.userData.id);
+
+            const initiator = new AppUser(userPayload);
+            if (!(await this.canManageIntegrations({ user: initiator, projectId }))) {
+                integrationsDebugLog({ step: 'initiate:reject', data: 'no permission for project' });
+                return res.status(403).end();
+            }
+
+            const nonce = randomToken();
+            res.cookie(INTEGRATIONS_OAUTH_NONCE_COOKIE, nonce, {
+                ...NONCE_COOKIE_OPTIONS,
+                maxAge: INTEGRATIONS_OAUTH_STATE_TTL_SECONDS * 1000,
+            });
+            const url = req.appUser.integrationsManager.getOAuthUrl({
+                provider,
+                projectId,
+                userId: userPayload.userData.id,
+                nonce,
+            });
             integrationsDebugLog({ step: 'initiate:redirect', data: { userId: userPayload.userData.id, url } });
             return res.redirect(url);
         } catch (err: any) {
@@ -80,17 +124,31 @@ export default class IntegrationsController {
 
     handleOAuthCallback = async (req: Request, res: Response) => {
         try {
-            const provider = req.params.provider;
+            const provider = IntegrationProviderArkType(req.params.provider);
+            if (provider instanceof type.errors) {
+                return res.redirect(`${process.env.APP_URL}?oauth=error`);
+            }
             const code = req.query.code as string;
             const state = req.query.state as string;
             integrationsDebugLog({ step: 'callback:start', data: { provider, hasCode: !!code, hasState: !!state, queryKeys: Object.keys(req.query) } });
+
+            const nonce = req.cookies?.[INTEGRATIONS_OAUTH_NONCE_COOKIE] as string | undefined;
+            res.clearCookie(INTEGRATIONS_OAUTH_NONCE_COOKIE, NONCE_COOKIE_OPTIONS);
 
             if (!code || !state) {
                 integrationsDebugLog({ step: 'callback:reject', data: 'missing code or state' });
                 return res.redirect(`${process.env.APP_URL}?oauth=error`);
             }
 
-            const { projectId, orgSlug } = await req.appUser.integrationsManager.handleOAuthCallback(provider, code, state);
+            const payload = req.appUser.integrationsManager.verifyOAuthState({ provider, state, nonce });
+
+            const initiator = await this.appUserFromId({ req, userId: payload.userId });
+            if (!initiator || !(await this.canManageIntegrations({ user: initiator, projectId: payload.projectId }))) {
+                integrationsDebugLog({ step: 'callback:reject', data: 'initiator may not manage the project' });
+                return res.redirect(`${process.env.APP_URL}?oauth=error`);
+            }
+
+            const { projectId, orgSlug } = await req.appUser.integrationsManager.completeOAuthCallback({ provider, code, payload });
             integrationsDebugLog({ step: 'callback:success', data: { projectId, orgSlug } });
             return res.redirect(`${process.env.APP_URL}/${orgSlug}/${projectId}/integrations?oauth=success`);
         } catch (err: any) {
@@ -116,6 +174,19 @@ export default class IntegrationsController {
             return res.redirect(`${process.env.APP_URL}?oauth=error`);
         }
     };
+
+    private async canManageIntegrations(args: CanManageIntegrationsArgs): Promise<boolean> {
+        const checker = await args.user.permissionsFetcher.getCheckerForGoal(args.projectId);
+        return checker.hasPermissions(GoalPermissions.INTEGRATIONS_CAN_MANAGE);
+    }
+
+    private async appUserFromId(args: AppUserFromIdArgs): Promise<AppUser | null> {
+        const userData = await args.req.appUser.authManager.repository.fetchUserById(args.userId);
+        if (!userData || userData.block !== 0) return null;
+        const user = new AppUser({ id: 0, userData: { id: userData.id, login: userData.login, email: userData.email } });
+        user.setUserDataFromDb(userData);
+        return user;
+    }
 
     fetchRepos = async (req: Request, res: Response) => {
         try {

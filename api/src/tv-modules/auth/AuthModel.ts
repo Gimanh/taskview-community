@@ -63,8 +63,8 @@ export default class AuthModel {
             }
             $logger.debug('User registration error');
             return false;
-        } catch (_error: any) {
-            $logger.error('Can not inser user into DB');
+        } catch (error: any) {
+            $logger.error({ err: error, login, email }, 'Can not insert user into DB');
             return false;
         }
     }
