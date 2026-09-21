@@ -12,6 +12,7 @@ export const GoalListArkTypeUpdate = type({
     id: 'number',
     name: type('string | null').optional(),
     description: type('string | null').optional(),
+    archive: type('0 | 1').optional(),
 });
 
 export type GoalListArgUpdate = typeof GoalListArkTypeUpdate.infer;

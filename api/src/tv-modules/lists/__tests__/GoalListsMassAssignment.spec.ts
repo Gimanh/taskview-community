@@ -23,7 +23,7 @@ describe('GoalListsRepository.updateListNew mass-assignment guard', () => {
         vi.clearAllMocks();
     });
 
-    it('drops goalId, owner, creatorId and archive injected next to a legitimate field', async () => {
+    it('drops goalId, owner and creatorId injected next to a legitimate field', async () => {
         const { set } = mockUpdateChain();
         const repository = new GoalListsRepository();
 
@@ -33,12 +33,21 @@ describe('GoalListsRepository.updateListNew mass-assignment guard', () => {
             goalId: 3,
             owner: 9,
             creatorId: 9,
-            archive: 1,
             someOther: 1
         } as any);
 
         expect(set).toHaveBeenCalledTimes(1);
         expect(set.mock.calls[0][0]).toEqual({ name: 'renamed' });
+    });
+
+    it('writes archive, which is a user-editable field sent by the web app and MCP', async () => {
+        const { set } = mockUpdateChain();
+        const repository = new GoalListsRepository();
+
+        await repository.updateListNew({ id: 1, archive: 1 });
+
+        expect(set).toHaveBeenCalledTimes(1);
+        expect(set.mock.calls[0][0]).toEqual({ archive: 1 });
     });
 
     it('still writes name and description', async () => {

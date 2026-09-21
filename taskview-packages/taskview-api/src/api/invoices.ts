@@ -29,9 +29,9 @@ export default class TvInvoicesApi extends TvApiBase {
         return this.request(this.$axios.post<AppResponse<InvoiceItem>>(`${this.moduleUrl}/${id}/reissue`, {}))
     }
 
-    public async fetchPdf({ id, lang }: InvoiceArgPdf) {
-        const response = await this.$axios.get<Blob>(`${this.moduleUrl}/${id}/pdf`, { params: { lang }, responseType: 'blob' })
-        return response.data
+    public async fetchPdf({ id, lang }: InvoiceArgPdf): Promise<Blob> {
+        const response = await this.$axios.get<ArrayBuffer>(`${this.moduleUrl}/${id}/pdf`, { params: { lang }, responseType: 'arraybuffer' })
+        return new Blob([response.data], { type: 'application/pdf' })
     }
 
     public async delete(id: number) {
