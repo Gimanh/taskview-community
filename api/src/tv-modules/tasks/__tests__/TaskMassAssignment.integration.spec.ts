@@ -164,9 +164,11 @@ describe('PATCH /module/tasks and /module/goal_lists mass assignment (integratio
         expect(tasks.map((task) => task.id)).not.toContain(attackerTaskId);
     });
 
-    it("attack: injected goalId / owner / archive do not move the list into the victim's goal", async () => {
+    it("attack: injected goalId / owner do not move the list into the victim's goal, while the user's own edits apply", async () => {
         const before = await listRow(attackerListId);
 
+        // archive is not injected: it is an ordinary edit of the caller's own
+        // list, the same thing the web app sends when a list is archived.
         const response = await api.patch(
             '/module/goal_lists',
             { id: attackerListId, name: 'pwned list', goalId: victimGoalId, owner: victimUserId, archive: 1 },
@@ -177,7 +179,7 @@ describe('PATCH /module/tasks and /module/goal_lists mass assignment (integratio
         const after = await listRow(attackerListId);
         expect(after.goal_id).toBe(attackerGoalId);
         expect(after.owner).toBe(before.owner);
-        expect(after.archive).toBe(before.archive);
+        expect(after.archive).toBe(1);
         expect(after.name).toBe('pwned list');
     });
 });

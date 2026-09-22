@@ -41,6 +41,9 @@ services:
       # Domains that skip DNS/HTTP ownership proof — used by sso.test.ts to
       # deterministically produce a *verified* config (method 'trusted').
       SSO_TRUSTED_DOMAINS: "owned-sso.example"
+      # The webhook receiver of webhooks.test.ts runs on the host and is reached
+      # via host.docker.internal, a private address from inside the container.
+      WEBHOOKS_ALLOW_PRIVATE_URLS: "true"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:

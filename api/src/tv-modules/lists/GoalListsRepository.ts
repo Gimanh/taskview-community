@@ -100,6 +100,7 @@ export class GoalListsRepository {
         const updates: Partial<typeof GoalsListSchema.$inferInsert> = {};
         if (data.name !== undefined && data.name !== null) updates.name = data.name;
         if (data.description !== undefined) updates.description = data.description;
+        if (data.archive !== undefined) updates.archive = data.archive;
 
         if (Object.keys(updates).length === 0) {
             const current = await callWithCatch(() =>
