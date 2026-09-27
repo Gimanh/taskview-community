@@ -26,6 +26,7 @@ import SprintsRoutes from '../tv-modules/sprints/SprintsRoutes';
 import RecurrenceRoutes from '../tv-modules/recurrence/RecurrenceRoutes';
 import BillingRoutes from '../tv-modules/billing/BillingRoutes';
 import InvoicesRoutes from '../tv-modules/invoices/InvoicesRoutes';
+import FilesRoutes from '../tv-modules/files/FilesRoutes';
 import type { Routable } from '../types/routable.type';
 
 type RoutableConstructor = new (...args: any[]) => Routable;
@@ -57,6 +58,7 @@ const routes: Record<string, RoutableConstructor> = {
     '/module/recurrence': RecurrenceRoutes,
     '/module/billing': BillingRoutes,
     '/module/invoices': InvoicesRoutes,
+    '/module/files': FilesRoutes,
     '/scim/v2': ScimRoutes,
     '/.well-known': OAuthWellKnownRoutes,
 };

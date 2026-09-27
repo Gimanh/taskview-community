@@ -43,6 +43,7 @@ export interface Task extends TaskBase {
     tags: number[];
     historyId: null | number;
     assignedUsers: number[];
+    filesCount?: number;
 };
 
 // we can not update defined fields

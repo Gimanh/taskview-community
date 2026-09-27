@@ -173,6 +173,7 @@ export type TaskForClientNew = TasksSchemaTypeForSelect & {
     assignedUsers: number[];
     historyId: number | null;
     subtasks: TaskForClientNew[];
+    filesCount: number;
 };
 
 export const TaskArkTypeDelete = type({

@@ -26,6 +26,7 @@ import type {
 } from '../../types/tasks.types';
 import { TaskItemForClient } from './TaskItemForClient';
 import { TasksRepository } from './TasksRepository';
+import { FilesRepository } from '../files/FilesRepository';
 import {
     type TaskArgAdd,
     type TaskArgDelete,
@@ -345,6 +346,7 @@ export class TasksManager {
                     assignedUsers: [],
                     historyId: null,
                     subtasks: [],
+                    filesCount: 0,
                 }))
             );
         }
@@ -355,13 +357,16 @@ export class TasksManager {
 
         const taskPermissions = await this.user.permissionsFetcher.getCheckerForGoal(tasks[0].goalId);
 
-        const [tags, assignees] = await Promise.all([
+        const [tags, assignees, filesCount] = await Promise.all([
             taskPermissions.hasPermissions(GoalPermissions.TASKS_CAN_WATCH_TAGS)
                 ? this.repository.fetchTagsForTasks(ids)
                 : Promise.resolve([]),
             taskPermissions.hasPermissions(GoalPermissions.TASKS_CAN_WATCH_ASSIGNED_USERS)
                 ? this.repository.fetchTaskAssigneeForTasks(ids)
                 : Promise.resolve([]),
+            taskPermissions.hasPermissions(GoalPermissions.FILE_CAN_VIEW)
+                ? new FilesRepository().countForTasks(ids)
+                : Promise.resolve(new Map<number, number>()),
         ]);
 
         tags.forEach((item) => {
@@ -384,6 +389,7 @@ export class TasksManager {
                 tags: tagsMap.get(t.id) || [],
                 assignedUsers: assigneesMap.get(t.id) || [],
                 historyId: null,
+                filesCount: filesCount.get(t.id) ?? 0,
                 //subtasks should be without subtasks, tags and assignees
                 subtasks: await this.extendTasksWithTagsAndAssignees(
                     taskPermissions.hasPermissions(GoalPermissions.TASKS_CAN_WATCH_SUBTASKS)

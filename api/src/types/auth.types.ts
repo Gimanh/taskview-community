@@ -205,6 +205,9 @@ export const GoalPermissions = {
     SPRINT_CAN_MANAGE: 'sprint_can_manage',
     SPRINT_CAN_ASSIGN_TASKS: 'sprint_can_assign_tasks',
     SPRINT_CAN_VIEW_ANALYTICS: 'sprint_can_view_analytics',
+
+    FILE_CAN_VIEW: 'file_can_view',
+    FILE_CAN_MANAGE: 'file_can_manage',
 } as const;
 
 export type PermissionsEntityType =

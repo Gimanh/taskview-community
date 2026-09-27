@@ -37,3 +37,5 @@ export * from './schemas/recurrence-rules.schema';
 export * from './schemas/recurrence-skip-dates.schema';
 export * from './schemas/recurrence-template-assignees.schema';
 export * from './schemas/recurrence-template-tags.schema';
+export * from './schemas/files.schema';
+export * from './schemas/file-to-task.schema';

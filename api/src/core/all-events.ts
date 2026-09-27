@@ -8,6 +8,7 @@ import { SprintsDispatcher } from '../tv-modules/sprints/SprintsDispatcher';
 import { RecurrenceDispatcher } from '../tv-modules/recurrence/RecurrenceDispatcher';
 import { MessagingDispatcher } from '../tv-modules/messaging/MessagingDispatcher';
 import { InviteEmailDispatcher } from '../tv-modules/collaboration/InviteEmailDispatcher';
+import { FilesDispatcher } from '../tv-modules/files/FilesDispatcher';
 
 const dispatchers: Dispatcher[] = [
     new NotificationDispatcher(),
@@ -18,6 +19,7 @@ const dispatchers: Dispatcher[] = [
     new RecurrenceDispatcher(),
     new MessagingDispatcher(),
     new InviteEmailDispatcher(),
+    new FilesDispatcher(),
 ];
 
 export function registerAllEventHandlers() {

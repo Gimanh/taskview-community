@@ -39,6 +39,7 @@ export interface AppEvents {
     'recurrence.ended': { ruleId: number; goalId: number; initiatorId: number };
     'recurrence.deleted': { ruleId: number; goalId: number; initiatorId: number };
     'recurrence.instanceSkipped': { ruleId: number; goalId: number; date: string; initiatorId: number };
+    'files.changed': { goalId: number; taskIds: number[]; initiatorId: number };
 }
 
 type EventName = keyof AppEvents;

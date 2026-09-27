@@ -800,5 +800,21 @@
             "New organization-level permission billing_can_manage (group 6) narrows what an API or OAuth token may do on the billing surfaces; access itself requires the organization owner or admin role.",
             "Invoice lifecycle: issued_at, paid_at, voided_at, replaces_invoice_id (void and reissue chain), template_version and totals frozen at issue time (subtotal, discount_amount, tax_amount, total). Status transitions are validated by the API; only drafts can be edited or deleted."
         ]
+    },
+    "62": {
+        "version": "1.67.0",
+        "name": "Files: project attachments",
+        "releaseDate": "20260923",
+        "scripts": [
+            "/1.67.0/0.create-files.sql",
+            "/1.67.0/1.create-file-to-task.sql",
+            "/1.67.0/2.file-permissions.sql",
+            "/1.67.0/all-triggers.sql"
+        ],
+        "description": [
+            "New schema tv_files with files (UUID id, goal_id, uploader snapshot, name, mime type, size, sha256 checksum, storage provider and key) and the relation table file_to_task. A file belongs to a project and may be linked to any number of its tasks; unlinking keeps the file, deleting a task only removes its links.",
+            "Storage provider per file (local or s3) so an instance can be migrated between providers without downtime.",
+            "New permission group 7 'files' with file_can_view (list, open, download) and file_can_manage (upload, rename, link, unlink, delete). New projects grant them to editor (both) and executor (view) through the updated add_roles_and_permissions() trigger. Existing projects are not backfilled: owners grant the permissions to their roles in the role editor."
+        ]
     }
 }
