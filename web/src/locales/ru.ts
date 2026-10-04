@@ -1439,6 +1439,7 @@ export default {
     },
     errors: {
       tooLarge: 'Файл слишком большой',
+      tooLargeLimit: 'Файл больше {size}',
       forbidden: 'Нет прав на загрузку',
       notFound: 'Задача не найдена',
       uploadFailed: 'Не удалось загрузить',

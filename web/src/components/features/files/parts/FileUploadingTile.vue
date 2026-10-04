@@ -22,10 +22,11 @@
           class="size-6 text-error"
         />
         <p class="text-xs text-error text-center">
-          {{ t(upload.errorKey ?? 'files.errors.uploadFailed') }}
+          {{ errorText }}
         </p>
         <div class="flex gap-1">
           <UButton
+            v-if="!isTooLarge"
             :label="t('files.retry')"
             size="xs"
             color="neutral"
@@ -65,11 +66,13 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { FileUploadItem } from '@/types/files.types'
 import { useFileKind } from '@/composables/useFileKind'
+import { FILE_TOO_LARGE_ERROR_KEY, useFilesStore } from '@/stores/files.store'
 
-defineProps<{
+const props = defineProps<{
   upload: FileUploadItem
 }>()
 
@@ -80,4 +83,12 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const { formatBytes } = useFileKind()
+const filesStore = useFilesStore()
+
+const isTooLarge = computed(() => props.upload.errorKey === FILE_TOO_LARGE_ERROR_KEY)
+const errorText = computed(() => {
+  const limit = filesStore.storage.maxFileSizeBytes
+  if (isTooLarge.value && limit !== null) return t('files.errors.tooLargeLimit', { size: formatBytes(limit) })
+  return t(props.upload.errorKey ?? 'files.errors.uploadFailed')
+})
 </script>

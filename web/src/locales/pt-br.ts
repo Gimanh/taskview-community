@@ -1501,6 +1501,7 @@ export default {
     },
     errors: {
       tooLarge: 'O arquivo é muito grande',
+      tooLargeLimit: 'O arquivo é maior que {size}',
       forbidden: 'Sem permissão para enviar',
       notFound: 'Tarefa não encontrada',
       uploadFailed: 'Falha no envio',

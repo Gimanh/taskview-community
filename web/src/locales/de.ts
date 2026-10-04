@@ -1490,6 +1490,7 @@ export default {
     },
     errors: {
       tooLarge: 'Datei ist zu groß',
+      tooLargeLimit: 'Datei ist größer als {size}',
       forbidden: 'Keine Berechtigung zum Hochladen',
       notFound: 'Aufgabe nicht gefunden',
       uploadFailed: 'Hochladen fehlgeschlagen',

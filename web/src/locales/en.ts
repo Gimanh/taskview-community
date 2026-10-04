@@ -1504,6 +1504,7 @@ export default {
     },
     errors: {
       tooLarge: 'File is too large',
+      tooLargeLimit: 'File is larger than {size}',
       forbidden: 'No permission to upload',
       notFound: 'Task not found',
       uploadFailed: 'Upload failed',

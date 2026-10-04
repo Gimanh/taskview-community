@@ -11,6 +11,7 @@ import type {
 } from '@/types/files.types'
 
 const PAGE_SIZE = 50
+export const FILE_TOO_LARGE_ERROR_KEY = 'files.errors.tooLarge'
 
 export const useFilesStore = defineStore('files', {
   state: (): FilesStoreState => ({
@@ -95,6 +96,14 @@ export const useFilesStore = defineStore('files', {
         errorKey: null,
         controller: new AbortController(),
       }
+
+      // The server enforces the limit too; checking here spares sending bytes that would be rejected anyway.
+      const limit = this.storage.maxFileSizeBytes
+      if (limit !== null && args.file.size > limit) {
+        this.uploads.push({ ...item, status: 'error', errorKey: FILE_TOO_LARGE_ERROR_KEY })
+        return null
+      }
+
       this.uploads.push(item)
 
       try {
@@ -213,7 +222,7 @@ export const useFilesStore = defineStore('files', {
 
     errorKeyFor(err: unknown): string {
       const status = (err as { response?: { status?: number } })?.response?.status
-      if (status === 413) return 'files.errors.tooLarge'
+      if (status === 413) return FILE_TOO_LARGE_ERROR_KEY
       if (status === 403) return 'files.errors.forbidden'
       if (status === 404) return 'files.errors.notFound'
       return 'files.errors.uploadFailed'

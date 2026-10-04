@@ -1490,6 +1490,7 @@ export default {
     },
     errors: {
       tooLarge: 'El archivo es demasiado grande',
+      tooLargeLimit: 'El archivo supera {size}',
       forbidden: 'Sin permiso para subir',
       notFound: 'Tarea no encontrada',
       uploadFailed: 'Error al subir',
