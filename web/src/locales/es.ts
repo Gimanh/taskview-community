@@ -1446,6 +1446,8 @@ export default {
     previous: 'Anterior',
     next: 'Siguiente',
     noPermission: 'No tienes permiso para ver los archivos de este proyecto',
+    storageDisabled: 'El almacenamiento de archivos no está configurado en este servidor',
+    storageDisabledHint: 'Los adjuntos no están disponibles.',
     filters: {
       all: 'Todos',
       images: 'Imágenes',

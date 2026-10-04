@@ -22,8 +22,25 @@ export type FileStorageProviderConfig = LocalFileStorageConfig | S3FileStorageCo
 
 export type FileStorageConfig = {
     maxFileSizeBytes: number;
-    active: FileStorageProvider;
+    active: FileStorageProvider | null;
+    inactiveReason: string | null;
     providers: Partial<Record<FileStorageProvider, FileStorageProviderConfig>>;
+};
+
+export type FileStorageActiveResolution = {
+    active: FileStorageProvider | null;
+    inactiveReason: string | null;
+};
+
+export type FileStorageResolveActiveArgs = {
+    env: NodeJS.ProcessEnv;
+    providers: FileStorageConfig['providers'];
+    s3Missing: string[];
+};
+
+export type FileStorageS3Reading = {
+    config: S3FileStorageConfig | null;
+    missing: string[];
 };
 
 export type StoragePutArgs = {

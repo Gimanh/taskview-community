@@ -57,6 +57,19 @@
             data-testid="task-recurrence-badge"
           />
           
+          <!-- Attached files -->
+          <UBadge
+            v-if="task.filesCount"
+            :label="String(task.filesCount)"
+            icon="i-lucide-paperclip"
+            color="neutral"
+            class="bg-elevated text-muted"
+            :ui="{ base: 'rounded-md', leadingIcon: 'size-3' }"
+            variant="subtle"
+            size="md"
+            data-testid="task-files-badge"
+          />
+
           <!-- Project -->
           <UBadge
             v-if="projectName"
@@ -265,6 +278,7 @@ const hasAdditionalInfo = computed(() => {
     props.task.endDate ||
     props.task.amount ||
     props.task.recurrenceRuleId ||
+    props.task.filesCount ||
     assigneeEmails.value.length > 0 ||
     taskTags.value.length > 0
 })

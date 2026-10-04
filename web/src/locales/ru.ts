@@ -1395,6 +1395,8 @@ export default {
     previous: 'Назад',
     next: 'Вперёд',
     noPermission: 'У вас нет прав на просмотр файлов этого проекта',
+    storageDisabled: 'Хранилище файлов не настроено на этом сервере',
+    storageDisabledHint: 'Вложения недоступны.',
     filters: {
       all: 'Все',
       images: 'Картинки',

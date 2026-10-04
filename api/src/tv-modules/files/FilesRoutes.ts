@@ -21,6 +21,9 @@ export default class FilesRoutes implements Routable {
     }
 
     initRoutes() {
+        // Whether attachments are enabled on this server (storage configured) and the upload size limit.
+        this.router.get('/status', [IsLoggedIn], this.controller.status);
+
         // Project scope: upload (multipart, optional ?taskId= to link right away) and paginated listing.
         this.router.post('/goal/:goalId', [IsLoggedIn, requireFilePermission(GoalPermissions.FILE_CAN_MANAGE, goalIdFromParam)], this.controller.upload);
         this.router.get('/goal/:goalId', [IsLoggedIn, requireFilePermission(GoalPermissions.FILE_CAN_VIEW, goalIdFromParam)], this.controller.listForGoal);

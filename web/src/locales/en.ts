@@ -1460,6 +1460,8 @@ export default {
     previous: 'Previous',
     next: 'Next',
     noPermission: 'You do not have permission to view files of this project',
+    storageDisabled: 'File storage is not configured on this server',
+    storageDisabledHint: 'Attachments are unavailable.',
     filters: {
       all: 'All',
       images: 'Images',

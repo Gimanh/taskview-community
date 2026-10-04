@@ -123,7 +123,13 @@ export type FileContent = {
     inline: boolean;
 };
 
-export type FileErrorCode = 'not_found' | 'forbidden' | 'too_large' | 'invalid' | 'storage_error';
+export type FileErrorCode = 'not_found' | 'forbidden' | 'too_large' | 'invalid' | 'storage_error' | 'storage_not_configured';
+export const FILE_STORAGE_NOT_CONFIGURED_MESSAGE = 'File storage is not configured on this server';
+
+export type FileStorageStatusDto = {
+    enabled: boolean;
+    maxFileSizeBytes: number;
+};
 export type FileResult<T> = { ok: true; data: T } | { ok: false; code: FileErrorCode; message?: string };
 
 export type FileListCursor = {

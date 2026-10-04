@@ -27,6 +27,7 @@ const codeToStatus: Record<FileErrorCode, number> = {
     too_large: 413,
     invalid: 400,
     storage_error: 500,
+    storage_not_configured: 503,
 };
 
 type IncomingFile = { stream: Readable; filename: string; mimeType: string };
@@ -36,6 +37,10 @@ export default class FilesController {
         if (result.ok) return res.tvJson(result.data);
         return res.status(codeToStatus[result.code]).send(result.message ?? result.code);
     }
+
+    status = (req: Request, res: Response) => {
+        return res.tvJson(req.appUser.filesManager.status());
+    };
 
     upload = async (req: Request, res: Response) => {
         const params = FileArkTypeGoalIdParam(req.params);

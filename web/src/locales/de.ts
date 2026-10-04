@@ -1446,6 +1446,8 @@ export default {
     previous: 'Zurück',
     next: 'Weiter',
     noPermission: 'Sie haben keine Berechtigung, die Dateien dieses Projekts zu sehen',
+    storageDisabled: 'Der Dateispeicher ist auf diesem Server nicht konfiguriert',
+    storageDisabledHint: 'Anhänge sind nicht verfügbar.',
     filters: {
       all: 'Alle',
       images: 'Bilder',

@@ -70,6 +70,11 @@ function buildRoutes(extensions: TvWebExtension[]): RouteRecordRaw[] {
           component: () => import('./pages/user/sprints.vue'),
         },
         {
+          path: ':projectId/files',
+          name: 'files',
+          component: () => import('./pages/user/files.vue'),
+        },
+        {
           path: ':projectId/collaboration',
           name: 'collaboration',
           component: () => import('./pages/user/collaboration.vue'),

@@ -42,6 +42,11 @@ export type RealtimeEventMap = {
     ruleId: number
     taskId: number
   }
+  'files.changed': {
+    event: 'files.changed'
+    goalId: number
+    taskIds: number[]
+  }
 }
 
 export type RealtimeEvent = RealtimeEventMap[keyof RealtimeEventMap]

@@ -26,11 +26,17 @@ export type FilesProjectListState = {
   loading: boolean
 }
 
+export type FilesStorageState = {
+  enabled: boolean | null
+  maxFileSizeBytes: number | null
+}
+
 export type FilesStoreState = {
   byTask: Record<number, TvFile[]>
   loadingTasks: Record<number, boolean>
   project: FilesProjectListState
   uploads: FileUploadItem[]
+  storage: FilesStorageState
 }
 
 export type FilesUploadArgs = {

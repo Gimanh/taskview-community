@@ -2,6 +2,7 @@ import type { RealtimeEventMap, RealtimeHandler } from '../types'
 import { handleNotification } from './notification'
 import { handleGoalsChanged } from './goals-changed'
 import { handleRecurrenceInstanceCreated } from './recurrence'
+import { handleFilesChanged } from './files'
 import {
   handleTimeEntryCreated,
   handleTimeEntryDeleted,
@@ -19,4 +20,5 @@ export const eventHandlers: { [K in keyof RealtimeEventMap]: RealtimeHandler<K> 
   'time-entry.updated': handleTimeEntryUpdated,
   'time-entry.deleted': handleTimeEntryDeleted,
   'recurrence.instanceCreated': handleRecurrenceInstanceCreated,
+  'files.changed': handleFilesChanged,
 }

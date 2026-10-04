@@ -11,6 +11,7 @@ import { FileTooLargeError, HashingStream } from './storage/HashingStream';
 import {
     FILE_DOWNLOAD_TOKEN_TTL_SECONDS,
     FILE_NAME_MAX_LENGTH,
+    FILE_STORAGE_NOT_CONFIGURED_MESSAGE,
     type FileContent,
     type FileDownloadUrl,
     type FileDto,
@@ -21,6 +22,7 @@ import {
     type FileListPage,
     type FileRenameArgs,
     type FileResult,
+    type FileStorageStatusDto,
     type FileUnlinkArgs,
     type FileUploadArgs,
 } from './types';
@@ -51,7 +53,12 @@ export class FilesManager {
         return this.storages.maxFileSizeBytes;
     }
 
+    status(): FileStorageStatusDto {
+        return this.storages.status();
+    }
+
     async upload(args: FileUploadArgs): Promise<FileResult<FileDto>> {
+        if (!this.storages.isConfigured) return fail('storage_not_configured', FILE_STORAGE_NOT_CONFIGURED_MESSAGE);
         if (args.taskId !== null) {
             const task = await this.tasksRepository.fetchTaskByIdNew(args.taskId);
             if (!task) return fail('not_found', 'task not found');
@@ -183,6 +190,7 @@ export class FilesManager {
     async issueDownloadUrl(args: FileIssueDownloadUrlArgs): Promise<FileResult<FileDownloadUrl>> {
         const file = await this.repository.getById(args.fileId);
         if (!file) return fail('not_found');
+        if (!this.storages.has(file.storageProvider)) return fail('storage_not_configured', FILE_STORAGE_NOT_CONFIGURED_MESSAGE);
         const exp = Math.floor(Date.now() / 1000) + FILE_DOWNLOAD_TOKEN_TTL_SECONDS;
         const token = new FileDownloadTokens().sign({ fileId: file.id, inline: args.inline, exp });
         return ok({ url: `/module/files/content/${token}`, expiresAt: new Date(exp * 1000).toISOString() });
@@ -193,6 +201,7 @@ export class FilesManager {
         if (!payload) return fail('forbidden', 'invalid or expired token');
         const file = await this.repository.getById(payload.fileId);
         if (!file) return fail('not_found');
+        if (!this.storages.has(file.storageProvider)) return fail('storage_not_configured', FILE_STORAGE_NOT_CONFIGURED_MESSAGE);
         try {
             const { stream, sizeBytes } = await this.storages.get(file.storageProvider).get(file.storageKey);
             return ok({ file, stream, sizeBytes: sizeBytes || file.sizeBytes, inline: payload.inline });

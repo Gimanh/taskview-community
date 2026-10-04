@@ -23,6 +23,11 @@ export type TvFileDownloadUrl = {
     expiresAt: string;
 };
 
+export type TvFileStorageStatus = {
+    enabled: boolean;
+    maxFileSizeBytes: number;
+};
+
 export type TvFileListArgs = {
     goalId: number;
     search?: string | null;

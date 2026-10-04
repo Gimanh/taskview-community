@@ -9,6 +9,7 @@ import { LoginMethods } from './tv-modules/auth/LoginMethods';
 import { InviteEmailDispatcher } from './tv-modules/collaboration/InviteEmailDispatcher';
 import { PublicApiUrl } from './modules/public-url';
 import { validateWebhooksEnvOnStartup } from './tv-modules/webhooks/webhooks.utils';
+import { FileStorageFactory } from './tv-modules/files/storage/FileStorageFactory';
 import cookieParser from 'cookie-parser';
 import { registerAllEventHandlers, startAllWorkers } from './core/all-events';
 
@@ -21,6 +22,7 @@ export default class App {
         PublicApiUrl.validateOnStartup();
         InviteEmailDispatcher.validateOnStartup();
         validateWebhooksEnvOnStartup();
+        FileStorageFactory.validateOnStartup();
 
         this.app = express();
         this.port = port;

@@ -8,12 +8,17 @@ import type {
     TvFileListArgs,
     TvFileListPage,
     TvFileRenameArgs,
+    TvFileStorageStatus,
     TvFileUnlinkArgs,
     TvFileUploadArgs,
 } from './files.types';
 
 export default class TvFilesApi extends TvApiBase {
     protected moduleUrl = '/module/files';
+
+    public async status() {
+        return this.request(this.$axios.get<AppResponse<TvFileStorageStatus>>(`${this.moduleUrl}/status`));
+    }
 
     public async upload(args: TvFileUploadArgs) {
         const form = new FormData();
