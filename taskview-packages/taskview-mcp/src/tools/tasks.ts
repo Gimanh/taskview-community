@@ -67,7 +67,7 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
         goalId: z.coerce.number().describe('Project (goal) ID'),
         description: z.string().describe('Task title/description'),
         goalListId: z.coerce.number().optional().nullable().describe('List ID within the project'),
-        note: z.string().optional().nullable().describe('Additional notes'),
+        note: z.string().optional().nullable().describe('Task note, separate from the description (the title). Stored and rendered as HTML: wrap paragraphs in <p>, lists in <ul>/<ol>; plain newlines collapse'),
         priorityId: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional()
           .describe('Priority: 1=low, 2=medium, 3=high'),
         startDate: z.string().optional().nullable().describe('Start date (ISO format)'),
@@ -94,7 +94,7 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
         id: z.coerce.number().describe('Task ID to update'),
         description: z.string().optional().describe('New task description'),
         complete: z.boolean().optional().describe('Mark task as complete/incomplete'),
-        note: z.string().optional().describe('Task notes'),
+        note: z.string().optional().describe('Task note, separate from the description (the title). Stored and rendered as HTML: wrap paragraphs in <p>, lists in <ul>/<ol>; plain newlines collapse. Replaces the whole note - read the current one with get_task first when appending'),
         priorityId: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional()
           .describe('Priority: 1=low, 2=medium, 3=high'),
         goalListId: z.coerce.number().optional().nullable().describe('Move to a different list'),

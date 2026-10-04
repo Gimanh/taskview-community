@@ -127,6 +127,10 @@ export class TvApi {
         this.files = new TvFilesApi(this.$axios);
     }
 
+    public get baseUrl(): string | undefined {
+        return this.$axios.defaults.baseURL;
+    }
+
     public setBaseUrl(baseUrl: string) {
         this.$axios.defaults.baseURL = baseUrl;
     }
