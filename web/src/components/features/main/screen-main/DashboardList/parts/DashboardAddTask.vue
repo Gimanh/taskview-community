@@ -16,6 +16,7 @@
         size="sm"
         :disabled="disabled"
         :ui="{ base: 'rounded-full hover:bg-primary/10 hover:text-primary' }"
+        data-testid="dashboard-add-task"
         @click.stop
       />
       <button
@@ -23,6 +24,7 @@
         v-bind="props"
         type="button"
         :disabled="disabled"
+        data-testid="dashboard-add-task"
         class="flex items-center gap-2.5 w-full px-4 py-3 rounded-2xl border border-dashed border-default text-muted hover:text-primary hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
         <span class="flex items-center justify-center size-6 rounded-full border border-dashed border-current shrink-0">

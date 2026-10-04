@@ -6,7 +6,7 @@ import { FILE_STORAGE_DOCS_URL, FileStorageConfigReader } from './FileStorageCon
 import { FileStorageNotConfiguredError } from './FileStorageNotConfiguredError';
 import { LocalFileStorage } from './LocalFileStorage';
 import { S3FileStorage } from './S3FileStorage';
-import type { FileStorageConfig, FileStorageProviderConfig } from './storage.types';
+import type { FileQuotaConfig, FileStorageConfig, FileStorageProviderConfig } from './storage.types';
 
 export class FileStorageFactory {
     private static instance: FileStorageFactory | null = null;
@@ -34,6 +34,7 @@ export class FileStorageFactory {
 
     static validateOnStartup(): void {
         const factory = FileStorageFactory.getInstance();
+        factory.logQuotaStatus();
         if (factory.isConfigured) {
             console.log(`[files] File storage: ${factory.config.active}`);
             return;
@@ -57,6 +58,22 @@ export class FileStorageFactory {
 
     get maxFileSizeBytes(): number {
         return this.config.maxFileSizeBytes;
+    }
+
+    get quota(): FileQuotaConfig {
+        return this.config.quota;
+    }
+
+    private logQuotaStatus(): void {
+        const { mode, defaultOrganizationQuotaBytes, invalidModeValue } = this.config.quota;
+        if (invalidModeValue !== null) {
+            const message = `[files] FILE_QUOTA_MODE="${invalidModeValue}" is not supported (off, enforce) - quotas are off`;
+            console.warn(message);
+            $logger.warn(message);
+            return;
+        }
+        if (mode === 'off') return;
+        console.log(`[files] File quotas: ${mode}, ${Math.round(defaultOrganizationQuotaBytes / 1024 / 1024)} MB per organization by default`);
     }
 
     get isConfigured(): boolean {

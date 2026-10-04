@@ -2,6 +2,7 @@ import type { Readable } from 'node:stream';
 import type { FileStorageProvider } from 'taskview-db-schemas';
 import type { FileStorage } from './FileStorage';
 import type { FilesRepository } from '../FilesRepository';
+import type { FileQuotaMode } from '../types';
 
 export type LocalFileStorageConfig = {
     type: 'local';
@@ -25,6 +26,13 @@ export type FileStorageConfig = {
     active: FileStorageProvider | null;
     inactiveReason: string | null;
     providers: Partial<Record<FileStorageProvider, FileStorageProviderConfig>>;
+    quota: FileQuotaConfig;
+};
+
+export type FileQuotaConfig = {
+    mode: FileQuotaMode;
+    defaultOrganizationQuotaBytes: number;
+    invalidModeValue: string | null;
 };
 
 export type FileStorageActiveResolution = {

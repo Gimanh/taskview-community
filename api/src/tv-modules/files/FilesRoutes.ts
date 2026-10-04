@@ -27,6 +27,8 @@ export default class FilesRoutes implements Routable {
         // Project scope: upload (multipart, optional ?taskId= to link right away) and paginated listing.
         this.router.post('/goal/:goalId', [IsLoggedIn, requireFilePermission(GoalPermissions.FILE_CAN_MANAGE, goalIdFromParam)], this.controller.upload);
         this.router.get('/goal/:goalId', [IsLoggedIn, requireFilePermission(GoalPermissions.FILE_CAN_VIEW, goalIdFromParam)], this.controller.listForGoal);
+        // Storage quota of the pool the project's files count against (its organization's own quota or the owner's pool).
+        this.router.get('/goal/:goalId/quota', [IsLoggedIn, requireFilePermission(GoalPermissions.FILE_CAN_VIEW, goalIdFromParam)], this.controller.quota);
 
         // Task scope: files of a task, link existing project files, unlink (the file itself stays).
         this.router.get('/task/:taskId', [IsLoggedIn, requireFilePermission(GoalPermissions.FILE_CAN_VIEW, goalIdFromTask)], this.controller.listForTask);

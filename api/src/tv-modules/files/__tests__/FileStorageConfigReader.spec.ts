@@ -13,7 +13,7 @@ describe('FileStorageConfigReader', () => {
         const empty = FileStorageConfigReader.fromEnv({});
         expect(empty.active).toBeNull();
         expect(empty.inactiveReason).toContain('FILE_STORAGE_PROVIDER is not set');
-        expect(empty.maxFileSizeBytes).toBe(50 * 1024 * 1024);
+        expect(empty.maxFileSizeBytes).toBe(10 * 1024 * 1024);
         expect(empty.providers).toEqual({});
 
         const described = FileStorageConfigReader.fromEnv({ FILE_STORAGE_LOCAL_DIR: '/var/files', ...s3Env });
@@ -65,5 +65,17 @@ describe('FileStorageConfigReader', () => {
         const config = FileStorageConfigReader.fromEnv({ FILE_STORAGE_PROVIDER: 'ftp' });
         expect(config.active).toBeNull();
         expect(config.inactiveReason).toContain('"ftp" is not supported');
+    });
+    it('reads quota settings: enforced with 100 MB per organization by default, explicit off, and invalid values', () => {
+        expect(FileStorageConfigReader.fromEnv({}).quota).toEqual({ mode: 'enforce', defaultOrganizationQuotaBytes: 100 * 1024 * 1024, invalidModeValue: null });
+        expect(FileStorageConfigReader.fromEnv({ FILE_QUOTA_MODE: 'off' }).quota.mode).toBe('off');
+
+        const enforce = FileStorageConfigReader.fromEnv({ FILE_QUOTA_MODE: 'Enforce', FILE_QUOTA_ORGANIZATION_MB: '500' });
+        expect(enforce.quota).toEqual({ mode: 'enforce', defaultOrganizationQuotaBytes: 500 * 1024 * 1024, invalidModeValue: null });
+
+        expect(FileStorageConfigReader.fromEnv({ FILE_QUOTA_MODE: 'observe' }).quota).toMatchObject({ mode: 'off', invalidModeValue: 'observe' });
+
+        const invalid = FileStorageConfigReader.fromEnv({ FILE_QUOTA_MODE: 'strict', FILE_QUOTA_ORGANIZATION_MB: 'lots' });
+        expect(invalid.quota).toEqual({ mode: 'off', defaultOrganizationQuotaBytes: 100 * 1024 * 1024, invalidModeValue: 'strict' });
     });
 });

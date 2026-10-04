@@ -816,5 +816,17 @@
             "Storage provider per file (local or s3) so an instance can be migrated between providers without downtime.",
             "New permission group 7 'files' with file_can_view (list, open, download) and file_can_manage (upload, rename, link, unlink, delete). New projects grant them to editor (both) and executor (view) through the updated add_roles_and_permissions() trigger. Existing projects are not backfilled: owners grant the permissions to their roles in the role editor."
         ]
+    },
+    "63": {
+        "version": "1.68.0",
+        "name": "Files: storage quotas",
+        "releaseDate": "20261005",
+        "scripts": [
+            "/1.68.0/0.alter-organizations-file-quota.sql"
+        ],
+        "description": [
+            "New column tv_auth.organizations.file_quota_mb (megabytes, NULL by default). Every organization has its own file storage quota: this column when set, otherwise the instance default FILE_QUOTA_ORGANIZATION_MB.",
+            "Quotas are enforced by default (100 MB per organization, FILE_QUOTA_ORGANIZATION_MB); FILE_QUOTA_MODE=off disables them."
+        ]
     }
 }

@@ -12,6 +12,9 @@ import {
   type TaskArgToggleAssignee,
   type TaskArgUpdate,
   type TaskBase,
+  type TaskArgMoveToProject,
+  type TaskResponseMovePreview,
+  type TaskResponseMoveToProject,
 } from 'taskview-api'
 import { $tvApi } from '@/plugins/axios'
 import { DEFAULT_ID } from '@/types/app.types'
@@ -295,12 +298,16 @@ export const useTasksStore = defineStore('tasks', {
 
       if (!result) return false
 
+      this.removeTaskLocally(id)
+      return true
+    },
+
+    removeTaskLocally(id: number) {
       const taskIndex = this.tasks.findIndex((task) => task.id === id)
 
       if (taskIndex !== -1) {
         this.tasks.splice(taskIndex, 1)
       } else {
-        // Check if it's a subtask
         for (const task of this.tasks) {
           const subIndex = task.subtasks.findIndex((s) => s.id === id)
           if (subIndex !== -1) {
@@ -318,8 +325,14 @@ export const useTasksStore = defineStore('tasks', {
           this.selectedTask.subtasks.splice(subIndex, 1)
         }
       }
+    },
 
-      return true
+    async previewMoveToProject(args: TaskArgMoveToProject): Promise<TaskResponseMovePreview | null> {
+      return (await $tvApi.tasks.movePreview(args).catch(logError)) ?? null
+    },
+
+    async moveToProject(args: TaskArgMoveToProject): Promise<TaskResponseMoveToProject | null> {
+      return (await $tvApi.tasks.moveToProject(args).catch(logError)) ?? null
     },
 
     async updateTaskNote(data: TaskArgUpdate): Promise<boolean> {
@@ -376,24 +389,11 @@ export const useTasksStore = defineStore('tasks', {
 
       const task = this.tasks.find((tsk) => +tsk.id === +data.taskId)
 
-      const toggleTag = (task: Task) => {
-        if (action === 'delete') {
-          const tagIndex = task.tags.indexOf(data.tagId)
-          if (tagIndex !== -1) {
-            task.tags.splice(tagIndex, 1)
-          }
-        } else {
-          task.tags.push(data.tagId)
-        }
-      }
+      const toggled = (tags: Task['tags']) =>
+        action === 'delete' ? tags.filter((id) => id !== data.tagId) : [...tags.filter((id) => id !== data.tagId), data.tagId]
 
-      if (task) {
-        toggleTag(task)
-        this.updateSelectedTask(task)
-      } else if (this.selectedTask?.id === data.taskId) {
-        toggleTag(this.selectedTask)
-      }
-
+      if (task) task.tags = toggled(task.tags)
+      if (this.selectedTask?.id === data.taskId && this.selectedTask !== task) this.selectedTask.tags = toggled(this.selectedTask.tags)
     },
 
     async udpatePriority(data: TaskArgUpdate): Promise<void> {
@@ -473,13 +473,8 @@ export const useTasksStore = defineStore('tasks', {
       if (!updateAssignee) return
 
       const task = this.tasks.find((tsk) => tsk.id === data.taskId)
-
-      if (task) {
-        task.assignedUsers = updateAssignee.userIds
-        this.updateSelectedTask(task)
-      } else if (this.selectedTask?.id === data.taskId) {
-        this.selectedTask.assignedUsers = updateAssignee.userIds
-      }
+      if (task) task.assignedUsers = updateAssignee.userIds
+      if (this.selectedTask?.id === data.taskId) this.selectedTask.assignedUsers = updateAssignee.userIds
     },
 
     // we do not fetch assigned users from server separately, we fetch all tasks with assigned users

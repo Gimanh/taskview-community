@@ -28,6 +28,7 @@ const codeToStatus: Record<FileErrorCode, number> = {
     invalid: 400,
     storage_error: 500,
     storage_not_configured: 503,
+    quota_exceeded: 507,
 };
 
 type IncomingFile = { stream: Readable; filename: string; mimeType: string };
@@ -40,6 +41,12 @@ export default class FilesController {
 
     status = (req: Request, res: Response) => {
         return res.tvJson(req.appUser.filesManager.status());
+    };
+
+    quota = async (req: Request, res: Response) => {
+        const params = FileArkTypeGoalIdParam(req.params);
+        if (params instanceof type.errors) return res.status(400).send(params.summary);
+        return res.tvJson(await req.appUser.filesManager.quotaForGoal(params.goalId));
     };
 
     upload = async (req: Request, res: Response) => {

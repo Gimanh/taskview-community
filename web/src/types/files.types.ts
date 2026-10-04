@@ -1,4 +1,4 @@
-import type { TvFile, TvFileKindFilter } from 'taskview-api'
+import type { TvFile, TvFileKindFilter, TvFileQuota } from 'taskview-api'
 
 export type FileKind = 'image' | 'pdf' | 'video' | 'audio' | 'text' | 'other'
 
@@ -37,6 +37,7 @@ export type FilesStoreState = {
   project: FilesProjectListState
   uploads: FileUploadItem[]
   storage: FilesStorageState
+  quotaByGoal: Record<number, TvFileQuota>
 }
 
 export type FilesUploadArgs = {

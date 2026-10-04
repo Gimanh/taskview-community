@@ -107,3 +107,45 @@ export type TaskResponseToggleAssignee = {
 export type TaskResponseFetchTaskHistory = { history: Task[] };
 
 export type TaskResponseRecoveryTaskHistory = { recovery: boolean };
+
+export type TaskArgMoveToProject = {
+    taskId: number;
+    targetGoalId: number;
+};
+
+// 'move' keeps the task id and removes it from the source project; 'copy' happens when the user may not delete
+// tasks in the source project: the original stays and a new task is created in the target project
+export type TaskMoveMode = 'move' | 'copy';
+
+export type TaskMoveBlockReason = 'not_found' | 'same_project' | 'other_organization' | 'is_subtask' | 'no_target_permission';
+
+export type TaskMoveRemovals = {
+    tags: number;
+    assignees: number;
+    fileLinks: number;
+    dependencies: number;
+    sprintOutcomes: number;
+    integrationLinks: number;
+    recurrence: number;
+};
+
+export type TaskMoveLeftBehind = {
+    subtasks: number;
+    timeEntries: number;
+};
+
+export type TaskResponseMovePreview = {
+    allowed: boolean;
+    reason: TaskMoveBlockReason | null;
+    mode: TaskMoveMode | null;
+    tasks: number;
+    timeEntries: number;
+    removals: TaskMoveRemovals | null;
+    leftBehind: TaskMoveLeftBehind | null;
+};
+
+export type TaskResponseMoveToProject = {
+    mode: TaskMoveMode;
+    taskId: number;
+    goalId: number;
+};

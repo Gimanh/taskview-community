@@ -40,6 +40,10 @@
     </div>
 
     <div class="flex flex-col gap-4 px-2">
+      <FilesQuotaUsage
+        v-if="storageEnabled"
+        :goal-id="goalId"
+      />
       <UAlert
         v-if="!storageEnabled"
         color="warning"
@@ -142,6 +146,7 @@ import FileProjectRow from './parts/FileProjectRow.vue'
 import FileRenameDialog from './parts/FileRenameDialog.vue'
 import FileDeleteDialog from './parts/FileDeleteDialog.vue'
 import FileTaskPickerDialog from './parts/FileTaskPickerDialog.vue'
+import FilesQuotaUsage from './parts/FilesQuotaUsage.vue'
 
 const props = defineProps<{
   goalId: number
@@ -178,7 +183,14 @@ const actions = useFileActions({ files, taskId: noTask })
 const reload = () => filesStore.fetchForGoal({ goalId: props.goalId, search: search.value, type: type.value })
 const debouncedReload = useDebounceFn(reload, 300)
 
-watch(() => props.goalId, () => void reload(), { immediate: true })
+watch(
+  () => props.goalId,
+  (id) => {
+    void reload()
+    void filesStore.fetchQuota(id)
+  },
+  { immediate: true },
+)
 watch(search, () => void debouncedReload())
 watch(type, () => void reload())
 

@@ -1,6 +1,7 @@
 import path from 'path';
 import pino from 'pino';
 import { createStream } from 'rotating-file-stream';
+import { LOG_LEVELS, resolveLogLevel } from './log-level';
 
 const generator = () => {
     const date = new Date();
@@ -15,10 +16,12 @@ const logStream = createStream(generator, {
     path: path.join('./logs'),
 });
 
+const { level, invalidValue } = resolveLogLevel(process.env);
 
-export const $logger = pino(
-    {
-        level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-    },
-    logStream
-);
+export const $logger = pino({ level }, logStream);
+
+if (invalidValue !== null) {
+    const message = `[logger] LOG_LEVEL="${invalidValue}" is not supported (${LOG_LEVELS.join(', ')}) - using ${level}`;
+    console.warn(message);
+    $logger.warn(message);
+}

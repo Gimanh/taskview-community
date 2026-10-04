@@ -97,7 +97,7 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
         note: z.string().optional().describe('Task note, separate from the description (the title). Stored and rendered as HTML: wrap paragraphs in <p>, lists in <ul>/<ol>; plain newlines collapse. Replaces the whole note - read the current one with get_task first when appending'),
         priorityId: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional()
           .describe('Priority: 1=low, 2=medium, 3=high'),
-        goalListId: z.coerce.number().optional().nullable().describe('Move to a different list'),
+        goalListId: z.coerce.number().optional().nullable().describe('Move to a different list of the same project. Lists of other projects are rejected; moving a task between projects is done in the app'),
         startDate: z.string().optional().nullable().describe('Start date (ISO format)'),
         endDate: z.string().optional().nullable().describe('End/due date (ISO format)'),
         statusId: z.coerce.number().optional().nullable().describe('Kanban column status ID'),

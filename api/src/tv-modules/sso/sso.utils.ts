@@ -2,6 +2,8 @@ import { randomBytes } from 'crypto'
 import { resolveTxt } from 'node:dns/promises'
 import type { SsoConfigsSchemaTypeForSelect } from 'taskview-db-schemas'
 import { decryptField } from '../../utils/crypto'
+import { OutboundUrlError } from '../../utils/OutboundUrlError'
+import { resolveOutboundUrl } from '../../utils/outbound-url'
 import { generateString } from '../../utils/helpers'
 import type { CheckSsoDomainProofArgs, SsoDomainVerificationMethod } from './types'
 
@@ -100,7 +102,7 @@ export async function checkSsoDomainHttpFile(args: CheckSsoDomainProofArgs): Pro
     ]
 
   for (const url of urls) {
-    const urlError = validateMetadataUrl(url)
+    const urlError = await checkSsoFetchUrl(url)
     if (urlError) continue
 
     try {
@@ -139,42 +141,30 @@ export function generateLoginCode(): string {
   return `${generateString(12)}:${Date.now()}`.toLowerCase()
 }
 
-const BLOCKED_HOSTNAMES = ['localhost', '127.0.0.1', '0.0.0.0', '[::1]']
-const PRIVATE_IP_RANGES = [
-  /^10\./,
-  /^172\.(1[6-9]|2\d|3[01])\./,
-  /^192\.168\./,
-  /^169\.254\./,
-  /^fc00:/,
-  /^fd/,
-  /^fe80:/,
-]
+export function isPrivateSsoUrlsAllowed(): boolean {
+  return process.env.SSO_ALLOW_PRIVATE_URLS?.trim().toLowerCase() === 'true'
+}
 
-export function validateMetadataUrl(url: string): string | null {
-  let parsed: URL
-  try {
-    parsed = new URL(url)
-  } catch {
-    return 'Invalid URL format'
+export function validateSsoEnvOnStartup(): void {
+  const raw = process.env.SSO_ALLOW_PRIVATE_URLS
+  if (raw === undefined || raw.trim() === '') return
+  const normalized = raw.trim().toLowerCase()
+  if (normalized !== 'true' && normalized !== 'false') {
+    throw new Error(`SSO_ALLOW_PRIVATE_URLS has unrecognized value "${raw}". Allowed: true, false`)
   }
+}
 
-  if (parsed.protocol !== 'https:' && process.env.NODE_ENV === 'production') {
+// URLs the server fetches for SSO (IdP metadata, domain-ownership file) go through the shared SSRF guard,
+// DNS resolution included. Returns a user-facing error, or null when the URL may be fetched.
+export async function checkSsoFetchUrl(url: string): Promise<string | null> {
+  if (process.env.NODE_ENV === 'production' && !url.toLowerCase().startsWith('https://')) {
     return 'Only HTTPS URLs are allowed'
   }
-
-  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-    return 'Only HTTP(S) URLs are allowed'
+  try {
+    await resolveOutboundUrl({ url, allowPrivate: isPrivateSsoUrlsAllowed() })
+    return null
+  } catch (err) {
+    if (err instanceof OutboundUrlError) return `URL ${err.message}`
+    throw err
   }
-
-  if (BLOCKED_HOSTNAMES.includes(parsed.hostname)) {
-    return 'Localhost URLs are not allowed'
-  }
-
-  for (const range of PRIVATE_IP_RANGES) {
-    if (range.test(parsed.hostname)) {
-      return 'Private IP addresses are not allowed'
-    }
-  }
-
-  return null
 }

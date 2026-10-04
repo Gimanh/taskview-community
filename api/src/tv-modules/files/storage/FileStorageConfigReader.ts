@@ -1,5 +1,7 @@
 import type { FileStorageProvider } from 'taskview-db-schemas';
+import type { FileQuotaMode } from '../types';
 import type {
+    FileQuotaConfig,
     FileStorageActiveResolution,
     FileStorageConfig,
     FileStorageProviderConfig,
@@ -7,7 +9,9 @@ import type {
     FileStorageS3Reading,
 } from './storage.types';
 
-const DEFAULT_MAX_FILE_SIZE_MB = 50;
+const DEFAULT_MAX_FILE_SIZE_MB = 10;
+const DEFAULT_ORGANIZATION_QUOTA_MB = 100;
+const QUOTA_MODES: readonly FileQuotaMode[] = ['off', 'enforce'];
 const S3_REQUIRED_VARS = ['FILE_STORAGE_S3_BUCKET', 'FILE_STORAGE_S3_REGION', 'FILE_STORAGE_S3_ACCESS_KEY', 'FILE_STORAGE_S3_SECRET_KEY'] as const;
 
 export const FILE_STORAGE_DOCS_URL = 'https://taskview.tech/docs/configuration/environment-variables#files-task-attachments';
@@ -31,6 +35,18 @@ export class FileStorageConfigReader {
             active,
             inactiveReason,
             providers,
+            quota: FileStorageConfigReader.readQuota(env),
+        };
+    }
+
+    private static readQuota(env: NodeJS.ProcessEnv): FileQuotaConfig {
+        const raw = env.FILE_QUOTA_MODE?.trim().toLowerCase() || 'enforce';
+        const known = QUOTA_MODES.find((mode) => mode === raw);
+        const organizationMb = Number(env.FILE_QUOTA_ORGANIZATION_MB ?? DEFAULT_ORGANIZATION_QUOTA_MB);
+        return {
+            mode: known ?? 'off',
+            defaultOrganizationQuotaBytes: (Number.isFinite(organizationMb) && organizationMb >= 0 ? organizationMb : DEFAULT_ORGANIZATION_QUOTA_MB) * 1024 * 1024,
+            invalidModeValue: !known ? (env.FILE_QUOTA_MODE as string) : null,
         };
     }
 

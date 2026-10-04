@@ -1,6 +1,7 @@
 import { type } from 'arktype';
 import type { Readable } from 'node:stream';
 import type { FileStorageProvider, FilesSchemaTypeForInsert, FilesSchemaTypeForSelect } from 'taskview-db-schemas';
+import type { FilesRepository } from './FilesRepository';
 
 export const FILE_LIST_DEFAULT_LIMIT = 50;
 export const FILE_LIST_MAX_LIMIT = 200;
@@ -106,6 +107,35 @@ export type FileDto = Omit<FilesSchemaTypeForSelect, FileInternalColumns> & {
     linkedTaskIds: number[];
 };
 
+export const FileEvents = {
+    Uploaded: 'file.uploaded',
+    Renamed: 'file.renamed',
+    Deleted: 'file.deleted',
+    Attached: 'file.attached',
+    Detached: 'file.detached',
+} as const;
+export type FileEventName = (typeof FileEvents)[keyof typeof FileEvents];
+export const FILE_EVENTS = [
+    FileEvents.Uploaded,
+    FileEvents.Renamed,
+    FileEvents.Deleted,
+    FileEvents.Attached,
+    FileEvents.Detached,
+] as const;
+
+export type FileEventPayload = {
+    goalId: number;
+    file: FileDto;
+    taskIds: number[];
+    initiatorId: number;
+};
+
+export type FileEmitEventArgs = {
+    event: FileEventName;
+    file: FileDto;
+    taskIds: number[];
+};
+
 export type FileListPage = {
     items: FileDto[];
     nextCursor: string | null;
@@ -123,8 +153,45 @@ export type FileContent = {
     inline: boolean;
 };
 
-export type FileErrorCode = 'not_found' | 'forbidden' | 'too_large' | 'invalid' | 'storage_error' | 'storage_not_configured';
+export type FileErrorCode =
+    | 'not_found'
+    | 'forbidden'
+    | 'too_large'
+    | 'invalid'
+    | 'storage_error'
+    | 'storage_not_configured'
+    | 'quota_exceeded';
 export const FILE_STORAGE_NOT_CONFIGURED_MESSAGE = 'File storage is not configured on this server';
+export const FILE_QUOTA_EXCEEDED_MESSAGE = 'File storage quota exceeded';
+
+export type FileQuotaMode = 'off' | 'enforce';
+
+export type FileQuotaDto = {
+    mode: FileQuotaMode;
+    quotaBytes: number | null;
+    usedBytes: number | null;
+};
+
+export type FileQuotaState = FileQuotaDto & {
+    organizationId: number | null;
+};
+
+export type FileInsertWithinQuotaArgs = {
+    row: FileInsertArgs;
+    organizationId: number;
+    quotaBytes: number;
+};
+
+export type FileQuotaOrganization = {
+    organizationId: number;
+    quotaMb: number | null;
+};
+
+export type FileQuotaResolverArgs = {
+    repository: FilesRepository;
+    mode: FileQuotaMode;
+    defaultOrganizationQuotaBytes: number;
+};
 
 export type FileStorageStatusDto = {
     enabled: boolean;

@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events';
+import { FileEvents, type FileEventPayload } from '../tv-modules/files/types';
 import type { RecurrenceRulesSchemaTypeForSelect, SprintsSchemaTypeForSelect, TasksSchemaTypeForSelect } from 'taskview-db-schemas';
 import type { TimeEntryWithUser } from '../tv-modules/time-tracking/types';
 import type { InviteEmailLocale } from '../tv-modules/collaboration/collaboration.server.types';
@@ -9,6 +10,8 @@ export interface AppEvents {
     'task.updated': { task: TasksSchemaTypeForSelect; changes: Record<string, unknown>; initiatorId: number };
     'task.assigneesChanged': { taskId: number; userIds: number[]; initiatorId: number };
     'task.deleted': { taskId: number; goalId: number; initiatorId: number };
+    // A task (with the subtasks in taskIds) moved to another project; the copy mode emits task.created instead
+    'task.moved': { task: TasksSchemaTypeForSelect; taskIds: number[]; fromGoalId: number; toGoalId: number; initiatorId: number };
     'collaboration.userAdded': { goalId: number; email: string; initiatorId: number; locale: InviteEmailLocale };
     'collaboration.userRemoved': { goalId: number; collaborationUserId: number; initiatorId: number };
     'collaboration.rolesChanged': { goalId: number; collaborationUserId: number; initiatorId: number };
@@ -40,6 +43,11 @@ export interface AppEvents {
     'recurrence.deleted': { ruleId: number; goalId: number; initiatorId: number };
     'recurrence.instanceSkipped': { ruleId: number; goalId: number; date: string; initiatorId: number };
     'files.changed': { goalId: number; taskIds: number[]; initiatorId: number };
+    [FileEvents.Uploaded]: FileEventPayload;
+    [FileEvents.Renamed]: FileEventPayload;
+    [FileEvents.Deleted]: FileEventPayload;
+    [FileEvents.Attached]: FileEventPayload;
+    [FileEvents.Detached]: FileEventPayload;
 }
 
 type EventName = keyof AppEvents;

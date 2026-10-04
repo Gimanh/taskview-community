@@ -1,17 +1,21 @@
-import { and, desc, eq, ilike, inArray, like, lt, not, notInArray, or, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, like, lt, not, notInArray, or, sql, sum, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import {
     FileToTaskSchema,
     FilesSchema,
     type FilesSchemaTypeForSelect,
+    GoalsSchema,
+    OrganizationsSchema,
 } from 'taskview-db-schemas';
 import { Database } from '../../modules/db';
 import type {
     FileInsertArgs,
+    FileInsertWithinQuotaArgs,
     FileLinkRowsArgs,
     FileListArgs,
     FileListByProviderArgs,
     FileListCursor,
+    FileQuotaOrganization,
     FileRenameArgs,
     FileUnlinkArgs,
     FileUpdateStorageProviderArgs,
@@ -27,6 +31,43 @@ export class FilesRepository {
     async insert(args: FileInsertArgs): Promise<FilesSchemaTypeForSelect> {
         const [row] = await this.db.dbDrizzle.insert(FilesSchema).values(args).returning();
         return row;
+    }
+
+    async quotaOrganizationForGoal(goalId: number): Promise<FileQuotaOrganization | null> {
+        const [row] = await this.db.dbDrizzle
+            .select({ organizationId: OrganizationsSchema.id, quotaMb: OrganizationsSchema.fileQuotaMb })
+            .from(GoalsSchema)
+            .innerJoin(OrganizationsSchema, eq(OrganizationsSchema.id, GoalsSchema.organizationId))
+            .where(eq(GoalsSchema.id, goalId))
+            .limit(1);
+        return row ?? null;
+    }
+
+    async usedBytesInOrganization(organizationId: number): Promise<number> {
+        const [row] = await this.db.dbDrizzle
+            .select({ total: sum(FilesSchema.sizeBytes) })
+            .from(FilesSchema)
+            .innerJoin(GoalsSchema, eq(GoalsSchema.id, FilesSchema.goalId))
+            .where(eq(GoalsSchema.organizationId, organizationId));
+        return Number(row?.total ?? 0);
+    }
+
+    async insertWithinQuota(args: FileInsertWithinQuotaArgs): Promise<FilesSchemaTypeForSelect | null> {
+        return this.db.dbDrizzle.transaction(async (tx) => {
+            await tx
+                .select({ id: OrganizationsSchema.id })
+                .from(OrganizationsSchema)
+                .where(eq(OrganizationsSchema.id, args.organizationId))
+                .for('update');
+            const [usage] = await tx
+                .select({ total: sum(FilesSchema.sizeBytes) })
+                .from(FilesSchema)
+                .innerJoin(GoalsSchema, eq(GoalsSchema.id, FilesSchema.goalId))
+                .where(eq(GoalsSchema.organizationId, args.organizationId));
+            if (Number(usage?.total ?? 0) + args.row.sizeBytes > args.quotaBytes) return null;
+            const [row] = await tx.insert(FilesSchema).values(args.row).returning();
+            return row;
+        });
     }
 
     async getById(fileId: string): Promise<FilesSchemaTypeForSelect | null> {

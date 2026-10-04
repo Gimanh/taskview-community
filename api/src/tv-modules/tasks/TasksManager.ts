@@ -25,7 +25,10 @@ import type {
     UpdateTaskNoteArg,
 } from '../../types/tasks.types';
 import { TaskItemForClient } from './TaskItemForClient';
+import { TaskMovePlanner } from './TaskMovePlanner';
+import { TaskMoveRepository } from './TaskMoveRepository';
 import { TasksRepository } from './TasksRepository';
+import type { TaskArgMove, TaskMoveOutcome, TaskMovePreviewDto } from './task-move.types';
 import { FilesRepository } from '../files/FilesRepository';
 import {
     type TaskArgAdd,
@@ -37,6 +40,7 @@ import {
     type TaskArgUpdate,
     TaskFieldPermissionsForWatching,
     type TaskForClientNew,
+    type TaskUpdateResult,
     type TasksArgToggleTaskUsers,
 } from './tasks.server.types';
 import type { KanbanArgFetchTasksForColumn, KanbanArgFilters } from '../kanban/types';
@@ -263,18 +267,25 @@ export class TasksManager {
         return await this.repository.updateTransactionType(data);
     }
 
-    async updateTask(data: TaskArgUpdate): Promise<{ task: TaskForClientNew; syncFailed?: boolean } | null> {
-        if (data.statusId !== undefined) {
-            const currentTask = await this.repository.fetchTaskByIdNew(data.id);
-            if (currentTask && currentTask.statusId !== data.statusId) {
-                data.kanbanOrder = await this.repository.getNextKanbanOrder(currentTask.goalId);
-            }
+    async updateTask(data: TaskArgUpdate): Promise<TaskUpdateResult> {
+        const currentTask = await this.repository.fetchTaskByIdNew(data.id);
+        if (!currentTask) return { ok: false, reason: 'not_found' };
+
+        const foreign = await this.repository.referencesOutsideGoal({
+            taskId: data.id,
+            goalId: currentTask.goalId,
+            goalListId: data.goalListId,
+            statusId: data.statusId,
+            parentId: data.parentId,
+        });
+        if (foreign) return { ok: false, reason: 'foreign_reference' };
+
+        if (data.statusId !== undefined && currentTask.statusId !== data.statusId) {
+            data.kanbanOrder = await this.repository.getNextKanbanOrder(currentTask.goalId);
         }
 
         const task = await this.repository.updateTask(data);
-        if (!task) {
-            return null;
-        }
+        if (!task) return { ok: false, reason: 'not_found' };
 
         let syncFailed = false;
         if (data.complete !== undefined) {
@@ -291,8 +302,8 @@ export class TasksManager {
 
         const tasks = await this.extendTasksWithTagsAndAssignees([task]);
         const result = tasks[0] ?? null;
-        if (!result) return null;
-        return { task: result, syncFailed: syncFailed || undefined };
+        if (!result) return { ok: false, reason: 'not_found' };
+        return { ok: true, task: result, syncFailed: syncFailed || undefined };
     }
 
     async fetchTasksNew(data: TaskArgFetchTasksNew) {
@@ -438,6 +449,38 @@ export class TasksManager {
             initiatorId: this.user.getUserData()?.id as number,
         });
         return result;
+    }
+
+    async previewMoveToProject(args: TaskArgMove): Promise<TaskMovePreviewDto> {
+        const planner = this.movePlanner();
+        return planner.toPreview(await planner.plan(args));
+    }
+
+    async moveToProject(args: TaskArgMove): Promise<TaskMoveOutcome> {
+        const decision = await this.movePlanner().plan(args);
+        if (!decision.ok) return decision;
+        const { plan } = decision;
+        const initiatorId = this.user.getUserData()?.id as number;
+        const repository = new TaskMoveRepository();
+
+        if (plan.mode === 'copy') {
+            const copy = await repository.executeCopy({ plan, creatorId: initiatorId });
+            for (const task of copy.tasks) eventBus.emit('task.created', { task, initiatorId });
+            return { ok: true, data: { mode: 'copy', taskId: copy.rootTaskId, goalId: plan.targetGoalId } };
+        }
+
+        const task = await repository.executeMove({ plan });
+        if (!task) return { ok: false, reason: 'not_found' };
+        eventBus.emit('task.moved', { task, taskIds: plan.taskIds, fromGoalId: plan.sourceGoalId, toGoalId: plan.targetGoalId, initiatorId });
+        return { ok: true, data: { mode: 'move', taskId: task.id, goalId: plan.targetGoalId } };
+    }
+
+    private movePlanner(): TaskMovePlanner {
+        return new TaskMovePlanner({
+            repository: new TaskMoveRepository(),
+            userId: this.user.getUserData()?.id as number,
+            checkerForGoal: (goalId) => this.user.permissionsFetcher.getCheckerForGoal(goalId),
+        });
     }
 
     async fetchTasksForKanbanColumn(data: KanbanArgFetchTasksForColumn & { filters?: KanbanArgFilters }): Promise<{ tasks: TaskForClientNew[], nextCursor: string | number | null }> {

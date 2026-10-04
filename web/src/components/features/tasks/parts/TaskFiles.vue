@@ -130,6 +130,13 @@ const { uploads, upload, openDialog, retry, cancel } = useFileUpload({ goalId, t
 const { isDragging } = useFileDropZone({ target: dropTarget, enabled: canUpload, onFiles: upload })
 const actions = useFileActions({ files, taskId })
 void filesStore.fetchStorageStatus()
+watch(
+  () => [props.goalId, canManageFiles.value] as const,
+  ([id, allowed]) => {
+    if (allowed) void filesStore.fetchQuota(id)
+  },
+  { immediate: true },
+)
 
 watch(
   () => [props.taskId, canViewFiles.value] as const,

@@ -72,3 +72,6 @@ export const DIALOG_WIDTH = 600
 export const DIALOG_DESKTOP_HEIGHT = '50%'
 
 export type BaseScreenSearchResponse = TaskItem[];
+
+// Dashboard list a not-completed task belongs to, by its deadline (same rule as the server's /start lists)
+export type BaseScreenTaskBucket = 'tasks' | 'tasksToday' | 'tasksUpcoming';

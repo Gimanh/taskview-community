@@ -5,21 +5,27 @@ import { eventBus } from '../../core/EventBus';
 import { $logger } from '../../modules/logget';
 import { TasksRepository } from '../tasks/TasksRepository';
 import { FileDownloadTokens } from './FileDownloadTokens';
+import { FileQuotaResolver } from './FileQuotaResolver';
 import { FilesRepository } from './FilesRepository';
 import { FileStorageFactory } from './storage/FileStorageFactory';
 import { FileTooLargeError, HashingStream } from './storage/HashingStream';
 import {
     FILE_DOWNLOAD_TOKEN_TTL_SECONDS,
     FILE_NAME_MAX_LENGTH,
+    FILE_QUOTA_EXCEEDED_MESSAGE,
     FILE_STORAGE_NOT_CONFIGURED_MESSAGE,
+    FileEvents,
     type FileContent,
     type FileDownloadUrl,
     type FileDto,
+    type FileEmitEventArgs,
     type FileErrorCode,
+    type FileInsertArgs,
     type FileIssueDownloadUrlArgs,
     type FileLinkArgs,
     type FileListArgs,
     type FileListPage,
+    type FileQuotaDto,
     type FileRenameArgs,
     type FileResult,
     type FileStorageStatusDto,
@@ -57,6 +63,16 @@ export class FilesManager {
         return this.storages.status();
     }
 
+    private get quotas(): FileQuotaResolver {
+        const { mode, defaultOrganizationQuotaBytes } = this.storages.quota;
+        return new FileQuotaResolver({ repository: this.repository, mode, defaultOrganizationQuotaBytes });
+    }
+
+    async quotaForGoal(goalId: number): Promise<FileQuotaDto> {
+        const { organizationId: _organizationId, ...quota } = await this.quotas.forGoal(goalId);
+        return quota;
+    }
+
     async upload(args: FileUploadArgs): Promise<FileResult<FileDto>> {
         if (!this.storages.isConfigured) return fail('storage_not_configured', FILE_STORAGE_NOT_CONFIGURED_MESSAGE);
         if (args.taskId !== null) {
@@ -65,10 +81,22 @@ export class FilesManager {
             if (task.goalId !== args.goalId) return fail('forbidden', 'task belongs to another project');
         }
 
+        const quota = await this.quotas.forGoal(args.goalId);
+        const remainingBytes =
+            quota.mode === 'enforce' && quota.quotaBytes !== null && quota.usedBytes !== null
+                ? Math.max(0, quota.quotaBytes - quota.usedBytes)
+                : null;
+        if (remainingBytes === 0) {
+            args.stream.resume();
+            return fail('quota_exceeded', FILE_QUOTA_EXCEEDED_MESSAGE);
+        }
+
+        const limitBytes = remainingBytes === null ? this.maxFileSizeBytes : Math.min(this.maxFileSizeBytes, remainingBytes);
+
         const storage = this.storages.active();
         const fileId = randomUUID();
         const storageKey = `${args.goalId}/${fileId}`;
-        const hashing = new HashingStream(this.maxFileSizeBytes);
+        const hashing = new HashingStream(limitBytes);
         args.stream.on('error', (err) => hashing.destroy(err));
 
         let sizeBytes: number;
@@ -78,30 +106,42 @@ export class FilesManager {
         } catch (err) {
             args.stream.resume();
             await storage.delete(storageKey).catch(() => undefined);
-            if (err instanceof FileTooLargeError) return fail('too_large', err.message);
+            if (err instanceof FileTooLargeError) {
+                if (limitBytes < this.maxFileSizeBytes) return fail('quota_exceeded', FILE_QUOTA_EXCEEDED_MESSAGE);
+                return fail('too_large', err.message);
+            }
             $logger.error(err, '[FilesManager] storage put failed');
             return fail('storage_error');
         }
 
-        let row: FilesSchemaTypeForSelect;
+        const fileRow: FileInsertArgs = {
+            id: fileId,
+            goalId: args.goalId,
+            uploaderId: args.uploaderId,
+            uploaderEmail: args.uploaderEmail,
+            name: this.normalizeName(args.originalName),
+            originalName: this.normalizeName(args.originalName),
+            mimeType: args.mimeType,
+            sizeBytes,
+            checksumSha256: hashing.digestHex(),
+            storageProvider: storage.provider,
+            storageKey,
+        };
+
+        let row: FilesSchemaTypeForSelect | null;
         try {
-            row = await this.repository.insert({
-                id: fileId,
-                goalId: args.goalId,
-                uploaderId: args.uploaderId,
-                uploaderEmail: args.uploaderEmail,
-                name: this.normalizeName(args.originalName),
-                originalName: this.normalizeName(args.originalName),
-                mimeType: args.mimeType,
-                sizeBytes,
-                checksumSha256: hashing.digestHex(),
-                storageProvider: storage.provider,
-                storageKey,
-            });
+            row =
+                quota.mode === 'enforce' && quota.organizationId !== null && quota.quotaBytes !== null
+                    ? await this.repository.insertWithinQuota({ row: fileRow, organizationId: quota.organizationId, quotaBytes: quota.quotaBytes })
+                    : await this.repository.insert(fileRow);
         } catch (err) {
             await storage.delete(storageKey).catch(() => undefined);
             $logger.error(err, '[FilesManager] insert failed');
             return fail('storage_error');
+        }
+        if (!row) {
+            await storage.delete(storageKey).catch(() => undefined);
+            return fail('quota_exceeded', FILE_QUOTA_EXCEEDED_MESSAGE);
         }
 
         const linkedTaskIds: number[] = [];
@@ -115,8 +155,10 @@ export class FilesManager {
             linkedTaskIds.push(args.taskId);
         }
 
+        const dto = this.toDto(row, linkedTaskIds);
         this.emitChanged(args.goalId, linkedTaskIds);
-        return ok(this.toDto(row, linkedTaskIds));
+        this.emitFileEvent({ event: FileEvents.Uploaded, file: dto, taskIds: linkedTaskIds });
+        return ok(dto);
     }
 
     async listForGoal(args: FileListArgs): Promise<FileListPage> {
@@ -147,8 +189,10 @@ export class FilesManager {
         if (files.some((f) => f.goalId !== task.goalId)) return fail('forbidden', 'file belongs to another project');
 
         await this.repository.link(args);
+        const dtos = await this.toDtos(files);
         this.emitChanged(task.goalId, [args.taskId]);
-        return ok(await this.toDtos(files));
+        for (const dto of dtos) this.emitFileEvent({ event: FileEvents.Attached, file: dto, taskIds: [args.taskId] });
+        return ok(dtos);
     }
 
     async unlink(args: FileUnlinkArgs): Promise<FileResult<null>> {
@@ -156,7 +200,9 @@ export class FilesManager {
         if (!file) return fail('not_found');
         const removed = await this.repository.unlink(args);
         if (!removed) return fail('not_found', 'file is not linked to this task');
+        const [dto] = await this.toDtos([file]);
         this.emitChanged(file.goalId, [args.taskId]);
+        this.emitFileEvent({ event: FileEvents.Detached, file: dto, taskIds: [args.taskId] });
         return ok(null);
     }
 
@@ -166,15 +212,19 @@ export class FilesManager {
         const name = this.keepExtension(this.normalizeName(args.name), current.originalName);
         const row = await this.repository.rename({ fileId: args.fileId, name });
         if (!row) return fail('not_found');
-        const linked = await this.repository.linkedTaskIdsFor([row.id]);
-        this.emitChanged(row.goalId, linked.get(row.id) ?? []);
-        return ok(this.toDto(row, linked.get(row.id) ?? []));
+        const taskIds = (await this.repository.linkedTaskIdsFor([row.id])).get(row.id) ?? [];
+        const dto = this.toDto(row, taskIds);
+        this.emitChanged(row.goalId, taskIds);
+        this.emitFileEvent({ event: FileEvents.Renamed, file: dto, taskIds });
+        return ok(dto);
     }
 
     async deleteForever(fileId: string): Promise<FileResult<null>> {
         const file = await this.repository.getById(fileId);
         if (!file) return fail('not_found');
         const linked = (await this.repository.linkedTaskIdsFor([fileId])).get(fileId) ?? [];
+        // Snapshot before the row is gone: the event describes the file that was deleted
+        const dto = this.toDto(file, linked);
 
         await this.repository.delete(fileId);
         try {
@@ -184,6 +234,7 @@ export class FilesManager {
         }
 
         this.emitChanged(file.goalId, linked);
+        this.emitFileEvent({ event: FileEvents.Deleted, file: dto, taskIds: linked });
         return ok(null);
     }
 
@@ -213,6 +264,15 @@ export class FilesManager {
 
     private emitChanged(goalId: number, taskIds: number[]) {
         eventBus.emit('files.changed', { goalId, taskIds, initiatorId: this.initiatorId });
+    }
+
+    private emitFileEvent(args: FileEmitEventArgs) {
+        eventBus.emit(args.event, {
+            goalId: args.file.goalId,
+            file: args.file,
+            taskIds: args.taskIds,
+            initiatorId: this.initiatorId,
+        });
     }
 
     private async toDtos(rows: FilesSchemaTypeForSelect[]): Promise<FileDto[]> {

@@ -4,7 +4,7 @@ import { FILE_STORAGE_DOCS_URL } from '../storage/FileStorageConfigReader';
 import { FileStorageFactory } from '../storage/FileStorageFactory';
 import { FileStorageNotConfiguredError } from '../storage/FileStorageNotConfiguredError';
 
-const STORAGE_VARS = ['FILE_STORAGE_PROVIDER', 'FILE_STORAGE_LOCAL_DIR', 'FILE_STORAGE_S3_BUCKET'] as const;
+const STORAGE_VARS = ['FILE_STORAGE_PROVIDER', 'FILE_STORAGE_LOCAL_DIR', 'FILE_STORAGE_S3_BUCKET', 'FILE_QUOTA_MODE'] as const;
 
 describe('FileStorageFactory startup', () => {
     const saved: Partial<Record<(typeof STORAGE_VARS)[number], string | undefined>> = {};
@@ -66,5 +66,15 @@ describe('FileStorageFactory startup', () => {
         const factory = FileStorageFactory.getInstance();
         expect(factory.status()).toEqual({ enabled: true, maxFileSizeBytes: factory.maxFileSizeBytes });
         expect(factory.active().provider).toBe('local');
+    });
+    it('warns about an unsupported quota mode and keeps quotas off', () => {
+        process.env.FILE_STORAGE_PROVIDER = 'local';
+        process.env.FILE_STORAGE_LOCAL_DIR = './.test-data/files';
+        process.env.FILE_QUOTA_MODE = 'strict';
+
+        FileStorageFactory.validateOnStartup();
+
+        expect($logger.warn).toHaveBeenCalledWith(expect.stringContaining('FILE_QUOTA_MODE="strict" is not supported'));
+        expect(FileStorageFactory.getInstance().quota.mode).toBe('off');
     });
 });

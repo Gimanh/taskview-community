@@ -9,6 +9,7 @@ import { WebhooksRepository } from './WebhooksRepository';
 import { WebhooksManager } from './WebhooksManager';
 import type { WebhookDeliverJobData } from './types';
 import type { Dispatcher } from '../../core/Dispatcher';
+import { FILE_EVENTS } from '../files/types';
 
 const WEBHOOK_DELIVER_JOB = 'webhook-deliver';
 const MAX_ATTEMPTS = 3;
@@ -22,6 +23,11 @@ export class WebhooksDispatcher implements Dispatcher {
         eventBus.on('task.created', (data) => this.dispatch('task.created', data.task.goalId, data));
         eventBus.on('task.updated', (data) => this.dispatch('task.updated', data.task.goalId, data));
         eventBus.on('task.deleted', (data) => this.dispatch('task.deleted', data.goalId, data));
+        // Both projects hear about a move: the task left one and arrived in the other
+        eventBus.on('task.moved', async (data) => {
+            await this.dispatch('task.moved', data.fromGoalId, data);
+            await this.dispatch('task.moved', data.toGoalId, data);
+        });
         eventBus.on('task.assigneesChanged', (data) => this.dispatchAssigneesChanged(data));
         eventBus.on('time-entry.started', (data) => this.dispatch('time-entry.started', data.goalId, data));
         eventBus.on('time-entry.stopped', (data) => this.dispatch('time-entry.stopped', data.goalId, data));
@@ -37,6 +43,9 @@ export class WebhooksDispatcher implements Dispatcher {
         eventBus.on('sprint.resumed', (data) => this.dispatchSprintLifecycle('sprint.resumed', data));
         eventBus.on('sprint.deleted', (data) => this.dispatch('sprint.deleted', data.goalId, data));
         eventBus.on('task.assignedToSprint', (data) => this.dispatch('task.assignedToSprint', data.goalId, data));
+        for (const event of FILE_EVENTS) {
+            eventBus.on(event, (data) => this.dispatch(event, data.goalId, data));
+        }
     }
 
     async registerWorkers(): Promise<void> {

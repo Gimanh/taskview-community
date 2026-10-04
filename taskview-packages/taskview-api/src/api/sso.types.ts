@@ -107,3 +107,15 @@ export type SsoPublicUrls = {
   scimEndpointUrl: string
   apiPublicUrlConfigured: boolean
 }
+
+// The organization is required: the endpoint is restricted to its admins
+export type SsoArgParseMetadata = {
+  url: string
+  organizationId: number
+}
+
+export type SsoParsedMetadata = {
+  samlEntryPoint: string
+  samlCert: string
+  samlLogoutUrl: string
+}

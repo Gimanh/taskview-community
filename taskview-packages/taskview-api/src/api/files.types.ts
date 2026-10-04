@@ -23,6 +23,14 @@ export type TvFileDownloadUrl = {
     expiresAt: string;
 };
 
+export type TvFileQuotaMode = 'off' | 'enforce';
+
+export type TvFileQuota = {
+    mode: TvFileQuotaMode;
+    quotaBytes: number | null;
+    usedBytes: number | null;
+};
+
 export type TvFileStorageStatus = {
     enabled: boolean;
     maxFileSizeBytes: number;

@@ -75,10 +75,16 @@ describe('Files module', () => {
     beforeAll(async () => {
         const db = Database.getInstance();
         const client = await db.getClient();
-        for (const file of (await fs.readdir(MIGRATION_DIR)).sort()) {
-            await client.query(await fs.readFile(join(MIGRATION_DIR, file), 'utf-8'));
+        // Integration specs run in parallel and re-apply migration SQL; an advisory lock keeps the DDL from racing.
+        await client.query('SELECT pg_advisory_lock(1401067)');
+        try {
+            for (const file of (await fs.readdir(MIGRATION_DIR)).sort()) {
+                await client.query(await fs.readFile(join(MIGRATION_DIR, file), 'utf-8'));
+            }
+        } finally {
+            await client.query('SELECT pg_advisory_unlock(1401067)');
+            client.release();
         }
-        client.release();
 
         server = new App(port).listen();
 

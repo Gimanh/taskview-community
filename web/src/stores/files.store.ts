@@ -12,6 +12,7 @@ import type {
 
 const PAGE_SIZE = 50
 export const FILE_TOO_LARGE_ERROR_KEY = 'files.errors.tooLarge'
+export const FILE_QUOTA_EXCEEDED_ERROR_KEY = 'files.errors.quotaExceeded'
 
 export const useFilesStore = defineStore('files', {
   state: (): FilesStoreState => ({
@@ -20,9 +21,16 @@ export const useFilesStore = defineStore('files', {
     project: { goalId: null, items: [], nextCursor: null, search: '', type: 'all', loading: false },
     uploads: [],
     storage: { enabled: null, maxFileSizeBytes: null },
+    quotaByGoal: {},
   }),
   getters: {
     storageEnabled: (state): boolean => state.storage.enabled !== false,
+
+    quotaRemaining: (state) => (goalId: number): number | null => {
+      const quota = state.quotaByGoal[goalId]
+      if (!quota || quota.mode !== 'enforce' || quota.quotaBytes === null || quota.usedBytes === null) return null
+      return Math.max(0, quota.quotaBytes - quota.usedBytes)
+    },
     filesForTask: (state) => (taskId: number): TvFile[] => state.byTask[taskId] ?? [],
     uploadsFor: (state) => (goalId: number, taskId: number | null): FileUploadItem[] =>
       state.uploads.filter((u) => u.goalId === goalId && u.taskId === taskId),
@@ -32,6 +40,15 @@ export const useFilesStore = defineStore('files', {
       if (this.storage.enabled !== null) return
       const status = await $tvApi.files.status().catch(logError)
       if (status) this.storage = { enabled: status.enabled, maxFileSizeBytes: status.maxFileSizeBytes }
+    },
+
+    async fetchQuota(goalId: number): Promise<void> {
+      const quota = await $tvApi.files.quota(goalId).catch(logError)
+      if (quota) this.quotaByGoal[goalId] = quota
+    },
+
+    refreshLoadedQuotas() {
+      for (const goalId of Object.keys(this.quotaByGoal)) void this.fetchQuota(Number(goalId))
     },
 
     async fetchForTask(taskId: number): Promise<void> {
@@ -103,6 +120,11 @@ export const useFilesStore = defineStore('files', {
         this.uploads.push({ ...item, status: 'error', errorKey: FILE_TOO_LARGE_ERROR_KEY })
         return null
       }
+      const remaining = this.quotaRemaining(args.goalId)
+      if (remaining !== null && args.file.size > remaining) {
+        this.uploads.push({ ...item, status: 'error', errorKey: FILE_QUOTA_EXCEEDED_ERROR_KEY })
+        return null
+      }
 
       this.uploads.push(item)
 
@@ -120,6 +142,7 @@ export const useFilesStore = defineStore('files', {
         })
         this.removeUpload(item.id)
         this.applyUploaded(uploaded)
+        if (this.quotaByGoal[args.goalId]) void this.fetchQuota(args.goalId)
         return uploaded
       } catch (err) {
         const current = this.uploads.find((u) => u.id === item.id)
@@ -186,6 +209,7 @@ export const useFilesStore = defineStore('files', {
         this.byTask[Number(taskId)] = this.byTask[Number(taskId)].filter((f) => f.id !== fileId)
       }
       this.project.items = this.project.items.filter((f) => f.id !== fileId)
+      this.refreshLoadedQuotas()
       return true
     },
 
@@ -223,6 +247,7 @@ export const useFilesStore = defineStore('files', {
     errorKeyFor(err: unknown): string {
       const status = (err as { response?: { status?: number } })?.response?.status
       if (status === 413) return FILE_TOO_LARGE_ERROR_KEY
+      if (status === 507) return FILE_QUOTA_EXCEEDED_ERROR_KEY
       if (status === 403) return 'files.errors.forbidden'
       if (status === 404) return 'files.errors.notFound'
       return 'files.errors.uploadFailed'

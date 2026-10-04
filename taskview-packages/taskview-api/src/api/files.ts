@@ -7,6 +7,7 @@ import type {
     TvFileLinkArgs,
     TvFileListArgs,
     TvFileListPage,
+    TvFileQuota,
     TvFileRenameArgs,
     TvFileStorageStatus,
     TvFileUnlinkArgs,
@@ -15,6 +16,10 @@ import type {
 
 export default class TvFilesApi extends TvApiBase {
     protected moduleUrl = '/module/files';
+
+    public async quota(goalId: number) {
+        return this.request(this.$axios.get<AppResponse<TvFileQuota>>(`${this.moduleUrl}/goal/${goalId}/quota`));
+    }
 
     public async status() {
         return this.request(this.$axios.get<AppResponse<TvFileStorageStatus>>(`${this.moduleUrl}/status`));
