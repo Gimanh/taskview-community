@@ -31,7 +31,11 @@ const { currentOrg } = storeToRefs(useOrganizationStore())
 const { isAdmin } = useOrgPermissions(() => currentOrg.value)
 
 const links = computed(() => [
+  { name: 'strategy', icon: 'i-lucide-target', label: 'Strategic Portfolio' },
+  { name: 'annual-planning', icon: 'i-lucide-calendar-check', label: 'Annual Planning' },
   { name: 'analytics', icon: 'i-lucide-bar-chart-3', label: t('userMenu.analytics') },
+  { name: 'erp-monitoring', icon: 'i-lucide-dollar-sign', label: 'ERP Budgeting' },
+  { name: 'risks', icon: 'i-lucide-shield-alert', label: 'Risk Register' },
   ...(isAdmin.value ? [{ name: 'invoices', icon: 'i-lucide-receipt', label: t('userMenu.invoices') }] : []),
   { name: 'time-reports', icon: 'i-lucide-clock-4', label: t('userMenu.timeReports') },
 ])

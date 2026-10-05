@@ -800,5 +800,22 @@
             "New organization-level permission billing_can_manage (group 6) narrows what an API or OAuth token may do on the billing surfaces; access itself requires the organization owner or admin role.",
             "Invoice lifecycle: issued_at, paid_at, voided_at, replaces_invoice_id (void and reissue chain), template_version and totals frozen at issue time (subtotal, discount_amount, tax_amount, total). Status transitions are validated by the API; only drafts can be edited or deleted."
         ]
+    },
+    "62": {
+        "version": "1.67.0",
+        "name": "Enterprise SPM & PPM: Stagegates, Strategy, Annual Planning, ERP, Progress Reports, Risks",
+        "releaseDate": "20261005",
+        "scripts": [
+            "/1.67.0/0.enterprise-ppm-modules.sql"
+        ],
+        "description": [
+            "Enterprise Strategic Portfolio Management and Project Portfolio Management suite:",
+            "Stagegates and phase approval cycle engine with progress calculation per gate and exit criteria.",
+            "Linkage between Strategic Objectives, Initiatives, Strategic KPIs, and Projects with multi-tier dashboards.",
+            "Annual planning cycle automation, proposal intake, multi-criteria scoring and prioritization.",
+            "ERP budget monitoring, cost center and WBS element variance tracking, and real-time webhook sync.",
+            "Automated progress reporting cadence and reminder notifications.",
+            "Enterprise Risk Management module with 5x5 probability-impact matrix and mitigation tracking."
+        ]
     }
 }

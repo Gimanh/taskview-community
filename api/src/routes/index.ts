@@ -26,6 +26,12 @@ import SprintsRoutes from '../tv-modules/sprints/SprintsRoutes';
 import RecurrenceRoutes from '../tv-modules/recurrence/RecurrenceRoutes';
 import BillingRoutes from '../tv-modules/billing/BillingRoutes';
 import InvoicesRoutes from '../tv-modules/invoices/InvoicesRoutes';
+import StagegatesRoutes from '../tv-modules/stagegates/StagegatesRoutes';
+import StrategyRoutes from '../tv-modules/strategy/StrategyRoutes';
+import AnnualPlanningRoutes from '../tv-modules/annual-planning/AnnualPlanningRoutes';
+import ErpRoutes from '../tv-modules/erp/ErpRoutes';
+import ProgressReportsRoutes from '../tv-modules/progress-reports/ProgressReportsRoutes';
+import RisksRoutes from '../tv-modules/risks/RisksRoutes';
 import type { Routable } from '../types/routable.type';
 
 type RoutableConstructor = new (...args: any[]) => Routable;
@@ -57,6 +63,12 @@ const routes: Record<string, RoutableConstructor> = {
     '/module/recurrence': RecurrenceRoutes,
     '/module/billing': BillingRoutes,
     '/module/invoices': InvoicesRoutes,
+    '/module/stagegates': StagegatesRoutes,
+    '/module/strategy': StrategyRoutes,
+    '/module/annual-planning': AnnualPlanningRoutes,
+    '/module/erp': ErpRoutes,
+    '/module/progress-reports': ProgressReportsRoutes,
+    '/module/risks': RisksRoutes,
     '/scim/v2': ScimRoutes,
     '/.well-known': OAuthWellKnownRoutes,
 };

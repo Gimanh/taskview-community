@@ -129,6 +129,46 @@
         :to="{ name: 'project-time-reports', params: { projectId: selectedProject?.id } }"
         @click="contextMenu?.close()"
       />
+      <!-- Stagegates -->
+      <UButton
+        :label="t('contextMenu.stagegates')"
+        icon="i-lucide-git-commit-horizontal"
+        variant="ghost"
+        color="neutral"
+        class="w-full justify-start"
+        :to="{ name: 'stagegates', params: { projectId: selectedProject?.id } }"
+        @click="contextMenu?.close()"
+      />
+      <!-- Progress Reports -->
+      <UButton
+        :label="t('contextMenu.progressReports')"
+        icon="i-lucide-file-text"
+        variant="ghost"
+        color="neutral"
+        class="w-full justify-start"
+        :to="{ name: 'project-progress-reports', params: { projectId: selectedProject?.id } }"
+        @click="contextMenu?.close()"
+      />
+      <!-- Risks -->
+      <UButton
+        :label="t('contextMenu.risks')"
+        icon="i-lucide-shield-alert"
+        variant="ghost"
+        color="neutral"
+        class="w-full justify-start"
+        :to="{ name: 'project-risks', params: { projectId: selectedProject?.id } }"
+        @click="contextMenu?.close()"
+      />
+      <!-- ERP Budget -->
+      <UButton
+        :label="t('contextMenu.erpBudget')"
+        icon="i-lucide-banknote"
+        variant="ghost"
+        color="neutral"
+        class="w-full justify-start"
+        :to="{ name: 'project-erp-budget', params: { projectId: selectedProject?.id } }"
+        @click="contextMenu?.close()"
+      />
 
       <USeparator class="my-1" />
 

@@ -12,6 +12,8 @@ import { validateWebhooksEnvOnStartup } from './tv-modules/webhooks/webhooks.uti
 import cookieParser from 'cookie-parser';
 import { registerAllEventHandlers, startAllWorkers } from './core/all-events';
 
+import { ensureEnterpriseTables } from './tv-modules/enterprise/ensureEnterpriseTables';
+
 export default class App {
     public app: express.Application;
     public port: number;
@@ -21,6 +23,7 @@ export default class App {
         PublicApiUrl.validateOnStartup();
         InviteEmailDispatcher.validateOnStartup();
         validateWebhooksEnvOnStartup();
+        ensureEnterpriseTables().catch((err) => console.error('Failed to ensure enterprise tables:', err));
 
         this.app = express();
         this.port = port;

@@ -6,6 +6,7 @@
   "workspaces": [
     "web",
     "api",
+    "site/*",
     "taskview-packages/*"
   ],
   "scripts": {
@@ -15,6 +16,7 @@
     "build:packages": "pnpm --filter=taskview-api --filter=taskview-db-schemas run build",
     "dev:api": "cd api && pnpm dev",
     "build:api": "cd api && pnpm build",
+    "build:docs": "node scripts/build-docs.mjs",
     "install:all": "pnpm install",
     "update:all": "pnpm update -r",
     "clean": "pnpm store prune && rm -rf node_modules",
@@ -24,11 +26,6 @@
   "devDependencies": {
     "@types/node": "^18.19.119",
     "typescript": "^5.7.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "pg": "8.20.0"
-    }
   },
   "engines": {
     "node": ">=18.0.0",
@@ -43,5 +40,8 @@
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0"
+  },
+  "overrides": {
+    "pg": "8.20.0"
   }
 }

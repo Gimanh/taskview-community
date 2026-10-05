@@ -107,6 +107,12 @@ const tools = computed<Tool[]>(() => {
     list.push({ key: 'timeReports', label: t('contextMenu.timeReports'), icon: 'i-lucide-clock', to: { name: 'project-time-reports', params: { projectId: id } }, active: () => route.name === 'project-time-reports' })
   }
 
+  // Enterprise SPM & PPM Tools
+  list.push({ key: 'stagegates', label: 'Stagegates & Approvals', icon: 'i-lucide-git-merge', to: { name: 'stagegates', params: { projectId: id } }, active: () => route.name === 'stagegates' })
+  list.push({ key: 'progressReports', label: 'Progress Reports', icon: 'i-lucide-file-text', to: { name: 'project-progress-reports', params: { projectId: id } }, active: () => route.name === 'project-progress-reports' })
+  list.push({ key: 'projectRisks', label: 'Risk Register', icon: 'i-lucide-shield-alert', to: { name: 'project-risks', params: { projectId: id } }, active: () => route.name === 'project-risks' })
+  list.push({ key: 'projectBudget', label: 'ERP Budget', icon: 'i-lucide-dollar-sign', to: { name: 'project-erp-budget', params: { projectId: id } }, active: () => route.name === 'project-erp-budget' })
+
   return list
 })
 </script>

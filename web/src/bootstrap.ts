@@ -144,6 +144,46 @@ function buildRoutes(extensions: TvWebExtension[]): RouteRecordRaw[] {
           name: 'project-time-reports',
           component: () => import('./pages/user/project-time-reports.vue'),
         },
+        {
+          path: ':projectId/stagegates',
+          name: 'stagegates',
+          component: () => import('./pages/user/stagegates.vue'),
+        },
+        {
+          path: ':projectId/progress-reports',
+          name: 'project-progress-reports',
+          component: () => import('./pages/user/progress-reports.vue'),
+        },
+        {
+          path: ':projectId/risks',
+          name: 'project-risks',
+          component: () => import('./pages/user/risks.vue'),
+        },
+        {
+          path: ':projectId/budget',
+          name: 'project-erp-budget',
+          component: () => import('./pages/user/erp-monitoring.vue'),
+        },
+        {
+          path: 'strategy',
+          name: 'strategy',
+          component: () => import('./pages/user/strategy.vue'),
+        },
+        {
+          path: 'annual-planning',
+          name: 'annual-planning',
+          component: () => import('./pages/user/annual-planning.vue'),
+        },
+        {
+          path: 'erp-monitoring',
+          name: 'erp-monitoring',
+          component: () => import('./pages/user/erp-monitoring.vue'),
+        },
+        {
+          path: 'risks',
+          name: 'risks',
+          component: () => import('./pages/user/risks.vue'),
+        },
         ...extensionOrgRoutes,
         {
           path: ':projectId?/:listId?/:taskId?',
