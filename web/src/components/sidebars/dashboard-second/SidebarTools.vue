@@ -67,6 +67,7 @@ const {
   canViewKanban,
   canViewGraph,
   canViewSprints,
+  canViewFiles,
   canManageUsers,
   canViewIntegrations,
   canViewTimeTracking,
@@ -94,6 +95,9 @@ const tools = computed<Tool[]>(() => {
   }
   if (canViewSprints.value) {
     list.push({ key: 'sprints', label: t('contextMenu.sprints'), icon: 'i-lucide-rocket', to: { name: 'sprints', params: { projectId: id } }, active: () => route.name === 'sprints' })
+  }
+  if (canViewFiles.value) {
+    list.push({ key: 'files', label: t('contextMenu.files'), icon: 'i-lucide-paperclip', to: { name: 'files', params: { projectId: id } }, active: () => route.name === 'files' })
   }
   if (canManageUsers.value) {
     list.push({ key: 'collaboration', label: t('contextMenu.collaboration'), icon: 'i-lucide-users', to: { name: 'collaboration', params: { projectId: id } }, active: () => route.name === 'collaboration' })

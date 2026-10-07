@@ -1,4 +1,5 @@
 import { type } from 'arktype';
+import { TaskArkTypeMove, TaskArkTypeMovePreview, type TaskMoveBlockReason } from './task-move.types';
 import type { Request, Response } from 'express';
 import { $logger } from '../../modules/logget';
 import {
@@ -39,6 +40,14 @@ import {
 } from './tasks.server.types';
 // import { TasksSchemaArkTypeInsert } from "taskview-db-schemas";
 
+
+const TASK_MOVE_REASON_STATUS: Record<TaskMoveBlockReason, number> = {
+    not_found: 404,
+    same_project: 400,
+    other_organization: 400,
+    is_subtask: 400,
+    no_target_permission: 403,
+};
 export class TasksController {
     /** @deprecated */
     fetchTaskById = async (req: Request, res: Response) => {
@@ -336,6 +345,24 @@ export class TasksController {
         // }
     };
 
+    previewMoveToProject = async (req: Request, res: Response) => {
+        const args = TaskArkTypeMovePreview({ taskId: req.params.taskId, targetGoalId: req.query.targetGoalId });
+        if (args instanceof type.errors) return res.status(400).send(args.summary);
+
+        const preview = await req.appUser.tasksManager.previewMoveToProject(args);
+        if (preview.reason === 'not_found') return res.status(404).send(preview.reason);
+        return res.tvJson(preview);
+    };
+
+    moveToProject = async (req: Request, res: Response) => {
+        const args = TaskArkTypeMove(req.body);
+        if (args instanceof type.errors) return res.status(400).send(args.summary);
+
+        const outcome = await req.appUser.tasksManager.moveToProject(args);
+        if (outcome.ok) return res.tvJson(outcome.data);
+        return res.status(TASK_MOVE_REASON_STATUS[outcome.reason]).send(outcome.reason);
+    };
+
     updateTask = async (req: Request, res: Response) => {
         const args = TaskArkTypeUpdate(req.body);
 
@@ -344,7 +371,12 @@ export class TasksController {
         }
 
         const result = await req.appUser.tasksManager.updateTask(args);
-        if (!result) return res.tvJson(null);
+        if (!result.ok) {
+            if (result.reason === 'foreign_reference') {
+                return res.status(400).send('List, kanban column and parent must belong to the task project; use /module/tasks/move to move a task');
+            }
+            return res.tvJson(null);
+        }
 
         return res.tvJson({ ...result.task, syncFailed: result.syncFailed });
     };

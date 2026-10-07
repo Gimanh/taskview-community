@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="panelRef"
     class="h-full relative flex flex-col gap-4 @container"
     data-testid="task-detail-panel"
   >
@@ -50,6 +51,13 @@
             :goal-id="task.goalId"
             :subtasks="task.subtasks"
             :class="[colClass(fieldId), 'pl-10']"
+          />
+          <TaskFiles
+            v-else-if="fieldId === 'files'"
+            :task-id="task.id"
+            :goal-id="task.goalId"
+            :drop-target="panelRef"
+            :class="colClass(fieldId)"
           />
           <NoteEditor
             v-else-if="fieldId === 'note'"
@@ -175,6 +183,7 @@ import TvDeadlineSelect from '@/components/features/base/TvDeadlineSelect.vue'
 import TaskRecurrence from '@/components/features/tasks/parts/TaskRecurrence.vue'
 import TaskSourceLink from '@/components/features/tasks/parts/TaskSourceLink.vue'
 import TaskSubtasks from '@/components/features/tasks/parts/TaskSubtasks.vue'
+import TaskFiles from '@/components/features/tasks/parts/TaskFiles.vue'
 import TaskDependencies from '@/components/features/tasks/parts/TaskDependencies.vue'
 import TaskIdCopy from '@/components/features/tasks/parts/TaskIdCopy.vue'
 import TvSprintSelect from '@/components/features/base/TvSprintSelect.vue'
@@ -219,6 +228,7 @@ const fieldWidthById = computed(() => {
 function colClass(id: string): string {
   return fieldWidthById.value.get(id) === 'wide' ? '@lg:col-span-2' : 'w-full'
 }
+const panelRef = ref<HTMLElement | null>(null)
 const task = computed(() => tasksStore.selectedTask ?? null)
 const projectId = computed(() => task.value?.goalId ?? 0)
 const titleValue = ref(task.value?.description ?? '')

@@ -12,6 +12,7 @@ import {
   type MainScreenAllStateResponse,
 } from '@/types/base-screen.types'
 import type { AppResponse } from '@/types/global-app.types'
+import type { BaseScreenTaskBucket } from '@/types/base-screen.types'
 import type { TaskItem } from '@/types/tasks.types'
 import { useOrganizationStore } from '@/stores/organization.store'
 
@@ -115,18 +116,18 @@ export const useBaseScreenStore = defineStore('base-screen-store', {
         localTask.complete = task.complete
 
         switch (prop) {
-        case 'tasks':
-          this.processLastAdded(task)
-          break
-        case 'tasksToday':
-          this.processToday(task)
-          break
-        case 'tasksUpcoming':
-          this.processUpcoming(task)
-          break
-        case 'tasksLastCompleted':
-          this.processLastCompleted(task)
-          break
+          case 'tasks':
+            this.processLastAdded(task)
+            break
+          case 'tasksToday':
+            this.processToday(task)
+            break
+          case 'tasksUpcoming':
+            this.processUpcoming(task)
+            break
+          case 'tasksLastCompleted':
+            this.processLastCompleted(task)
+            break
         }
       }
     },
@@ -156,17 +157,25 @@ export const useBaseScreenStore = defineStore('base-screen-store', {
       }
     },
 
+    bucketForTask(task: TaskItem): BaseScreenTaskBucket {
+      if (!task.endDate) return 'tasks'
+      const today = useDateFormat(new Date(), 'YYYY-MM-DD').value
+      return task.endDate.slice(0, 10) <= today ? 'tasksToday' : 'tasksUpcoming'
+    },
+
+    addCreatedTask(task: TaskItem) {
+      const bucket = this.bucketForTask(task)
+      if (!this[bucket].some((t) => t.id === task.id)) this[bucket].unshift(task)
+    },
+
     processLastCompleted(task: TaskItem) {
       if (task.complete) return
-
-      const deadline = new Date(useDateFormat(new Date(task.endDate || ''), 'YYYY-MM-DD').value)
-      const today = new Date(useDateFormat(new Date(), 'YYYY-MM-DD').value)
 
       const removeTask = () => {
         this.tasksLastCompleted = this.tasksLastCompleted.filter((t) => t.id !== task.id)
       }
 
-      const key = !task.endDate ? 'tasks' : deadline <= today ? 'tasksToday' : 'tasksUpcoming'
+      const key = this.bucketForTask(task)
 
       const existingTask = this[key].find((tsk) => tsk.id === task.id)
 

@@ -29,6 +29,7 @@
     <SsoSamlForm
       v-if="form.protocol === 'saml'"
       v-model:form="form"
+      :organization-id="organizationId"
       :callback-url-placeholder="callbackUrlPlaceholder"
       :has-secrets="hasSecrets"
     />
@@ -84,6 +85,7 @@ const form = defineModel<SsoFormData>('form', { required: true })
 import type { SsoConfig } from 'taskview-api'
 
 defineProps<{
+  organizationId: number
   isEditing: boolean
   saving: boolean
   callbackUrlPlaceholder: string

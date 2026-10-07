@@ -1,4 +1,6 @@
 import { type } from 'arktype';
+import { OUTBOUND_URL_ERROR_CODES } from '../../utils/outbound-url.types';
+import { FILE_EVENTS } from '../files/types';
 
 const NumberFromString = type('string|number').pipe((v) => Number(v));
 
@@ -51,6 +53,7 @@ export const WEBHOOK_EVENTS = [
     'task.created',
     'task.updated',
     'task.deleted',
+    'task.moved',
     'task.assigneesChanged',
     'time-entry.started',
     'time-entry.stopped',
@@ -66,11 +69,12 @@ export const WEBHOOK_EVENTS = [
     'sprint.resumed',
     'sprint.deleted',
     'task.assignedToSprint',
+    ...FILE_EVENTS,
 ] as const;
 
 export type WebhookEvent = typeof WEBHOOK_EVENTS[number];
 
-export const WEBHOOK_URL_ERROR_CODES = ['invalid', 'scheme', 'private', 'unresolvable'] as const;
+export const WEBHOOK_URL_ERROR_CODES = OUTBOUND_URL_ERROR_CODES;
 
 export type WebhookUrlErrorCode = typeof WEBHOOK_URL_ERROR_CODES[number];
 

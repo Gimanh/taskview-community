@@ -10,6 +10,7 @@ export const OrganizationsSchema = pgSchema('tv_auth').table('organizations', {
   isPersonal: integer('is_personal').notNull().default(0),
   plan: varchar().notNull().default('free'),
   timeTrackingAutostopHours: integer('time_tracking_autostop_hours').default(24),
+  fileQuotaMb: integer('file_quota_mb'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 })

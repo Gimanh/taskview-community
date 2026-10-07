@@ -12,7 +12,7 @@ import { OrganizationRepository } from '../organizations/OrganizationRepository'
 import { createSsoProvider } from './providers/provider-factory'
 import { SsoRepository } from './SsoRepository'
 import { parseSamlMetadata } from './saml-metadata-parser'
-import { generateLoginCode, isSsoDomainVerified, stripSecrets, validateMetadataUrl } from './sso.utils'
+import { checkSsoFetchUrl, generateLoginCode, isSsoDomainVerified, stripSecrets } from './sso.utils'
 import {
   SsoConfigArkTypeCreate,
   SsoConfigArkTypeUpdate,
@@ -326,7 +326,7 @@ export class SsoController {
     const metadataUrl = req.query.url as string
     if (!metadataUrl) return res.status(400).tvJson({ message: 'url is required' })
 
-    const urlError = validateMetadataUrl(metadataUrl)
+    const urlError = await checkSsoFetchUrl(metadataUrl)
     if (urlError) return res.status(400).tvJson({ message: urlError })
 
     try {

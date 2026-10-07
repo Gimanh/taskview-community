@@ -1,5 +1,8 @@
 <template>
-  <div class="relative">
+  <div
+    class="relative"
+    :data-testid="`dashboard-section-${sectionKey}`"
+  >
     <!-- Timeline connecting line under the icon -->
     <div class="absolute left-6 top-14 bottom-0 w-px bg-accented hidden sm:block" />
 

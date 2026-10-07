@@ -155,7 +155,7 @@ there is no browser to complete an authorization flow.
 
 ## Available tools
 
-61 tools covering the full TaskView surface.
+68 tools covering the full TaskView surface.
 
 **Projects (Goals)** — `list_goals`, `create_goal`, `update_goal`, `delete_goal`
 
@@ -178,6 +178,8 @@ there is no browser to complete an authorization flow.
 **Organizations** — `list_organizations`, `get_organization`, `create_organization`, `update_organization`, `delete_organization`, `list_organization_members`, `add_organization_member`, `update_organization_member_role`, `remove_organization_member`
 
 **Time tracking** — `start_timer`, `stop_timer`, `get_active_timer`, `log_time`, `list_time_entries`, `update_time_entry`, `delete_time_entry`, `get_time_summary`, `get_time_report`, `get_time_contributors`
+
+**Files** — `list_files`, `get_file`, `get_file_download_url`, `attach_files_to_task`, `detach_file_from_task`, `rename_file`, `delete_file` (metadata and short-lived download links for existing attachments; uploading goes through the app)
 
 ## How it works
 

@@ -164,6 +164,15 @@ export const TvPermissions: Record<Uppercase<keyof GoalPermissions>, keyof GoalP
      * Can view sprint analytics (burndown, velocity)
      */
     SPRINT_CAN_VIEW_ANALYTICS: 'sprint_can_view_analytics',
+
+    /**
+     * Can list, open and download project files
+     */
+    FILE_CAN_VIEW: 'file_can_view',
+    /**
+     * Can upload, rename, link/unlink and delete project files
+     */
+    FILE_CAN_MANAGE: 'file_can_manage',
 } as const;
 
 export type GoalPermissions = {
@@ -217,4 +226,7 @@ export type GoalPermissions = {
     sprint_can_manage?: true;
     sprint_can_assign_tasks?: true;
     sprint_can_view_analytics?: true;
+
+    file_can_view?: true;
+    file_can_manage?: true;
 };

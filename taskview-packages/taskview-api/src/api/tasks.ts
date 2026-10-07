@@ -1,6 +1,6 @@
 import TvApiBase from "./base"
 import type { AppResponse } from "./base.types";
-import { type TaskArgAdd, type TaskResponseAdd, type TaskArgDelete, type TaskResponseDelete, type TaskArgUpdate, type TaskResponseUpdate, type TaskResponseFetchById, type TaskArgFetch, type TaskResponseFetch, type TaskArgToggleAssignee, type TaskResponseToggleAssignee, type TaskResponseFetchTaskHistory, type TaskResponseRecoveryTaskHistory } from "./tasks.api.types"
+import { type TaskArgAdd, type TaskResponseAdd, type TaskArgDelete, type TaskResponseDelete, type TaskArgUpdate, type TaskResponseUpdate, type TaskResponseFetchById, type TaskArgFetch, type TaskResponseFetch, type TaskArgToggleAssignee, type TaskResponseToggleAssignee, type TaskResponseFetchTaskHistory, type TaskResponseRecoveryTaskHistory, type TaskArgMoveToProject, type TaskResponseMovePreview, type TaskResponseMoveToProject } from "./tasks.api.types"
 
 export default class TvTaskApi extends TvApiBase {
     protected moduleUrl = '/module/tasks';
@@ -69,6 +69,20 @@ export default class TvTaskApi extends TvApiBase {
             this.$axios.post<AppResponse<TaskResponseRecoveryTaskHistory>>(
                 `${this.moduleUrl}/${taskId}/restore/${historyId}`
             )
+        );
+    }
+
+    public async movePreview(args: TaskArgMoveToProject) {
+        return this.request(
+            this.$axios.get<AppResponse<TaskResponseMovePreview>>(
+                `${this.moduleUrl}/${args.taskId}/move-preview`, { params: { targetGoalId: args.targetGoalId } }
+            )
+        );
+    }
+
+    public async moveToProject(args: TaskArgMoveToProject) {
+        return this.request(
+            this.$axios.post<AppResponse<TaskResponseMoveToProject>>(`${this.moduleUrl}/move`, args)
         );
     }
 }

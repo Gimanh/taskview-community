@@ -87,7 +87,7 @@ const api = {
               $axios
                 .post<{
                   access: string;
-                  refresh: string;
+                  refresh?: string;
                 }>(
                   '/module/auth/refresh/token',
                   qs.stringify({ refreshToken }),
@@ -95,7 +95,7 @@ const api = {
                 .then((data) => {
                   console.log('We got refresh data tokens', data)
                   $ls.setToken(data.data.access)
-                  $ls.setRefreshToken(data.data.refresh)
+                  if (data.data.refresh) $ls.setRefreshToken(data.data.refresh)
                   $ls.checkTokenAndSetForAxios()
                   $ls.updateUserStoreByToken()
                   originalRequest.headers.Authorization = `Bearer ${data.data.access}`
