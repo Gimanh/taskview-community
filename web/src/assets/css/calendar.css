@@ -1,0 +1,50 @@
+/*
+ * FullCalendar "classic" palette mapped to Nuxt UI tokens. Replaces the stock palette.css so
+ * light/dark follow the app's `.dark` class instead of FullCalendar's own color scheme.
+ * Declared on :root because drag mirrors are appended to <body>, outside the calendar.
+ */
+:root {
+  --fc-classic-button: var(--ui-bg-elevated);
+  --fc-classic-button-border: var(--ui-border);
+  --fc-classic-button-strong: var(--ui-bg-accented);
+  --fc-classic-button-strong-border: var(--ui-border-accented);
+  --fc-classic-button-outline: color-mix(in oklab, var(--ui-primary) 50%, transparent);
+  --fc-classic-button-foreground: var(--ui-text);
+
+  --fc-classic-primary: var(--ui-primary);
+  --fc-classic-primary-foreground: var(--ui-bg);
+
+  --fc-classic-event: var(--ui-primary);
+  --fc-classic-event-contrast: var(--ui-bg);
+  --fc-classic-background-event: var(--ui-primary);
+  --fc-classic-background-event-opacity: 15%;
+  --fc-classic-background-event-foreground-opacity: 50%;
+  --fc-classic-highlight: color-mix(in oklab, var(--ui-primary) 15%, transparent);
+  --fc-classic-today: color-mix(in oklab, var(--ui-primary) 4%, transparent);
+  --fc-classic-now: var(--ui-error);
+  --fc-classic-small-dot-width: 8px;
+  --fc-classic-large-dot-width: 10px;
+
+  --fc-classic-background: var(--ui-bg);
+  --fc-classic-faint: var(--ui-bg-muted);
+  --fc-classic-muted: var(--ui-bg-elevated);
+  --fc-classic-strong: var(--ui-bg-accented);
+
+  --fc-classic-foreground: var(--ui-text);
+  --fc-classic-faint-foreground: var(--ui-text-dimmed);
+  --fc-classic-muted-foreground: var(--ui-text-muted);
+
+  --fc-classic-border: var(--ui-border);
+  --fc-classic-strong-border: var(--ui-border-accented);
+}
+
+/* Day headers and day numbers are nav links; the classic theme underlines them on hover */
+.tv-calendar [role='link']:hover {
+  text-decoration: none;
+}
+
+/* Empty weekend days in the week view (see ProjectCalendar's collapsedWeekdays).
+   !important because FullCalendar's skeleton sizes columns with !important utilities. */
+.tv-calendar .tv-calendar-collapsed {
+  flex: 0 0 4.5rem !important;
+}

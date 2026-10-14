@@ -63,6 +63,16 @@
         :to="{ name: 'kanban', params: { projectId: selectedProject?.id } }"
         @click="contextMenu?.close()"
       />
+      <!-- Calendar -->
+      <UButton
+        :label="t('contextMenu.calendar')"
+        icon="i-lucide-calendar-days"
+        variant="ghost"
+        color="neutral"
+        class="w-full justify-start"
+        :to="{ name: 'calendar', params: { projectId: selectedProject?.id } }"
+        @click="contextMenu?.close()"
+      />
       <!-- Graph -->
       <UButton
         v-if="canViewGraph"

@@ -91,6 +91,7 @@ const tools = computed<Tool[]>(() => {
   if (canViewKanban.value) {
     list.push({ key: 'kanban', label: t('contextMenu.kanban'), icon: 'i-lucide-kanban', to: { name: 'kanban', params: { projectId: id } }, active: () => route.name === 'kanban' })
   }
+  list.push({ key: 'calendar', label: t('contextMenu.calendar'), icon: 'i-lucide-calendar-days', to: { name: 'calendar', params: { projectId: id } }, active: () => route.name === 'calendar' })
   if (canViewGraph.value) {
     list.push({ key: 'graph', label: t('contextMenu.graph'), icon: 'i-lucide-git-graph', to: { name: 'graph', params: { projectId: id } }, active: () => route.name === 'graph' })
   }

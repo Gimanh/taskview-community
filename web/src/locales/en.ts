@@ -113,6 +113,7 @@ export default {
     tasks: 'Tasks',
     kanban: 'Kanban',
     graph: 'Graph',
+    calendar: 'Calendar',
     sprints: 'Sprints',
     files: 'Files',
     automations: 'Automations',
@@ -297,6 +298,22 @@ export default {
       saved: 'Recurrence saved',
       skipped: 'Occurrence skipped',
       deleted: 'Series deleted',
+    },
+  },
+  calendar: {
+    title: 'Calendar',
+    today: 'Today',
+    previous: 'Previous period',
+    next: 'Next period',
+    views: {
+      month: 'Month',
+      week: 'Week',
+      list: 'List',
+    },
+    subtasks: 'Subtasks: {count}',
+    empty: {
+      title: 'Tasks with dates appear here',
+      description: 'Open a task and set a start or end date to see it on the calendar.',
     },
   },
   graph: {

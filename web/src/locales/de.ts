@@ -99,6 +99,7 @@ export default {
     tasks: 'Liste',
     kanban: 'Kanban',
     graph: 'Graph',
+    calendar: 'Kalender',
     sprints: 'Sprints',
     files: 'Dateien',
     automations: 'Automatisierungen',
@@ -283,6 +284,22 @@ export default {
       saved: 'Wiederholung gespeichert',
       skipped: 'Termin übersprungen',
       deleted: 'Serie gelöscht',
+    },
+  },
+  calendar: {
+    title: 'Kalender',
+    today: 'Heute',
+    previous: 'Vorheriger Zeitraum',
+    next: 'Nächster Zeitraum',
+    views: {
+      month: 'Monat',
+      week: 'Woche',
+      list: 'Liste',
+    },
+    subtasks: 'Unteraufgaben: {count}',
+    empty: {
+      title: 'Hier erscheinen Aufgaben mit Datum',
+      description: 'Öffnen Sie eine Aufgabe und legen Sie ein Start- oder Enddatum fest, um sie im Kalender zu sehen.',
     },
   },
   graph: {

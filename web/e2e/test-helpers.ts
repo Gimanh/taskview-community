@@ -3,6 +3,16 @@ import { TEST_USER } from './fixtures/auth'
 
 const API_URL = 'http://localhost:1401'
 
+// ── API auth ──
+
+/** Logs in through the API and returns a JWT for helpers that call it directly. */
+async function apiToken(page: Page): Promise<string> {
+  const response = await page.request.post(`${API_URL}/module/auth/login`, {
+    form: { login: TEST_USER.login, password: TEST_USER.password },
+  })
+  return (await response.json()).access
+}
+
 // ── Cleanup ──
 
 const createdProjectIds: number[] = []
@@ -18,11 +28,7 @@ export function trackProjectId(id: number | null) {
 export async function cleanupProjects(page: Page) {
   if (createdProjectIds.length === 0) return
 
-  const loginResponse = await page.request.post(`${API_URL}/module/auth/login`, {
-    form: { login: TEST_USER.login, password: TEST_USER.password },
-  })
-  const loginData = await loginResponse.json()
-  const token = loginData.access
+  const token = await apiToken(page)
   if (!token) {
     console.error('Cleanup: failed to get auth token, skipping project deletion')
     return
@@ -126,6 +132,35 @@ export async function navigateToGraph(page: Page, projectName: string) {
   await openProjectMenu(page, projectName)
   await page.getByRole('link', { name: /graph/i }).click()
   await page.waitForURL(/\/graph/, { timeout: 10000 })
+}
+
+// ── API seeding ──
+
+/**
+ * Creates a project through the API (tracked for cleanup) and returns its id.
+ */
+export async function createProjectViaApi(page: Page, name: string): Promise<number> {
+  const token = await apiToken(page)
+  const organizationId = await page.evaluate(() => Number(localStorage.getItem('tv_current_org_id')))
+  const response = await page.request.post(`${API_URL}/module/goals`, {
+    data: { name, organizationId },
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const id = (await response.json()).response.id as number
+  trackProjectId(id)
+  return id
+}
+
+/**
+ * Creates a task through the API, for tests that need fields the quick-add input can't set (e.g. dates).
+ */
+export async function createTaskViaApi(page: Page, task: { goalId: number; description: string; startDate?: string; endDate?: string }): Promise<number> {
+  const token = await apiToken(page)
+  const response = await page.request.post(`${API_URL}/module/tasks`, {
+    data: task,
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return (await response.json()).response.id as number
 }
 
 // ── Tasks ──

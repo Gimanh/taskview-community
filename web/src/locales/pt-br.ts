@@ -112,6 +112,7 @@ export default {
     tasks: 'Tarefas',
     kanban: 'Kanban',
     graph: 'Gráfico',
+    calendar: 'Calendário',
     sprints: 'Sprints',
     files: 'Arquivos',
     automations: 'Automações',
@@ -296,6 +297,22 @@ export default {
       saved: 'Recorrência salva',
       skipped: 'Ocorrência ignorada',
       deleted: 'Série excluída',
+    },
+  },
+  calendar: {
+    title: 'Calendário',
+    today: 'Hoje',
+    previous: 'Período anterior',
+    next: 'Próximo período',
+    views: {
+      month: 'Mês',
+      week: 'Semana',
+      list: 'Lista',
+    },
+    subtasks: 'Subtarefas: {count}',
+    empty: {
+      title: 'Aqui aparecem as tarefas com data',
+      description: 'Abra uma tarefa e defina uma data de início ou de término para vê-la no calendário.',
     },
   },
   graph: {

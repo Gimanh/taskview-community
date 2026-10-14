@@ -65,6 +65,11 @@ function buildRoutes(extensions: TvWebExtension[]): RouteRecordRaw[] {
           component: () => import('./pages/user/graph.vue'),
         },
         {
+          path: ':projectId/calendar',
+          name: 'calendar',
+          component: () => import('./pages/user/calendar.vue'),
+        },
+        {
           path: ':projectId/sprints',
           name: 'sprints',
           component: () => import('./pages/user/sprints.vue'),
