@@ -23,8 +23,9 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
     }
   }
 
-  async function fetch() {
-    if (loading.value) return
+  let pending: Promise<void> | null = null
+
+  async function load() {
     loading.value = true
     try {
       const result = await $tvApi.uiPreferences.fetch()
@@ -34,7 +35,18 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
       loaded.value = true
     } finally {
       loading.value = false
+      pending = null
     }
+  }
+
+  function fetch(): Promise<void> {
+    pending ??= load()
+    return pending
+  }
+
+  async function ensureLoaded() {
+    if (loaded.value) return
+    await fetch().catch(() => undefined)
   }
 
   const flush = useDebounceFn(async () => {
@@ -76,6 +88,7 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
     loading,
     saving,
     fetch,
+    ensureLoaded,
     setSection,
     getSection,
     setSetting,

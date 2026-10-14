@@ -47,7 +47,11 @@ export class ScimController {
     const { scimOrg, scimConfig } = res.locals
     const email = decodeURIComponent(req.params.id)
 
-    const operations = req.body.Operations || []
+    const operations = req.body.Operations
+
+    if (!Array.isArray(operations) || operations.length === 0) {
+      return res.status(400).json(toScimError(400, 'Operations must be a non-empty array'))
+    }
 
     for (const op of operations) {
       if (op.op === 'replace' && (op.path === 'active' || op.value?.active !== undefined)) {

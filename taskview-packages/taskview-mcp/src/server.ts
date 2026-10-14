@@ -11,6 +11,7 @@ import { registerNotificationsTools } from './tools/notifications.js'
 import { registerStartTools } from './tools/start.js'
 import { registerOrganizationsTools } from './tools/organizations.js'
 import { registerTimeTrackingTools } from './tools/time-tracking.js'
+import { registerFilesTools } from './tools/files.js'
 
 const INSTRUCTIONS = `TaskView is a project and task management platform.
 
@@ -26,7 +27,11 @@ WORKFLOW: all IDs are numeric and must be resolved first — never guess them. M
 
 list_tasks is paginated: page is 0-based, ~30 tasks per page — request the next page until one returns fewer than 30. Completed tasks are hidden unless showCompleted is set. Use sortBy ("date" or "priority") with descending to control ordering.
 
-AGENDA: for "what do I have today", "what is coming up" or "what did I finish recently", call get_agenda. It returns today, upcoming, recently completed and undated tasks across every project in a single request, with the day boundary computed on the server. Do NOT answer those questions by listing projects and walking their tasks — that is many times slower and gets the day wrong for anyone outside UTC. Pass the user's IANA timezone when you know it.`
+AGENDA: for "what do I have today", "what is coming up" or "what did I finish recently", call get_agenda. It returns today, upcoming, recently completed and undated tasks across every project in a single request, with the day boundary computed on the server. Do NOT answer those questions by listing projects and walking their tasks — that is many times slower and gets the day wrong for anyone outside UTC. Pass the user's IANA timezone when you know it.
+
+TASK FIELDS: "description" is the task title (short, one line). "note" is the task body, stored as HTML - send <p>, <ul>, <ol>, <b> markup, never plain newlines. update_task replaces the note entirely, so to append read it with get_task first and send the merged HTML.
+
+FILES: tasks and projects can have file attachments, identified by a uuid fileId. list_files shows them (pass taskId for one task, omit it for the whole project), get_file_download_url gives a 5-minute link to the bytes, attach_files_to_task / detach_file_from_task move existing files between tasks. Uploading new files is not available over MCP — ask the user to upload in the app, then attach.`
 
 export function createMcpServer(api: TvApi) {
   const server = new McpServer(
@@ -48,6 +53,7 @@ export function createMcpServer(api: TvApi) {
   registerStartTools(server, api)
   registerOrganizationsTools(server, api)
   registerTimeTrackingTools(server, api)
+  registerFilesTools(server, api)
 
   return server
 }

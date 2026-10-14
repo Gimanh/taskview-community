@@ -316,7 +316,7 @@ export default class AuthController {
         res.cookie(this.refreshTokenCookieName, refreshToken, {
             httpOnly: true,
             secure: true,
-            sameSite: "none",
+            sameSite: "lax",
             maxAge: this.parseLifetimeToMs(this.jwtRefreshExp),
         });
     }
@@ -325,7 +325,7 @@ export default class AuthController {
         res.clearCookie(this.refreshTokenCookieName, {
             httpOnly: true,
             secure: true,
-            sameSite: "none",
+            sameSite: "lax",
         });
     }
 
@@ -652,25 +652,23 @@ export default class AuthController {
     };
 
     refreshTokens = async (req: Request, res: Response) => {
-        let refreshToken = req.cookies[this.refreshTokenCookieName];
+        const cookieToken: string | undefined = req.cookies[this.refreshTokenCookieName] || undefined;
+        const bodyData = RefreshTokenSchema.safeParse(req.body);
+        const bodyToken = bodyData.success && bodyData.data.refreshToken ? bodyData.data.refreshToken : undefined;
 
-        if (!refreshToken) {
-            const refreshData = RefreshTokenSchema.safeParse(req.body);
-
-            if (!refreshData.success) {
-                return res.status(400).send({ message: 'Invalid refresh token' });
-            }
-
-            refreshToken = refreshData.data.refreshToken;
-            $logger.info(`Refresh token found in body`);
-        } else {
-            $logger.info(`Refresh token found in cookies`);
+        if (!cookieToken && !bodyToken) {
+            return res.status(400).send({ message: 'Invalid refresh token' });
         }
 
-        const payload = await AuthController.validateTokens(refreshToken);
+        const cookiePayload = cookieToken ? await AuthController.validateTokens(cookieToken) : undefined;
+        const bodyPayload = bodyToken ? await AuthController.validateTokens(bodyToken) : undefined;
+        const payload = cookiePayload ?? bodyPayload;
+        $logger.info(
+            `Refresh token source: ${cookiePayload ? 'cookie' : bodyPayload ? 'body' : 'none valid'}` +
+            ` (cookie: ${cookieToken ? 'yes' : 'no'}, body: ${bodyToken ? 'yes' : 'no'})`
+        );
 
         if (!payload) {
-            $logger.info('Refresh token validation failed');
             this.clearRefreshToken(res);
             return res.status(400).end();
         }
@@ -687,7 +685,9 @@ export default class AuthController {
 
         await this.setRefreshToken(res, newTokens.refresh);
 
-        return res.json(newTokens);
+        if (bodyPayload?.id === payload.id) return res.json(newTokens);
+        const { refresh: _refresh, ...withoutRefresh } = newTokens;
+        return res.json(withoutRefresh);
     };
 
     getLoginOptions = async (_req: Request, res: Response) => {

@@ -8,6 +8,7 @@ export type TaskDetailField = {
 export const TASK_DETAIL_FIELDS = [
   { id: 'subtasks', width: 'wide' },
   { id: 'note', width: 'wide' },
+  { id: 'files', width: 'wide' },
   { id: 'status', width: 'narrow' },
   { id: 'priority', width: 'narrow' },
   { id: 'assignees', width: 'narrow' },

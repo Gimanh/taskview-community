@@ -17,6 +17,7 @@
         :can-manage="canManageGraph"
         @open="openTask"
         @add="(task) => addEdge({ source: task.id, target: taskId, task })"
+        @created="(task) => placeOnGraph({ task, side: 'before' })"
         @remove="removeEdge"
       />
 
@@ -37,6 +38,7 @@
         :can-manage="canManageGraph"
         @open="openTask"
         @add="(task) => addEdge({ source: taskId, target: task.id, task })"
+        @created="(task) => placeOnGraph({ task, side: 'after' })"
         @remove="removeEdge"
       />
     </div>
@@ -51,8 +53,9 @@ import { $tvApi } from '@/plugins/axios'
 import { logError } from '@/helpers/Helper'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
+import { useGraphStore } from '@/stores/graph.store'
 import TaskDependencyGroup from './TaskDependencyGroup.vue'
-import type { DependencyEntry, DependencyTask } from './TaskDependencies.types'
+import type { DependencyEdgeAddArgs, DependencyEntry, DependencyPlaceOnGraphArgs, DependencyTask } from './TaskDependencies.types'
 
 const props = defineProps<{
   taskId: number
@@ -60,8 +63,10 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
+const toast = useToast()
 const { canViewGraph, canManageGraph } = useGoalPermissions()
 const { openTask } = useTaskDetailPanel()
+const graphStore = useGraphStore()
 
 const edges = ref<GraphResponseAddEdge[]>([])
 const taskNames = ref(new Map<number, DependencyTask>())
@@ -111,16 +116,29 @@ async function load() {
 
 watch(() => props.taskId, load, { immediate: true })
 
-async function addEdge({ source, target, task }: { source: number; target: number; task: DependencyTask }) {
+async function addEdge({ source, target, task }: DependencyEdgeAddArgs) {
   const edge = await $tvApi.graph.addEdge({ source, target }).catch((err: unknown) => logError(err))
-  if (!edge) return
+  if (!edge) {
+    toast.add({ title: t('tasks.dependencies.addFailed'), color: 'error' })
+    return
+  }
   taskNames.value.set(task.id, task)
   edges.value.push(edge)
+  graphStore.insertEdge(edge)
+}
+
+// A task created from the picker goes onto the open graph right next to this task,
+// before its edge is added, so the edge has both ends on screen
+function placeOnGraph({ task, side }: DependencyPlaceOnGraphArgs) {
+  const position = graphStore.positionNear({ taskId: props.taskId, task, side })
+  graphStore.insertTask({ task, position })
+  if (position) void graphStore.updateTaskPosition({ id: task.id, nodeGraphPosition: position })
 }
 
 async function removeEdge(edgeId: number) {
   const result = await $tvApi.graph.deleteEdge(edgeId).catch((err: unknown) => logError(err))
   if (!result) return
   edges.value = edges.value.filter((e) => e.id !== edgeId)
+  graphStore.removeEdge(edgeId)
 }
 </script>

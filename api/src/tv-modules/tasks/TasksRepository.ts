@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, exists, gt, ilike, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import type { TasksSchemaTypeForSelect } from 'taskview-db-schemas';
-import { TasksAssigneeSchema, TasksSchema, TasksToTagsSchema } from 'taskview-db-schemas';
+import { GoalsListSchema, TasksAssigneeSchema, TasksSchema, TasksStatusesSchema, TasksToTagsSchema } from 'taskview-db-schemas';
 import { FetchTasksQueryBuilder } from '../../core/FetchTasksQueryBuilder';
 import { Database } from '../../modules/db';
 import { $logger } from '../../modules/logget';
@@ -28,6 +28,9 @@ import {
     type TaskArgDelete,
     type TaskArgFetchTasksNew,
     type TaskArgUpdate,
+    type TaskHistoryRestoreArgs,
+    type TaskReferenceCheckArgs,
+    TASK_PROJECT_BOUND_COLUMNS,
     TASK_UPDATABLE_COLUMNS,
     type TasksArgToggleTaskUsers,
 } from './tasks.server.types';
@@ -470,14 +473,25 @@ export class TasksRepository {
         return [];
     }
 
-    async recoveryTaskHistory(historyId: number, _taskId: number): Promise<boolean> {
+    async recoveryTaskHistory(historyId: number, taskId: number): Promise<boolean> {
         const history = await this.fetchTaskHistoryById(historyId);
+        const current = await this.fetchTaskByIdNew(taskId);
 
-        if (!history) {
+        if (!history || !current) {
             return false;
         }
 
-        return await this.updateTaskState(history.task);
+        return await this.updateTaskState(this.restorableState({ snapshot: history.task, currentGoalId: current.goalId }));
+    }
+
+    private restorableState(args: TaskHistoryRestoreArgs): TaskItemInDb {
+        const state: Partial<TaskItemInDb> = { ...args.snapshot };
+        delete state.goal_id;
+        delete state.owner;
+        if (args.snapshot.goal_id !== args.currentGoalId) {
+            for (const column of TASK_PROJECT_BOUND_COLUMNS) delete state[column];
+        }
+        return state as TaskItemInDb;
     }
 
     async updateTaskStatusId(data: TasksUpdateStatusId): Promise<boolean> {
@@ -625,11 +639,11 @@ export class TasksRepository {
         const order =
             data.sortBy === 'priority'
                 ? [
-                      descending
-                          ? sql`${TasksSchema.priorityId} DESC NULLS LAST`
-                          : sql`${TasksSchema.priorityId} ASC NULLS LAST`,
-                      desc(TasksSchema.id),
-                  ]
+                    descending
+                        ? sql`${TasksSchema.priorityId} DESC NULLS LAST`
+                        : sql`${TasksSchema.priorityId} ASC NULLS LAST`,
+                    desc(TasksSchema.id),
+                ]
                 : [descending ? desc(TasksSchema.id) : asc(TasksSchema.id)];
 
         const limit = 30;
@@ -720,6 +734,37 @@ export class TasksRepository {
             minKanbanOrder: sql<number>`MIN(kanban_order)`
         }).from(TasksSchema).where(and(...conditions)));
         return result?.[0]?.minKanbanOrder ?? null;
+    }
+
+    async referencesOutsideGoal(args: TaskReferenceCheckArgs): Promise<boolean> {
+        const db = this.db.dbDrizzle;
+        if (args.goalListId != null) {
+            const [list] = await db.select({ goalId: GoalsListSchema.goalId }).from(GoalsListSchema).where(eq(GoalsListSchema.id, args.goalListId));
+            if (!list || list.goalId !== args.goalId) return true;
+        }
+        if (args.statusId != null) {
+            const [status] = await db
+                .select({ goalId: TasksStatusesSchema.goalId })
+                .from(TasksStatusesSchema)
+                .where(eq(TasksStatusesSchema.id, args.statusId));
+            if (!status || status.goalId !== args.goalId) return true;
+        }
+        if (args.parentId != null) {
+            // Walk up from the new parent: another project, or reaching the task itself (a cycle), is not allowed
+            let current: number | null = args.parentId;
+            const seen = new Set<number>();
+            while (current !== null) {
+                if (current === args.taskId || seen.has(current)) return true;
+                seen.add(current);
+                const [row] = await db
+                    .select({ goalId: TasksSchema.goalId, parentId: TasksSchema.parentId })
+                    .from(TasksSchema)
+                    .where(eq(TasksSchema.id, current));
+                if (!row || row.goalId !== args.goalId) return true;
+                current = row.parentId;
+            }
+        }
+        return false;
     }
 
     static readonly KANBAN_ORDER_GAP = 16384;

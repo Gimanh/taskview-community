@@ -1,21 +1,15 @@
-import { eq } from 'drizzle-orm';
-import {
-    CollaborationUsersSchema,
-    CollaborationUsersToGoalsSchema,
-    GoalsSchema,
-    UsersSchema,
-} from 'taskview-db-schemas';
 import { getCentrifugoClient } from '../../core/CentrifugoClient';
 import type { Dispatcher } from '../../core/Dispatcher';
 import { eventBus } from '../../core/EventBus';
-import { Database } from '../../modules/db';
 import { $logger } from '../../modules/logget';
+import { RealtimeRepository } from '../realtime/RealtimeRepository';
 import { SprintScheduler } from './SprintScheduler';
 
 const SPRINT_RT_EVENT = 'sprints.changed';
 
 export class SprintsDispatcher implements Dispatcher {
     private readonly scheduler = new SprintScheduler();
+    private readonly realtime = new RealtimeRepository();
 
     register(): void {
         eventBus.on('sprint.created', (d) => this.notifyGoalMembers(d.sprint.goalId, { sprintId: d.sprint.id }));
@@ -36,36 +30,13 @@ export class SprintsDispatcher implements Dispatcher {
     }
 
     private async notifyGoalMembers(goalId: number, payload: Record<string, unknown>): Promise<void> {
+        const centrifugo = getCentrifugoClient();
+        if (!centrifugo.isEnabled()) return;
         try {
-            const memberIds = await this.resolveGoalMemberIds(goalId);
-            if (memberIds.length === 0) return;
-            const centrifugo = getCentrifugoClient();
-            await Promise.all(
-                memberIds.map((userId) => centrifugo.publishToUser(userId, SPRINT_RT_EVENT, { goalId, ...payload }))
-            );
+            const userIds = await this.realtime.fetchGoalMemberIds(goalId);
+            await centrifugo.broadcastToUsers({ userIds, event: SPRINT_RT_EVENT, data: { goalId, ...payload } });
         } catch (err) {
             $logger.error(err, '[SprintsDispatcher] real-time publish failed');
         }
-    }
-
-    private async resolveGoalMemberIds(goalId: number): Promise<number[]> {
-        const db = Database.getInstance();
-        const [ownerRows, collabRows] = await Promise.all([
-            db.dbDrizzle.select({ id: GoalsSchema.owner }).from(GoalsSchema).where(eq(GoalsSchema.id, goalId)).limit(1),
-            db.dbDrizzle
-                .select({ id: UsersSchema.id })
-                .from(CollaborationUsersToGoalsSchema)
-                .innerJoin(
-                    CollaborationUsersSchema,
-                    eq(CollaborationUsersToGoalsSchema.userId, CollaborationUsersSchema.id)
-                )
-                .innerJoin(UsersSchema, eq(CollaborationUsersSchema.email, UsersSchema.email))
-                .where(eq(CollaborationUsersToGoalsSchema.goalId, goalId)),
-        ]);
-
-        const ids = new Set<number>();
-        if (ownerRows[0]?.id) ids.add(ownerRows[0].id);
-        collabRows.forEach((r) => ids.add(r.id));
-        return [...ids];
     }
 }

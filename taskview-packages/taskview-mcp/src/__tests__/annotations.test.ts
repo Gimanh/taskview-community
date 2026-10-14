@@ -10,6 +10,7 @@ import { registerNotificationsTools } from '../tools/notifications.js'
 import { registerStartTools } from '../tools/start.js'
 import { registerOrganizationsTools } from '../tools/organizations.js'
 import { registerTimeTrackingTools } from '../tools/time-tracking.js'
+import { registerFilesTools } from '../tools/files.js'
 import { mockServer, mockApi, findTool } from './setup.js'
 
 const REQUIRED_HINTS = ['readOnlyHint', 'destructiveHint', 'openWorldHint'] as const
@@ -28,6 +29,7 @@ function registerEverything() {
   registerStartTools(server, api)
   registerOrganizationsTools(server, api)
   registerTimeTrackingTools(server, api)
+  registerFilesTools(server, api)
   return tools
 }
 

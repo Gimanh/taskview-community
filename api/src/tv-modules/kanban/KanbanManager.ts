@@ -1,5 +1,6 @@
 import { chunk } from '../../utils/helpers';
 import type { AppUser } from '../../core/AppUser';
+import { eventBus } from '../../core/EventBus';
 import type { TaskForClientNew } from '../tasks/tasks.server.types';
 import { KanbanRepository } from './KanbanRepository';
 import {
@@ -33,7 +34,16 @@ export class KanbanManager {
     }
 
     async deleteStatus(data: DeleteKanbanStatus) {
-        return await this.repository.deleteStatus(data.id);
+        const status = await this.repository.fetchStatus(data.id);
+        const deleted = await this.repository.deleteStatus(data.id);
+        if (status && deleted) {
+            eventBus.emit('kanban.statusDeleted', {
+                statusId: status.id,
+                goalId: status.goal_id,
+                initiatorId: this.user.getUserData()?.id as number,
+            });
+        }
+        return deleted;
     }
 
     async addStatus(data: KanbanAddStatus): Promise<KanbanStatusForClient | null> {
@@ -92,9 +102,16 @@ export class KanbanManager {
         return tasksWithNewOrder;
     }
 
-    async updateTasksOrderAndColumn(data: KanbanArgUpdateTasksOrder): Promise<{ tasks: { id: number, kanbanOrder: number | null }[], columnVersion: number | null }> {
+    async updateTasksOrderAndColumn(data: KanbanArgUpdateTasksOrder): Promise<{ tasks: { id: number, kanbanOrder: number | null }[], columnVersion: number | null } | null> {
         const KANBAN_GAP = 16384;
         const MIN_GAP_THRESHOLD = 1e-6;
+
+        const previous = await this.user.tasksManager.repository.fetchTaskByIdNew(data.taskId);
+        if (!previous || previous.goalId !== data.goalId) return null;
+        if (data.columnId !== null) {
+            const columns = await this.repository.getAllStatusesForGoal(data.goalId);
+            if (!columns.some((column) => column.id === data.columnId)) return null;
+        }
 
         // Получаем порядки предыдущей и следующей задач
         let prevTask = data.prevTaskId
@@ -181,11 +198,18 @@ export class KanbanManager {
         }
 
         if (newOrder !== null) {
-            await this.user.tasksManager.repository.updateTask({
+            const task = await this.user.tasksManager.repository.updateTask({
                 id: data.taskId,
                 kanbanOrder: newOrder,
                 statusId: data.columnId,
             });
+            if (task && previous.statusId !== task.statusId) {
+                eventBus.emit('task.updated', {
+                    task,
+                    changes: { statusId: task.statusId, kanbanOrder: newOrder },
+                    initiatorId: this.user.getUserData()?.id as number,
+                });
+            }
         }
 
         const result = await this.repository.getTasksOrderForColumnAndCursor(

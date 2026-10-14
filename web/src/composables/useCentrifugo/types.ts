@@ -42,6 +42,25 @@ export type RealtimeEventMap = {
     ruleId: number
     taskId: number
   }
+  'files.changed': {
+    event: 'files.changed'
+    goalId: number
+    taskIds: number[]
+  }
+  'tasks.changed': {
+    event: 'tasks.changed'
+    goalId: number
+    taskIds: number[]
+    kind: RealtimeTaskChangeKind
+  }
+}
+
+export type RealtimeTaskChangeKind = 'created' | 'updated' | 'deleted'
+
+export type RealtimeTaskRefresh = {
+  taskId: number
+  goalId: number
+  created: boolean
 }
 
 export type RealtimeEvent = RealtimeEventMap[keyof RealtimeEventMap]

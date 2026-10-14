@@ -25,6 +25,7 @@
             v-model="taskDescription"
             :placeholder="t('tasks.addPlaceholder')"
             class="w-full"
+            data-testid="main-add-task-input"
             @keyup.enter="addTask"
           />
         </UFormField>
@@ -54,6 +55,7 @@
               variant="soft"
               class="w-full justify-start"
               :ui="{leadingIcon: 'size-4.5'}"
+              data-testid="main-add-task-deadline"
             />
             <template #content>
               <UCalendar
@@ -88,6 +90,7 @@
           :disabled="!canAdd"
           :loading="loading"
           variant="soft"
+          data-testid="main-add-task-submit"
           @click="addTask"
         >
           {{ t('tasks.add') }}
@@ -219,15 +222,7 @@ async function addTask() {
     })
 
     if (task) {
-      // Add task to appropriate list based on deadline
-      if (props.noDates) {
-        baseScreenStore.tasks.unshift(task)
-      } else if (props.upcomingTask) {
-        baseScreenStore.tasksUpcoming.unshift(task)
-      } else {
-        baseScreenStore.tasksToday.unshift(task)
-      }
-
+      baseScreenStore.addCreatedTask(task)
       emit('added')
       close()
     }

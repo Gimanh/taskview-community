@@ -45,6 +45,13 @@
         :ui="{ base: 'rounded-xl' }"
       />
     </UFormField>
+
+    <USwitch
+      v-model="showTaskId"
+      :label="t('uiCustomization.others.showTaskId')"
+      :description="t('uiCustomization.others.showTaskIdHint')"
+      data-testid="show-task-id-switch"
+    />
   </div>
 </template>
 
@@ -77,6 +84,13 @@ const defaultView = computed<DefaultView>({
   get: () => store.settings.defaultView ?? 'tasks',
   set: (value) => {
     store.setSetting('defaultView', value === 'tasks' ? undefined : value)
+  },
+})
+
+const showTaskId = computed<boolean>({
+  get: () => store.settings.showTaskId === 1,
+  set: (value) => {
+    store.setSetting('showTaskId', value ? 1 : undefined)
   },
 })
 

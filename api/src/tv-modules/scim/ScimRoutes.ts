@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import type { Routable } from '../../types/routable.type'
 import { ScimAuth } from './middlewares/ScimAuth'
+import { ScimContentType } from './middlewares/ScimContentType'
 import { ScimController } from './ScimController'
 
 export default class ScimRoutes implements Routable {
@@ -18,6 +19,7 @@ export default class ScimRoutes implements Routable {
   }
 
   initRoutes() {
+    this.router.use(ScimContentType)
     this.router.use(ScimAuth)
 
     this.router.get('/Users', this.controller.listUsers)

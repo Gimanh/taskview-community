@@ -1,17 +1,10 @@
-import { eq } from 'drizzle-orm';
-import {
-    CollaborationUsersSchema,
-    CollaborationUsersToGoalsSchema,
-    GoalsSchema,
-    UsersSchema,
-} from 'taskview-db-schemas';
 import { getCentrifugoClient } from '../../core/CentrifugoClient';
 import type { Dispatcher } from '../../core/Dispatcher';
 import type { AppEvents } from '../../core/EventBus';
 import { eventBus } from '../../core/EventBus';
 import { getJobQueue } from '../../core/JobQueue';
-import { Database } from '../../modules/db';
 import { $logger } from '../../modules/logget';
+import { RealtimeRepository } from '../realtime/RealtimeRepository';
 import { RecurrenceGenerator } from './RecurrenceGenerator';
 import { RecurrenceRepository } from './RecurrenceRepository';
 
@@ -21,6 +14,7 @@ const RECURRENCE_RT_EVENT = 'recurrence.instanceCreated';
 export class RecurrenceDispatcher implements Dispatcher {
     private readonly generator = new RecurrenceGenerator();
     private readonly repository = new RecurrenceRepository();
+    private readonly realtime = new RealtimeRepository();
 
     register(): void {
         // The heart of the lazy model: completing the open instance materializes the next one.
@@ -86,24 +80,20 @@ export class RecurrenceDispatcher implements Dispatcher {
 
     private async onTaskCreated(data: AppEvents['task.created']): Promise<void> {
         if (!data.task.recurrenceRuleId) return;
+        const centrifugo = getCentrifugoClient();
+        if (!centrifugo.isEnabled()) return;
         try {
-            const memberIds = await this.resolveGoalMemberIds(data.task.goalId);
-            if (memberIds.length === 0) return;
-            const centrifugo = getCentrifugoClient();
+            const userIds = await this.realtime.fetchGoalMemberIds(data.task.goalId);
             // Task fields are gated per role (TaskFieldPermissionsForWatching),
             // and recipients have different roles — so the broadcast carries ids
             // only, never content (same thin-event convention as goals.changed).
             // Each client fetches the task through REST, where fields are
             // cleaned for that user (fail closed).
-            await Promise.all(
-                memberIds.map((userId) =>
-                    centrifugo.publishToUser(userId, RECURRENCE_RT_EVENT, {
-                        goalId: data.task.goalId,
-                        ruleId: data.task.recurrenceRuleId,
-                        taskId: data.task.id,
-                    })
-                )
-            );
+            await centrifugo.broadcastToUsers({
+                userIds,
+                event: RECURRENCE_RT_EVENT,
+                data: { goalId: data.task.goalId, ruleId: data.task.recurrenceRuleId, taskId: data.task.id },
+            });
         } catch (err) {
             $logger.error(err, '[RecurrenceDispatcher] real-time publish failed');
         }
@@ -114,26 +104,5 @@ export class RecurrenceDispatcher implements Dispatcher {
             goalId: data.goalId,
             collabUserId: data.collaborationUserId,
         });
-    }
-
-    private async resolveGoalMemberIds(goalId: number): Promise<number[]> {
-        const db = Database.getInstance();
-        const [ownerRows, collabRows] = await Promise.all([
-            db.dbDrizzle.select({ id: GoalsSchema.owner }).from(GoalsSchema).where(eq(GoalsSchema.id, goalId)).limit(1),
-            db.dbDrizzle
-                .select({ id: UsersSchema.id })
-                .from(CollaborationUsersToGoalsSchema)
-                .innerJoin(
-                    CollaborationUsersSchema,
-                    eq(CollaborationUsersToGoalsSchema.userId, CollaborationUsersSchema.id)
-                )
-                .innerJoin(UsersSchema, eq(CollaborationUsersSchema.email, UsersSchema.email))
-                .where(eq(CollaborationUsersToGoalsSchema.goalId, goalId)),
-        ]);
-
-        const ids = new Set<number>();
-        if (ownerRows[0]?.id) ids.add(ownerRows[0].id);
-        for (const row of collabRows) ids.add(row.id);
-        return [...ids];
     }
 }

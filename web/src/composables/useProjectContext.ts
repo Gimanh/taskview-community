@@ -12,8 +12,8 @@ import { useKanbanStore } from '@/stores/kanban.store'
 export type ProjectContext = {
   tags: ComputedRef<TagItem[]>
   users: ComputedRef<CollaborationResponseFetchAllUsers[]>
-  statuses: Ref<KanbanColumnItem[]>
-  lists: Ref<GoalListItem[]>
+  statuses: ComputedRef<KanbanColumnItem[]>
+  lists: ComputedRef<GoalListItem[]>
 }
 
 const PROJECT_CONTEXT_KEY: InjectionKey<ProjectContext> = Symbol('projectContext')
@@ -22,6 +22,8 @@ export function provideProjectContext(goalId: Ref<number>) {
   const tagsStore = useTagsStore()
   const goalsStore = useGoalsStore()
   const collaborationStore = useCollaborationStore()
+  const kanbanStore = useKanbanStore()
+  const goalListsStore = useGoalListsStore()
 
   const tags = computed(() => {
     const id = goalId.value
@@ -36,16 +38,24 @@ export function provideProjectContext(goalId: Ref<number>) {
   const users = computed(() =>
     isCurrentProject.value ? collaborationStore.users : fetchedUsers.value,
   )
-  const statuses = ref<KanbanColumnItem[]>([])
-  const lists = ref<GoalListItem[]>([])
+  const fetchedStatuses = ref<KanbanColumnItem[]>([])
+  const fetchedLists = ref<GoalListItem[]>([])
+  // The current project reads the global stores live: they may still be
+  // loading, and fetching replaces their arrays rather than filling them
+  const statuses = computed(() =>
+    isCurrentProject.value ? kanbanStore.statuses : fetchedStatuses.value,
+  )
+  const lists = computed(() =>
+    isCurrentProject.value ? goalListsStore.lists : fetchedLists.value,
+  )
   let requestId = 0
 
   watch(goalId, async (id) => {
     if (id <= 0) {
       fetchedUsers.value = []
       isCurrentProject.value = false
-      statuses.value = []
-      lists.value = []
+      fetchedStatuses.value = []
+      fetchedLists.value = []
       return
     }
 
@@ -55,11 +65,7 @@ export function provideProjectContext(goalId: Ref<number>) {
 
     // If we're inside this project already, reuse data from global stores
     if (goalsStore.selectedItemId === id) {
-      const kanbanStore = useKanbanStore()
-      const goalListsStore = useGoalListsStore()
       isCurrentProject.value = true
-      statuses.value = kanbanStore.statuses
-      lists.value = goalListsStore.lists
       return
     }
     isCurrentProject.value = false
@@ -77,12 +83,12 @@ export function provideProjectContext(goalId: Ref<number>) {
 
     if (usersResult) fetchedUsers.value = usersResult
     if (columnsResult) {
-      statuses.value = [
+      fetchedStatuses.value = [
         { id: DEFAULT_ID, name: 'msg.allTasks', goalId: id, viewOrder: 0 },
         ...columnsResult,
       ]
     }
-    if (listsResult) lists.value = listsResult
+    if (listsResult) fetchedLists.value = listsResult
   }, { immediate: true })
 
   const context: ProjectContext = { tags, users, statuses, lists }

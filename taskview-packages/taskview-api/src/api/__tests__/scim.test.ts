@@ -249,3 +249,66 @@ describe('SCIM: isolation between organizations', () => {
     }
   })
 })
+
+describe('SCIM: application/scim+json content type (RFC 7644 §3.1)', () => {
+  const scimJsonHeaders = () => ({
+    Authorization: `Bearer ${scimToken}`,
+    'Content-Type': 'application/scim+json',
+  })
+
+  it('should create user with userName only', async () => {
+    const email = `scim-json-create-${Date.now()}@scim-e2e.example`
+
+    const res = await axios.post(`${scimUrl}/Users`, { userName: email }, {
+      headers: scimJsonHeaders(),
+      validateStatus: () => true,
+    })
+
+    expect(res.status).toBe(201)
+    expect(res.data.userName).toBe(email)
+    expect(res.headers['content-type']).toContain('application/scim+json')
+
+    const list = await axios.get(`${scimUrl}/Users`, { headers: scimHeaders() })
+    expect(list.data.Resources.map((r: any) => r.userName)).toContain(email)
+  })
+
+  it('should deactivate user', async () => {
+    const email = `scim-json-deactivate-${Date.now()}@scim-e2e.example`
+    await axios.post(`${scimUrl}/Users`, { userName: email }, { headers: scimHeaders() })
+
+    const res = await axios.patch(
+      `${scimUrl}/Users/${encodeURIComponent(email)}`,
+      {
+        schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp'],
+        Operations: [{ op: 'replace', path: 'active', value: false }],
+      },
+      { headers: scimJsonHeaders(), validateStatus: () => true },
+    )
+
+    expect(res.status).toBe(200)
+    expect(res.data.active).toBe(false)
+
+    const get = await axios.get(`${scimUrl}/Users/${encodeURIComponent(email)}`, {
+      headers: scimHeaders(),
+      validateStatus: () => true,
+    })
+    expect(get.status).toBe(404)
+  })
+
+  it('should reject PATCH without Operations instead of reporting success', async () => {
+    const email = `scim-json-noops-${Date.now()}@scim-e2e.example`
+    await axios.post(`${scimUrl}/Users`, { userName: email }, { headers: scimHeaders() })
+
+    const res = await axios.patch(
+      `${scimUrl}/Users/${encodeURIComponent(email)}`,
+      { schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp'] },
+      { headers: scimJsonHeaders(), validateStatus: () => true },
+    )
+
+    expect(res.status).toBe(400)
+    expect(res.data.schemas).toContain('urn:ietf:params:scim:api:messages:2.0:Error')
+
+    const get = await axios.get(`${scimUrl}/Users/${encodeURIComponent(email)}`, { headers: scimHeaders() })
+    expect(get.data.active).toBe(true)
+  })
+})

@@ -9,6 +9,8 @@ import { LoginMethods } from './tv-modules/auth/LoginMethods';
 import { InviteEmailDispatcher } from './tv-modules/collaboration/InviteEmailDispatcher';
 import { PublicApiUrl } from './modules/public-url';
 import { validateWebhooksEnvOnStartup } from './tv-modules/webhooks/webhooks.utils';
+import { validateSsoEnvOnStartup } from './tv-modules/sso/sso.utils';
+import { FileStorageFactory } from './tv-modules/files/storage/FileStorageFactory';
 import cookieParser from 'cookie-parser';
 import { registerAllEventHandlers, startAllWorkers } from './core/all-events';
 
@@ -21,6 +23,8 @@ export default class App {
         PublicApiUrl.validateOnStartup();
         InviteEmailDispatcher.validateOnStartup();
         validateWebhooksEnvOnStartup();
+        validateSsoEnvOnStartup();
+        FileStorageFactory.validateOnStartup();
 
         this.app = express();
         this.port = port;
@@ -63,6 +67,8 @@ export default class App {
         this.app.use(corsMiddleware);
         this.app.use(cookieParser());
         this.app.use(express.json({
+            // RFC 7644 §3.1: SCIM clients (Entra ID, Okta, OneLogin) send application/scim+json
+            type: ['application/json', 'application/scim+json'],
             verify: (req: any, _res, buf) => {
                 // Store raw body for webhook signature verification github and gitlab integrations
                 if (req.url?.includes('/webhook/')) {

@@ -12,6 +12,7 @@
       block
       class="text-muted"
       :ui="{ base: 'rounded-xl justify-start' }"
+      data-testid="dependency-add"
     />
     <template #content>
       <div class="w-72 p-2 flex flex-col gap-2">
@@ -23,6 +24,7 @@
           size="sm"
           autofocus
           :loading="loading"
+          data-testid="dependency-search"
         />
         <div class="max-h-64 overflow-y-auto flex flex-col gap-0.5">
           <button
@@ -51,6 +53,20 @@
             {{ t('tasks.dependencies.noResults') }}
           </p>
         </div>
+        <UButton
+          v-if="canAddTask && newTaskName"
+          icon="i-lucide-plus"
+          :label="t('tasks.dependencies.create', { name: newTaskName })"
+          :loading="creating"
+          color="primary"
+          variant="ghost"
+          size="sm"
+          block
+          class="justify-start"
+          :ui="{ label: 'truncate' }"
+          data-testid="dependency-create"
+          @click="create"
+        />
       </div>
     </template>
   </UPopover>
@@ -60,9 +76,10 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
-import { ALL_TASKS_LIST_ID } from 'taskview-api'
+import { ALL_TASKS_LIST_ID, type Task } from 'taskview-api'
 import { $tvApi } from '@/plugins/axios'
 import { logError } from '@/helpers/Helper'
+import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import type { DependencyTask } from './TaskDependencies.types'
 
 const props = defineProps<{
@@ -72,14 +89,20 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   select: [task: DependencyTask]
+  created: [task: Task]
 }>()
 
 const { t } = useI18n()
+const toast = useToast()
+const { canAddTask } = useGoalPermissions()
 
 const open = ref(false)
 const query = ref('')
 const loading = ref(false)
+const creating = ref(false)
 const results = ref<DependencyTask[]>([])
+
+const newTaskName = computed(() => query.value.trim())
 
 const options = computed(() =>
   results.value.filter((task) => !props.excludedIds.includes(task.id)),
@@ -117,5 +140,20 @@ watch(open, (isOpen) => {
 function pick(task: DependencyTask) {
   open.value = false
   emit('select', task)
+}
+
+async function create() {
+  if (!newTaskName.value || creating.value) return
+  creating.value = true
+  const task = await $tvApi.tasks
+    .createTask({ goalId: props.goalId, description: newTaskName.value })
+    .catch((err: unknown) => logError(err))
+  creating.value = false
+  if (!task) {
+    toast.add({ title: t('tasks.dependencies.createFailed'), color: 'error' })
+    return
+  }
+  emit('created', task)
+  pick({ id: task.id, description: task.description, complete: task.complete })
 }
 </script>

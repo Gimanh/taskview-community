@@ -1,6 +1,8 @@
 import TvApiBase from './base'
 import type { AppResponse } from './base.types'
 import type {
+  SsoArgParseMetadata,
+  SsoParsedMetadata,
   SsoConfig,
   SsoConfigArgCreate,
   SsoConfigArgUpdate,
@@ -45,10 +47,10 @@ export default class TvSsoApi extends TvApiBase {
     )
   }
 
-  public async parseMetadata(url: string) {
+  public async parseMetadata(args: SsoArgParseMetadata) {
     return this.request(
-      this.$axios.get<AppResponse<{ samlEntryPoint: string, samlCert: string, samlLogoutUrl: string }>>(`${this.moduleUrl}/admin/metadata`, {
-        params: { url },
+      this.$axios.get<AppResponse<SsoParsedMetadata>>(`${this.moduleUrl}/admin/metadata`, {
+        params: { url: args.url, organizationId: args.organizationId },
       })
     )
   }

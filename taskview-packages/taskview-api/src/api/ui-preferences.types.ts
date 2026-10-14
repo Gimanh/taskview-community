@@ -1,3 +1,5 @@
+import type { TaskSortBy } from './tasks.api.types'
+
 export type UiPreferencesItem = {
   id: string
   order: number
@@ -13,6 +15,9 @@ export type UiSettings = {
   firstDayOfWeek?: FirstDayOfWeek
   defaultProjectId?: number
   defaultView?: DefaultView
+  taskSortBy?: TaskSortBy
+  taskSortFirstNew?: 0 | 1
+  showTaskId?: 0 | 1
 }
 
 export const UI_SETTINGS_KEY = '__settings__'

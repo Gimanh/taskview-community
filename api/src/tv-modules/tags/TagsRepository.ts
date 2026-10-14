@@ -6,7 +6,7 @@ import { Database } from '../../modules/db';
 import { GoalPermissions } from '../../types/auth.types';
 import { logError } from '../../utils/api';
 import { callWithCatch } from '../../utils/helpers';
-import type { TagItemArgAdd, TagItemArgUpdate, TagItemInDb } from './tags.types';
+import type { TagAddToTaskIfAbsentArgs, TagItemArgAdd, TagItemArgUpdate, TagItemInDb } from './tags.types';
 
 export class TagsRepository {
     private readonly db: Database;
@@ -212,6 +212,18 @@ export class TagsRepository {
             }
             return 'add';
         }
+    }
+
+    async addTagToTaskIfAbsent(args: TagAddToTaskIfAbsentArgs): Promise<boolean | null> {
+        const inserted = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .insert(TasksToTagsSchema)
+                .values({ tagId: args.tagId, taskId: args.taskId })
+                .onConflictDoNothing()
+                .returning({ taskId: TasksToTagsSchema.taskId })
+        );
+        if (!inserted) return null;
+        return inserted.length > 0;
     }
 
     async addTagToTask(tagId: number, taskId: number): Promise<boolean> {
