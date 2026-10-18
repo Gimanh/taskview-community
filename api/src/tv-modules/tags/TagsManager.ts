@@ -1,15 +1,19 @@
 import type { TagsSchemaTypeForSelect } from 'taskview-db-schemas';
 import type { AppUser } from '../../core/AppUser';
+import { eventBus } from '../../core/EventBus';
 import { $logger } from '../../modules/logget';
 import { TagItemForClient } from './TagItemForClient';
 import { TagsRepository } from './TagsRepository';
 import type {
     AddTagArg,
     DeleteTagArg,
+    TagAddToTaskIfAbsentArgs,
     TagItemArgAdd,
     TagItemArgDelete,
     TagItemArgToggle,
     TagItemArgUpdate,
+    TagItemInDb,
+    TaskTagChange,
     ToggleTagArg,
     UpdateTagArgs,
 } from './tags.types';
@@ -67,24 +71,40 @@ export class TagsManager {
 
         if (tagExists) {
             await this.repository.deleteTagFromTask(args.tagId, args.taskId);
+            this.emitTagsChanged({ taskId: args.taskId, tagId: args.tagId, added: false });
             return 'delete';
         }
 
         await this.repository.addTagToTask(args.tagId, args.taskId);
+        this.emitTagsChanged({ taskId: args.taskId, tagId: args.tagId, added: true });
         return 'add';
     }
 
     async toggleTagNew(data: TagItemArgToggle): Promise<'delete' | 'add' | null> {
-        return await this.repository.toggleTagNew(data.tagId, data.taskId);
+        const result = await this.repository.toggleTagNew(data.tagId, data.taskId);
+        if (result) this.emitTagsChanged({ taskId: data.taskId, tagId: data.tagId, added: result === 'add' });
+        return result;
+    }
+
+    async addTagToTaskIfAbsent(args: TagAddToTaskIfAbsentArgs): Promise<boolean | null> {
+        const added = await this.repository.addTagToTaskIfAbsent(args);
+        if (added) this.emitTagsChanged({ taskId: args.taskId, tagId: args.tagId, added: true });
+        return added;
     }
 
     /** @deprecated use deleteTagNew instead */
     async deleteTag(args: DeleteTagArg): Promise<boolean> {
-        return await this.repository.deleteTag(args.tagId);
+        const tag = await this.repository.fetchTagById(args.tagId);
+        const deleted = await this.repository.deleteTag(args.tagId);
+        if (deleted && tag) this.emitTagDeleted(tag);
+        return deleted;
     }
 
     async deleteTagNew(data: TagItemArgDelete): Promise<boolean> {
-        return await this.repository.deleteTagNew(data.tagId);
+        const tag = await this.repository.fetchTagById(data.tagId);
+        const deleted = await this.repository.deleteTagNew(data.tagId);
+        if (deleted && tag) this.emitTagDeleted(tag);
+        return deleted;
     }
 
     /** @deprecated use updateTagNew instead */
@@ -99,5 +119,14 @@ export class TagsManager {
 
     async updateTagNew(data: TagItemArgUpdate): Promise<TagsSchemaTypeForSelect | null> {
         return await this.repository.updateTagNew(data);
+    }
+
+    private emitTagsChanged(change: TaskTagChange): void {
+        eventBus.emit('task.tagsChanged', { ...change, initiatorId: this.user.getUserData()?.id as number });
+    }
+
+    private emitTagDeleted(tag: TagItemInDb): void {
+        if (tag.goal_id === null) return;
+        eventBus.emit('tag.deleted', { tagId: tag.id, goalId: tag.goal_id, initiatorId: this.user.getUserData()?.id as number });
     }
 }

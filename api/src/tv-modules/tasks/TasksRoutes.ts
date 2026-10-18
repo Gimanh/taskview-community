@@ -61,6 +61,13 @@ export default class TasksRoutes implements Routable {
         this.router.delete('', [IsLoggedIn, CanDeleteTask], this.tasksController.deleteTaskNew);
 
         /**
+         * Move a task (with its subtasks) to another project of the same organization. The planner checks both
+         * projects; without the right to delete in the source project the task is copied instead.
+         */
+        this.router.get('/:taskId/move-preview', [IsLoggedIn], this.tasksController.previewMoveToProject);
+        this.router.post('/move', [IsLoggedIn], this.tasksController.moveToProject);
+
+        /**
          * Fetch task history
          */
         this.router.get('/:taskId/history', [IsLoggedIn, CanFetchTaskHistory], this.tasksController.fetchTaskHistory);

@@ -672,4 +672,29 @@ describe('Collaboration', () => {
 
         await $api.tasks.deleteTask(task.id).catch(() => {});
     });
+
+    it('does not bring back old project roles when a removed user is invited again', async () => {
+        const goal = await $api.goals.createGoal({ name: 'Collaboration roles goal' });
+        const otherGoal = await $api.goals.createGoal({ name: 'Collaboration roles other goal' });
+        if (!goal || !otherGoal) {
+            throw new Error('Failed to create goals');
+        }
+
+        // A second project keeps the collaborator row alive after the removal
+        const invited = await addUserToGoal(goal.id, email);
+        await addUserToGoal(otherGoal.id, email);
+        const role = await $api.collaboration.createRoleForGoal({ goalId: goal.id, roleName: `Role ${Date.now()}` });
+        if (!invited || !role) {
+            throw new Error('Failed to prepare collaborator');
+        }
+        await $api.collaboration.toggleUserRoles({ goalId: goal.id, userId: invited.id, roles: [role.id] });
+
+        await $api.collaboration.deleteUserFromGoal({ goalId: goal.id, id: invited.id });
+        const again = await addUserToGoal(goal.id, email);
+        expect(again?.id).toBe(invited.id);
+
+        const users = await $api.collaboration.fetchUsersForGoal(goal.id);
+        expect(users.find((u) => u.email === email)?.roles).toEqual([]);
+        expect((await $api.collaboration.fetchRolesForGoal(goal.id)).map((r) => r.id)).toContain(role.id);
+    });
 });

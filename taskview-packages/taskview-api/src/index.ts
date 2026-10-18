@@ -26,3 +26,5 @@ export * from '@/api/time-tracking.types';
 export * from '@/api/ui-preferences.types';
 export * from '@/api/sprints.types';
 export * from '@/api/recurrence.types';
+export * from '@/api/files.types';
+export * from '@/api/automations.types';

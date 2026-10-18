@@ -1,4 +1,5 @@
 import { type } from 'arktype';
+import type { TaskItemInDb } from '../../types/tasks.types';
 import type { TasksSchemaTypeForSelect } from 'taskview-db-schemas';
 import { GoalPermissions } from '../../types/auth.types';
 
@@ -73,6 +74,16 @@ export const TaskArkTypeFetchTasksNew = type({
 export type TaskArgFetchTasksNew = typeof TaskArkTypeFetchTasksNew.infer;
 
 export type TaskArgUpdate = typeof TaskArkTypeUpdate.infer;
+
+// A list, kanban column or parent from another project would silently move the task there (a DB trigger derives
+// goal_id from the list), so updates must only reference the task's own project. Moving goes through /tasks/move.
+export type TaskReferenceCheckArgs = {
+    taskId: number;
+    goalId: number;
+    goalListId?: number | null;
+    statusId?: number | null;
+    parentId?: number | null;
+};
 
 export const TASK_UPDATABLE_COLUMNS = [
     'parentId',
@@ -173,6 +184,7 @@ export type TaskForClientNew = TasksSchemaTypeForSelect & {
     assignedUsers: number[];
     historyId: number | null;
     subtasks: TaskForClientNew[];
+    filesCount: number;
 };
 
 export const TaskArkTypeDelete = type({
@@ -202,3 +214,24 @@ export const TaskArkTypeRestoreTaskHistory = type({
 });
 
 export type TaskArgRestoreTaskHistory = typeof TaskArkTypeRestoreTaskHistory.infer;
+
+export type TaskUpdateResult =
+    | { ok: true; task: TaskForClientNew; syncFailed?: boolean }
+    | { ok: false; reason: 'not_found' | 'foreign_reference' };
+
+// Columns that point into the task's project; a history snapshot from another project must not restore them
+export const TASK_PROJECT_BOUND_COLUMNS = [
+    'goal_list_id',
+    'status_id',
+    'sprint_id',
+    'parent_id',
+    'recurrence_rule_id',
+    'recurrence_instance_date',
+    'node_graph_position',
+    'kanban_order',
+] as const satisfies ReadonlyArray<keyof TaskItemInDb>;
+
+export type TaskHistoryRestoreArgs = {
+    snapshot: TaskItemInDb;
+    currentGoalId: number;
+};

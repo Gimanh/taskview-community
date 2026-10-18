@@ -1,9 +1,11 @@
-import { and, eq, inArray, ne } from 'drizzle-orm'
+import { and, eq, inArray, ne, sql } from 'drizzle-orm'
 import {
   OrganizationsSchema,
   OrganizationMembersSchema,
+  CollaborationRolesSchema,
   CollaborationUsersSchema,
   CollaborationUsersToGoalsSchema,
+  CollaborationUsersToRolesSchema,
   GoalsSchema,
   UsersSchema,
   UserTokensSchema,
@@ -234,7 +236,7 @@ export class OrganizationRepository {
       const collabUsers = await this.db.dbDrizzle
         .select({ id: CollaborationUsersSchema.id })
         .from(CollaborationUsersSchema)
-        .where(eq(CollaborationUsersSchema.email, email))
+        .where(sql`lower(${CollaborationUsersSchema.email}) = ${email.toLowerCase()}`)
 
       const orgGoals = await this.db.dbDrizzle
         .select({ id: GoalsSchema.id })
@@ -245,14 +247,28 @@ export class OrganizationRepository {
       const goalIds = orgGoals.map(g => g.id)
 
       if (userIds.length && goalIds.length) {
-        await this.db.dbDrizzle
-          .delete(CollaborationUsersToGoalsSchema)
-          .where(
-            and(
-              inArray(CollaborationUsersToGoalsSchema.userId, userIds),
-              inArray(CollaborationUsersToGoalsSchema.goalId, goalIds),
+        await this.db.dbDrizzle.transaction(async (tx) => {
+          const goalRoles = tx
+            .select({ id: CollaborationRolesSchema.id })
+            .from(CollaborationRolesSchema)
+            .where(inArray(CollaborationRolesSchema.goalId, goalIds))
+          await tx
+            .delete(CollaborationUsersToRolesSchema)
+            .where(
+              and(
+                inArray(CollaborationUsersToRolesSchema.userId, userIds),
+                inArray(CollaborationUsersToRolesSchema.roleId, goalRoles),
+              )
             )
-          )
+          await tx
+            .delete(CollaborationUsersToGoalsSchema)
+            .where(
+              and(
+                inArray(CollaborationUsersToGoalsSchema.userId, userIds),
+                inArray(CollaborationUsersToGoalsSchema.goalId, goalIds),
+              )
+            )
+        })
       }
     })
   }

@@ -79,6 +79,8 @@ export class KanbanController {
             return res.status(400).send(data.summary);
         }
 
-        return res.tvJson(await req.appUser.kanbanManager.updateTasksOrderAndColumn(data));
+        const result = await req.appUser.kanbanManager.updateTasksOrderAndColumn(data);
+        if (!result) return res.status(404).end();
+        return res.tvJson(result);
     };
 }

@@ -590,4 +590,118 @@ describe('Login API', () => {
         const after = await userModel.getUserByLogin(email, true);
         expect((after as any).block).toBe(1);
     });
+    describe('refresh token hardening (GHSA-p7h5-m7pj-2vq3)', () => {
+        const login = () =>
+            axios.post(`${url}/module/auth/login`, { login: 'test@mail.dest', password: 'user1!#Q' });
+        const refreshCookieFrom = (setCookie: string[] | undefined) => {
+            const cookie = (setCookie ?? []).find((c) => /refresh/i.test(c.split('=')[0]));
+            expect(cookie).toBeTruthy();
+            return cookie as string;
+        };
+
+        it('does not grant CORS access to the opaque "null" origin', async () => {
+            const preflight = await axios.options(`${url}/module/auth/refresh/token`, {
+                headers: { Origin: 'null', 'Access-Control-Request-Method': 'POST' },
+                validateStatus: () => true,
+            });
+            expect(preflight.headers['access-control-allow-origin']).toBeUndefined();
+            expect(preflight.headers['access-control-allow-credentials']).toBeUndefined();
+
+            const post = await axios.post(`${url}/module/auth/refresh/token`, {}, {
+                headers: { Origin: 'null' },
+                validateStatus: () => true,
+            });
+            expect(post.headers['access-control-allow-origin']).toBeUndefined();
+        });
+
+        it('still grants CORS access to an allowed origin', async () => {
+            const preflight = await axios.options(`${url}/module/auth/refresh/token`, {
+                headers: { Origin: 'https://app.taskview.tech', 'Access-Control-Request-Method': 'POST' },
+                validateStatus: () => true,
+            });
+            expect(preflight.headers['access-control-allow-origin']).toBe('https://app.taskview.tech');
+            expect(preflight.headers['access-control-allow-credentials']).toBe('true');
+        });
+
+        it('sets the refresh cookie HttpOnly, Secure and SameSite=Lax', async () => {
+            const cookie = refreshCookieFrom((await login()).headers['set-cookie']);
+            expect(cookie).toMatch(/HttpOnly/i);
+            expect(cookie).toMatch(/Secure/i);
+            expect(cookie).toMatch(/SameSite=Lax/i);
+            expect(cookie).not.toMatch(/SameSite=None/i);
+        });
+
+        it('does not return the refresh token in the body when refreshing by cookie only', async () => {
+            const cookie = refreshCookieFrom((await login()).headers['set-cookie']).split(';')[0];
+
+            const response = await axios.post(`${url}/module/auth/refresh/token`, {}, { headers: { Cookie: cookie } });
+
+            expect(response.status).toBe(200);
+            expect(response.data.access).toBeTruthy();
+            expect(response.data).not.toHaveProperty('refresh');
+            expect(refreshCookieFrom(response.headers['set-cookie'])).toMatch(/SameSite=Lax/i);
+        });
+
+        it('returns a new pair to a client that sends its stored token in the body alongside the cookie', async () => {
+            const loginResponse = await login();
+            const cookie = refreshCookieFrom(loginResponse.headers['set-cookie']).split(';')[0];
+
+            const response = await axios.post(
+                `${url}/module/auth/refresh/token`,
+                { refreshToken: loginResponse.data.refresh },
+                { headers: { Cookie: cookie } },
+            );
+
+            expect(response.status).toBe(200);
+            expect(response.data.access).toBeTruthy();
+            expect(response.data.refresh).toBeTruthy();
+        });
+
+        it('does not return the refresh token when the body carries an invalid token next to a valid cookie', async () => {
+            const cookie = refreshCookieFrom((await login()).headers['set-cookie']).split(';')[0];
+
+            const response = await axios.post(
+                `${url}/module/auth/refresh/token`,
+                { refreshToken: 'not-a-token' },
+                { headers: { Cookie: cookie } },
+            );
+
+            expect(response.status).toBe(200);
+            expect(response.data.access).toBeTruthy();
+            expect(response.data).not.toHaveProperty('refresh');
+        });
+
+        it('does not return the refresh token when the body token belongs to another session', async () => {
+            const first = await login();
+            const second = await login();
+            const cookie = refreshCookieFrom(first.headers['set-cookie']).split(';')[0];
+
+            const response = await axios.post(
+                `${url}/module/auth/refresh/token`,
+                { refreshToken: second.data.refresh },
+                { headers: { Cookie: cookie } },
+            );
+
+            expect(response.status).toBe(200);
+            expect(response.data).not.toHaveProperty('refresh');
+        });
+
+        it('falls back to the body token when the cookie is invalid', async () => {
+            const loginResponse = await login();
+
+            const response = await axios.post(
+                `${url}/module/auth/refresh/token`,
+                { refreshToken: loginResponse.data.refresh },
+                { headers: { Cookie: 'taskview-refresh=garbage' } },
+            );
+
+            expect(response.status).toBe(200);
+            expect(response.data.refresh).toBeTruthy();
+        });
+
+        it('rejects a refresh call with neither a body token nor a cookie', async () => {
+            const response = await axios.post(`${url}/module/auth/refresh/token`, {}, { validateStatus: () => true });
+            expect(response.status).toBe(400);
+        });
+    });
 });

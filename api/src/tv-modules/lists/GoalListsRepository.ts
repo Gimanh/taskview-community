@@ -129,14 +129,11 @@ export class GoalListsRepository {
         return !!(del.rowCount && del.rowCount > 0);
     }
 
-    async deleteListNew(data: GoalListArgDelete): Promise<boolean> {
+    async deleteListNew(data: GoalListArgDelete): Promise<GoalsListSchemaTypeForSelect | null> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.delete(GoalsListSchema).where(eq(GoalsListSchema.id, data.id)).returning()
         );
-        if (!result) {
-            return false;
-        }
-        return !!result.length;
+        return result?.[0] ?? null;
     }
 
     async updateArchive(listId: number, archive: GoalListInDb['archive']): Promise<boolean> {

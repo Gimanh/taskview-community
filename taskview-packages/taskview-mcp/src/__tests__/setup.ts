@@ -33,6 +33,10 @@ export function mockApi(overrides: Record<string, Record<string, unknown>> = {})
       reportByDay: noop, reportByUser: noop, reportByTask: noop, reportSummary: noop,
       reportContributors: noop,
     },
+    files: {
+      listForGoal: noop, listForTask: noop, getById: noop, downloadUrl: noop,
+      link: noop, unlink: noop, rename: noop, deleteForever: noop,
+    },
   }
 
   for (const [ns, methods] of Object.entries(overrides)) {

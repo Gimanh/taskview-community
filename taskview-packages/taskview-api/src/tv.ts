@@ -23,6 +23,8 @@ import TvSprintApi from "./api/sprints";
 import TvRecurrenceApi from "./api/recurrence";
 import TvBillingApi from "./api/billing";
 import TvInvoicesApi from "./api/invoices";
+import TvFilesApi from "./api/files";
+import TvAutomationsApi from "./api/automations";
 
 export class TvApi {
 
@@ -73,6 +75,8 @@ export class TvApi {
     public billing: TvBillingApi;
 
     public invoices: TvInvoicesApi;
+    public files: TvFilesApi;
+    public automations: TvAutomationsApi;
 
     constructor($axios: AxiosInstance) {
         this.$axios = $axios;
@@ -122,6 +126,12 @@ export class TvApi {
         this.billing = new TvBillingApi(this.$axios);
 
         this.invoices = new TvInvoicesApi(this.$axios);
+        this.files = new TvFilesApi(this.$axios);
+        this.automations = new TvAutomationsApi(this.$axios);
+    }
+
+    public get baseUrl(): string | undefined {
+        return this.$axios.defaults.baseURL;
     }
 
     public setBaseUrl(baseUrl: string) {

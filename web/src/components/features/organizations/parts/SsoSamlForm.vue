@@ -1,5 +1,12 @@
 <template>
   <div class="flex flex-col gap-4">
+    <UAlert
+      color="info"
+      icon="i-lucide-fingerprint"
+      :title="t('sso.nameIdHintTitle')"
+      :description="t('sso.nameIdHint')"
+    />
+
     <UFormField :label="t('sso.metadataUrl')">
       <div class="flex gap-2">
         <UInput
@@ -153,7 +160,8 @@ const form = defineModel<SamlFormData>('form', { required: true })
 
 import type { SsoConfig } from 'taskview-api'
 
-defineProps<{
+const props = defineProps<{
+  organizationId: number
   callbackUrlPlaceholder: string
   hasSecrets?: SsoConfig
 }>()
@@ -185,7 +193,7 @@ async function syncMetadata() {
 
   syncing.value = true
   try {
-    const result = await $tvApi.sso.parseMetadata(metadataUrl.value.trim())
+    const result = await $tvApi.sso.parseMetadata({ url: metadataUrl.value.trim(), organizationId: props.organizationId })
     if (result.samlEntryPoint) form.value.samlEntryPoint = result.samlEntryPoint
     if (result.samlCert) form.value.samlCert = result.samlCert
     if (result.samlLogoutUrl) form.value.samlLogoutUrl = result.samlLogoutUrl

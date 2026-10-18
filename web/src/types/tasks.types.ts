@@ -4,6 +4,11 @@ export type TaskItem = Task;
 
 export type TaskItems = TaskItem[];
 
+export type TasksApplyRemoteArgs = {
+    task: Task;
+    created: boolean;
+};
+
 export type PartialSome<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 export type PartialFetchRules = PartialSome<TasksStoreState['fetchRules'], 'currentPage' | 'endOfTasks'>;

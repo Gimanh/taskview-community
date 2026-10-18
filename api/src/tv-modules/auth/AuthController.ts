@@ -226,13 +226,16 @@ export default class AuthController {
             return res.status(400).send('User not found');
         }
 
+        // Providers may return mixed-case addresses; every other login path stores emails lowercased
+        const email = user.email.trim().toLowerCase();
+
         let userData = await req.appUser.authManager.repository.getUserByLogin(
-            user.email,
-            isEmail(user.email)
+            email,
+            isEmail(email)
         );
 
         if (!userData) {
-            if (!(await this.canCreateAccount(req, user.email))) {
+            if (!(await this.canCreateAccount(req, email))) {
                 $logger.info(`[AuthController:loginByProvider] public registration disabled, email not invited`);
                 return res.redirect(`${process.env.APP_URL}/login?sso_error=registration-disabled`);
             }
@@ -242,7 +245,7 @@ export default class AuthController {
 
             const id = await req.appUser.authManager.repository.registerUserInDb({
                 login,
-                email: user.email,
+                email,
                 password: hashSync(password, 10),
                 block: 0,
                 confirmEmailCode: '',
@@ -253,17 +256,17 @@ export default class AuthController {
                 return res.status(500).send(`Can not register user`);
             }
 
-            await this.createPersonalWorkspace(id, user.email, login)
+            await this.createPersonalWorkspace(id, email, login)
 
             userData = await req.appUser.authManager.repository.getUserByLogin(
-                user.email,
-                isEmail(user.email)
+                email,
+                isEmail(email)
             );
         }
 
         if (!userData) {
             $logger.error(`Can not find user after registration`);
-            return res.status(500).send(`Can not find user ${user.email} after registration`);
+            return res.status(500).send(`Can not find user ${email} after registration`);
         }
 
         const code = this.generateLoginCode();
@@ -316,7 +319,7 @@ export default class AuthController {
         res.cookie(this.refreshTokenCookieName, refreshToken, {
             httpOnly: true,
             secure: true,
-            sameSite: "none",
+            sameSite: "lax",
             maxAge: this.parseLifetimeToMs(this.jwtRefreshExp),
         });
     }
@@ -325,7 +328,7 @@ export default class AuthController {
         res.clearCookie(this.refreshTokenCookieName, {
             httpOnly: true,
             secure: true,
-            sameSite: "none",
+            sameSite: "lax",
         });
     }
 
@@ -652,25 +655,23 @@ export default class AuthController {
     };
 
     refreshTokens = async (req: Request, res: Response) => {
-        let refreshToken = req.cookies[this.refreshTokenCookieName];
+        const cookieToken: string | undefined = req.cookies[this.refreshTokenCookieName] || undefined;
+        const bodyData = RefreshTokenSchema.safeParse(req.body);
+        const bodyToken = bodyData.success && bodyData.data.refreshToken ? bodyData.data.refreshToken : undefined;
 
-        if (!refreshToken) {
-            const refreshData = RefreshTokenSchema.safeParse(req.body);
-
-            if (!refreshData.success) {
-                return res.status(400).send({ message: 'Invalid refresh token' });
-            }
-
-            refreshToken = refreshData.data.refreshToken;
-            $logger.info(`Refresh token found in body`);
-        } else {
-            $logger.info(`Refresh token found in cookies`);
+        if (!cookieToken && !bodyToken) {
+            return res.status(400).send({ message: 'Invalid refresh token' });
         }
 
-        const payload = await AuthController.validateTokens(refreshToken);
+        const cookiePayload = cookieToken ? await AuthController.validateTokens(cookieToken) : undefined;
+        const bodyPayload = bodyToken ? await AuthController.validateTokens(bodyToken) : undefined;
+        const payload = cookiePayload ?? bodyPayload;
+        $logger.info(
+            `Refresh token source: ${cookiePayload ? 'cookie' : bodyPayload ? 'body' : 'none valid'}` +
+            ` (cookie: ${cookieToken ? 'yes' : 'no'}, body: ${bodyToken ? 'yes' : 'no'})`
+        );
 
         if (!payload) {
-            $logger.info('Refresh token validation failed');
             this.clearRefreshToken(res);
             return res.status(400).end();
         }
@@ -687,7 +688,9 @@ export default class AuthController {
 
         await this.setRefreshToken(res, newTokens.refresh);
 
-        return res.json(newTokens);
+        if (bodyPayload?.id === payload.id) return res.json(newTokens);
+        const { refresh: _refresh, ...withoutRefresh } = newTokens;
+        return res.json(withoutRefresh);
     };
 
     getLoginOptions = async (_req: Request, res: Response) => {

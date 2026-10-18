@@ -32,6 +32,18 @@
           :class="ui?.additionalInfo"
           class="flex flex-wrap items-center gap-2"
         >
+          <span
+            v-if="showTaskId"
+            class="inline-flex"
+            @click.stop
+          >
+            <TaskIdCopy
+              :task-id="task.id"
+              badge
+              :data-testid="`task-card-id-${task.id}`"
+            />
+          </span>
+
           <!-- Date -->
           <UBadge
             v-if="task.endDate"
@@ -57,6 +69,19 @@
             data-testid="task-recurrence-badge"
           />
           
+          <!-- Attached files -->
+          <UBadge
+            v-if="task.filesCount"
+            :label="String(task.filesCount)"
+            icon="i-lucide-paperclip"
+            color="neutral"
+            class="bg-elevated text-muted"
+            :ui="{ base: 'rounded-md', leadingIcon: 'size-3' }"
+            variant="subtle"
+            size="md"
+            data-testid="task-files-badge"
+          />
+
           <!-- Project -->
           <UBadge
             v-if="projectName"
@@ -135,9 +160,11 @@ import { useGoalListsStore } from '@/stores/goal-lists.store'
 import { useBaseScreenStore } from '@/stores/base-screen.store'
 import { useCollaborationStore } from '@/stores/collaboration.store'
 import { useTagsStore } from '@/stores/tag.store'
-import { formatDate } from '@vueuse/core'
+import { formatDate, normalizeDate } from '@vueuse/core'
 import { AllGoalPermissions } from '@/types/goals.types'
 import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
+import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
+import TaskIdCopy from './TaskIdCopy.vue'
 
 const TOGGLE_DELAY = 200
 const props = defineProps<{
@@ -178,6 +205,9 @@ const goalListsStore = useGoalListsStore()
 const baseScreenStore = useBaseScreenStore()
 const collaborationStore = useCollaborationStore()
 const tagsStore = useTagsStore()
+const uiPreferencesStore = useUiPreferencesStore()
+
+const showTaskId = computed(() => uiPreferencesStore.settings.showTaskId === 1)
 
 const priorityColor = computed(() => {
   switch (props.task.priorityId) {
@@ -203,17 +233,17 @@ const listName = computed(() => {
     || ''
 })
 
+function formatTaskDate(date: string, time: string | null) {
+  const value = normalizeDate(time ? `${date}T${time}Z` : date)
+  const day = value.getFullYear() === new Date().getFullYear() ? 'DD.MMM' : 'DD.MMM.YYYY'
+  return formatDate(value, time ? `${day} HH:mm` : day)
+}
+
 const formattedDate = computed(() => {
   if (!props.task.endDate) return ''
-  if (props.task.endTime) {
-    const match = props.task.endTime.match(/^(\d{2}):(\d{2})/)
-    if (match) {
-      const utc = new Date(`${props.task.endDate}T${match[1]}:${match[2]}:00Z`)
-      return formatDate(utc, 'DD.MMM.YYYY HH:mm')
-    }
-  }
-  const [y, m, d] = props.task.endDate.split('-').map(Number)
-  return formatDate(new Date(y, m - 1, d), 'DD.MMM.YYYY')
+  const end = formatTaskDate(props.task.endDate, props.task.endTime)
+  if (!props.task.startDate) return end
+  return `${formatTaskDate(props.task.startDate, props.task.startTime)} → ${end}`
 })
 
 const isOverdue = computed(() => {
@@ -260,11 +290,13 @@ const transactionColor = computed(() => {
 })
 
 const hasAdditionalInfo = computed(() => {
-  return projectName.value ||
+  return showTaskId.value ||
+    projectName.value ||
     listName.value ||
     props.task.endDate ||
     props.task.amount ||
     props.task.recurrenceRuleId ||
+    props.task.filesCount ||
     assigneeEmails.value.length > 0 ||
     taskTags.value.length > 0
 })

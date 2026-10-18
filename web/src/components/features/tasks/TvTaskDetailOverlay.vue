@@ -25,22 +25,12 @@
         <TaskDetailPanel />
       </template>
       <template #footer>
-        <div class="flex justify-between gap-2 w-full">
-          <UButton
-            :label="t('common.delete')"
-            color="error"
-            variant="soft"
-            data-testid="task-detail-delete-button"
-            @click="openDeleteDialog"
-          />
-          <UButton
-            :label="t('common.close')"
-            color="neutral"
-            variant="soft"
-            data-testid="task-detail-close-button"
-            @click="closeTask"
-          />
-        </div>
+        <TaskDetailFooter
+          :can-move="canMove"
+          @delete="openDeleteDialog"
+          @move="isMoveDialogOpen = true"
+          @close="closeTask"
+        />
       </template>
     </USlideover>
 
@@ -75,22 +65,12 @@
         <TaskDetailPanel />
       </template>
       <template #footer>
-        <div class="flex justify-between gap-2 w-full">
-          <UButton
-            :label="t('common.delete')"
-            color="error"
-            variant="soft"
-            data-testid="task-detail-delete-button"
-            @click="openDeleteDialog"
-          />
-          <UButton
-            :label="t('common.close')"
-            color="neutral"
-            variant="soft"
-            data-testid="task-detail-close-button"
-            @click="closeTask"
-          />
-        </div>
+        <TaskDetailFooter
+          :can-move="canMove"
+          @delete="openDeleteDialog"
+          @move="isMoveDialogOpen = true"
+          @close="closeTask"
+        />
       </template>
     </UModal>
 
@@ -99,6 +79,12 @@
       v-model:open="isDeleteDialogOpen"
       :task="task"
       @confirm="handleDelete"
+    />
+
+    <TaskMoveDialog
+      v-model:open="isMoveDialogOpen"
+      :task="task"
+      @moved="handleMoved"
     />
   </template>
 </template>
@@ -109,6 +95,11 @@ import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import TaskDetailPanel from './TaskDetailPanel.vue'
 import TaskDeleteDialog from '@/components/features/tasks/parts/TaskDeleteDialog.vue'
+import TaskMoveDialog from '@/components/features/tasks/parts/TaskMoveDialog.vue'
+import TaskDetailFooter from '@/components/features/tasks/parts/TaskDetailFooter.vue'
+import { useRouter } from 'vue-router'
+import { ALL_TASKS_LIST_ID, type TaskResponseMoveToProject } from 'taskview-api'
+import { useOrganizationStore } from '@/stores/organization.store'
 import { useTasksStore } from '@/stores/tasks.store'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useAppStore } from '@/stores/app.store'
@@ -149,6 +140,13 @@ const canViewTaskDetails = computed(() =>
 )
 
 const isDeleteDialogOpen = ref(false)
+const isMoveDialogOpen = ref(false)
+const router = useRouter()
+const toast = useToast()
+const organizationStore = useOrganizationStore()
+
+// Subtasks move only together with their parent task
+const canMove = computed(() => !!task.value && !task.value.parentId)
 const { taskDetailDisplayMode: displayMode } = storeToRefs(appStore)
 
 function openDeleteDialog() {
@@ -163,5 +161,32 @@ async function handleDelete() {
     broadcastRemoval(taskId)
     closeTask()
   }
+}
+
+function handleMoved(result: TaskResponseMoveToProject) {
+  const project = goalsStore.goalMap.get(result.goalId)?.name ?? ''
+  const open = async () => {
+    await router.push({
+      name: 'user',
+      params: {
+        orgSlug: organizationStore.currentOrgSlug,
+        projectId: String(result.goalId),
+        listId: String(ALL_TASKS_LIST_ID),
+        taskId: String(result.taskId),
+      },
+    })
+  }
+
+  isMoveDialogOpen.value = false
+  if (result.mode === 'move') {
+    tasksStore.removeTaskLocally(result.taskId)
+    broadcastRemoval(result.taskId)
+    closeTask()
+  }
+  toast.add({
+    title: t(result.mode === 'move' ? 'tasks.move.moved' : 'tasks.move.copied', { project }),
+    color: 'success',
+    actions: [{ label: t('tasks.move.open'), onClick: open }],
+  })
 }
 </script>

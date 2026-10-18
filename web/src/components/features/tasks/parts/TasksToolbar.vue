@@ -38,6 +38,7 @@
           variant="subtle"
           :disabled="loading"
           :ui="{ base: 'min-w-32' }"
+          data-testid="tasks-sort-select"
         />
         <UTooltip :text="sortTooltip">
           <UButton
@@ -46,6 +47,7 @@
             variant="subtle"
             :loading="loading"
             :disabled="loading"
+            data-testid="tasks-sort-direction"
             @click="toggleSort"
           />
         </UTooltip>
@@ -122,11 +124,13 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { TaskSortBy } from 'taskview-api'
 import { useTasksStore } from '@/stores/tasks.store'
+import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
 import TasksFilterDrawer from './TasksFilterDrawer.vue'
 
 const { t } = useI18n()
 const route = useRoute()
 const tasksStore = useTasksStore()
+const uiPrefs = useUiPreferencesStore()
 
 const { fetchRules } = storeToRefs(tasksStore)
 
@@ -200,9 +204,16 @@ async function applySort(rules: Partial<typeof fetchRules.value>) {
     currentPage: 0,
     endOfTasks: false,
   })
+  rememberSort()
 
   await tasksStore.fetchTasks()
   loading.value = false
+}
+
+function rememberSort() {
+  const { sortBy, firstNew } = fetchRules.value
+  uiPrefs.setSetting('taskSortBy', sortBy === 'date' ? undefined : sortBy)
+  uiPrefs.setSetting('taskSortFirstNew', firstNew === 1 ? undefined : firstNew)
 }
 
 function toggleSort() {

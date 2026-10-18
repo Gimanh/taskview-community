@@ -70,6 +70,10 @@ export type CheckSsoDomainProofArgs = {
   token: string
 }
 
+export const ScimGroupProjectArkType = type({
+  roleId: 'number.integer > 0',
+})
+
 export type SsoDomainVerificationMethod = 'dns' | 'http' | 'trusted'
 
 export type StartDomainVerificationResult = {
@@ -128,7 +132,18 @@ export type ApplySsoIdpEmailArgs = {
   email: string
 }
 
-export type SsoCallbackError = 'authentication_failed' | 'email_in_use' | 'account_blocked'
+export type SsoCallbackError =
+  | 'authentication_failed'
+  | 'email_in_use'
+  | 'account_blocked'
+  | 'account_deactivated'
+  | 'not_provisioned'
+
+export type CheckSsoScimAccessArgs = {
+  config: SsoConfigsSchemaTypeForSelect
+  email: string
+  externalId: string
+}
 
 export type ResolveSsoUserResult =
   | { ok: true, user: UserDbRecord }

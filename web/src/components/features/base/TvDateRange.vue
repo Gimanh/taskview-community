@@ -109,6 +109,10 @@ const { activatorUi } = useNuxtUiTaskItemStyles()
 const open = ref(false)
 const isRange = ref(false)
 
+watch(() => !!model.value?.start, (hasStart) => {
+  isRange.value = hasStart
+}, { immediate: true })
+
 // drop the start date when switching back to single-date mode
 watch(isRange, (on) => {
   if (!on && model.value?.start) {
