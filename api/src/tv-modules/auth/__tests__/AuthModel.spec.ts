@@ -77,6 +77,20 @@ describe('AuthModel Integration Tests', () => {
         });
     });
 
+    it('getUserByLogin finds a mixed-case email case-insensitively', async () => {
+        const userId = await authModel.registerUserInDb({
+            login: `${emailNum}testuser`,
+            email: `${emailNum}Mixed.Case@Test.com`,
+            password: 'hashed_password',
+            confirmEmailCode: '',
+            block: 0,
+        });
+        expect(userId).toBeTruthy();
+
+        const user = await authModel.getUserByLogin(`${emailNum}mixed.case@test.com`, true);
+        expect(user && user.id).toBe(userId);
+    });
+
     it('fetchUserById', async () => {
         const userData: RegisterUserInDb = {
             login: `${emailNum}testuser2`,

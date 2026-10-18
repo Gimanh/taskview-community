@@ -40,5 +40,8 @@ export default class SsoRoutes implements Routable {
     this.router.post('/admin/configs/:configId/verify-domain/check', [IsLoggedIn, IsSsoConfigAdmin, canManageSso], this.controller.checkDomainVerification)
     this.router.post('/admin/configs/:configId/scim-token', [IsLoggedIn, IsSsoConfigAdmin, canManageSso], this.controller.generateScimToken)
     this.router.patch('/admin/configs/:configId/scim', [IsLoggedIn, IsSsoConfigAdmin, canManageSso], this.controller.toggleScim)
+    this.router.get('/admin/configs/:configId/scim-groups', [IsLoggedIn, IsSsoConfigAdmin, canManageSso], this.controller.listScimGroups)
+    this.router.put('/admin/configs/:configId/scim-groups/:groupId/projects/:goalId', [IsLoggedIn, IsSsoConfigAdmin, canManageSso], this.controller.linkScimGroupProject)
+    this.router.delete('/admin/configs/:configId/scim-groups/:groupId/projects/:goalId', [IsLoggedIn, IsSsoConfigAdmin, canManageSso], this.controller.unlinkScimGroupProject)
   }
 }

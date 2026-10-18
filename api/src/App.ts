@@ -13,6 +13,7 @@ import { validateSsoEnvOnStartup } from './tv-modules/sso/sso.utils';
 import { FileStorageFactory } from './tv-modules/files/storage/FileStorageFactory';
 import cookieParser from 'cookie-parser';
 import { registerAllEventHandlers, startAllWorkers } from './core/all-events';
+import { ScimBodyErrorHandler } from './tv-modules/scim/middlewares/ScimBodyErrorHandler';
 
 export default class App {
     public app: express.Application;
@@ -93,6 +94,7 @@ export default class App {
         for (const i in routes) {
             this.app.use(i, new routes[i]().getRouter());
         }
+        this.app.use('/scim/v2', ScimBodyErrorHandler);
     }
 
     public listen() {

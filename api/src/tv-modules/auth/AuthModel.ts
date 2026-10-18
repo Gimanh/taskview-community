@@ -1,5 +1,5 @@
 import { eq, sql } from 'drizzle-orm';
-import { CollaborationUsersSchema, OrganizationMembersSchema, SsoIdentitiesSchema, UsersSchema } from 'taskview-db-schemas';
+import { CollaborationUsersSchema, OrganizationMembersSchema, ScimUsersSchema, SsoIdentitiesSchema, UsersSchema } from 'taskview-db-schemas';
 import { Database } from '../../modules/db';
 import { $logger } from '../../modules/logget';
 import type { RegisterUserInDb, UpdateUserCredentialsArgs, UpdateUserEmailArgs, UpdateUserCredentialsResult, UserDbRecord } from '../../types/auth.types';
@@ -13,11 +13,15 @@ export default class AuthModel {
 
     async getUserByLogin(login: string, isEmail: boolean = false): Promise<UserDbRecord | false> {
         const field = isEmail ? 'email' : 'login';
+        // Emails are case-insensitive; legacy rows may still hold mixed case, oldest account wins
+        const query = isEmail
+            ? 'select * from tv_auth.users where lower(email) = lower($1) order by id limit 1'
+            : 'select * from tv_auth.users where login = $1';
         $logger.info({ field }, `[AuthModel:getUserByLogin] field`);
         try {
-            const data = await this.db.query<UserDbRecord>(`select * from tv_auth.users where ${field} = $1`, [login]);
+            const data = await this.db.query<UserDbRecord>(query, [login]);
 
-            $logger.info({ login }, `[AuthModel:getUserByLogin] select * from tv_auth.users where ${field} = $1`);
+            $logger.info({ login }, `[AuthModel:getUserByLogin] ${query}`);
             $logger.info(data, `[AuthModel:getUserByLogin] data`);
 
             if (data.rows && data.rows.length > 0) {
@@ -182,11 +186,11 @@ export default class AuthModel {
                 await tx
                     .update(OrganizationMembersSchema)
                     .set({ email: args.email })
-                    .where(eq(OrganizationMembersSchema.email, args.oldEmail));
+                    .where(sql`lower(${OrganizationMembersSchema.email}) = ${args.oldEmail.toLowerCase()}`);
                 await tx
                     .update(CollaborationUsersSchema)
                     .set({ email: args.email })
-                    .where(eq(CollaborationUsersSchema.email, args.oldEmail));
+                    .where(sql`lower(${CollaborationUsersSchema.email}) = ${args.oldEmail.toLowerCase()}`);
                 await tx
                     .update(SsoIdentitiesSchema)
                     .set({ email: args.email })
@@ -214,11 +218,15 @@ export default class AuthModel {
                 await tx
                     .update(OrganizationMembersSchema)
                     .set({ email: args.email })
-                    .where(eq(OrganizationMembersSchema.email, args.oldEmail));
+                    .where(sql`lower(${OrganizationMembersSchema.email}) = ${args.oldEmail.toLowerCase()}`);
                 await tx
                     .update(CollaborationUsersSchema)
                     .set({ email: args.email })
-                    .where(eq(CollaborationUsersSchema.email, args.oldEmail));
+                    .where(sql`lower(${CollaborationUsersSchema.email}) = ${args.oldEmail.toLowerCase()}`);
+                await tx
+                    .update(ScimUsersSchema)
+                    .set({ memberEmail: args.email })
+                    .where(sql`lower(${ScimUsersSchema.memberEmail}) = ${args.oldEmail.toLowerCase()}`);
                 await tx
                     .update(SsoIdentitiesSchema)
                     .set({ email: args.email })

@@ -1,93 +1,158 @@
+import { ArkErrors } from 'arktype'
 import type { Request, Response } from 'express'
 import { $logger } from '../../modules/logget'
+import { PublicApiUrl } from '../../modules/public-url'
+import { ScimError } from './ScimError'
+import { ScimGroupsManager } from './ScimGroupsManager'
 import { ScimManager } from './ScimManager'
-import { toScimUser, toScimList, toScimError } from './scim.helpers'
+import { scimGroupResourceType, scimGroupSchema, scimServiceProviderConfig, scimUserResourceType, scimUserSchema } from './scim.discovery'
+import { SCIM_GROUP_SCHEMA, excludesMembers, groupAttributesFromBody, parseGroupListQuery, toScimGroup } from './scim.groups.helpers'
+import { SCIM_USER_SCHEMA, attributesFromBody, parseListQuery, toScimError, toScimList, toScimUser } from './scim.helpers'
+import { ScimGroupArkType, ScimPatchArkType, ScimUserArkType, type ScimContext, type ScimHandler, type ScimValidateArgs } from './types'
 
 export class ScimController {
   private readonly manager = new ScimManager()
+  private readonly groups = new ScimGroupsManager()
 
-  listUsers = async (_req: Request, res: Response) => {
-    const { scimOrg } = res.locals
-    const members = await this.manager.listUsers(scimOrg.id)
+  listUsers = this.handle(async (req, res) => {
+    const query = parseListQuery(req.query as Record<string, unknown>)
+    const { users, totalResults } = await this.manager.listUsers({ ...this.contextOf(res), query })
+    const baseUrl = this.baseUrl(req)
+    return res.json(toScimList({
+      resources: users.map((user) => toScimUser({ user, baseUrl })),
+      totalResults,
+      startIndex: query.startIndex,
+    }))
+  })
 
-    return res.json(toScimList(members.map(m => toScimUser(m, true))))
-  }
+  getUser = this.handle(async (req, res) => {
+    const user = await this.manager.getUser({ ...this.contextOf(res), scimId: req.params.id })
+    return res.json(toScimUser({ user, baseUrl: this.baseUrl(req) }))
+  })
 
-  getUser = async (req: Request, res: Response) => {
-    const { scimOrg } = res.locals
-    const email = decodeURIComponent(req.params.id)
+  createUser = this.handle(async (req, res) => {
+    const attributes = attributesFromBody(this.validate({ schema: ScimUserArkType, body: req.body }))
+    const user = await this.manager.createUser({ ...this.contextOf(res), attributes })
+    const resource = toScimUser({ user, baseUrl: this.baseUrl(req) })
+    return res.status(201).location(resource.meta.location).json(resource)
+  })
 
-    const member = await this.manager.getUserByEmail(scimOrg.id, email)
-    if (!member) {
-      return res.status(404).json(toScimError(404, 'User not found'))
-    }
+  replaceUser = this.handle(async (req, res) => {
+    const attributes = attributesFromBody(this.validate({ schema: ScimUserArkType, body: req.body }))
+    const user = await this.manager.replaceUser({ ...this.contextOf(res), scimId: req.params.id, attributes })
+    return res.json(toScimUser({ user, baseUrl: this.baseUrl(req) }))
+  })
 
-    return res.json(toScimUser(member, true))
-  }
+  patchUser = this.handle(async (req, res) => {
+    const { Operations } = this.validate({ schema: ScimPatchArkType, body: req.body })
+    const user = await this.manager.patchUser({ ...this.contextOf(res), scimId: req.params.id, operations: Operations })
+    return res.json(toScimUser({ user, baseUrl: this.baseUrl(req) }))
+  })
 
-  createUser = async (req: Request, res: Response) => {
-    const { scimOrg } = res.locals
-    const email = req.body.userName || req.body.emails?.[0]?.value
+  deleteUser = this.handle(async (req, res) => {
+    await this.manager.deleteUser({ ...this.contextOf(res), scimId: req.params.id })
+    return res.status(204).end()
+  })
 
-    if (!email) {
-      return res.status(400).json(toScimError(400, 'userName or emails[0].value is required'))
-    }
+  listGroups = this.handle(async (req, res) => {
+    const query = parseGroupListQuery(req.query as Record<string, unknown>)
+    const { groups, totalResults } = await this.groups.listGroups({ ...this.contextOf(res), query })
+    const baseUrl = this.baseUrl(req)
+    return res.json(toScimList({
+      resources: groups.map((view) => toScimGroup({ view, baseUrl })),
+      totalResults,
+      startIndex: query.startIndex,
+    }))
+  })
 
-    await this.manager.reactivateUser(scimOrg, email)
+  getGroup = this.handle(async (req, res) => {
+    const excludeMembers = excludesMembers(req.query as Record<string, unknown>)
+    const view = await this.groups.getGroup({ ...this.contextOf(res), scimId: req.params.id, excludeMembers })
+    return res.json(toScimGroup({ view, baseUrl: this.baseUrl(req) }))
+  })
 
-    const member = await this.manager.getUserByEmail(scimOrg.id, email)
-    if (!member) {
-      return res.status(500).json(toScimError(500, 'Failed to create user'))
-    }
+  createGroup = this.handle(async (req, res) => {
+    const attributes = groupAttributesFromBody(this.validate({ schema: ScimGroupArkType, body: req.body }))
+    const view = await this.groups.createGroup({ ...this.contextOf(res), attributes })
+    const resource = toScimGroup({ view, baseUrl: this.baseUrl(req) })
+    return res.status(201).location(resource.meta.location).json(resource)
+  })
 
-    return res.status(201).json(toScimUser(member, true))
-  }
+  replaceGroup = this.handle(async (req, res) => {
+    const attributes = groupAttributesFromBody(this.validate({ schema: ScimGroupArkType, body: req.body }))
+    const view = await this.groups.replaceGroup({ ...this.contextOf(res), scimId: req.params.id, attributes })
+    return res.json(toScimGroup({ view, baseUrl: this.baseUrl(req) }))
+  })
 
-  patchUser = async (req: Request, res: Response) => {
-    const { scimOrg, scimConfig } = res.locals
-    const email = decodeURIComponent(req.params.id)
+  // Microsoft Entra ID expects 204 here and advises against returning the whole member list
+  patchGroup = this.handle(async (req, res) => {
+    const { Operations } = this.validate({ schema: ScimPatchArkType, body: req.body })
+    await this.groups.patchGroup({ ...this.contextOf(res), scimId: req.params.id, operations: Operations })
+    return res.status(204).end()
+  })
 
-    const operations = req.body.Operations
+  deleteGroup = this.handle(async (req, res) => {
+    await this.groups.deleteGroup({ ...this.contextOf(res), scimId: req.params.id })
+    return res.status(204).end()
+  })
 
-    if (!Array.isArray(operations) || operations.length === 0) {
-      return res.status(400).json(toScimError(400, 'Operations must be a non-empty array'))
-    }
+  serviceProviderConfig = this.handle(async (req, res) => {
+    return res.json(scimServiceProviderConfig(this.baseUrl(req)))
+  })
 
-    for (const op of operations) {
-      if (op.op === 'replace' && (op.path === 'active' || op.value?.active !== undefined)) {
-        const active = op.path === 'active' ? op.value : op.value.active
+  resourceTypes = this.handle(async (req, res) => {
+    const resources = [scimUserResourceType(this.baseUrl(req)), scimGroupResourceType(this.baseUrl(req))]
+    return res.json(toScimList({ resources, totalResults: resources.length, startIndex: 1 }))
+  })
 
-        if (active === false || active === 'false') {
-          const result = await this.manager.deactivateUser(scimOrg, scimConfig, email)
-          if (!result) {
-            return res.status(404).json(toScimError(404, 'User not found'))
-          }
-          $logger.info(`SCIM: deactivated user ${email} from org ${scimOrg.id}`)
-          return res.json(toScimUser({ email, role: 'member' }, false))
+  resourceType = this.handle(async (req, res) => {
+    if (req.params.id === 'User') return res.json(scimUserResourceType(this.baseUrl(req)))
+    if (req.params.id === 'Group') return res.json(scimGroupResourceType(this.baseUrl(req)))
+    throw new ScimError({ status: 404, detail: 'Resource type not found' })
+  })
+
+  schemas = this.handle(async (req, res) => {
+    const resources = [scimUserSchema(this.baseUrl(req)), scimGroupSchema(this.baseUrl(req))]
+    return res.json(toScimList({ resources, totalResults: resources.length, startIndex: 1 }))
+  })
+
+  schema = this.handle(async (req, res) => {
+    if (req.params.id === SCIM_USER_SCHEMA) return res.json(scimUserSchema(this.baseUrl(req)))
+    if (req.params.id === SCIM_GROUP_SCHEMA) return res.json(scimGroupSchema(this.baseUrl(req)))
+    throw new ScimError({ status: 404, detail: 'Schema not found' })
+  })
+
+  notFound = this.handle(async () => {
+    throw new ScimError({ status: 404, detail: 'Endpoint not found' })
+  })
+
+  private handle(handler: ScimHandler) {
+    return async (req: Request, res: Response) => {
+      try {
+        await handler(req, res)
+      } catch (error) {
+        if (error instanceof ScimError) {
+          return res.status(error.status).json(toScimError({ status: error.status, detail: error.message, scimType: error.scimType }))
         }
-
-        if (active === true || active === 'true') {
-          await this.manager.reactivateUser(scimOrg, email)
-          $logger.info(`SCIM: reactivated user ${email} in org ${scimOrg.id}`)
-          const member = await this.manager.getUserByEmail(scimOrg.id, email)
-          return res.json(toScimUser(member || { email, role: 'member' }, true))
-        }
+        $logger.error(error, 'SCIM: unexpected error')
+        return res.status(500).json(toScimError({ status: 500, detail: 'Internal server error' }))
       }
     }
-
-    return res.status(200).json(toScimUser({ email, role: 'member' }, true))
   }
 
-  deleteUser = async (req: Request, res: Response) => {
-    const { scimOrg, scimConfig } = res.locals
-    const email = decodeURIComponent(req.params.id)
-
-    const result = await this.manager.deactivateUser(scimOrg, scimConfig, email)
-    if (!result) {
-      return res.status(404).json(toScimError(404, 'User not found'))
+  private validate<T>(args: ScimValidateArgs<T>): T {
+    const result = args.schema(args.body ?? {})
+    if (result instanceof ArkErrors) {
+      throw new ScimError({ status: 400, scimType: 'invalidSyntax', detail: result.summary })
     }
+    return result
+  }
 
-    $logger.info(`SCIM: deleted user ${email} from org ${scimOrg.id}`)
-    return res.status(204).end()
+  private contextOf(res: Response): ScimContext {
+    return { org: res.locals.scimOrg, config: res.locals.scimConfig }
+  }
+
+  private baseUrl(req: Request): string {
+    return `${PublicApiUrl.base(req)}/scim/v2`
   }
 }

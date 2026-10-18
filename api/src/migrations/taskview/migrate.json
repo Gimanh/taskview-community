@@ -842,5 +842,24 @@
             "New schema tv_automations with the rules table. A rule belongs to a project and links a trigger (module, event, params) to an action (module, action, params); actions run on behalf of the rule creator with their current project permissions.",
             "New permission group 8 'automations' with automation_can_view and automation_can_manage. New projects grant them to editor (both) and executor (view) through the updated add_roles_and_permissions() trigger. Existing projects are not backfilled: owners grant the permissions to their roles in the role editor."
         ]
+    },
+    "65": {
+        "version": "1.70.0",
+        "name": "SCIM: provisioned users and groups",
+        "releaseDate": "20261015",
+        "scripts": [
+            "/1.70.0/0.create-scim-users.sql",
+            "/1.70.0/1.backfill-scim-users.sql",
+            "/1.70.0/2.remove-orphan-role-links.sql",
+            "/1.70.0/3.create-scim-groups.sql",
+            "/1.70.0/4.create-scim-group-projects.sql"
+        ],
+        "description": [
+            "New table tv_auth.scim_users: users provisioned by an identity provider over SCIM, per SSO configuration. Stores the SCIM id, userName, externalId, email, name attributes and the active flag; deactivated users keep their row and the organization role and project access they had, which are restored on reactivation.",
+            "Existing members of organizations with a SCIM token are backfilled with their email as SCIM id and userName, so identity providers connected before this version keep working.",
+            "Removing a person from a project now also removes their links to that project's roles; links left behind by earlier removals are deleted.",
+            "New tables tv_auth.scim_groups and tv_auth.scim_group_members: groups pushed by an identity provider over SCIM and their members, per SSO configuration. Groups are stored only and do not grant access yet.",
+            "New table tv_auth.scim_group_projects: an organization admin links a SCIM group to a project with a default role. People who join the group, or are in it when the link is made, or are reactivated while in it, are added to the project with that role unless they are already in it. Leaving the group changes nothing: the project is managed in TaskView."
+        ]
     }
 }

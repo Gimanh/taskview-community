@@ -1,5 +1,12 @@
 <template>
   <div class="flex flex-col gap-4">
+    <UAlert
+      color="info"
+      icon="i-lucide-fingerprint"
+      :title="t('sso.nameIdHintTitle')"
+      :description="t('sso.nameIdHint')"
+    />
+
     <UFormField :label="t('sso.metadataUrl')">
       <div class="flex gap-2">
         <UInput

@@ -226,13 +226,16 @@ export default class AuthController {
             return res.status(400).send('User not found');
         }
 
+        // Providers may return mixed-case addresses; every other login path stores emails lowercased
+        const email = user.email.trim().toLowerCase();
+
         let userData = await req.appUser.authManager.repository.getUserByLogin(
-            user.email,
-            isEmail(user.email)
+            email,
+            isEmail(email)
         );
 
         if (!userData) {
-            if (!(await this.canCreateAccount(req, user.email))) {
+            if (!(await this.canCreateAccount(req, email))) {
                 $logger.info(`[AuthController:loginByProvider] public registration disabled, email not invited`);
                 return res.redirect(`${process.env.APP_URL}/login?sso_error=registration-disabled`);
             }
@@ -242,7 +245,7 @@ export default class AuthController {
 
             const id = await req.appUser.authManager.repository.registerUserInDb({
                 login,
-                email: user.email,
+                email,
                 password: hashSync(password, 10),
                 block: 0,
                 confirmEmailCode: '',
@@ -253,17 +256,17 @@ export default class AuthController {
                 return res.status(500).send(`Can not register user`);
             }
 
-            await this.createPersonalWorkspace(id, user.email, login)
+            await this.createPersonalWorkspace(id, email, login)
 
             userData = await req.appUser.authManager.repository.getUserByLogin(
-                user.email,
-                isEmail(user.email)
+                email,
+                isEmail(email)
             );
         }
 
         if (!userData) {
             $logger.error(`Can not find user after registration`);
-            return res.status(500).send(`Can not find user ${user.email} after registration`);
+            return res.status(500).send(`Can not find user ${email} after registration`);
         }
 
         const code = this.generateLoginCode();
