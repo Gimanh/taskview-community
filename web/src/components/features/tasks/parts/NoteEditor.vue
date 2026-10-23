@@ -17,6 +17,7 @@
           :content-type="contentType"
           :placeholder="placeholder"
           :extensions="extensions"
+          :image="false"
           :editable="canEditTaskNote"
           :class="isFullscreen ? 'flex flex-col flex-1 min-h-0' : 'min-h-32'"
           :ui="{ content: contentClass }"
@@ -57,34 +58,68 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, ref, toRef, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
 import TextAlign from '@tiptap/extension-text-align'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
+import { useNoteImages } from '@/composables/useNoteImages'
+import { useFilesStore } from '@/stores/files.store'
 import { useNoteEditorToolbar } from '@/composables/useNoteEditorToolbar'
 import { useNoteEditorCollapse } from '@/composables/useNoteEditorCollapse'
 import NoteEditorFooter from '@/components/features/tasks/parts/NoteEditorFooter.vue'
+import { TaskFileImage } from '@/components/features/tasks/parts/noteEditor/taskFileImage'
 
 const { t } = useI18n()
 
 const {
   canEditTaskNote,
   canViewTaskNote,
+  canViewFiles,
+  canManageFiles,
 } = useGoalPermissions()
-
-const extensions = [
-  TextAlign.configure({
-    types: ['heading', 'paragraph'],
-  }),
-]
 
 const props = defineProps<{
   content: string
   contentType?: 'html' | 'markdown'
   placeholder?: string
   debounce?: number
+  taskId?: number
+  goalId?: number
 }>()
+
+const filesStore = useFilesStore()
+void filesStore.fetchStorageStatus()
+
+// Markdown notes (imported tasks) cannot keep the data-file-id attribute, so embedding is HTML-only.
+const canInsertImage = computed(() =>
+  canManageFiles.value
+  && canEditTaskNote.value
+  && filesStore.storageEnabled
+  && props.contentType !== 'markdown'
+  && props.taskId !== undefined
+  && props.goalId !== undefined,
+)
+
+const { resolveUrl, invalidateUrl, uploadFiles, openImageDialog } = useNoteImages({
+  goalId: toRef(props, 'goalId'),
+  taskId: toRef(props, 'taskId'),
+  enabled: canInsertImage,
+  getEditor: () => editorRef.value?.editor,
+})
+
+const extensions = [
+  TextAlign.configure({
+    types: ['heading', 'paragraph'],
+  }),
+  TaskFileImage.configure({
+    canViewFiles: () => canViewFiles.value,
+    resolveUrl,
+    invalidateUrl,
+    canUploadFiles: () => canInsertImage.value,
+    onFiles: (files, position) => void uploadFiles(files, position),
+  }),
+]
 
 const emit = defineEmits<{
   save: [value: string]
@@ -115,6 +150,8 @@ function toggleFullscreen() {
 const { toolbarItems } = useNoteEditorToolbar({
   isFullscreen,
   onToggleFullscreen: toggleFullscreen,
+  canInsertImage,
+  onInsertImage: () => openImageDialog(),
 })
 
 const contentElement = computed(() => editorRef.value?.editor?.view.dom ?? null)

@@ -65,6 +65,8 @@
             :content="task.note || ''"
             :content-type="task.sourceUrl ? 'markdown' : 'html'"
             :placeholder="t('tasks.addNote')"
+            :task-id="task.id"
+            :goal-id="task.goalId"
             :class="colClass(fieldId)"
             @save="updateNote"
           />

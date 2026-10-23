@@ -32,5 +32,5 @@ export function useFileDownload() {
     if (url) window.open(url, '_blank', 'noopener')
   }
 
-  return { urlFor, download, openInNewTab }
+  return { toAbsolute, urlFor, download, openInNewTab }
 }

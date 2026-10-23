@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { TvFile, TvFileLinkArgs, TvFileRenameArgs, TvFileUnlinkArgs } from 'taskview-api'
+import type { TvFile, TvFileDownloadUrl, TvFileLinkArgs, TvFileRenameArgs, TvFileUnlinkArgs } from 'taskview-api'
 import { $tvApi } from '@/plugins/axios'
 import { logError } from '@/helpers/Helper'
 import type {
@@ -214,8 +214,12 @@ export const useFilesStore = defineStore('files', {
     },
 
     async downloadUrl(args: { fileId: string; inline: boolean }): Promise<string | null> {
-      const result = await $tvApi.files.downloadUrl(args).catch(logError)
+      const result = await this.downloadLink(args)
       return result?.url ?? null
+    },
+
+    async downloadLink(args: { fileId: string; inline: boolean }): Promise<TvFileDownloadUrl | null> {
+      return (await $tvApi.files.downloadUrl(args).catch(logError)) ?? null
     },
 
     handleRemoteChange(args: FilesRemoteChangeArgs) {

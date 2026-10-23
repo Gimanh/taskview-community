@@ -156,8 +156,19 @@ const alignItems: EditorToolbarItem[] = [{
   }],
 }]
 
-export function useNoteEditorToolbar({ isFullscreen, onToggleFullscreen }: UseNoteEditorToolbarArgs) {
+export function useNoteEditorToolbar({ isFullscreen, onToggleFullscreen, canInsertImage, onInsertImage }: UseNoteEditorToolbarArgs) {
   const { t } = useI18n()
+
+  const imageItems = computed<EditorToolbarItem[]>(() => {
+    if (!canInsertImage?.value || !onInsertImage) return []
+    return [{
+      icon: 'i-lucide-image-plus',
+      tooltip: { text: t('tasks.noteInsertImage') },
+      'aria-label': t('tasks.noteInsertImage'),
+      ui: itemUi,
+      onClick: onInsertImage,
+    }]
+  })
 
   const fullscreenItems = computed<EditorToolbarItem[]>(() => [{
     icon: isFullscreen.value ? 'i-lucide-minimize-2' : 'i-lucide-maximize-2',
@@ -172,9 +183,10 @@ export function useNoteEditorToolbar({ isFullscreen, onToggleFullscreen }: UseNo
     blockItems,
     markItems,
     linkItems,
+    imageItems.value,
     alignItems,
     fullscreenItems.value,
-  ])
+  ].filter((group) => group.length > 0))
 
   return { toolbarItems }
 }

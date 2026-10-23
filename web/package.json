@@ -13,6 +13,7 @@
     "lint:fix": "eslint src --fix",
     "format": "eslint src --fix",
     "typecheck": "vue-tsc -p ./tsconfig.app.json",
+    "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
@@ -42,6 +43,7 @@
     "@tanstack/table-core": "^8.21.3",
     "@tiptap/core": "^3.20.0",
     "@tiptap/extension-drag-handle-vue-3": "^3.20.0",
+    "@tiptap/extension-image": "^3.20.0",
     "@tiptap/extension-text-align": "^3.20.0",
     "@tiptap/extension-underline": "^3.20.0",
     "@tiptap/pm": "^3.20.0",
@@ -88,10 +90,12 @@
     "@vitejs/plugin-vue": "^6.0.3",
     "eslint": "^9.39.2",
     "eslint-plugin-vue": "^10.7.0",
+    "jsdom": "^20.0.3",
     "playwright": "^1.49.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.53.1",
     "vite": "^7.3.1",
+    "vitest": "^3.2.4",
     "vue-tsc": "^3.2.2"
   },
   "packageManager": "pnpm@10.28.1"
