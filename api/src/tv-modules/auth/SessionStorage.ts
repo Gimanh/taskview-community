@@ -1,10 +1,28 @@
-import { and, eq, ne } from 'drizzle-orm'
+import { and, eq, gt, ne, sql } from 'drizzle-orm'
 import { UserTokensSchema } from 'taskview-db-schemas'
 import { Database } from '../../modules/db'
-import { callWithCatch, parseDeviceName } from '../../utils/helpers'
+import { callWithCatch, parseDeviceName, parsePositiveInt } from '../../utils/helpers'
+
+const DEFAULT_SESSION_MAX_AGE_DAYS = 90
 
 export default class SessionStorage {
   private readonly db: Database
+
+  /** A session ends this many days after sign-in, however often its tokens are refreshed. */
+  static maxAgeDays(): number {
+    return parsePositiveInt(process.env.SESSION_MAX_AGE_DAYS) ?? DEFAULT_SESSION_MAX_AGE_DAYS
+  }
+
+  static validateOnStartup(): void {
+    const raw = process.env.SESSION_MAX_AGE_DAYS
+    if (raw !== undefined && raw.trim() !== '' && parsePositiveInt(raw) === null) {
+      throw new Error(`SESSION_MAX_AGE_DAYS has unrecognized value "${raw}". Expected a positive integer`)
+    }
+  }
+
+  private notExpired() {
+    return gt(UserTokensSchema.timeCreation, sql`now() - make_interval(days => ${SessionStorage.maxAgeDays()})`)
+  }
 
   constructor() {
     this.db = Database.getInstance()
@@ -28,7 +46,7 @@ export default class SessionStorage {
     const result = await callWithCatch(() =>
       this.db.dbDrizzle.select({ id: UserTokensSchema.id })
         .from(UserTokensSchema)
-        .where(eq(UserTokensSchema.id, sessionId))
+        .where(and(eq(UserTokensSchema.id, sessionId), this.notExpired()))
     )
     return !!(result && result.length > 0)
   }
@@ -72,7 +90,7 @@ export default class SessionStorage {
     const result = await callWithCatch(() =>
       this.db.dbDrizzle.select()
         .from(UserTokensSchema)
-        .where(eq(UserTokensSchema.userId, userId))
+        .where(and(eq(UserTokensSchema.userId, userId), this.notExpired()))
         .orderBy(UserTokensSchema.lastUsedAt)
     )
     return result ?? []

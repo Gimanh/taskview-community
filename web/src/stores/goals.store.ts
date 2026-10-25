@@ -11,6 +11,7 @@ export const useGoalsStore = defineStore('goals', {
     loading: false,
     selectedItemId: -1,
     goals: [],
+    personalInbox: null,
   }),
   getters: {
     goalMap: (state) => {
@@ -33,11 +34,26 @@ export const useGoalsStore = defineStore('goals', {
     },
   },
   actions: {
+    async fetchPersonalInbox(): Promise<void> {
+      const orgStore = useOrganizationStore()
+      const personal = orgStore.personalOrg
+      if (!personal || this.personalInbox?.organizationId === personal.id) return
+
+      const goals = await $tvApi.goals.fetchGoals(personal.id)
+      this.personalInbox = goals?.find((goal) => goal.isInbox && goal.organizationId === personal.id) ?? null
+    },
+
     async fetchGoals(): Promise<void> {
       if (this.loading) return
       this.loading = true
       const orgStore = useOrganizationStore()
-      const result = await $tvApi.goals.fetchGoals(orgStore.currentOrg?.id)
+      const orgId = orgStore.currentOrg?.id
+      const result = await $tvApi.goals.fetchGoals(orgId)
+      if (orgStore.currentOrg?.id !== orgId) {
+        // The organization changed while loading — this answer belongs to the previous one.
+        this.loading = false
+        return this.fetchGoals()
+      }
       if (!result) {
         this.loading = false
         return

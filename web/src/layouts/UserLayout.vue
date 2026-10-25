@@ -13,6 +13,8 @@
 
       <!-- Single global search palette; activators (SearchActivator) trigger it. -->
       <SearchAll />
+
+      <AppShortcuts />
     </UDashboardGroup>
 
     <TvMobileBottomNav />
@@ -33,12 +35,14 @@ import DashboardSidebarFirst from '@/components/sidebars/DashboardSidebarFirst.v
 import DashboardSidebarSecond from '@/components/sidebars/DashboardSidebarSecond.vue'
 import TvMobileBottomNav from '@/components/features/base/TvMobileBottomNav.vue'
 import SearchAll from '@/components/features/main/screen-main/parts/SearchAll.vue'
+import AppShortcuts from '@/components/features/shortcuts/AppShortcuts.vue'
 import { useCentrifugo } from '@/composables/useCentrifugo'
 import { usePushNotifications } from '@/composables/usePushNotifications'
 import { useWidgetSnapshot } from '@/composables/useWidgetSnapshot'
 import { useWidgetDeepLink } from '@/composables/useWidgetDeepLink'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useOrganizationStore } from '@/stores/organization.store'
+import { useOrgSwitcher } from '@/composables/useOrgSwitcher'
 import { useTimeTrackingStore } from '@/stores/time-tracking.store'
 import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
 
@@ -64,6 +68,16 @@ watch(
 )
 const route = useRoute()
 const router = useRouter()
+const { activateOrg } = useOrgSwitcher()
+
+watch(
+  () => route.params.orgSlug as string | undefined,
+  (slug) => {
+    if (!slug || !orgStore.initialized) return
+    const org = orgStore.findOrgBySlug(slug)
+    if (org) activateOrg(org)
+  },
+)
 
 watch(
   () => [goalsStore.initialized, goalsStore.goals, route.params.projectId] as const,

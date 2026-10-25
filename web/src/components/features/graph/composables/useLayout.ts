@@ -1,6 +1,6 @@
 import dagre from '@dagrejs/dagre'
 import { type Edge, type GraphNode, type Node, Position, type XYPosition } from '@vue-flow/core'
-import type { GraphPlaceNodeNearArgs } from '@/types/graph.types'
+import type { GraphPlaceNodeFreeArgs, GraphPlaceNodeNearArgs } from '@/types/graph.types'
 import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
 
 const NODE_WIDTH = 288 // w-72 wrapper in TaskNode
@@ -137,6 +137,38 @@ export function placeNodeNear({ anchor, node, side, direction, obstacles }: Grap
     if (isFree(position)) return position
   }
   return origin
+}
+
+/**
+ * The free spot nearest to the wanted one: kept as is when nothing is there, otherwise moved
+ * flush against a side of a node in the way, keeping NODE_SEP from every node.
+ */
+export function placeNodeInFreeSpot({ target, node, obstacles }: GraphPlaceNodeFreeArgs): XYPosition {
+  const size = estimateNodeSize(node)
+  const rects = obstacles.map((item) => ({ ...item.position, ...nodeSize(item) }))
+  const isFree = (position: XYPosition) =>
+    rects.every(
+      (rect) =>
+        position.x + size.width + NODE_SEP <= rect.x ||
+        rect.x + rect.width + NODE_SEP <= position.x ||
+        position.y + size.height + NODE_SEP <= rect.y ||
+        rect.y + rect.height + NODE_SEP <= position.y,
+    )
+  if (isFree(target)) return target
+
+  // Slide along one axis at a time, like placeNodeNear, and keep the closest result
+  const candidates: XYPosition[] = []
+  for (const rect of rects) {
+    candidates.push(
+      { x: target.x, y: rect.y - NODE_SEP - size.height },
+      { x: target.x, y: rect.y + rect.height + NODE_SEP },
+      { x: rect.x - NODE_SEP - size.width, y: target.y },
+      { x: rect.x + rect.width + NODE_SEP, y: target.y },
+    )
+  }
+  const distance = (position: XYPosition) => Math.hypot(position.x - target.x, position.y - target.y)
+  candidates.sort((a, b) => distance(a) - distance(b))
+  return candidates.find(isFree) ?? target
 }
 
 /**

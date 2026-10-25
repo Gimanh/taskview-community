@@ -11,6 +11,7 @@ export type UserDbRecord = {
     remind_password_code: string | null;
     remind_password_time: number | null;
     remember_token: string | null;
+    login_code_attempts: number;
 };
 
 export const UserJwtPayloadSchema = z.object({
@@ -21,6 +22,18 @@ export const UserJwtPayloadSchema = z.object({
         email: z.string(),
     }),
 });
+
+export type AuthTokenType = 'access' | 'refresh';
+
+// A signed session token as it comes in: the session payload plus the token type
+export const AuthTokenPayloadSchema = UserJwtPayloadSchema.extend({
+    typ: z.enum(['access', 'refresh']),
+});
+
+export type ValidateTokenArgs = {
+    token: string;
+    type: AuthTokenType;
+};
 
 export const RegisterUserInDbSchema = z.object({
     login: z.string(),
@@ -51,9 +64,9 @@ export type RemindPassword = z.infer<typeof RemindPasswordSchema>;
 export const ChangePasswordDataScheme = z
     .object({
         login: z.string(),
-        code: z.string(),
-        password: z.string(),
-        passwordRepeat: z.string(),
+        code: z.string().min(1).max(64),
+        password: z.string().min(6).max(128),
+        passwordRepeat: z.string().max(128),
     })
     .refine((data) => data.password === data.passwordRepeat, {
         message: "Passwords don't match",
@@ -122,6 +135,46 @@ export type UpdateUserEmailArgs = {
 };
 
 export type UpdateUserCredentialsResult = 'ok' | 'conflict' | 'error';
+
+export type LoginCodeAttempt = {
+    rememberToken: string;
+    attempts: number;
+};
+
+export type ConsumeLoginCodeArgs = {
+    userId: number;
+    rememberToken: string;
+};
+
+export type ReserveLoginCodeSendArgs = {
+    userId: number;
+    hourlyLimit: number;
+};
+
+export type LoginCodeSendReservation = { allowed: true } | { allowed: false; retryAfterSeconds: number };
+
+export type ConsumeReminderCodeArgs = {
+    userId: number;
+    code: string;
+    /** unix seconds; a code issued before this moment has expired */
+    issuedAfter: number;
+};
+
+export const DeleteAccountSchema = z.object({
+    code: z.string().min(1).max(64),
+});
+
+export type AddDeleteAccountCodeArgs = {
+    userId: number;
+    code: string;
+};
+
+export type DeleteAccountByCodeArgs = {
+    userId: number;
+    code: string;
+    /** seconds; a code issued longer ago than this has expired */
+    ttlSeconds: number;
+};
 
 export const RefreshTokenSchema = z.object({
     refreshToken: z.string(),
@@ -199,6 +252,7 @@ export const GoalPermissions = {
     ORG_CAN_MANAGE_MEMBERS: 'org_can_manage_members',
     SSO_CAN_MANAGE: 'sso_can_manage',
     WEBHOOKS_CAN_MANAGE: 'webhooks_can_manage',
+    WEBHOOKS_CAN_VIEW: 'webhooks_can_view',
     BILLING_CAN_MANAGE: 'billing_can_manage',
 
     SPRINT_CAN_VIEW: 'sprint_can_view',
@@ -230,3 +284,11 @@ export type FetchPermissionsForGoalByUserParams = {
     userId: number;
     email: string;
 };
+
+export type FetchPermissionsForGoalsParams = {
+    goalIds: number[];
+    userId: number;
+    email: string;
+};
+
+export type GoalPermissionItemsWithGoalFromDb = (GoalPermissionItemsFromDb[number] & { goalId: number })[];

@@ -20,13 +20,19 @@
           >
             <template #leading>
               <div class="h-full">
-                <UCheckbox
-                  :disabled="!canEditTaskStatus"
-                  :model-value="!!task.complete"
-                  class="mt-0.5"
-                  data-testid="task-detail-complete"
-                  @update:model-value="toggleComplete"
-                />
+                <UTooltip
+                  :text="t(SHORTCUTS.toggleComplete.labelKey)"
+                  :kbds="SHORTCUTS.toggleComplete.kbds"
+                  :disabled="!shortcutsEnabled || !canEditTaskStatus"
+                >
+                  <UCheckbox
+                    :disabled="!canEditTaskStatus"
+                    :model-value="!!task.complete"
+                    class="mt-0.5"
+                    data-testid="task-detail-complete"
+                    @update:model-value="toggleComplete"
+                  />
+                </UTooltip>
               </div>
             </template>
           </UTextarea>
@@ -194,6 +200,9 @@ import type { StatusValue } from '@/composables/useKanbanStatusOptions'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useUiPreferences } from '@/composables/useUiPreferences'
 import { tasksSection } from '@/uiCustomization/sections/tasks'
+import { useTaskShortcuts } from '@/shortcuts/useTaskShortcuts'
+import { useShortcutsEnabled } from '@/shortcuts/useShortcutsEnabled'
+import { SHORTCUTS } from '@/shortcuts/registry'
 
 const { t } = useI18n()
 const toast = useToast()
@@ -275,6 +284,9 @@ async function toggleComplete() {
   }
 }
 
+
+useTaskShortcuts({ canToggleComplete: canEditTaskStatus, toggleComplete })
+const shortcutsEnabled = useShortcutsEnabled()
 
 async function updateNote(note: string) {
   if (!task.value) return

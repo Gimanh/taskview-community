@@ -2,6 +2,7 @@
   <div class="flex justify-between gap-2 w-full">
     <div class="flex gap-2">
       <UButton
+        v-if="canDelete"
         :label="t('common.delete')"
         color="error"
         variant="soft"
@@ -33,6 +34,7 @@ import { useI18n } from 'vue-i18n'
 
 defineProps<{
   canMove: boolean
+  canDelete: boolean
 }>()
 
 const emit = defineEmits<{

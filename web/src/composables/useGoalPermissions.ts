@@ -22,19 +22,21 @@ export function useGoalPermissionsFor(goalRef: Ref<GoalItem | null>) {
     canDeleteGoal: can('GOAL_CAN_DELETE'),
     canEditGoal: can('GOAL_CAN_EDIT'),
     canManageUsers: can('GOAL_CAN_MANAGE_USERS'),
-    canViewKanban: computed(() => hasPermission(goalRef.value, 'KANBAN_CAN_VIEW') || hasPermission(goalRef.value, 'KANBAN_CAN_MANAGE')),
-    canViewGraph: computed(() => hasPermission(goalRef.value, 'GRAPH_CAN_VIEW') || hasPermission(goalRef.value, 'GRAPH_CAN_MANAGE')),
-    canViewIntegrations: computed(() => hasPermission(goalRef.value, 'INTEGRATIONS_CAN_VIEW') || hasPermission(goalRef.value, 'INTEGRATIONS_CAN_MANAGE')),
+    canViewKanban: can('KANBAN_CAN_VIEW'),
+    canViewGraph: can('GRAPH_CAN_VIEW'),
+    canViewIntegrations: can('INTEGRATIONS_CAN_VIEW'),
     canManageIntegrations: computed(() => hasPermission(goalRef.value, 'INTEGRATIONS_CAN_MANAGE')),
-    canViewTimeTracking: computed(() => hasPermission(goalRef.value, 'TIMETRACKING_CAN_VIEW') || hasPermission(goalRef.value, 'TIMETRACKING_CAN_MANAGE_ALL')),
+    canViewTimeTracking: can('TIMETRACKING_CAN_VIEW'),
     canViewSprints: can('SPRINT_CAN_VIEW'),
     canManageSprints: can('SPRINT_CAN_MANAGE'),
     canAssignSprintTasks: can('SPRINT_CAN_ASSIGN_TASKS'),
     canViewSprintAnalytics: can('SPRINT_CAN_VIEW_ANALYTICS'),
-    canViewFiles: computed(() => hasPermission(goalRef.value, 'FILE_CAN_VIEW') || hasPermission(goalRef.value, 'FILE_CAN_MANAGE')),
+    canViewFiles: can('FILE_CAN_VIEW'),
     canManageFiles: can('FILE_CAN_MANAGE'),
-    canViewAutomations: computed(() => hasPermission(goalRef.value, 'AUTOMATION_CAN_VIEW') || hasPermission(goalRef.value, 'AUTOMATION_CAN_MANAGE')),
+    canViewAutomations: can('AUTOMATION_CAN_VIEW'),
     canManageAutomations: can('AUTOMATION_CAN_MANAGE'),
+    canViewWebhooks: can('WEBHOOKS_CAN_VIEW'),
+    canManageWebhooks: can('WEBHOOKS_CAN_MANAGE'),
   }
 }
 
@@ -82,15 +84,15 @@ export const useGoalPermissions = () => {
   const canRecoveryTaskHistory = computed(() => permissions.TASK_CAN_RECOVERY_HISTORY)
   const canAssignUsersToTask = computed(() => permissions.TASK_CAN_ASSIGN_USERS)
   const canViewAssignedUsersToTask = computed(() => permissions.TASK_CAN_WATCH_ASSIGNED_USERS)
-  const canViewKanban = computed(() => permissions.KANBAN_CAN_VIEW || permissions.KANBAN_CAN_MANAGE)
+  const canViewKanban = computed(() => permissions.KANBAN_CAN_VIEW)
   const canManageKanban = computed(() => permissions.KANBAN_CAN_MANAGE)
-  const canViewGraph = computed(() => permissions.GRAPH_CAN_VIEW || permissions.GRAPH_CAN_MANAGE)
+  const canViewGraph = computed(() => permissions.GRAPH_CAN_VIEW)
   const canManageGraph = computed(() => permissions.GRAPH_CAN_MANAGE)
-  const canViewIntegrations = computed(() => permissions.INTEGRATIONS_CAN_VIEW || permissions.INTEGRATIONS_CAN_MANAGE)
+  const canViewIntegrations = computed(() => permissions.INTEGRATIONS_CAN_VIEW)
   const canManageIntegrations = computed(() => permissions.INTEGRATIONS_CAN_MANAGE)
 
-  const canViewTimeTracking = computed(() => permissions.TIMETRACKING_CAN_VIEW || permissions.TIMETRACKING_CAN_MANAGE_ALL)
-  const canLogTime = computed(() => permissions.TIMETRACKING_CAN_LOG || permissions.TIMETRACKING_CAN_MANAGE_ALL)
+  const canViewTimeTracking = computed(() => permissions.TIMETRACKING_CAN_VIEW)
+  const canLogTime = computed(() => permissions.TIMETRACKING_CAN_LOG)
   const canManageAllTime = computed(() => permissions.TIMETRACKING_CAN_MANAGE_ALL)
 
   const canViewSprints = computed(() => permissions.SPRINT_CAN_VIEW)
@@ -98,10 +100,12 @@ export const useGoalPermissions = () => {
   const canAssignSprintTasks = computed(() => permissions.SPRINT_CAN_ASSIGN_TASKS)
   const canViewSprintAnalytics = computed(() => permissions.SPRINT_CAN_VIEW_ANALYTICS)
 
-  const canViewFiles = computed(() => permissions.FILE_CAN_VIEW || permissions.FILE_CAN_MANAGE)
+  const canViewFiles = computed(() => permissions.FILE_CAN_VIEW)
   const canManageFiles = computed(() => permissions.FILE_CAN_MANAGE)
-  const canViewAutomations = computed(() => permissions.AUTOMATION_CAN_VIEW || permissions.AUTOMATION_CAN_MANAGE)
+  const canViewAutomations = computed(() => permissions.AUTOMATION_CAN_VIEW)
   const canManageAutomations = computed(() => permissions.AUTOMATION_CAN_MANAGE)
+  const canViewWebhooks = computed(() => permissions.WEBHOOKS_CAN_VIEW)
+  const canManageWebhooks = computed(() => permissions.WEBHOOKS_CAN_MANAGE)
 
   return {
     permissions,
@@ -148,5 +152,7 @@ export const useGoalPermissions = () => {
     canManageFiles,
     canViewAutomations,
     canManageAutomations,
+    canViewWebhooks,
+    canManageWebhooks,
   }
 }

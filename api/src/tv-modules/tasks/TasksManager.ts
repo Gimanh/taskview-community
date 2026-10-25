@@ -31,6 +31,7 @@ import { TasksRepository } from './TasksRepository';
 import type { TaskArgMove, TaskMoveOutcome, TaskMovePreviewDto } from './task-move.types';
 import { FilesRepository } from '../files/FilesRepository';
 import {
+    type TaskAddResult,
     type TaskArgAdd,
     type TaskArgDelete,
     type TaskArgFetchTaskByIdNew,
@@ -38,14 +39,12 @@ import {
     type TaskArgFetchTasksNew,
     type TaskArgRestoreTaskHistory,
     type TaskArgUpdate,
-    TaskFieldPermissionsForWatching,
     type TaskForClientNew,
     type TaskUpdateResult,
     type TasksArgToggleTaskUsers,
 } from './tasks.server.types';
 import type { KanbanArgFetchTasksForColumn, KanbanArgFilters } from '../kanban/types';
-
-type TaskFieldPermissionKey = keyof typeof TaskFieldPermissionsForWatching & keyof TasksSchemaTypeForSelect;
+import { hideUnwatchableTaskFields } from './task-field-visibility';
 
 export class TasksManager {
     public readonly repository: TasksRepository;
@@ -321,17 +320,8 @@ export class TasksManager {
 
     /** Public: other modules returning task rows (e.g. recurrence) gate fields through the same cleaner. */
     async cleanTaskFieldsRegardPermissions(task: TasksSchemaTypeForSelect): Promise<TasksSchemaTypeForSelect> {
-        const permissions = await this.user.permissionsFetcher.getCheckerForGoal(task.goalId);
-        (Object.keys(TaskFieldPermissionsForWatching) as TaskFieldPermissionKey[]).forEach((key) => {
-            if (!permissions.hasPermissions(TaskFieldPermissionsForWatching[key])) {
-                // Type-safe: we know key is a valid field from TaskFieldPermissions
-                // and we're intentionally nullifying it for permission reasons
-                const taskWithNullableFields = task as TasksSchemaTypeForSelect &
-                    Partial<Record<TaskFieldPermissionKey, null>>;
-                taskWithNullableFields[key] = null;
-            }
-        });
-        return task;
+        const checker = await this.user.permissionsFetcher.getCheckerForGoal(task.goalId);
+        return hideUnwatchableTaskFields({ task, checker });
     }
 
     /**
@@ -412,14 +402,27 @@ export class TasksManager {
         );
     }
 
-    async addTaskNew(data: TaskArgAdd) {
-        let newData = { ...data };
+    async addTaskNew(data: TaskArgAdd): Promise<TaskAddResult> {
+        // The caller is authorized on data.goalId only; a DB trigger would otherwise move the task into the list's project
+        const foreign = await this.repository.referencesOutsideGoal({
+            taskId: null,
+            goalId: data.goalId,
+            goalListId: data.goalListId,
+            statusId: data.statusId,
+            parentId: data.parentId,
+        });
+        if (foreign) return { ok: false, reason: 'foreign_reference' };
+
+        const newData = { ...data };
 
         if (data.kanbanOrder === null || data.kanbanOrder === undefined) {
             newData.kanbanOrder = await this.repository.getNextKanbanOrder(data.goalId, data.statusId ?? null);
         }
 
-        const task = await this.repository.addTaskNew(newData);
+        const task = await this.repository.addTaskNew({
+            data: newData,
+            creatorId: this.user.getUserData()?.id as number,
+        });
         const result = await this.extendTasksWithTagsAndAssignees(task, true);
 
         if (task[0]) {
@@ -429,7 +432,7 @@ export class TasksManager {
             });
         }
 
-        return result;
+        return { ok: true, tasks: result };
     }
 
     async deleteTaskNew(data: TaskArgDelete) {

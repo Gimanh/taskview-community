@@ -4,7 +4,13 @@ import type { AddGoalToDbArg, GoalItemInDb, UpdateGoalDbArg } from '../../types/
 import { isNotNullable } from '../../utils/helpers';
 import { GoalItemForClient } from './GoalItemForClient';
 import { GoalsRepository } from './GoalsRepository';
-import type { GoalsArgAdd, GoalsArgDelete, GoalsArgUpdate, GoalsItemForClientWithPermissions } from './types';
+import type {
+    GoalsArgAdd,
+    GoalsArgDelete,
+    GoalsArgFetchAccessibleIds,
+    GoalsArgUpdate,
+    GoalsItemForClientWithPermissions,
+} from './types';
 
 export default class GoalsManager {
     public readonly goalsRepository: GoalsRepository;
@@ -102,8 +108,20 @@ export default class GoalsManager {
         return await this.goalsRepository.updateArchive(goalId, archive);
     }
 
-    async fetchAllOwnGoalsIds(organizationId?: number) {
-        return await this.goalsRepository.fetchAllOwnGoalsIds(this.user, organizationId);
+    async fetchAccessibleGoalIds(args: GoalsArgFetchAccessibleIds = {}): Promise<number[]> {
+        const userId = this.user.getUserData()?.id;
+        if (!userId) return [];
+
+        const [ownGoalIds, sharedGoals] = await Promise.all([
+            this.goalsRepository.fetchOwnGoalIds({
+                userId,
+                organizationId: args.organizationId,
+                includeArchived: args.includeArchivedOwn,
+            }),
+            this.goalsRepository.fetchSharedGoals(this.user, args.organizationId),
+        ]);
+
+        return [...new Set([...ownGoalIds, ...sharedGoals.map((g) => g.id)])];
     }
 
     async createGoal(goalData: GoalsArgAdd): Promise<GoalsItemForClientWithPermissions | false> {

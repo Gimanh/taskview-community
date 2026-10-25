@@ -22,6 +22,8 @@ export type GoalsStoreState = {
     loading: boolean;
     selectedItemId: GoalItem['id'];
     goals: GoalItem[];
+    /** Inbox of the user's personal organization, loaded while another organization is open */
+    personalInbox: GoalItem | null;
 };
 
 export type GoalEventMoreMenu = {

@@ -33,7 +33,7 @@ export const tagsAutomations: AutomationModuleDefinition = {
     ],
     dataSources: {
         'tags.goalTags': {
-            viewPermissions: [GoalPermissions.TASKS_CAN_WATCH_TAGS, GoalPermissions.TASKS_CAN_EDIT_TAGS],
+            viewPermissions: [GoalPermissions.TASKS_CAN_WATCH_TAGS],
             load: async ({ goalId }) => {
                 const tags = await new AutomationsRepository().fetchGoalTags(goalId);
                 return tags.map((tag) => ({ id: tag.id, label: tag.name, color: tag.color }));

@@ -5,6 +5,22 @@ import { useGraphStore } from '@/stores/graph.store'
 import { useBaseScreenStore } from '@/stores/base-screen.store'
 import { useCalendarStore } from '@/stores/calendar.store'
 
+export function useTaskRemovalBroadcast() {
+  const kanbanStore = useKanbanStore()
+  const graphStore = useGraphStore()
+  const baseScreenStore = useBaseScreenStore()
+  const calendarStore = useCalendarStore()
+
+  function broadcastRemoval(taskId: number) {
+    kanbanStore.removeTask(taskId)
+    graphStore.removeTask(taskId)
+    baseScreenStore.removeTask(taskId)
+    calendarStore.removeTask(taskId)
+  }
+
+  return { broadcastRemoval }
+}
+
 // If you use it in more than one component, you need to use a shared composable
 // using import { createSharedComposable } from '@vueuse/core'
 export function useSelectedTaskSync() {
@@ -26,12 +42,5 @@ export function useSelectedTaskSync() {
     { deep: true },
   )
 
-  function broadcastRemoval(taskId: number) {
-    kanbanStore.removeTask(taskId)
-    graphStore.removeTask(taskId)
-    baseScreenStore.removeTask(taskId)
-    calendarStore.removeTask(taskId)
-  }
-
-  return { broadcastRemoval }
+  return useTaskRemovalBroadcast()
 }

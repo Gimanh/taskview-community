@@ -20,6 +20,13 @@ export type KanbanResponseAddColumn = KanbanColumnItem | null;
 export type KanbanArgUpdateColumn = { id: number; name: string; viewOrder?: number };
 export type KanbanResponseUpdateColumn = boolean;
 
+export type KanbanArgReorderColumns = {
+    goalId: number;
+    /** every column of the project, in the new order */
+    statusIds: number[];
+};
+export type KanbanResponseReorderColumns = KanbanColumnItem[];
+
 export type KanbanArgDeleteColumn = { id: number };
 export type KanbanResponseDeleteColumn = boolean;
 

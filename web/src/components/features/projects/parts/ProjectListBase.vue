@@ -119,7 +119,7 @@
       />
       <!-- Webhooks -->
       <UButton
-        v-if="canViewIntegrations"
+        v-if="canViewWebhooks"
         :label="t('contextMenu.webhooks')"
         icon="i-lucide-webhook"
         variant="ghost"
@@ -257,6 +257,7 @@ const {
   canViewKanban,
   canViewGraph,
   canViewIntegrations,
+  canViewWebhooks,
   canViewTimeTracking,
   canManageUsers,
   canEditGoal,

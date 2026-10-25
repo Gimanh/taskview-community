@@ -26,6 +26,13 @@ export type GraphPositionNearArgs = {
     side: GraphPlacementSide;
 };
 
+export type GraphPlaceNodeFreeArgs = {
+    /** wanted top-left corner of the new node */
+    target: XYPosition;
+    node: Pick<Node, 'data'>;
+    obstacles: Node[];
+};
+
 export type GraphPlaceNodeNearArgs = {
     anchor: Node;
     node: Pick<Node, 'data'>;

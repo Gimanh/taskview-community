@@ -295,7 +295,7 @@ describe('AuthModel Integration Tests', () => {
         expect(userId).toBeTruthy();
 
         if (userId) {
-            const result = await authModel.addDeleteAccountCode(`${emailNum}some-code`, userId);
+            const result = await authModel.addDeleteAccountCode({ code: `${emailNum}some-code`, userId });
             expect(result).toBe(true);
             const db = Database.getInstance();
             const codeResult = await db.query('select * from tv_auth.account_deletion where code = $1', [
@@ -326,14 +326,14 @@ describe('AuthModel Integration Tests', () => {
         expect(userId).toBeTruthy();
 
         if (userId) {
-            const result = await authModel.addDeleteAccountCode(code, userId);
+            const result = await authModel.addDeleteAccountCode({ code, userId });
             expect(result).toBe(true);
 
             const codeResult = await db.query('select * from tv_auth.account_deletion where code = $1', [code]);
             expect(codeResult.rows[0].user_id).toBe(userId);
             expect(codeResult.rows[0].code).toBe(code);
         }
-        const deleteResult = await authModel.deleteUserAccount(code, userId);
+        const deleteResult = await authModel.deleteAccountByCode({ code, userId, ttlSeconds: 15 * 60 });
         expect(deleteResult).toBe(true);
 
         const codeResult = await db.query('select * from tv_auth.account_deletion where code = $1', [code]);

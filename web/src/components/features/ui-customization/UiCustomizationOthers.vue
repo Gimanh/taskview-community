@@ -52,6 +52,13 @@
       :description="t('uiCustomization.others.showTaskIdHint')"
       data-testid="show-task-id-switch"
     />
+
+    <USwitch
+      v-model="keyboardShortcuts"
+      :label="t('uiCustomization.others.keyboardShortcuts')"
+      :description="t('uiCustomization.others.keyboardShortcutsHint')"
+      data-testid="keyboard-shortcuts-switch"
+    />
   </div>
 </template>
 
@@ -91,6 +98,13 @@ const showTaskId = computed<boolean>({
   get: () => store.settings.showTaskId === 1,
   set: (value) => {
     store.setSetting('showTaskId', value ? 1 : undefined)
+  },
+})
+
+const keyboardShortcuts = computed<boolean>({
+  get: () => store.settings.keyboardShortcuts !== 0,
+  set: (value) => {
+    store.setSetting('keyboardShortcuts', value ? undefined : 0)
   },
 })
 

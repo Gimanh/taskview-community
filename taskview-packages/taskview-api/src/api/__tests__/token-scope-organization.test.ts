@@ -360,12 +360,20 @@ describe('API token scope on organization-level surfaces', () => {
             expect(status).toBe(403);
         });
 
-        it('allows a token holding webhooks_can_manage', async () => {
-            const client = await scopedClient(['webhooks_can_manage']);
+        it('lets a token holding webhooks_can_view list webhooks', async () => {
+            const client = await scopedClient(['webhooks_can_view']);
 
             const status = await statusOf(client.webhooks.fetch(goalId));
 
             expectAllowed(status);
+        });
+
+        it('does not let webhooks_can_manage alone list webhooks', async () => {
+            const client = await scopedClient(['webhooks_can_manage']);
+
+            const status = await statusOf(client.webhooks.fetch(goalId));
+
+            expect(status).toBe(403);
         });
 
         it('allows an unrestricted token', async () => {

@@ -24,8 +24,7 @@ export const canViewTimeStats = (source: Source) => async (req: Request, res: Re
     }
 
     if (
-        checker.hasPermissions(GoalPermissions.TIMETRACKING_CAN_VIEW) ||
-        checker.hasPermissions(GoalPermissions.TIMETRACKING_CAN_MANAGE_ALL)
+        checker.hasPermissions(GoalPermissions.TIMETRACKING_CAN_VIEW)
     ) {
         return next()
     }

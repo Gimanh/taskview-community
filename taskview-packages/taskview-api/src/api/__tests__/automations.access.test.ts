@@ -90,6 +90,22 @@ describe('Automations permission boundaries', () => {
     await expectApiError({ request: memberApi.automations.getOptions({ goalId: p.goalId, source: 'tags.goalTags' }), status: 403 })
   })
 
+  it('does not let automation_can_manage alone read the rules', async () => {
+    const p = await project()
+    await ownerApi.automations.createRule(createdAddsTag(p, p.tagAId))
+    await share(p.goalId, [TvPermissions.AUTOMATION_CAN_MANAGE])
+
+    await expectApiError({ request: memberApi.automations.listRules(p.goalId), status: 403 })
+  })
+
+  it('does not offer columns or tags as rule values for manage-only kanban and tag permissions', async () => {
+    const p = await project()
+    await share(p.goalId, [TvPermissions.AUTOMATION_CAN_VIEW, TvPermissions.KANBAN_CAN_MANAGE, TvPermissions.TASK_CAN_EDIT_TAGS])
+
+    await expectApiError({ request: memberApi.automations.getOptions({ goalId: p.goalId, source: 'kanban.statuses' }), status: 403 })
+    await expectApiError({ request: memberApi.automations.getOptions({ goalId: p.goalId, source: 'tags.goalTags' }), status: 403 })
+  })
+
   it('refuses a rule whose action needs a permission the author does not have', async () => {
     const p = await project()
     await share(p.goalId, [TvPermissions.AUTOMATION_CAN_MANAGE, TvPermissions.TASK_CAN_EDIT_TAGS])

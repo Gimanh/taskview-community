@@ -9,11 +9,17 @@ import {
     PermissionsSchema,
 } from 'taskview-db-schemas';
 import { Database } from '../modules/db';
-import type { FetchGoalIdsWithAnyPermissionParams, FetchPermissionsForGoalByUserParams, GoalPermissionItemsFromDb } from '../types/auth.types';
+import type {
+    FetchGoalIdsWithAnyPermissionParams,
+    FetchPermissionsForGoalByUserParams,
+    FetchPermissionsForGoalsParams,
+    GoalPermissionItemsFromDb,
+    GoalPermissionItemsWithGoalFromDb,
+    GoalPermissionType,
+} from '../types/auth.types';
 import type { GoalItemInDb } from '../types/goal.type';
 import type { ListItemInDb } from '../types/lists.types';
 import type { TaskItemInDb } from '../types/tasks.types';
-import type { AppUser } from './AppUser';
 
 export class GoalPermissionsRepository {
     private db: Database;
@@ -30,12 +36,6 @@ export class GoalPermissionsRepository {
             return result.rows[0].goal_id;
         }
         return null;
-    }
-
-    async fetchPermissionsForGoal(goalId: number, user: AppUser): Promise<GoalPermissionItemsFromDb> {
-        const userData = user.getUserData();
-        if (!userData) return [];
-        return this.fetchPermissionsForGoalByUser({ goalId, userId: userData.id, email: userData.email });
     }
 
     /**
@@ -71,6 +71,74 @@ export class GoalPermissionsRepository {
         const result = await this.db.query<GoalPermissionItemsFromDb[number]>(query, args);
 
         return result.rows;
+    }
+
+    async fetchPermissionsForGoals(params: FetchPermissionsForGoalsParams): Promise<GoalPermissionItemsWithGoalFromDb> {
+        if (params.goalIds.length === 0) return [];
+
+        const goals = await this.db.dbDrizzle
+            .select({ id: GoalsSchema.id, owner: GoalsSchema.owner })
+            .from(GoalsSchema)
+            .where(inArray(GoalsSchema.id, params.goalIds));
+
+        const ownedGoalIds = goals.filter((g) => g.owner === params.userId).map((g) => g.id);
+        const sharedGoalIds = goals.filter((g) => g.owner !== params.userId).map((g) => g.id);
+        const rows: GoalPermissionItemsWithGoalFromDb = [];
+
+        if (ownedGoalIds.length > 0) {
+            const allPermissions = await this.db.dbDrizzle
+                .select({ permissionName: PermissionsSchema.name, permissionId: PermissionsSchema.id })
+                .from(PermissionsSchema);
+            ownedGoalIds.forEach((goalId) => {
+                allPermissions.forEach((p) => {
+                    rows.push({ goalId, permissionName: p.permissionName as GoalPermissionType, permissionId: p.permissionId });
+                });
+            });
+        }
+
+        if (sharedGoalIds.length > 0) {
+            const shared = await this.db.dbDrizzle
+                .select({
+                    goalId: CollaborationUsersToGoalsSchema.goalId,
+                    permissionName: PermissionsSchema.name,
+                    permissionId: PermissionsSchema.id,
+                })
+                .from(CollaborationUsersSchema)
+                .innerJoin(
+                    CollaborationUsersToGoalsSchema,
+                    eq(CollaborationUsersToGoalsSchema.userId, CollaborationUsersSchema.id),
+                )
+                .innerJoin(
+                    CollaborationUsersToRolesSchema,
+                    eq(CollaborationUsersToRolesSchema.userId, CollaborationUsersSchema.id),
+                )
+                .innerJoin(
+                    CollaborationRolesSchema,
+                    and(
+                        eq(CollaborationRolesSchema.id, CollaborationUsersToRolesSchema.roleId),
+                        eq(CollaborationRolesSchema.goalId, CollaborationUsersToGoalsSchema.goalId),
+                    ),
+                )
+                .innerJoin(
+                    CollaborationPermissionsToRoleSchema,
+                    eq(CollaborationPermissionsToRoleSchema.roleId, CollaborationRolesSchema.id),
+                )
+                .innerJoin(
+                    PermissionsSchema,
+                    eq(PermissionsSchema.id, CollaborationPermissionsToRoleSchema.permissionId),
+                )
+                .where(
+                    and(
+                        eq(CollaborationUsersSchema.email, params.email),
+                        inArray(CollaborationUsersToGoalsSchema.goalId, sharedGoalIds),
+                    ),
+                );
+            shared.forEach((r) => {
+                rows.push({ goalId: r.goalId, permissionName: r.permissionName as GoalPermissionType, permissionId: r.permissionId });
+            });
+        }
+
+        return rows;
     }
 
     async getGoalIdForTask(taskId: number): Promise<TaskItemInDb['goal_id'] | null> {

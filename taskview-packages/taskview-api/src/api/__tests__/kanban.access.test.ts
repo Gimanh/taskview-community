@@ -2,7 +2,9 @@ import { TvApi } from '@/tv'
 import { TvPermissions } from '@/api/permissions'
 import axios, { type AxiosInstance } from 'axios'
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import type { Client } from 'pg'
 import { API_URL, DEFAULT_PASSWORD, DEFAULT_USER_2, initApi } from './init-api'
+import { openTestDb } from './test-db'
 
 /**
  * Board writes (columns and task placement) are gated by kanban_can_manage, the
@@ -16,6 +18,7 @@ describe('Kanban permission boundaries', () => {
   let outsiderEmail: string
   let deleteAllGoals: () => Promise<void>
   let attackerAxios: AxiosInstance
+  let db: Client
   const permissionIdByName = new Map<string, number>()
 
   beforeAll(async () => {
@@ -38,11 +41,20 @@ describe('Kanban permission boundaries', () => {
     for (const permission of await ownerApi.collaboration.fetchAllPermissions()) {
       permissionIdByName.set(permission.name, permission.id)
     }
+
+    db = await openTestDb()
   })
 
   afterAll(async () => {
     await deleteAllGoals()
+    await db.end()
   })
+
+  async function readPlacement(taskId: number): Promise<{ status_id: number | null, kanban_order: number | null }> {
+    const result = await db.query('select status_id, kanban_order from tasks.tasks where id = $1', [taskId])
+    expect(result.rows).toHaveLength(1)
+    return result.rows[0]
+  }
 
   async function expectHttpStatus<T>(promise: Promise<T>, status: number): Promise<void> {
     try {
@@ -215,6 +227,67 @@ describe('Kanban permission boundaries', () => {
 
       expect(deleteResponse.status).toBe(403)
       expect(updateResponse.status).toBe(403)
+    })
+  })
+
+  describe('a task move stays inside the goal it was authorized for', () => {
+    it('rejects moving a foreign task when a self-owned goalId is supplied', async () => {
+      const victimGoal = await ownerApi.goals.createGoal({ name: `Victim move ${Date.now()}` })
+      if (!victimGoal) throw new Error('Failed to create victim goal')
+      const victimColumn = await addColumn(victimGoal.id, 'Victim column')
+      const victimTask = await ownerApi.tasks.createTask({
+        goalId: victimGoal.id,
+        description: `victim-${Date.now()}`,
+        statusId: victimColumn.id,
+      })
+      if (!victimTask) throw new Error('Failed to create victim task')
+      const before = await readPlacement(victimTask.id)
+
+      const ownGoal = await outsiderApi.goals.createGoal({ name: `Attacker move ${Date.now()}` })
+      if (!ownGoal) throw new Error('Failed to create attacker goal')
+
+      const response = await attackerAxios.patch('/module/kanban/update-tasks-order-and-column', {
+        goalId: ownGoal.id,
+        columnId: null,
+        taskId: victimTask.id,
+        prevTaskId: null,
+        nextTaskId: null,
+      })
+
+      expect(response.status).toBe(404)
+      expect(await readPlacement(victimTask.id)).toEqual(before)
+    })
+
+    it('ignores neighbour tasks from another goal when placing a task', async () => {
+      const victimGoal = await ownerApi.goals.createGoal({ name: `Victim neighbour ${Date.now()}` })
+      if (!victimGoal) throw new Error('Failed to create victim goal')
+      const victimTask = await ownerApi.tasks.createTask({ goalId: victimGoal.id, description: `victim-${Date.now()}` })
+      if (!victimTask) throw new Error('Failed to create victim task')
+      const victimOrder = 777777
+      await db.query('update tasks.tasks set kanban_order = $1 where id = $2', [victimOrder, victimTask.id])
+
+      const ownGoal = await outsiderApi.goals.createGoal({ name: `Attacker neighbour ${Date.now()}` })
+      if (!ownGoal) throw new Error('Failed to create attacker goal')
+      const ownColumn = await outsiderApi.kanban.addColumn({ goalId: ownGoal.id, name: 'Own column' })
+      if (!ownColumn) throw new Error('Failed to create attacker column')
+      const ownTask = await outsiderApi.tasks.createTask({ goalId: ownGoal.id, description: `own-${Date.now()}` })
+      if (!ownTask) throw new Error('Failed to create attacker task')
+
+      const response = await attackerAxios.patch('/module/kanban/update-tasks-order-and-column', {
+        goalId: ownGoal.id,
+        columnId: ownColumn.id,
+        taskId: ownTask.id,
+        prevTaskId: victimTask.id,
+        nextTaskId: null,
+      })
+      expect(response.status).toBe(200)
+
+      // Placed after the foreign task, the order would have been derived from it (777777 + gap)
+      const placement = await readPlacement(ownTask.id)
+      expect(placement.status_id).toBe(ownColumn.id)
+      expect(placement.kanban_order).not.toBeNull()
+      expect(placement.kanban_order!).toBeLessThan(victimOrder)
+      expect((await readPlacement(victimTask.id)).kanban_order).toBe(victimOrder)
     })
   })
 })

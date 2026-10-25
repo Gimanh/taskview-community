@@ -1,4 +1,15 @@
 import type { TasksSchemaTypeForSelect } from 'taskview-db-schemas';
+import type { GoalAccess } from '../../core/GoalAccess';
+
+export type StartVisibleTask = {
+    goalId: number;
+    tags: number[];
+};
+
+export type StartTasksVisibilityArgs<T extends StartVisibleTask> = {
+    tasks: T[];
+    access: GoalAccess;
+};
 
 export type SearchTaskArgs = {
     description: string;
@@ -29,4 +40,9 @@ export type AssigneesForTaskFromDb = {
     email: string;
     taskId: number;
     collabUserId: number;
+};
+
+export type StartTaskTagFromDb = {
+    taskId: number;
+    tagId: number;
 };

@@ -41,20 +41,6 @@ export class TagsManager {
         return await this.repository.addTagNew(data);
     }
 
-    /** @deprecated use fetchAllTagsForUser instead */
-    async fetchAll() {
-        const userId = this.user.getUserData()?.id;
-        if (!userId) {
-            $logger.error(`Can not fetch tags for undefined user`);
-            return [];
-        }
-        const tags = await this.repository.fetchAll(userId);
-        if (!tags) {
-            return [];
-        }
-        return tags.map((item) => new TagItemForClient(item));
-    }
-
     async fetchAllTagsForUser(organizationId?: number) {
         const userId = this.user.getUserData()?.id;
         if (!userId) {

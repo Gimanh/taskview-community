@@ -1,0 +1,2 @@
+ALTER TABLE tv_auth.users
+    ADD COLUMN IF NOT EXISTS login_code_attempts INTEGER NOT NULL DEFAULT 0;

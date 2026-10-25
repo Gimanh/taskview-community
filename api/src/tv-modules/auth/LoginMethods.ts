@@ -1,4 +1,7 @@
 import type { LoginMethod } from '../../types/auth.types';
+import { parsePositiveInt } from '../../utils/helpers';
+
+const DEFAULT_LOGIN_CODE_HOURLY_LIMIT = 5;
 
 export class LoginMethods {
     static readonly ALL: LoginMethod[] = ['magic-link', 'password', 'sso', 'social'];
@@ -19,7 +22,17 @@ export class LoginMethods {
         return process.env.ALLOW_PUBLIC_REGISTRATION?.trim().toLowerCase() !== 'false';
     }
 
+    /** Max login codes one account may request by email per hour. */
+    static loginCodeHourlyLimit(): number {
+        return parsePositiveInt(process.env.LOGIN_CODE_HOURLY_LIMIT) ?? DEFAULT_LOGIN_CODE_HOURLY_LIMIT;
+    }
+
     static validateOnStartup(): void {
+        const limitRaw = process.env.LOGIN_CODE_HOURLY_LIMIT;
+        if (limitRaw !== undefined && limitRaw.trim() !== '' && parsePositiveInt(limitRaw) === null) {
+            throw new Error(`LOGIN_CODE_HOURLY_LIMIT has unrecognized value "${limitRaw}". Expected a positive integer`);
+        }
+
         const registrationRaw = process.env.ALLOW_PUBLIC_REGISTRATION;
         if (registrationRaw !== undefined && registrationRaw.trim() !== '') {
             const normalized = registrationRaw.trim().toLowerCase();

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import type { GoalItem, KanbanArgDeleteColumn, KanbanArgUpdateColumn, KanbanArgUpdateTasksOrder, KanbanColumnItem, KanbanFilters, TaskArgAdd, KanbanArgAddColumn } from 'taskview-api'
 import { DEFAULT_ID } from '@/types/app.types'
-import type { KanbanStoreState } from '@/types/kanban.types'
+import type { KanbanMoveStatusArgs, KanbanStoreState } from '@/types/kanban.types'
 import { $tvApi } from '@/plugins/axios'
 import { TaskItem } from '@/types/tasks.types'
 import { hasActiveFilters } from '@/helpers/Helper'
@@ -122,6 +122,31 @@ export const useKanbanStore = defineStore('kanban', {
         tasks: [],
         nextCursor: null,
         columnVersion: null,
+      }
+    },
+
+    async moveStatus(args: KanbanMoveStatusArgs): Promise<boolean> {
+      const backlog = this.statuses.filter((stat) => stat.id === DEFAULT_ID)
+      const columns = this.statuses.filter((stat) => stat.id !== DEFAULT_ID)
+      const index = columns.findIndex((stat) => stat.id === args.statusId)
+      const target = args.direction === 'left' ? index - 1 : index + 1
+      if (index === -1 || target < 0 || target >= columns.length) return false
+
+      const previous = [...this.statuses]
+      const [moved] = columns.splice(index, 1)
+      columns.splice(target, 0, moved)
+      this.statuses = [...backlog, ...columns]
+
+      try {
+        const saved = await $tvApi.kanban.reorderColumns({
+          goalId: this.goalId,
+          statusIds: columns.map((stat) => stat.id),
+        })
+        this.statuses = [...backlog, ...saved]
+        return true
+      } catch {
+        this.statuses = previous
+        return false
       }
     },
 

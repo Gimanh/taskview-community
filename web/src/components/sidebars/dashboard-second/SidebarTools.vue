@@ -71,6 +71,7 @@ const {
   canViewAutomations,
   canManageUsers,
   canViewIntegrations,
+  canViewWebhooks,
   canViewTimeTracking,
 } = useGoalPermissionsFor(currentProject)
 
@@ -107,8 +108,10 @@ const tools = computed<Tool[]>(() => {
   if (canManageUsers.value) {
     list.push({ key: 'collaboration', label: t('contextMenu.collaboration'), icon: 'i-lucide-users', to: { name: 'collaboration', params: { projectId: id } }, active: () => route.name === 'collaboration' })
   }
-  if (canViewIntegrations.value) {
+  if (canViewWebhooks.value) {
     list.push({ key: 'webhooks', label: t('contextMenu.webhooks'), icon: 'i-lucide-webhook', to: { name: 'webhooks', params: { projectId: id } }, active: () => route.name === 'webhooks' })
+  }
+  if (canViewIntegrations.value) {
     list.push({ key: 'integrations', label: t('contextMenu.integrations'), icon: 'i-lucide-plug', to: { name: 'integrations', params: { projectId: id } }, active: () => route.name === 'integrations' })
     list.push({ key: 'messaging', label: t('contextMenu.messaging'), icon: 'i-lucide-send', to: { name: 'messaging', params: { projectId: id } }, active: () => route.name === 'messaging' })
   }

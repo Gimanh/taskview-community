@@ -12,7 +12,7 @@ import type { AddGoalToDbArg, GoalItemInDb, GoalItemsInDb, UpdateGoalDbArg } fro
 import { logError } from '../../utils/api';
 import { updateQuery } from '../../utils/db-helper';
 import { callWithCatch } from '../../utils/helpers';
-import type { GoalsArgAdd, GoalsArgCreateInbox, GoalsArgDelete, GoalsArgUpdate } from './types';
+import type { GoalsArgAdd, GoalsArgCreateInbox, GoalsArgDelete, GoalsArgFetchOwnIds, GoalsArgUpdate } from './types';
 
 export class GoalsRepository {
     private readonly db: Database;
@@ -194,13 +194,13 @@ export class GoalsRepository {
         return !!(result.rowCount && result.rowCount > 0);
     }
 
-    async fetchAllOwnGoalsIds(user: AppUser, organizationId?: number): Promise<number[]> {
-        const conditions = [
-            eq(GoalsSchema.owner, user.getUserData()?.id!),
-            eq(GoalsSchema.archive, 0),
-        ];
-        if (organizationId) {
-            conditions.push(eq(GoalsSchema.organizationId, organizationId));
+    async fetchOwnGoalIds(args: GoalsArgFetchOwnIds): Promise<number[]> {
+        const conditions = [eq(GoalsSchema.owner, args.userId)];
+        if (!args.includeArchived) {
+            conditions.push(eq(GoalsSchema.archive, 0));
+        }
+        if (args.organizationId) {
+            conditions.push(eq(GoalsSchema.organizationId, args.organizationId));
         }
 
         const result = await callWithCatch(() =>

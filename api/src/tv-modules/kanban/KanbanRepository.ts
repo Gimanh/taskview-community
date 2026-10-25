@@ -3,10 +3,9 @@ import { Database } from '../../modules/db';
 import type { GoalItemInDb } from '../../types/goal.type';
 import { logError } from '../../utils/api';
 import { updateQuery } from '../../utils/db-helper';
-import type { KanbanStatusItemInDb, StatusBelongsToGoalArgs } from './types';
+import type { KanbanGoalTaskArgs, KanbanReorderStatusesArgs, KanbanStatusItemInDb, StatusBelongsToGoalArgs } from './types';
 import { callWithCatch } from '../../utils/helpers';
 import { and, asc, eq, gt, gte, isNull, lt, lte, sql } from 'drizzle-orm';
-import type { TaskItemInDb } from '../../types/tasks.types';
 import { PgDialect } from 'drizzle-orm/pg-core';
 
 export class KanbanRepository {
@@ -20,13 +19,31 @@ export class KanbanRepository {
             return [];
         }
 
-        const columns = await this.db
-            .query<KanbanStatusItemInDb>('select * from tasks.statuses where goal_id = $1 order by id', [goalId])
-            .catch(logError);
+        const columns = await callWithCatch(() => this.db.dbDrizzle
+            .select({
+                id: TasksStatusesSchema.id,
+                goal_id: TasksStatusesSchema.goalId,
+                name: TasksStatusesSchema.name,
+                view_order: TasksStatusesSchema.viewOrder,
+            })
+            .from(TasksStatusesSchema)
+            .where(eq(TasksStatusesSchema.goalId, goalId))
+            .orderBy(asc(TasksStatusesSchema.viewOrder), asc(TasksStatusesSchema.id)));
 
-        if (!columns) return [];
+        return (columns ?? []).map((column) => ({ ...column, view_order: column.view_order ?? 0 }));
+    }
 
-        return columns.rows;
+    async reorderStatuses(args: KanbanReorderStatusesArgs): Promise<boolean> {
+        const result = await callWithCatch(() => this.db.dbDrizzle.transaction(async (tx) => {
+            for (const [index, statusId] of args.statusIds.entries()) {
+                await tx
+                    .update(TasksStatusesSchema)
+                    .set({ viewOrder: index + 1 })
+                    .where(and(eq(TasksStatusesSchema.id, statusId), eq(TasksStatusesSchema.goalId, args.goalId)));
+            }
+            return true;
+        }));
+        return result === true;
     }
 
     async updateNameFotStatus(
@@ -134,8 +151,11 @@ export class KanbanRepository {
         return result?.[0] ?? null;
     }
 
-    async getTaskById(id: TaskItemInDb['id']): Promise<TasksSchemaTypeForSelect | null> {
-        const result = await callWithCatch(() => this.db.dbDrizzle.select().from(TasksSchema).where(eq(TasksSchema.id, id)));
+    async getGoalTask(args: KanbanGoalTaskArgs): Promise<TasksSchemaTypeForSelect | null> {
+        const result = await callWithCatch(() => this.db.dbDrizzle
+            .select()
+            .from(TasksSchema)
+            .where(and(eq(TasksSchema.id, args.taskId), eq(TasksSchema.goalId, args.goalId))));
         if (!result) {
             return null;
         }

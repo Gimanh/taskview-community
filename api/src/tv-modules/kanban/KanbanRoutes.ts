@@ -44,6 +44,17 @@ export default class KanbanRoutes implements Routable {
             this.kanbanController.addStatus
         );
 
+        this.router.patch(
+            '/reorder-statuses',
+            [
+                IsLoggedIn, requireKanbanPermission({
+                    anyOf: [GoalPermissions.KANBAN_CAN_MANAGE],
+                    resolveGoalId: goalIdFromBody
+                })
+            ],
+            this.kanbanController.reorderStatuses
+        );
+
         this.router.post(
             '/delete-status',
             [

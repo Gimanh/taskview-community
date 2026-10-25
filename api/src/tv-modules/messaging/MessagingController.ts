@@ -175,7 +175,7 @@ export class MessagingController {
             const token = req.query.token as string;
             if (!token) return res.status(401).send('token is required');
 
-            const userPayload = await AuthController.validateTokens(token);
+            const userPayload = await AuthController.validateTokens({ token, type: 'access' });
             const userId = userPayload?.userData?.id;
             if (!userId) return res.status(401).send('Invalid token');
 

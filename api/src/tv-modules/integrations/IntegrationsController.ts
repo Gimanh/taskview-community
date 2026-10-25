@@ -80,7 +80,7 @@ export default class IntegrationsController {
                 integrationsDebugLog({ step: 'initiate:reject', data: 'token is required' });
                 return res.status(401).send('token is required');
             }
-            const userPayload = await AuthController.validateTokens(token);
+            const userPayload = await AuthController.validateTokens({ token, type: 'access' });
             if (!userPayload?.userData?.id) {
                 integrationsDebugLog({ step: 'initiate:reject', data: 'invalid token' });
                 return res.status(401).send('Invalid token');

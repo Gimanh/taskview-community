@@ -72,6 +72,7 @@ import type { Task, TaskResponseMovePreview, TaskResponseMoveToProject } from 't
 import { useGoalsStore } from '@/stores/goals.store'
 import { useTasksStore } from '@/stores/tasks.store'
 import { useTaskView } from '@/composables/useTaskView'
+import { useInbox } from '@/composables/useInbox'
 import { AllGoalPermissions } from '@/types/goals.types'
 import TaskMovePreview from './TaskMovePreview.vue'
 
@@ -87,6 +88,7 @@ const isOpen = defineModel<boolean>('open', { required: true })
 
 const { t } = useI18n()
 const goalsStore = useGoalsStore()
+const { isOwnInbox } = useInbox()
 const tasksStore = useTasksStore()
 const { isFullscreenModal } = useTaskView()
 
@@ -100,7 +102,7 @@ const targets = computed(() => {
   return goalsStore.goals
     .filter((g) => g.id !== props.task?.goalId && !g.archive && g.organizationId === sourceGoal?.organizationId)
     .filter((g) => !!g.permissions[AllGoalPermissions.COMPONENT_CAN_ADD_TASKS])
-    .map((g) => ({ label: g.isInbox ? t('projects.inbox') : g.name, value: g.id }))
+    .map((g) => ({ label: isOwnInbox(g) ? t('projects.inbox') : g.name, value: g.id }))
 })
 
 watch(isOpen, (open) => {

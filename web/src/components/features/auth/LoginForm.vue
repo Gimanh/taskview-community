@@ -134,6 +134,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import $api from '@/helpers/axios'
 import { logError } from '@/helpers/Helper'
 import { getConfiguredApiUrl } from '@/helpers/serverConfig'
@@ -160,7 +161,10 @@ type LoginOptions = {
   publicRegistration: boolean
 }
 
-const currentView = ref<View>('code')
+const route = useRoute()
+
+// /login?view=forgot opens the password recovery form, e.g. from an expired reset link
+const currentView = ref<View>(route.query.view === 'forgot' ? 'forgot' : 'code')
 
 const isLoadingOptions = ref(true)
 const isServerLocked = getConfiguredApiUrl() !== null

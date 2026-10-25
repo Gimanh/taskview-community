@@ -9,3 +9,7 @@ export type KanbanStoreState = {
     goalId: GoalItem['id'];
     filters: KanbanFilters;
 };
+export type KanbanMoveStatusArgs = {
+    statusId: KanbanColumnItem['id'];
+    direction: 'left' | 'right';
+};

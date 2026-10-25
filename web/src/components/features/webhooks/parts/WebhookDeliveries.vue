@@ -74,7 +74,7 @@
                 @click="openPayload(row.original)"
               />
               <UButton
-                v-if="row.original.status === 'failed'"
+                v-if="canManage && row.original.status === 'failed'"
                 icon="i-lucide-refresh-cw"
                 variant="ghost"
                 size="xs"
@@ -115,6 +115,7 @@ import type { WebhookDeliveryItem } from 'taskview-api'
 
 const props = defineProps<{
   webhookId: number
+  canManage: boolean
 }>()
 
 const isOpen = defineModel<boolean>('open', { default: false })

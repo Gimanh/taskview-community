@@ -5,6 +5,8 @@ export * from './schemas/tags.schema';
 export * from './schemas/users.schema';
 export * from './schemas/collaboration-users.schema';
 export * from './schemas/invite-emails.schema';
+export * from './schemas/login-code-requests.schema';
+export * from './schemas/account-deletion.schema';
 export * from './schemas/tasks-assignee.schema';
 export * from './schemas/goals.schema';
 export * from './schemas/goals-list.schema';

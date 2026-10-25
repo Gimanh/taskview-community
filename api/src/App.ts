@@ -6,6 +6,8 @@ import errorHandler from './middlewares/error-handler';
 import routes from './routes';
 import passport, { initPassportLogin } from './tv-modules/auth/strategies/passport-login';
 import { LoginMethods } from './tv-modules/auth/LoginMethods';
+import SessionStorage from './tv-modules/auth/SessionStorage';
+import { AccountDeletion } from './tv-modules/auth/AccountDeletion';
 import { InviteEmailDispatcher } from './tv-modules/collaboration/InviteEmailDispatcher';
 import { PublicApiUrl } from './modules/public-url';
 import { validateWebhooksEnvOnStartup } from './tv-modules/webhooks/webhooks.utils';
@@ -21,6 +23,8 @@ export default class App {
 
     constructor(port: number) {
         LoginMethods.validateOnStartup();
+        SessionStorage.validateOnStartup();
+        AccountDeletion.validateOnStartup();
         PublicApiUrl.validateOnStartup();
         InviteEmailDispatcher.validateOnStartup();
         validateWebhooksEnvOnStartup();

@@ -1,5 +1,6 @@
-import type { PermissionsEntityType } from '../types/auth.types';
+import type { GoalPermissionItemsFromDb, GoalPermissionType, PermissionsEntityType } from '../types/auth.types';
 import type { AppUser } from './AppUser';
+import { GoalAccess } from './GoalAccess';
 import { GoalPermissionsChecker } from './GoalPermissionsChecker';
 import { GoalPermissionsRepository } from './GoalPermissionsRepository';
 
@@ -39,29 +40,61 @@ export class GoalPermissionsFetcher {
 
         if (!goalId) { return new GoalPermissionsChecker([]); }
 
-        //Token authentication check
+        return (await this.getAccessForGoals([goalId])).checkerFor(goalId);
+    }
+
+    /**
+     * The single place where a user's goal permissions are resolved: owner or role
+     * permissions, dropped for goals outside the token's allowedGoalIds and
+     * intersected with the token's permissions.
+     */
+    async getAccessForGoals(goalIds: number[]): Promise<GoalAccess> {
+        const checkers = new Map<number, GoalPermissionsChecker>();
+        const userData = this.user.getUserData();
+        if (!userData) return new GoalAccess(checkers);
+
         const allowedGoalIds = this.user.getAllowedGoalIds();
-        if (allowedGoalIds && allowedGoalIds.length > 0 && !allowedGoalIds.includes(goalId)) {
-            return new GoalPermissionsChecker([]);
+        const scopedGoalIds = [...new Set(goalIds)].filter(
+            (id) => !allowedGoalIds || allowedGoalIds.length === 0 || allowedGoalIds.includes(id)
+        );
+        const uncachedGoalIds = scopedGoalIds.filter((id) => !this.isCacheValid(id));
+
+        if (uncachedGoalIds.length > 0) {
+            const rows = await this.goalPermissionsRepository.fetchPermissionsForGoals({
+                goalIds: uncachedGoalIds,
+                userId: userData.id,
+                email: userData.email,
+            });
+            const tokenPerms = this.user.getTokenPermissions();
+            const permissionsByGoal = new Map<number, GoalPermissionItemsFromDb>(uncachedGoalIds.map((id) => [id, []]));
+
+            rows.forEach((row) => {
+                if (tokenPerms && tokenPerms.length > 0 && !tokenPerms.includes(row.permissionName)) return;
+                permissionsByGoal.get(row.goalId)?.push({ permissionName: row.permissionName, permissionId: row.permissionId });
+            });
+
+            permissionsByGoal.forEach((permissions, goalId) => {
+                this.checkerCache[goalId] = {
+                    checker: new GoalPermissionsChecker(permissions),
+                    timestamp: performance.now(),
+                };
+            });
         }
 
-        if (this.isCacheValid(goalId)) {
-            return this.checkerCache[goalId].checker;
-        }
+        scopedGoalIds.forEach((id) => checkers.set(id, this.checkerCache[id].checker));
+        return new GoalAccess(checkers);
+    }
 
-        let permissions = await this.goalPermissionsRepository.fetchPermissionsForGoal(goalId, this.user);
+    /**
+     * Whether the caller may see data that belongs to no goal (e.g. legacy tags):
+     * a token restricted to goals may not, and a token's permissions still apply.
+     */
+    canSeeDataOutsideGoals(permission: GoalPermissionType): boolean {
+        const allowedGoalIds = this.user.getAllowedGoalIds();
+        if (allowedGoalIds && allowedGoalIds.length > 0) return false;
 
         const tokenPerms = this.user.getTokenPermissions();
-        if (tokenPerms && tokenPerms.length > 0) {
-            permissions = permissions.filter(p => tokenPerms.includes(p.permissionName));
-        }
-
-        this.checkerCache[goalId] = {
-            checker: new GoalPermissionsChecker(permissions),
-            timestamp: performance.now(),
-        };
-
-        return this.checkerCache[goalId].checker;
+        return !tokenPerms || tokenPerms.length === 0 || tokenPerms.includes(permission);
     }
 
     async getCheckerForGoal(goalId: number): Promise<GoalPermissionsChecker> {

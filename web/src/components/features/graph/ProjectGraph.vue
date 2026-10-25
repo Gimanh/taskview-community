@@ -99,7 +99,8 @@ import type { GraphDirection } from '@/types/graph.types'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useAppRouteInfo } from '@/composables/useAppRouteInfo'
 import AddNewTaskToGraph from './AddNewTaskToGraph.vue'
-import { layoutCenter, useLayout } from './composables/useLayout'
+import { estimateNodeSize, layoutCenter, placeNodeInFreeSpot, useLayout } from './composables/useLayout'
+import { provideGraphViewportCenter } from './composables/useGraphViewportCenter'
 import TaskNode from './TaskNode.vue'
 
 const listIds = defineModel<number[]>('listIds', { default: () => [] })
@@ -141,7 +142,19 @@ const {
   onNodeDragStop,
   removeEdges,
   screenToFlowCoordinate,
+  viewport,
+  dimensions,
 } = useVueFlow()
+
+// Where a new node goes: the middle of what is on screen, or the nearest free spot to it
+provideGraphViewportCenter(() => {
+  const { width, height } = estimateNodeSize({ data: {} })
+  const target = {
+    x: Math.round((dimensions.value.width / 2 - viewport.value.x) / viewport.value.zoom - width / 2),
+    y: Math.round((dimensions.value.height / 2 - viewport.value.y) / viewport.value.zoom - height / 2),
+  }
+  return placeNodeInFreeSpot({ target, node: { data: {} }, obstacles: store.nodes })
+})
 
 const { projectId } = useAppRouteInfo()
 const { layout } = useLayout()

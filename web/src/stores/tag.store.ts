@@ -39,10 +39,7 @@ export const useTagsStore = defineStore('tags', {
         return
       }
       this.tags = tags
-
-      this.tags.forEach((tag) => {
-        this.tagsMap.set(tag.id, tag)
-      })
+      this.tagsMap = new Map(tags.map((tag) => [tag.id, tag]))
     },
 
     async addTag(tagData: TagItemArgAdd): Promise<boolean> {

@@ -1,7 +1,7 @@
 import type { CollaborationPermission } from 'taskview-api'
 import type { TI18nLocalesInApp } from './app.types'
 
-export type PermissioinGroupsIds = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type PermissioinGroupsIds = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 export const PermissionGroups: Record<PermissioinGroupsIds, Record<keyof TI18nLocalesInApp, string>> = {
   1: { en: 'Applicarion level', ru: 'Уровня приложения' },
@@ -12,6 +12,7 @@ export const PermissionGroups: Record<PermissioinGroupsIds, Record<keyof TI18nLo
   6: { en: 'Organization', ru: 'Организация' },
   7: { en: 'Files', ru: 'Файлы' },
   8: { en: 'Automations', ru: 'Автоматизации' },
+  9: { en: 'Webhooks', ru: 'Вебхуки' },
 }
 
 export type CollaborationPermissionsState = {

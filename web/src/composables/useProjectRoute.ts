@@ -11,8 +11,8 @@ export const VIEW_ROUTES: Record<DefaultView, string> = {
 }
 
 const VIEW_PERMISSIONS: Record<Exclude<DefaultView, 'tasks'>, (keyof GoalPermissions)[]> = {
-  kanban: [AllGoalPermissions.KANBAN_CAN_VIEW, AllGoalPermissions.KANBAN_CAN_MANAGE],
-  graph: [AllGoalPermissions.GRAPH_CAN_VIEW, AllGoalPermissions.GRAPH_CAN_MANAGE],
+  kanban: [AllGoalPermissions.KANBAN_CAN_VIEW],
+  graph: [AllGoalPermissions.GRAPH_CAN_VIEW],
   sprints: [AllGoalPermissions.SPRINT_CAN_VIEW],
 }
 

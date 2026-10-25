@@ -26,7 +26,7 @@ export const kanbanAutomations: AutomationModuleDefinition = {
     ],
     dataSources: {
         'kanban.statuses': {
-            viewPermissions: [GoalPermissions.KANBAN_CAN_VIEW, GoalPermissions.KANBAN_CAN_MANAGE],
+            viewPermissions: [GoalPermissions.KANBAN_CAN_VIEW],
             load: async ({ actor, goalId }) => {
                 const statuses = await actor.kanbanManager.getAllStatusesForGoal(goalId);
                 return statuses.map((status) => ({ id: status.id, label: status.name }));

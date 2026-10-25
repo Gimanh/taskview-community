@@ -233,7 +233,7 @@ export class TimeTrackingManager {
             if (filters.organizationId === undefined) return []
             const accessibleGoalIds = await this.user.permissionsFetcher.getAccessibleGoalIds(
                 filters.organizationId,
-                [GoalPermissions.TIMETRACKING_CAN_VIEW, GoalPermissions.TIMETRACKING_CAN_MANAGE_ALL],
+                [GoalPermissions.TIMETRACKING_CAN_VIEW],
             )
             if (accessibleGoalIds.length === 0) return []
 
@@ -284,10 +284,7 @@ export class TimeTrackingManager {
     }
 
     async getViewableGoalIds(organizationId: number): Promise<number[]> {
-        return this.user.permissionsFetcher.getAccessibleGoalIds(organizationId, [
-            GoalPermissions.TIMETRACKING_CAN_VIEW,
-            GoalPermissions.TIMETRACKING_CAN_MANAGE_ALL,
-        ])
+        return this.user.permissionsFetcher.getAccessibleGoalIds(organizationId, [GoalPermissions.TIMETRACKING_CAN_VIEW])
     }
 
     private async resolveReportFilters(req: TimeReportRequest): Promise<ResolvedReportFilters | null> {

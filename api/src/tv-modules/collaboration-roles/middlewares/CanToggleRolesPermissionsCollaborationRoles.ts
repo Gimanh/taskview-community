@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { $logger } from '../../../modules/logget';
+import { GoalPermissions } from '../../../types/auth.types';
 
 export const CanToggleRolesPermissionsCollaborationRoles = async (req: Request, res: Response, next: NextFunction) => {
     const roleId = req.body.roleId;
@@ -22,7 +23,12 @@ export const CanToggleRolesPermissionsCollaborationRoles = async (req: Request, 
         return res.status(500).end();
     }
 
-    if (goal.owner === req.appUser.getUserData()?.id) {
+    if (goal.owner !== req.appUser.getUserData()?.id) {
+        return res.status(403).end();
+    }
+
+    const permissions = await req.appUser.permissionsFetcher.getCheckerForGoal(goal.id);
+    if (permissions.hasPermissions(GoalPermissions.GOAL_CAN_MANAGE_USERS)) {
         return next();
     }
 

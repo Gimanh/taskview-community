@@ -24,12 +24,13 @@ import { logError } from '../../utils/api';
 import { updateQuery } from '../../utils/db-helper';
 import { callWithCatch, isNotNullable } from '../../utils/helpers';
 import {
-    type TaskArgAdd,
     type TaskArgDelete,
     type TaskArgFetchTasksNew,
     type TaskArgUpdate,
     type TaskHistoryRestoreArgs,
+    type TaskInsertArgs,
     type TaskReferenceCheckArgs,
+    TASK_CREATABLE_COLUMNS,
     TASK_PROJECT_BOUND_COLUMNS,
     TASK_UPDATABLE_COLUMNS,
     type TasksArgToggleTaskUsers,
@@ -672,8 +673,15 @@ export class TasksRepository {
         return rows;
     }
 
-    async addTaskNew(data: TaskArgAdd): Promise<TasksSchemaTypeForSelect[]> {
-        const result = await callWithCatch(() => this.db.dbDrizzle.insert(TasksSchema).values(data).returning());
+    async addTaskNew(args: TaskInsertArgs): Promise<TasksSchemaTypeForSelect[]> {
+        // Validated input keeps undeclared keys, so only the declared columns are written
+        const values: typeof TasksSchema.$inferInsert = { goalId: args.data.goalId, creatorId: args.creatorId };
+        for (const column of TASK_CREATABLE_COLUMNS) {
+            if (args.data[column] !== undefined) {
+                values[column] = args.data[column] as never;
+            }
+        }
+        const result = await callWithCatch(() => this.db.dbDrizzle.insert(TasksSchema).values(values).returning());
         if (!result) return [];
         return result;
     }

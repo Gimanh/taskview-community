@@ -10,6 +10,8 @@ import {
     type KanbanArgFilters,
     type KanbanArgGetTasksOrderForColumnAndCursor,
     type KanbanArgUpdateTasksOrder,
+    type KanbanReorderStatusesArgs,
+    type KanbanReorderStatusesResult,
     type KanbanStatusForClient,
     KanbanStatusToClientSchema,
     type UpdateKanbanStatus,
@@ -27,6 +29,20 @@ export class KanbanManager {
     async getAllStatusesForGoal(goalId: number): Promise<KanbanStatusForClient[]> {
         const statuses = await this.repository.getAllStatusesForGoal(goalId);
         return statuses.map((stat) => KanbanStatusToClientSchema.parse(stat));
+    }
+
+    async reorderStatuses(args: KanbanReorderStatusesArgs): Promise<KanbanReorderStatusesResult> {
+        const currentIds = new Set((await this.repository.getAllStatusesForGoal(args.goalId)).map((s) => s.id));
+        const requestedIds = new Set(args.statusIds);
+        const isFullOrder =
+            requestedIds.size === args.statusIds.length &&
+            requestedIds.size === currentIds.size &&
+            args.statusIds.every((id) => currentIds.has(id));
+        if (!isFullOrder) return { ok: false, reason: 'invalid_order' };
+
+        if (!(await this.repository.reorderStatuses(args))) return { ok: false, reason: 'save_failed' };
+
+        return { ok: true, statuses: await this.getAllStatusesForGoal(args.goalId) };
     }
 
     async updateStatus(data: UpdateKanbanStatus) {
@@ -115,10 +131,10 @@ export class KanbanManager {
 
         // Получаем порядки предыдущей и следующей задач
         let prevTask = data.prevTaskId
-            ? (await this.repository.getTaskById(data.prevTaskId))?.kanbanOrder ?? null
+            ? (await this.repository.getGoalTask({ taskId: data.prevTaskId, goalId: data.goalId }))?.kanbanOrder ?? null
             : null;
         let nextTask = data.nextTaskId
-            ? (await this.repository.getTaskById(data.nextTaskId))?.kanbanOrder ?? null
+            ? (await this.repository.getGoalTask({ taskId: data.nextTaskId, goalId: data.goalId }))?.kanbanOrder ?? null
             : null;
 
         let newOrder: number | null = null;

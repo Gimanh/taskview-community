@@ -861,5 +861,43 @@
             "New tables tv_auth.scim_groups and tv_auth.scim_group_members: groups pushed by an identity provider over SCIM and their members, per SSO configuration. Groups are stored only and do not grant access yet.",
             "New table tv_auth.scim_group_projects: an organization admin links a SCIM group to a project with a default role. People who join the group, or are in it when the link is made, or are reactivated while in it, are added to the project with that role unless they are already in it. Leaving the group changes nothing: the project is managed in TaskView."
         ]
+    },
+    "66": {
+        "version": "1.71.0",
+        "name": "Login code limits",
+        "releaseDate": "20261024",
+        "scripts": [
+            "/1.71.0/0.add-login-code-attempts.sql",
+            "/1.71.0/1.create-login-code-requests.sql"
+        ],
+        "description": [
+            "New column tv_auth.users.login_code_attempts: counts wrong guesses of the current email login code. After 5 wrong guesses the code stops working and a new one has to be requested; requesting a new code resets the counter.",
+            "New table tv_auth.login_code_requests: a log of emailed login codes. One account can request at most LOGIN_CODE_HOURLY_LIMIT codes (default 5) in any hour; rows older than an hour are pruned."
+        ]
+    },
+    "67": {
+        "version": "1.72.0",
+        "name": "Account deletion code expiry",
+        "releaseDate": "20261024",
+        "scripts": [
+            "/1.72.0/0.add-account-deletion-created-at.sql"
+        ],
+        "description": [
+            "New column tv_auth.account_deletion.created_at: when the account deletion code was emailed. A code works for 15 minutes; codes issued before this version start their 15 minutes at the upgrade."
+        ]
+    },
+    "68": {
+        "version": "1.73.0",
+        "name": "Webhook permissions",
+        "releaseDate": "20261024",
+        "scripts": [
+            "/1.73.0/0.webhooks-permissions.sql",
+            "/1.73.0/all-triggers.sql"
+        ],
+        "description": [
+            "New permission group 9 'webhooks'. webhooks_can_manage moves there from the organization group, and the new webhooks_can_view lets a project member see the webhooks and their delivery history. Any member whose role grants them can view or manage webhooks, not only the project owner. Neither permission is granted to existing or default roles: owners add them to roles in the role editor.",
+            "A *_can_manage permission no longer includes the matching view permission, and timetracking_can_manage_all no longer includes viewing entries or logging own time: each permission grants only what it names.",
+            "all-triggers.sql: re-applies all triggers idempotently and updates tasks.add_roles_and_permissions() so the editor role of NEW projects also gets timetracking_can_log. Existing projects are not changed: owners grant it to their roles in the role editor."
+        ]
     }
 }

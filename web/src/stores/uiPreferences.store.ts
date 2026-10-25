@@ -49,15 +49,19 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
     await fetch().catch(() => undefined)
   }
 
-  const flush = useDebounceFn(async () => {
+  let revision = 0
+  let saveChain: Promise<void> = Promise.resolve()
+
+  async function save() {
     saving.value = true
+    const sentRevision = revision
     try {
       const payload: UiPreferences = { ...prefs.value }
       if (Object.keys(settings.value).length > 0) {
         payload[UI_SETTINGS_KEY] = settings.value
       }
       const result = await $tvApi.uiPreferences.update(payload)
-      if (result) {
+      if (result && sentRevision === revision) {
         const { sections, settings: s } = split(result)
         prefs.value = sections
         settings.value = s
@@ -65,10 +69,16 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
     } finally {
       saving.value = false
     }
+  }
+
+  const flush = useDebounceFn(() => {
+    saveChain = saveChain.then(save, save)
+    return saveChain
   }, SAVE_DEBOUNCE_MS)
 
   function setSection(section: string, items: UiPreferencesItem[]) {
     prefs.value = { ...prefs.value, [section]: items }
+    revision++
     flush()
   }
 
@@ -78,6 +88,7 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
 
   function setSetting<K extends keyof UiSettings>(key: K, value: UiSettings[K]) {
     settings.value = { ...settings.value, [key]: value }
+    revision++
     flush()
   }
 

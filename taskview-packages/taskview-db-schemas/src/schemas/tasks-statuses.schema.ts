@@ -5,6 +5,7 @@ export const TasksStatusesSchema = pgSchema('tasks').table('statuses', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     name: varchar().notNull(),
     goalId: integer('goal_id').notNull().references(() => GoalsSchema.id, { onDelete: 'cascade' }),
+    viewOrder: integer('view_order'),
     columnVersion: integer('column_version'),
 });
 

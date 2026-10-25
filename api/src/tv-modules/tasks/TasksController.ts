@@ -408,13 +408,16 @@ export class TasksController {
             return res.status(400).send(args.summary);
         }
 
-        const tasks = await req.appUser.tasksManager.addTaskNew(args);
+        const result = await req.appUser.tasksManager.addTaskNew(args);
+        if (!result.ok) {
+            return res.status(400).send('List, kanban column and parent must belong to the task project');
+        }
 
-        if (tasks.length === 0) {
+        if (result.tasks.length === 0) {
             return res.status(500).send('Can not add task');
         }
 
-        return res.tvJson(tasks[0] ?? null);
+        return res.tvJson(result.tasks[0] ?? null);
     };
 
     deleteTaskNew = async (req: Request, res: Response) => {

@@ -1,4 +1,6 @@
 import { type } from 'arktype';
+import type { Request } from 'express';
+import type { GoalPermissionType } from '../../types/auth.types';
 import { OUTBOUND_URL_ERROR_CODES } from '../../utils/outbound-url.types';
 import { FILE_EVENTS } from '../files/types';
 
@@ -86,3 +88,8 @@ export interface WebhookDeliverJobData {
     payload: object;
     attempt: number;
 }
+
+export type WebhooksPermissionGuardArgs = {
+    permission: GoalPermissionType;
+    resolveGoalId: (req: Request) => Promise<number | null>;
+};

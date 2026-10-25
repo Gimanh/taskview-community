@@ -25,17 +25,15 @@ export class CollaborationManager {
         this.repository = new CollaborationRepository();
     }
 
+    private async fetchGoalIdsWithVisibleUsers(organizationId?: number): Promise<number[]> {
+        const goalIds = await this.user.goalsManager.fetchAccessibleGoalIds({ organizationId });
+        const access = await this.user.permissionsFetcher.getAccessForGoals(goalIds);
+        return access.goalIdsWith(GoalPermissions.TASKS_CAN_WATCH_ASSIGNED_USERS);
+    }
+
     /** @deprecated */
     async fetchAllUsers(): Promise<CollaborationUserWithRoles[] | false> {
-        const sharedGoals = await this.user.goalsManager.fetchSharedGoals();
-
-        const goalIds = sharedGoals
-            .filter((g) => g.hasPermissions(GoalPermissions.TASKS_CAN_WATCH_ASSIGNED_USERS))
-            .map((g) => g.id);
-
-        const ownGoals = await this.user.goalsManager.fetchAllOwnGoalsIds();
-
-        goalIds.push(...ownGoals);
+        const goalIds = await this.fetchGoalIdsWithVisibleUsers();
 
         if (goalIds.length === 0) {
             return [];
@@ -163,16 +161,7 @@ export class CollaborationManager {
     }
 
     async fetchAllUsersNew(organizationId?: number): Promise<CollaborationUserWithRoles[]> {
-
-        const sharedGoals = await this.user.goalsManager.fetchSharedGoals(organizationId);
-
-        const goalIds = sharedGoals
-            .filter((g) => g.hasPermissions(GoalPermissions.TASKS_CAN_WATCH_ASSIGNED_USERS))
-            .map((g) => g.id);
-
-        const ownGoals = await this.user.goalsManager.fetchAllOwnGoalsIds(organizationId);
-
-        goalIds.push(...ownGoals);
+        const goalIds = await this.fetchGoalIdsWithVisibleUsers(organizationId);
 
         if (goalIds.length === 0) {
             return [];

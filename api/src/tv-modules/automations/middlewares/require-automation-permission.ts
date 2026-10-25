@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { GoalPermissionsFetcher } from '../../../core/GoalPermissionsFetcher';
 import { $logger } from '../../../modules/logget';
-import { GoalPermissions } from '../../../types/auth.types';
 import { logError } from '../../../utils/api';
 import type { RequireAutomationPermissionArgs } from '../types';
 
@@ -19,10 +18,7 @@ export function requireAutomationPermission({ permission, resolveGoalId }: Requi
             return res.status(500).end();
         }
 
-        const granted =
-            permissions.hasPermissions(permission) ||
-            (permission === GoalPermissions.AUTOMATION_CAN_VIEW && permissions.hasPermissions(GoalPermissions.AUTOMATION_CAN_MANAGE));
-        if (granted) return next();
+        if (permissions.hasPermissions(permission)) return next();
         return res.status(403).end();
     };
 }

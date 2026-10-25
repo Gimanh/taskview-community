@@ -18,8 +18,7 @@ export const canLogTimeOnTask = async (req: Request, res: Response, next: NextFu
     }
 
     if (
-        checker.hasPermissions(GoalPermissions.TIMETRACKING_CAN_LOG) ||
-        checker.hasPermissions(GoalPermissions.TIMETRACKING_CAN_MANAGE_ALL)
+        checker.hasPermissions(GoalPermissions.TIMETRACKING_CAN_LOG)
     ) {
         return next()
     }

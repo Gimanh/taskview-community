@@ -33,8 +33,7 @@ export const canFetchTimeEntries = async (req: Request, res: Response, next: Nex
     }
 
     if (
-        checker.hasPermissions(GoalPermissions.TIMETRACKING_CAN_VIEW) ||
-        checker.hasPermissions(GoalPermissions.TIMETRACKING_CAN_MANAGE_ALL)
+        checker.hasPermissions(GoalPermissions.TIMETRACKING_CAN_VIEW)
     ) {
         return next()
     }

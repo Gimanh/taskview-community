@@ -10,6 +10,7 @@ export const UsersSchema = pgSchema('tv_auth').table('users', {
     remindPasswordCode: varchar('remind_password_code'),
     remindPasswordTime: integer('remind_password_time'),
     rememberToken: varchar('remember_token'),
+    loginCodeAttempts: integer('login_code_attempts').notNull().default(0),
 });
 
 export const PermissionsSchema = pgSchema('tv_auth').table('permissions', {
