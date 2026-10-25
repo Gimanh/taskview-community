@@ -59,6 +59,15 @@ async function webhookIds(goalId: number): Promise<number[]> {
   return (await fx.ownerApi.webhooks.fetch(goalId))!.map((w) => w.id)
 }
 
+async function firstDeliveryId(webhookId: number): Promise<number> {
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const deliveries = await fx.ownerApi.webhooks.fetchDeliveries(webhookId)
+    if (deliveries?.length) return deliveries[0].id
+    await new Promise((resolve) => setTimeout(resolve, 100))
+  }
+  throw new Error(`no delivery recorded for webhook ${webhookId}`)
+}
+
 beforeAll(async () => {
   const init = await initApi()
   ctx.ownerApi = init.$tvApi
@@ -282,6 +291,15 @@ describe('webhooks with a token holding webhooks_can_view and webhooks_can_manag
     expect(results).toEqual([403, 403, 403, 403])
     const hook = (await fx.ownerApi.webhooks.fetch(fx.projectB.goalId))!.find((w) => w.id === id)
     expect(hook!.url).toMatch(/^https:\/\/receiver\.test\//)
+  })
+
+  it('cannot retry a delivery of a project B webhook', async () => {
+    await fx.ownerApi.tasks.createTask({ goalId: fx.projectB.goalId, description: `roles-scope-b-task-${Date.now()}` })
+    const deliveryId = await firstDeliveryId(fx.projectB.webhookId)
+
+    const status = await statusOf(client.webhooks.retryDelivery(deliveryId))
+
+    expect(status).toBe(403)
   })
 
   it('cannot delete a project B webhook', async () => {
