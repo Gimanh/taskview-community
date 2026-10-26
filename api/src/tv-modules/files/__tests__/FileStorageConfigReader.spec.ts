@@ -37,7 +37,7 @@ describe('FileStorageConfigReader', () => {
         const config = FileStorageConfigReader.fromEnv({
             FILE_STORAGE_PROVIDER: 's3',
             FILE_STORAGE_LOCAL_DIR: '/var/files',
-            FILE_STORAGE_S3_ENDPOINT: 'http://minio:9000',
+            FILE_STORAGE_S3_ENDPOINT: 'http://s3.internal:8333',
             FILE_STORAGE_S3_FORCE_PATH_STYLE: 'true',
             FILE_MAX_SIZE_MB: '5',
             ...s3Env,
@@ -45,7 +45,7 @@ describe('FileStorageConfigReader', () => {
         expect(config.active).toBe('s3');
         expect(config.maxFileSizeBytes).toBe(5 * 1024 * 1024);
         expect(config.providers.local).toEqual({ type: 'local', rootDir: '/var/files' });
-        expect(config.providers.s3).toMatchObject({ type: 's3', bucket: 'b', endpoint: 'http://minio:9000', forcePathStyle: true });
+        expect(config.providers.s3).toMatchObject({ type: 's3', bucket: 'b', endpoint: 'http://s3.internal:8333', forcePathStyle: true });
     });
 
     it('does not configure local when s3 is active and no local dir is given', () => {

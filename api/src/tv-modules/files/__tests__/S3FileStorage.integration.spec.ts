@@ -5,12 +5,12 @@ import { FileStorageConfigReader } from '../storage/FileStorageConfigReader';
 import { S3FileStorage } from '../storage/S3FileStorage';
 import type { S3FileStorageConfig } from '../storage/storage.types';
 
-// Runs against MinIO from dev-containers-test/docker-compose.minio.yml (see vitest.config.ts env).
+// Runs against SeaweedFS from dev-containers-test/docker-compose.seaweedfs.yml (see vitest.config.ts env).
 const config = FileStorageConfigReader.fromEnv().providers.s3 as S3FileStorageConfig;
 const storage = new S3FileStorage(config);
 const read = async (stream: Readable) => Buffer.concat(await stream.toArray());
 
-describe('S3FileStorage (MinIO)', () => {
+describe('S3FileStorage (S3-compatible server)', () => {
     it('stores, reads, checks and deletes an object by key', async () => {
         const key = `it/${Date.now()}/small`;
         const stored = await storage.put({ key, stream: Readable.from([Buffer.from('payload')]), mimeType: 'text/plain' });

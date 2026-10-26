@@ -20,12 +20,12 @@ export default defineConfig({
             FILE_STORAGE_PROVIDER: 'local',
             FILE_STORAGE_LOCAL_DIR: './.test-data/files',
             FILE_MAX_SIZE_MB: '1',
-            // MinIO from dev-containers-test/docker-compose.minio.yml
+            // SeaweedFS from dev-containers-test/docker-compose.seaweedfs.yml
             FILE_STORAGE_S3_BUCKET: 'taskview-test',
             FILE_STORAGE_S3_REGION: 'us-east-1',
-            FILE_STORAGE_S3_ENDPOINT: 'http://localhost:9000',
-            FILE_STORAGE_S3_ACCESS_KEY: 'minioadmin',
-            FILE_STORAGE_S3_SECRET_KEY: 'minioadmin',
+            FILE_STORAGE_S3_ENDPOINT: 'http://localhost:8333',
+            FILE_STORAGE_S3_ACCESS_KEY: 'taskview',
+            FILE_STORAGE_S3_SECRET_KEY: 'taskview-secret',
             FILE_STORAGE_S3_FORCE_PATH_STYLE: 'true',
             ...conf,
             APP_URL: 'http://localhost:3000',
