@@ -107,7 +107,12 @@ const weekStart = useWeekStart()
 const { activatorUi } = useNuxtUiTaskItemStyles()
 
 const open = ref(false)
-const isRange = ref(false)
+// A task that already has a start date opens in range mode; in single-date mode,
+// picking a day would silently drop that start date
+const isRange = ref(Boolean(model.value?.start))
+watch(() => model.value?.start, (start) => {
+  isRange.value = Boolean(start)
+})
 
 // drop the start date when switching back to single-date mode
 watch(isRange, (on) => {
@@ -134,7 +139,8 @@ const rangeModel = computed<DateRangeValue>({
 })
 
 const format = (date?: CalendarDate): string =>
-  date ? useDateFormat(new Date(date.toString()), 'DD MMM').value : ''
+  // new Date('YYYY-MM-DD') would read the day as UTC midnight, a day early west of UTC
+  date ? useDateFormat(date.toDate(getLocalTimeZone()), 'DD MMM').value : ''
 
 const startLabel = computed(() => model.value?.start ? format(model.value.start) : t('deadline.startDate'))
 const endLabel = computed(() => {
