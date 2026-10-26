@@ -309,6 +309,7 @@ export default {
       list: 'List',
     },
     subtasks: 'Subtasks: {count}',
+    moveError: 'Couldn\'t save the new dates. The task is back where it was.',
     empty: {
       title: 'Tasks with dates appear here',
       description: 'Open a task and set a start or end date to see it on the calendar.',

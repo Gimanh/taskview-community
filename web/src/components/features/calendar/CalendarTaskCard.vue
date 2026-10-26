@@ -9,8 +9,8 @@
   />
   <div
     v-else
-    class="tv-calendar-card flex w-full min-w-0 items-start gap-1.5 rounded-10 border px-1.5 py-1 text-sm text-default"
-    :class="{ 'opacity-60': task.complete }"
+    class="tv-calendar-card group relative flex w-full min-w-0 items-start gap-1.5 rounded-10 border px-1.5 py-1 text-sm text-default"
+    :class="{ 'opacity-60': task.complete && !lifted, 'pr-3': resizable, 'shadow-lg': lifted }"
     :style="{ backgroundColor: tint.backgroundColor, borderColor: tint.borderColor }"
     :data-testid="`calendar-task-${task.id}`"
   >
@@ -51,6 +51,13 @@
       />
       {{ task.subtasks.length }}
     </span>
+
+    <!-- Only a hint: FullCalendar's own resize handle sits on top of it and takes the pointer -->
+    <span
+      v-if="resizable"
+      class="pointer-events-none absolute inset-y-1.5 right-1 w-1 rounded-full bg-current opacity-0 transition-opacity group-hover:opacity-40"
+      aria-hidden="true"
+    />
   </div>
 </template>
 
@@ -68,6 +75,10 @@ const props = defineProps<{
   compact?: boolean
   // Phone-width month: cells are too narrow for text, show a priority-colored bar
   dot?: boolean
+  // Its end can be dragged to change the duration: show a grip on hover
+  resizable?: boolean
+  // The copy that follows the pointer while dragging
+  lifted?: boolean
 }>()
 
 const { t } = useI18n()

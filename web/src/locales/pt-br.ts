@@ -308,6 +308,7 @@ export default {
       list: 'Lista',
     },
     subtasks: 'Subtarefas: {count}',
+    moveError: 'Não foi possível salvar as novas datas. A tarefa voltou ao lugar.',
     empty: {
       title: 'Aqui aparecem as tarefas com data',
       description: 'Abra uma tarefa e defina uma data de início ou de término para vê-la no calendário.',
