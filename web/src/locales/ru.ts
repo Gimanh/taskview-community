@@ -213,6 +213,8 @@ export default {
     startDate: 'Дата начала',
     endDate: 'Дата окончания',
     selectTime: 'Выбрать время',
+    startTime: 'Время начала',
+    endTime: 'Время окончания',
     selectRange: 'Выбрать период',
     today: 'Сегодня',
     tomorrow: 'Завтра',

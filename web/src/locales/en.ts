@@ -213,6 +213,8 @@ export default {
     startDate: 'Start date',
     endDate: 'End date',
     selectTime: 'Select time',
+    startTime: 'Start time',
+    endTime: 'End time',
     selectRange: 'Select range',
     today: 'Today',
     tomorrow: 'Tomorrow',
