@@ -11,6 +11,9 @@ export type FirstDayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6
 
 export type DefaultView = 'tasks' | 'kanban' | 'graph' | 'sprints' | 'calendar'
 
+/** Minutes a task snaps to when dragged or resized in the calendar's hours view */
+export type CalendarDragStep = 5 | 10 | 15 | 30 | 60
+
 export const THEME_PRIMARY_COLORS = [
   'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan',
   'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose',
@@ -45,6 +48,7 @@ export type UiSettings = {
   firstDayOfWeek?: FirstDayOfWeek
   defaultProjectId?: number
   defaultView?: DefaultView
+  calendarDragStep?: CalendarDragStep
   taskSortBy?: TaskSortBy
   taskSortFirstNew?: 0 | 1
   showTaskId?: 0 | 1

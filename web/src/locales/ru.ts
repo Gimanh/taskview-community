@@ -314,6 +314,7 @@ export default {
     previous: 'Предыдущий период',
     next: 'Следующий период',
     views: {
+      hours: 'Часы',
       month: 'Месяц',
       week: 'Неделя',
       list: 'Список',
@@ -995,6 +996,9 @@ export default {
       viewGraph: 'Граф',
       viewSprints: 'Спринты',
       viewCalendar: 'Календарь',
+      calendarDragStep: 'Шаг перетаскивания в календаре',
+      calendarDragStepHint: 'На сколько сдвигается задача при перетаскивании или изменении длительности в режиме «Часы».',
+      minutes: '{count} мин',
     },
     taskFields: {
       subtasks: 'Подзадачи',

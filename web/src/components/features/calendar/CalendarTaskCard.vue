@@ -10,7 +10,7 @@
   <div
     v-else
     class="tv-calendar-card group relative flex w-full min-w-0 items-start gap-1.5 rounded-10 border px-1.5 py-1 text-sm text-default"
-    :class="{ 'opacity-60': task.complete && !lifted, 'pr-3': resizable, 'shadow-lg': lifted }"
+    :class="{ 'opacity-60': task.complete && !lifted, 'pr-3': resizable, 'shadow-lg': lifted, 'h-full': fill }"
     :style="{ backgroundColor: tint.backgroundColor, borderColor: tint.borderColor }"
     :data-testid="`calendar-task-${task.id}`"
   >
@@ -79,6 +79,8 @@ const props = defineProps<{
   resizable?: boolean
   // The copy that follows the pointer while dragging
   lifted?: boolean
+  // In the hours view the card fills the event, so its height shows the duration
+  fill?: boolean
 }>()
 
 const { t } = useI18n()

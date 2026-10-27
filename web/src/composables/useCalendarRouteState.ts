@@ -2,7 +2,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter, type LocationQuery } from 'vue-router'
 import { format, isValid, parseISO } from 'date-fns'
 
-export const CALENDAR_VIEWS = ['month', 'week', 'list'] as const
+export const CALENDAR_VIEWS = ['month', 'week', 'hours', 'list'] as const
 export type CalendarView = typeof CALENDAR_VIEWS[number]
 
 // In the statuses filter, stands for tasks without a status

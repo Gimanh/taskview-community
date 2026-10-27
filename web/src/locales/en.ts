@@ -314,6 +314,7 @@ export default {
     previous: 'Previous period',
     next: 'Next period',
     views: {
+      hours: 'Hours',
       month: 'Month',
       week: 'Week',
       list: 'List',
@@ -1029,6 +1030,9 @@ export default {
       viewGraph: 'Graph',
       viewSprints: 'Sprints',
       viewCalendar: 'Calendar',
+      calendarDragStep: 'Calendar drag step',
+      calendarDragStepHint: 'How far a task moves when you drag or resize it in the calendar\'s hours view.',
+      minutes: '{count} min',
     },
     taskFields: {
       subtasks: 'Subtasks',

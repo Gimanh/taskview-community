@@ -20,7 +20,7 @@
       >
         <template #dayHeaderContent="arg">
           <div
-            v-if="arg.view.type === FC_VIEWS.week"
+            v-if="arg.view.type === FC_VIEWS.week || arg.view.type === FC_VIEWS.hours"
             class="flex flex-col items-start gap-0.5 px-1 py-1.5"
           >
             <span class="text-xs font-normal text-muted">{{ arg.weekdayText }}</span>
@@ -50,6 +50,7 @@
             :dot="isMobile && arg.view.type === FC_VIEWS.month"
             :resizable="arg.isEndResizable"
             :lifted="arg.isMirror"
+            :fill="arg.view.type === FC_VIEWS.hours"
           />
         </template>
       </FullCalendar>
@@ -84,6 +85,7 @@ import FullCalendar from '@fullcalendar/vue3'
 import type { CalendarOptions, DatesSetInfo, EventChangeInfo, EventClickInfo, EventDropInfo, EventResizeDoneInfo } from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/vue3/daygrid'
 import interactionPlugin from '@fullcalendar/vue3/interaction'
+import timeGridPlugin from '@fullcalendar/vue3/timegrid'
 import listPlugin from '@fullcalendar/vue3/list'
 import classicThemePlugin from '@fullcalendar/vue3/themes/classic'
 import deLocale from '@fullcalendar/vue3/locales/de'
@@ -97,12 +99,14 @@ import CalendarToolbar from './CalendarToolbar.vue'
 import CalendarTaskCard from './CalendarTaskCard.vue'
 import { useCalendarStore } from '@/stores/calendar.store'
 import type { TaskItem } from '@/types/tasks.types'
+import type { TaskArgUpdate } from 'taskview-api'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
 import { useTaskView } from '@/composables/useTaskView'
 import { useWeekStart } from '@/composables/useWeekStart'
 import { NO_STATUS, useCalendarFilters, useCalendarRouteState, type CalendarView } from '@/composables/useCalendarRouteState'
-import { isScheduled, occupiesDay, shiftTaskDates, taskToEvent, type TaskCalendarEvent } from '@/helpers/taskCalendarDates'
+import { eventToTaskDates, isScheduled, occupiesDay, shiftTaskDates, taskToEvent, type TaskCalendarEvent } from '@/helpers/taskCalendarDates'
+import { useCalendarDragStep } from '@/composables/useCalendarDragStep'
 
 const props = defineProps<{ goalId: number }>()
 
@@ -111,6 +115,7 @@ const DAY_FORMAT = 'yyyy-MM-dd'
 const FC_VIEWS: Record<CalendarView, string> = {
   month: 'dayGridMonth',
   week: 'dayGridWeek',
+  hours: 'timeGridWeek',
   list: 'listWeek',
 }
 
@@ -121,6 +126,7 @@ const { isMobile } = useTaskView()
 const { canEditTaskDeadline } = useGoalPermissions()
 const toast = useToast()
 const weekStart = useWeekStart()
+const dragStep = useCalendarDragStep()
 const { view, date } = useCalendarRouteState(isMobile.value ? 'list' : 'week')
 const filters = useCalendarFilters()
 
@@ -169,7 +175,7 @@ const collapsedWeekdays = computed(() => {
 const weekendClass = (arg: { dow: number }) => (collapsedWeekdays.value.has(arg.dow) ? 'tv-calendar-collapsed' : '')
 
 // Seven readable columns don't fit a phone: let the week scroll sideways instead of squeezing cards
-const scrollWeek = computed(() => isMobile.value && view.value === 'week')
+const scrollWeek = computed(() => isMobile.value && (view.value === 'week' || view.value === 'hours'))
 
 const showEmptyState = computed(() => !calendarStore.loading && !calendarStore.tasks.some(isScheduled))
 
@@ -196,25 +202,39 @@ function onEventClick(info: EventClickInfo) {
   openTask((info.event.extendedProps.task as TaskCalendarEvent['extendedProps']['task']).id)
 }
 
-// FullCalendar has already moved the event: save the shift and put the event back if that fails.
-// Day grids move events by whole days, so the deltas carry days only.
-async function saveShift(info: EventChangeInfo, startDays: number, endDays: number) {
-  const { task } = info.event.extendedProps as TaskCalendarEvent['extendedProps']
-  if (await calendarStore.updateTaskDates(shiftTaskDates(task, startDays, endDays))) return
+// FullCalendar has already moved the event: save the new dates and put the event back if that fails
+async function saveDates(info: EventChangeInfo, patch: TaskArgUpdate) {
+  if (await calendarStore.updateTaskDates(patch)) return
   info.revert()
   toast.add({ title: t('calendar.moveError'), color: 'error' })
 }
 
+// Day grids move events by whole days, so their deltas carry days only and keep each time as it is.
+// In the hours view, an event that lands on (or leaves) a time slot is read from where it landed.
+function movedByDays(info: EventChangeInfo) {
+  return view.value !== 'hours' || (info.event.allDay && info.oldEvent.allDay)
+}
+
+function landed(info: EventChangeInfo) {
+  return { start: info.event.start!, end: info.event.end, allDay: info.event.allDay }
+}
+
 function onEventDrop(info: EventDropInfo) {
-  saveShift(info, info.delta.days, info.delta.days)
+  const { task, shape } = info.event.extendedProps as TaskCalendarEvent['extendedProps']
+  saveDates(info, movedByDays(info)
+    ? shiftTaskDates(task, info.delta.days, info.delta.days)
+    : eventToTaskDates(task, shape, landed(info), false))
 }
 
 function onEventResize(info: EventResizeDoneInfo) {
-  saveShift(info, info.startDelta.days, info.endDelta.days)
+  const { task, shape } = info.event.extendedProps as TaskCalendarEvent['extendedProps']
+  saveDates(info, movedByDays(info)
+    ? shiftTaskDates(task, info.startDelta.days, info.endDelta.days)
+    : eventToTaskDates(task, shape, landed(info), true))
 }
 
 const calendarOptions = computed<CalendarOptions>(() => ({
-  plugins: [classicThemePlugin, dayGridPlugin, interactionPlugin, listPlugin],
+  plugins: [classicThemePlugin, dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
   initialView,
   initialDate,
   headerToolbar: false,
@@ -234,6 +254,12 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   navLinkDayClick: onNavLinkDayClick,
   views: {
     dayGridWeek: { dayMaxEvents: false, dayHeaderClass: weekendClass, dayCellClass: weekendClass },
+    timeGridWeek: {
+      slotDuration: '00:30:00',
+      snapDuration: { minutes: dragStep.value },
+      scrollTime: '08:00:00',
+      nowIndicator: true,
+    },
   },
   datesSet: onDatesSet,
   eventClick: onEventClick,

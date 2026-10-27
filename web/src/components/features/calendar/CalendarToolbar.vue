@@ -37,7 +37,7 @@
     </h2>
 
     <UFieldGroup
-      size="lg"
+      :size="compact ? 'md' : 'lg'"
       class="ml-auto shrink-0"
     >
       <UButton
@@ -81,6 +81,7 @@ const { t } = useI18n()
 const viewItems = computed(() => [
   { value: 'month' as const, label: t('calendar.views.month'), icon: 'i-lucide-calendar' },
   { value: 'week' as const, label: t('calendar.views.week'), icon: 'i-lucide-columns-3' },
+  { value: 'hours' as const, label: t('calendar.views.hours'), icon: 'i-lucide-clock' },
   { value: 'list' as const, label: t('calendar.views.list'), icon: 'i-lucide-list' },
 ])
 </script>

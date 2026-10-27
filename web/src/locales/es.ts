@@ -300,6 +300,7 @@ export default {
     previous: 'Período anterior',
     next: 'Período siguiente',
     views: {
+      hours: 'Horas',
       month: 'Mes',
       week: 'Semana',
       list: 'Lista',
@@ -1015,6 +1016,9 @@ export default {
       viewGraph: 'Grafo',
       viewSprints: 'Sprints',
       viewCalendar: 'Calendario',
+      calendarDragStep: 'Paso al arrastrar en el calendario',
+      calendarDragStepHint: 'Cuánto se mueve una tarea al arrastrarla o cambiar su duración en la vista Horas del calendario.',
+      minutes: '{count} min',
     },
     taskFields: {
       subtasks: 'Subtareas',
