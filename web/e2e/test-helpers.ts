@@ -163,6 +163,41 @@ export async function createTaskViaApi(page: Page, task: { goalId: number; descr
   return (await response.json()).response.id as number
 }
 
+export async function createTagViaApi(page: Page, tag: { goalId: number; name: string; color: string }): Promise<number> {
+  const token = await apiToken(page)
+  const response = await page.request.post(`${API_URL}/module/tags`, {
+    data: tag,
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return (await response.json()).response.id as number
+}
+
+export async function addTagToTaskViaApi(page: Page, tagId: number, taskId: number) {
+  const token = await apiToken(page)
+  await page.request.patch(`${API_URL}/module/tags/toggle`, {
+    data: { tagId, taskId },
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+/** The user's UI settings (the `__settings__` preferences). */
+export async function getUiSettingsViaApi(page: Page): Promise<Record<string, unknown>> {
+  const token = await apiToken(page)
+  const response = await page.request.get(`${API_URL}/module/ui-preferences`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return (await response.json()).response?.__settings__ ?? {}
+}
+
+/** Replaces the user's UI settings (the `__settings__` preferences). Shared by all tests of the user. */
+export async function setUiSettingsViaApi(page: Page, settings: Record<string, unknown>) {
+  const token = await apiToken(page)
+  await page.request.put(`${API_URL}/module/ui-preferences`, {
+    data: { __settings__: settings },
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
 // ── Tasks ──
 
 export async function addTaskFromList(page: Page, taskName: string) {
