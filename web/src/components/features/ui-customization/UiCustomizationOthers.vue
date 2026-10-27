@@ -118,6 +118,7 @@ const viewItems = computed(() => [
   { value: 'kanban', label: t('uiCustomization.others.viewKanban') },
   { value: 'graph', label: t('uiCustomization.others.viewGraph') },
   { value: 'sprints', label: t('uiCustomization.others.viewSprints') },
+  { value: 'calendar', label: t('uiCustomization.others.viewCalendar') },
 ])
 
 const weekStart = computed<number>({

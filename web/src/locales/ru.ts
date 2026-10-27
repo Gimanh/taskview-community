@@ -990,6 +990,7 @@ export default {
       viewKanban: 'Канбан',
       viewGraph: 'Граф',
       viewSprints: 'Спринты',
+      viewCalendar: 'Календарь',
     },
     taskFields: {
       subtasks: 'Подзадачи',

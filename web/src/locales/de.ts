@@ -1010,6 +1010,7 @@ export default {
       viewKanban: 'Kanban',
       viewGraph: 'Graph',
       viewSprints: 'Sprints',
+      viewCalendar: 'Kalender',
     },
     taskFields: {
       subtasks: 'Teilaufgaben',

@@ -9,7 +9,7 @@ export type UiPreferencesItem = {
 
 export type FirstDayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6
 
-export type DefaultView = 'tasks' | 'kanban' | 'graph' | 'sprints'
+export type DefaultView = 'tasks' | 'kanban' | 'graph' | 'sprints' | 'calendar'
 
 export const THEME_PRIMARY_COLORS = [
   'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan',

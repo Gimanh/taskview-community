@@ -1023,6 +1023,7 @@ export default {
       viewKanban: 'Kanban',
       viewGraph: 'Gráfico',
       viewSprints: 'Sprints',
+      viewCalendar: 'Calendário',
     },
     taskFields: {
       subtasks: 'Subtarefas',
