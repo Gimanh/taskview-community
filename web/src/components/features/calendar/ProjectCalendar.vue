@@ -96,11 +96,12 @@ import '@/assets/css/calendar.css'
 import CalendarToolbar from './CalendarToolbar.vue'
 import CalendarTaskCard from './CalendarTaskCard.vue'
 import { useCalendarStore } from '@/stores/calendar.store'
+import type { TaskItem } from '@/types/tasks.types'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
 import { useTaskView } from '@/composables/useTaskView'
 import { useWeekStart } from '@/composables/useWeekStart'
-import { useCalendarRouteState, type CalendarView } from '@/composables/useCalendarRouteState'
+import { NO_STATUS, useCalendarFilters, useCalendarRouteState, type CalendarView } from '@/composables/useCalendarRouteState'
 import { isScheduled, occupiesDay, shiftTaskDates, taskToEvent, type TaskCalendarEvent } from '@/helpers/taskCalendarDates'
 
 const props = defineProps<{ goalId: number }>()
@@ -121,6 +122,7 @@ const { canEditTaskDeadline } = useGoalPermissions()
 const toast = useToast()
 const weekStart = useWeekStart()
 const { view, date } = useCalendarRouteState(isMobile.value ? 'list' : 'week')
+const filters = useCalendarFilters()
 
 const calendarRef = useTemplateRef<InstanceType<typeof FullCalendar>>('calendarRef')
 const api = () => calendarRef.value?.getApi()
@@ -131,7 +133,17 @@ const initialView = FC_VIEWS[view.value]
 const initialDate = date.value
 
 
+// Filters apply on the client: only the visible period is loaded, so this stays small and instant.
+// Within each filter any selected value matches; different filters must all match.
+function matchesFilters(task: TaskItem): boolean {
+  const { assignees, tags, statuses } = filters
+  return (!assignees.value.length || task.assignedUsers.some((id) => assignees.value.includes(id)))
+    && (!tags.value.length || task.tags.some((id) => tags.value.includes(id)))
+    && (!statuses.value.length || statuses.value.includes(task.statusId ?? NO_STATUS))
+}
+
 const events = computed(() => calendarStore.tasks
+  .filter(matchesFilters)
   .map(taskToEvent)
   .filter((event): event is TaskCalendarEvent => event !== null))
 
@@ -148,7 +160,7 @@ watch([() => props.goalId, visibleRange], ([goalId, range]) => {
   calendarStore.fetchTasks(goalId, { from: format(addDays(range.start, -1), DAY_FORMAT), to: format(range.end, DAY_FORMAT) })
 })
 const collapsedWeekdays = computed(() => {
-  if (!visibleRange.value || canEditTaskDeadline.value) return new Set<number>()
+  if (!visibleRange.value || canEditTaskDeadline.value || filters.hideWeekends.value) return new Set<number>()
   const { start, end } = visibleRange.value
   const emptyWeekendDays = eachDayOfInterval({ start, end: addDays(end, -1) })
     .filter((day) => isWeekend(day) && !events.value.some((event) => occupiesDay(event, day)))
@@ -217,6 +229,7 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   eventColor: 'transparent',
   eventContrastColor: 'var(--ui-text)',
   dayMaxEvents: true,
+  weekends: !filters.hideWeekends.value,
   navLinks: true,
   navLinkDayClick: onNavLinkDayClick,
   views: {
