@@ -320,9 +320,15 @@ export default {
     },
     subtasks: 'Subtarefas: {count}',
     moveError: 'Não foi possível salvar as novas datas. A tarefa voltou ao lugar.',
+    add: {
+      title: 'Nova tarefa',
+      submit: 'Adicionar tarefa',
+      error: 'Não foi possível adicionar a tarefa. Tente novamente.',
+    },
     empty: {
       title: 'Nada agendado para estas datas',
       description: 'Abra uma tarefa e defina uma data de início ou de término para vê-la no calendário.',
+      descriptionCanAdd: 'Clique em um dia para adicionar uma tarefa, ou abra uma e defina uma data de início ou de término.',
     },
   },
   graph: {

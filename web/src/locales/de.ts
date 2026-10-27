@@ -307,9 +307,15 @@ export default {
     },
     subtasks: 'Unteraufgaben: {count}',
     moveError: 'Die neuen Termine konnten nicht gespeichert werden. Die Aufgabe ist wieder an ihrem Platz.',
+    add: {
+      title: 'Neue Aufgabe',
+      submit: 'Aufgabe hinzufügen',
+      error: 'Die Aufgabe konnte nicht hinzugefügt werden. Bitte erneut versuchen.',
+    },
     empty: {
       title: 'Für diesen Zeitraum ist nichts geplant',
       description: 'Öffnen Sie eine Aufgabe und legen Sie ein Start- oder Enddatum fest, um sie im Kalender zu sehen.',
+      descriptionCanAdd: 'Klicke auf einen Tag, um eine Aufgabe hinzuzufügen, oder öffne eine und setze ein Start- oder Enddatum.',
     },
   },
   graph: {

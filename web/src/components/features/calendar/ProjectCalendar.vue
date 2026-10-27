@@ -1,5 +1,9 @@
 <template>
-  <div class="tv-calendar flex h-full min-h-0 flex-col gap-3">
+  <div
+    class="tv-calendar flex h-full min-h-0 flex-col gap-3"
+    :class="showAddHint && ['tv-calendar-addable', `tv-calendar-add-${view}`]"
+    :style="showAddHint ? { '--tv-calendar-add-label': addHintLabel } : undefined"
+  >
     <CalendarToolbar
       v-model:view="view"
       :title="title"
@@ -69,20 +73,26 @@
             {{ t('calendar.empty.title') }}
           </p>
           <p class="mt-1 text-sm text-muted">
-            {{ t('calendar.empty.description') }}
+            {{ t(canCreate ? 'calendar.empty.descriptionCanAdd' : 'calendar.empty.description') }}
           </p>
         </div>
       </div>
     </div>
+
+    <CalendarAddTaskDialog
+      v-model:open="addOpen"
+      :span="addSpan"
+      :goal-id="goalId"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef, watch } from 'vue'
-import { addDays, eachDayOfInterval, format, getDay, isWeekend } from 'date-fns'
+import { addDays, addMinutes, differenceInMinutes, eachDayOfInterval, format, getDay, isWeekend } from 'date-fns'
 import { useI18n } from 'vue-i18n'
 import FullCalendar from '@fullcalendar/vue3'
-import type { CalendarOptions, DatesSetInfo, EventChangeInfo, EventClickInfo, EventDropInfo, EventResizeDoneInfo } from '@fullcalendar/vue3'
+import type { CalendarOptions, DateSelectInfo, DatesSetInfo, EventChangeInfo, EventClickInfo, EventDropInfo, EventResizeDoneInfo } from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/vue3/daygrid'
 import interactionPlugin from '@fullcalendar/vue3/interaction'
 import timeGridPlugin from '@fullcalendar/vue3/timegrid'
@@ -97,6 +107,7 @@ import '@fullcalendar/vue3/themes/classic/theme.css'
 import '@/assets/css/calendar.css'
 import CalendarToolbar from './CalendarToolbar.vue'
 import CalendarTaskCard from './CalendarTaskCard.vue'
+import CalendarAddTaskDialog from './CalendarAddTaskDialog.vue'
 import { useCalendarStore } from '@/stores/calendar.store'
 import type { TaskItem } from '@/types/tasks.types'
 import type { TaskArgUpdate } from 'taskview-api'
@@ -105,7 +116,7 @@ import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
 import { useTaskView } from '@/composables/useTaskView'
 import { useWeekStart } from '@/composables/useWeekStart'
 import { NO_STATUS, useCalendarFilters, useCalendarRouteState, type CalendarView } from '@/composables/useCalendarRouteState'
-import { eventToTaskDates, isScheduled, occupiesDay, shiftTaskDates, taskToEvent, type TaskCalendarEvent } from '@/helpers/taskCalendarDates'
+import { eventToTaskDates, type CalendarSpan, isScheduled, occupiesDay, shiftTaskDates, taskToEvent, type TaskCalendarEvent } from '@/helpers/taskCalendarDates'
 import { useCalendarDragStep } from '@/composables/useCalendarDragStep'
 
 const props = defineProps<{ goalId: number }>()
@@ -123,10 +134,13 @@ const { t, locale } = useI18n()
 const calendarStore = useCalendarStore()
 const { openTask } = useTaskDetailPanel()
 const { isMobile } = useTaskView()
-const { canEditTaskDeadline } = useGoalPermissions()
+const { canEditTaskDeadline, canAddTask } = useGoalPermissions()
+// A task created on a day gets that date, so it takes both permissions
+const canCreate = computed(() => canAddTask.value && canEditTaskDeadline.value)
 const toast = useToast()
 const weekStart = useWeekStart()
 const dragStep = useCalendarDragStep()
+const slotMinutes = computed(() => Math.max(30, dragStep.value))
 const { view, date } = useCalendarRouteState(isMobile.value ? 'list' : 'week')
 const filters = useCalendarFilters()
 
@@ -137,7 +151,6 @@ const title = ref('')
 // Read once: FullCalendar owns navigation after mount and reports it back through datesSet
 const initialView = FC_VIEWS[view.value]
 const initialDate = date.value
-
 
 // Filters apply on the client: only the visible period is loaded, so this stays small and instant.
 // Within each filter any selected value matches; different filters must all match.
@@ -153,10 +166,6 @@ const events = computed(() => calendarStore.tasks
   .map(taskToEvent)
   .filter((event): event is TaskCalendarEvent => event !== null))
 
-// Like Asana, an empty Saturday or Sunday shrinks to a narrow column in the week view.
-// Only empty days collapse, so no multi-day bar ever spans a column narrower than the rest.
-// Only when tasks can't be moved: FullCalendar finds the day under the pointer assuming equal-width
-// columns, so a narrow column would make drops and resizes land on the wrong day.
 const visibleRange = ref<{ start: Date; end: Date }>()
 
 // Load the visible period only, one day wider on each side: a task with a time is stored in UTC
@@ -165,6 +174,11 @@ watch([() => props.goalId, visibleRange], ([goalId, range]) => {
   if (!range) return
   calendarStore.fetchTasks(goalId, { from: format(addDays(range.start, -1), DAY_FORMAT), to: format(range.end, DAY_FORMAT) })
 })
+
+// Like Asana, an empty Saturday or Sunday shrinks to a narrow column in the week view.
+// Only empty days collapse, so no multi-day bar ever spans a column narrower than the rest.
+// Only when tasks can't be moved: FullCalendar finds the day under the pointer assuming equal-width
+// columns, so a narrow column would make drops and resizes land on the wrong day.
 const collapsedWeekdays = computed(() => {
   if (!visibleRange.value || canEditTaskDeadline.value || filters.hideWeekends.value) return new Set<number>()
   const { start, end } = visibleRange.value
@@ -176,6 +190,10 @@ const weekendClass = (arg: { dow: number }) => (collapsedWeekdays.value.has(arg.
 
 // Seven readable columns don't fit a phone: let the week scroll sideways instead of squeezing cards
 const scrollWeek = computed(() => isMobile.value && (view.value === 'week' || view.value === 'hours'))
+
+// Day views show "+ Add task" on the hovered day, so it's clear a click adds one (see calendar.css)
+const showAddHint = computed(() => canCreate.value && (view.value === 'month' || view.value === 'week'))
+const addHintLabel = computed(() => JSON.stringify(`+ ${t('calendar.add.submit')}`))
 
 const showEmptyState = computed(() => !calendarStore.loading && !calendarStore.tasks.some(isScheduled))
 
@@ -219,6 +237,23 @@ function landed(info: EventChangeInfo) {
   return { start: info.event.start!, end: info.event.end, allDay: info.event.allDay }
 }
 
+// Clicking a day (or dragging across days or time slots) opens the quick add for that span
+const addOpen = ref(false)
+const addSpan = ref<CalendarSpan | null>(null)
+
+function onSelect(info: DateSelectInfo) {
+  // A click on a time slot selects a single snap step: make it as long as the slot instead
+  const end = !info.allDay && differenceInMinutes(info.end, info.start) <= dragStep.value
+    ? addMinutes(info.start, slotMinutes.value)
+    : info.end
+  addSpan.value = { start: info.start, end, allDay: info.allDay }
+  addOpen.value = true
+}
+
+watch(addOpen, (isOpen) => {
+  if (!isOpen) api()?.unselect()
+})
+
 function onEventDrop(info: EventDropInfo) {
   const { task, shape } = info.event.extendedProps as TaskCalendarEvent['extendedProps']
   saveDates(info, movedByDays(info)
@@ -255,7 +290,8 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   views: {
     dayGridWeek: { dayMaxEvents: false, dayHeaderClass: weekendClass, dayCellClass: weekendClass },
     timeGridWeek: {
-      slotDuration: '00:30:00',
+      // FullCalendar ignores a snap step that doesn't divide the slot, so a 60-minute step needs 60-minute slots
+      slotDuration: { minutes: slotMinutes.value },
       snapDuration: { minutes: dragStep.value },
       scrollTime: '08:00:00',
       nowIndicator: true,
@@ -266,5 +302,7 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   editable: canEditTaskDeadline.value,
   eventDrop: onEventDrop,
   eventResize: onEventResize,
+  selectable: canCreate.value,
+  select: onSelect,
 }))
 </script>

@@ -15,6 +15,9 @@ export interface TaskCalendarEvent {
 
 const DAY_FORMAT = 'yyyy-MM-dd'
 
+/** A span picked on the calendar. All-day ends are exclusive, as FullCalendar reports them. */
+export type CalendarSpan = { start: Date; end: Date; allDay: boolean }
+
 // Dates that carry a time are stored in UTC; date-only values are plain calendar dates
 function utcDateTime(date: string, time: string): Date {
   return new Date(`${date}T${time.slice(0, 5)}:00Z`)

@@ -307,9 +307,15 @@ export default {
     },
     subtasks: 'Subtareas: {count}',
     moveError: 'No se pudieron guardar las fechas nuevas. La tarea volvió a su lugar.',
+    add: {
+      title: 'Nueva tarea',
+      submit: 'Agregar tarea',
+      error: 'No se pudo agregar la tarea. Inténtalo de nuevo.',
+    },
     empty: {
       title: 'No hay nada programado en estas fechas',
       description: 'Abre una tarea y ponle fecha de inicio o de fin para verla en el calendario.',
+      descriptionCanAdd: 'Haz clic en un día para agregar una tarea, o abre una y ponle fecha de inicio o de fin.',
     },
   },
   graph: {

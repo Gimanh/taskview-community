@@ -321,9 +321,15 @@ export default {
     },
     subtasks: 'Subtasks: {count}',
     moveError: 'Couldn\'t save the new dates. The task is back where it was.',
+    add: {
+      title: 'New task',
+      submit: 'Add task',
+      error: 'Couldn\'t add the task. Try again.',
+    },
     empty: {
       title: 'Nothing scheduled for these dates',
       description: 'Open a task and set a start or end date to see it on the calendar.',
+      descriptionCanAdd: 'Click a day to add a task, or open one and set a start or end date.',
     },
   },
   graph: {
