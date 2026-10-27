@@ -588,6 +588,14 @@ export class TasksRepository {
             conditions.push(eq(TasksSchema.sprintId, data.filters.sprintId));
         }
 
+        // period: a task with a single date spans just that day; tasks without dates never match
+        if (data.dateFrom !== undefined) {
+            conditions.push(sql`COALESCE(${TasksSchema.endDate}, ${TasksSchema.startDate}) >= ${data.dateFrom}`);
+        }
+        if (data.dateTo !== undefined) {
+            conditions.push(sql`COALESCE(${TasksSchema.startDate}, ${TasksSchema.endDate}) <= ${data.dateTo}`);
+        }
+
         // search
         if (data.searchText) {
             conditions.push(ilike(TasksSchema.description, `%${data.searchText}%`));
