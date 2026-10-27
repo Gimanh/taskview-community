@@ -48,6 +48,8 @@
             :time-text="arg.event.allDay ? undefined : arg.timeText"
             :compact="arg.view.type !== FC_VIEWS.week"
             :dot="isMobile && arg.view.type === FC_VIEWS.month"
+            :resizable="arg.isEndResizable"
+            :lifted="arg.isMirror"
           />
         </template>
       </FullCalendar>
@@ -79,8 +81,9 @@ import { computed, ref, useTemplateRef, watch } from 'vue'
 import { addDays, eachDayOfInterval, getDay, isWeekend } from 'date-fns'
 import { useI18n } from 'vue-i18n'
 import FullCalendar from '@fullcalendar/vue3'
-import type { CalendarOptions, DatesSetInfo, EventClickInfo } from '@fullcalendar/vue3'
+import type { CalendarOptions, DatesSetInfo, EventChangeInfo, EventClickInfo, EventDropInfo, EventResizeDoneInfo } from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/vue3/daygrid'
+import interactionPlugin from '@fullcalendar/vue3/interaction'
 import listPlugin from '@fullcalendar/vue3/list'
 import classicThemePlugin from '@fullcalendar/vue3/themes/classic'
 import deLocale from '@fullcalendar/vue3/locales/de'
@@ -93,11 +96,12 @@ import '@/assets/css/calendar.css'
 import CalendarToolbar from './CalendarToolbar.vue'
 import CalendarTaskCard from './CalendarTaskCard.vue'
 import { useCalendarStore } from '@/stores/calendar.store'
+import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
 import { useTaskView } from '@/composables/useTaskView'
 import { useWeekStart } from '@/composables/useWeekStart'
 import { useCalendarRouteState, type CalendarView } from '@/composables/useCalendarRouteState'
-import { isScheduled, occupiesDay, taskToEvent, type TaskCalendarEvent } from '@/helpers/taskCalendarDates'
+import { isScheduled, occupiesDay, shiftTaskDates, taskToEvent, type TaskCalendarEvent } from '@/helpers/taskCalendarDates'
 
 const props = defineProps<{ goalId: number }>()
 
@@ -111,6 +115,8 @@ const { t, locale } = useI18n()
 const calendarStore = useCalendarStore()
 const { openTask } = useTaskDetailPanel()
 const { isMobile } = useTaskView()
+const { canEditTaskDeadline } = useGoalPermissions()
+const toast = useToast()
 const weekStart = useWeekStart()
 const { view, date } = useCalendarRouteState(isMobile.value ? 'list' : 'week')
 
@@ -130,9 +136,11 @@ const events = computed(() => calendarStore.tasks
 
 // Like Asana, an empty Saturday or Sunday shrinks to a narrow column in the week view.
 // Only empty days collapse, so no multi-day bar ever spans a column narrower than the rest.
+// Only when tasks can't be moved: FullCalendar finds the day under the pointer assuming equal-width
+// columns, so a narrow column would make drops and resizes land on the wrong day.
 const visibleRange = ref<{ start: Date; end: Date }>()
 const collapsedWeekdays = computed(() => {
-  if (!visibleRange.value) return new Set<number>()
+  if (!visibleRange.value || canEditTaskDeadline.value) return new Set<number>()
   const { start, end } = visibleRange.value
   const emptyWeekendDays = eachDayOfInterval({ start, end: addDays(end, -1) })
     .filter((day) => isWeekend(day) && !events.value.some((event) => occupiesDay(event, day)))
@@ -164,8 +172,25 @@ function onEventClick(info: EventClickInfo) {
   openTask((info.event.extendedProps.task as TaskCalendarEvent['extendedProps']['task']).id)
 }
 
+// FullCalendar has already moved the event: save the shift and put the event back if that fails.
+// Day grids move events by whole days, so the deltas carry days only.
+async function saveShift(info: EventChangeInfo, startDays: number, endDays: number) {
+  const { task } = info.event.extendedProps as TaskCalendarEvent['extendedProps']
+  if (await calendarStore.updateTaskDates(shiftTaskDates(task, startDays, endDays))) return
+  info.revert()
+  toast.add({ title: t('calendar.moveError'), color: 'error' })
+}
+
+function onEventDrop(info: EventDropInfo) {
+  saveShift(info, info.delta.days, info.delta.days)
+}
+
+function onEventResize(info: EventResizeDoneInfo) {
+  saveShift(info, info.startDelta.days, info.endDelta.days)
+}
+
 const calendarOptions = computed<CalendarOptions>(() => ({
-  plugins: [classicThemePlugin, dayGridPlugin, listPlugin],
+  plugins: [classicThemePlugin, dayGridPlugin, interactionPlugin, listPlugin],
   initialView,
   initialDate,
   headerToolbar: false,
@@ -187,5 +212,8 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   },
   datesSet: onDatesSet,
   eventClick: onEventClick,
+  editable: canEditTaskDeadline.value,
+  eventDrop: onEventDrop,
+  eventResize: onEventResize,
 }))
 </script>

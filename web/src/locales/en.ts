@@ -213,6 +213,8 @@ export default {
     startDate: 'Start date',
     endDate: 'End date',
     selectTime: 'Select time',
+    startTime: 'Start time',
+    endTime: 'End time',
     selectRange: 'Select range',
     today: 'Today',
     tomorrow: 'Tomorrow',
@@ -309,6 +311,7 @@ export default {
       list: 'List',
     },
     subtasks: 'Subtasks: {count}',
+    moveError: 'Couldn\'t save the new dates. The task is back where it was.',
     empty: {
       title: 'Tasks with dates appear here',
       description: 'Open a task and set a start or end date to see it on the calendar.',

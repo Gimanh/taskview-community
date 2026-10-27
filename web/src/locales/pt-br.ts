@@ -212,6 +212,8 @@ export default {
     startDate: 'Data de início',
     endDate: 'Data de término',
     selectTime: 'Selecionar horário',
+    startTime: 'Hora de início',
+    endTime: 'Hora de término',
     selectRange: 'Selecionar período',
     today: 'Hoje',
     tomorrow: 'Amanhã',
@@ -308,6 +310,7 @@ export default {
       list: 'Lista',
     },
     subtasks: 'Subtarefas: {count}',
+    moveError: 'Não foi possível salvar as novas datas. A tarefa voltou ao lugar.',
     empty: {
       title: 'Aqui aparecem as tarefas com data',
       description: 'Abra uma tarefa e defina uma data de início ou de término para vê-la no calendário.',

@@ -199,6 +199,8 @@ export default {
     startDate: 'Startdatum',
     endDate: 'Enddatum',
     selectTime: 'Zeit auswählen',
+    startTime: 'Startzeit',
+    endTime: 'Endzeit',
     selectRange: 'Zeitraum auswählen',
     today: 'Heute',
     tomorrow: 'Morgen',
@@ -295,6 +297,7 @@ export default {
       list: 'Liste',
     },
     subtasks: 'Unteraufgaben: {count}',
+    moveError: 'Die neuen Termine konnten nicht gespeichert werden. Die Aufgabe ist wieder an ihrem Platz.',
     empty: {
       title: 'Hier erscheinen Aufgaben mit Datum',
       description: 'Öffnen Sie eine Aufgabe und legen Sie ein Start- oder Enddatum fest, um sie im Kalender zu sehen.',

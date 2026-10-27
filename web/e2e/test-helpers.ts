@@ -154,7 +154,7 @@ export async function createProjectViaApi(page: Page, name: string): Promise<num
 /**
  * Creates a task through the API, for tests that need fields the quick-add input can't set (e.g. dates).
  */
-export async function createTaskViaApi(page: Page, task: { goalId: number; description: string; startDate?: string; endDate?: string }): Promise<number> {
+export async function createTaskViaApi(page: Page, task: { goalId: number; description: string; startDate?: string; startTime?: string; endDate?: string; endTime?: string }): Promise<number> {
   const token = await apiToken(page)
   const response = await page.request.post(`${API_URL}/module/tasks`, {
     data: task,

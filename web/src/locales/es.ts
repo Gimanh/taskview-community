@@ -199,6 +199,8 @@ export default {
     startDate: 'Fecha de inicio',
     endDate: 'Fecha de fin',
     selectTime: 'Seleccionar hora',
+    startTime: 'Hora de inicio',
+    endTime: 'Hora de fin',
     selectRange: 'Seleccionar rango',
     today: 'Hoy',
     tomorrow: 'Mañana',
@@ -295,6 +297,7 @@ export default {
       list: 'Lista',
     },
     subtasks: 'Subtareas: {count}',
+    moveError: 'No se pudieron guardar las fechas nuevas. La tarea volvió a su lugar.',
     empty: {
       title: 'Aquí aparecen las tareas con fecha',
       description: 'Abre una tarea y ponle fecha de inicio o de fin para verla en el calendario.',

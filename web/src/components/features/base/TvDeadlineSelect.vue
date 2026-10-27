@@ -9,11 +9,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Task } from 'taskview-api'
-import { CalendarDate } from '@internationalized/date'
 import TvDateRange from '@/components/features/base/TvDateRange.vue'
 import { useTasksStore } from '@/stores/tasks.store'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import type { DateRangeValue } from '@/types/tvDate.types'
+import { fromServerDateTime, toServerDateTime } from '@/helpers/taskDateTime'
 
 const props = defineProps<{
   task: Task
@@ -22,26 +22,21 @@ const props = defineProps<{
 const tasksStore = useTasksStore()
 const { canEditTaskDeadline } = useGoalPermissions()
 
-function parse(dateStr: string | null | undefined): CalendarDate | undefined {
-  if (!dateStr) return undefined
-  const [year, month, day] = dateStr.split('-').map(Number)
-  if (!year || !month || !day) return undefined
-  return new CalendarDate(year, month, day)
-}
-
-const range = computed<DateRangeValue>(() => ({
-  start: parse(props.task.startDate),
-  end: parse(props.task.endDate),
-}))
+const range = computed<DateRangeValue>(() => {
+  const start = fromServerDateTime(props.task.startDate, props.task.startTime)
+  const end = fromServerDateTime(props.task.endDate, props.task.endTime)
+  return { start: start?.date, startTime: start?.time, end: end?.date, endTime: end?.time }
+})
 
 async function onUpdate(value: DateRangeValue | undefined) {
-  const v = value ?? null
+  const start = toServerDateTime(value?.start && { date: value.start, time: value.startTime })
+  const end = toServerDateTime(value?.end && { date: value.end, time: value.endTime })
   await tasksStore.saveDateForTask({
     id: props.task.id,
-    startDate: v?.start ? v.start.toString() : null,
-    startTime: v?.start ? props.task.startTime : null,
-    endDate: v?.end ? v.end.toString() : null,
-    endTime: v?.end ? props.task.endTime : null,
+    startDate: start.date,
+    startTime: start.time,
+    endDate: end.date,
+    endTime: end.time,
   })
 }
 </script>
