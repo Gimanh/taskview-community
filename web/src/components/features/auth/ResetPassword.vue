@@ -26,32 +26,8 @@
       </div>
     </template>
 
-    <!-- Error state - invalid reset link -->
-    <template v-else-if="!isValidLink">
-      <div class="text-center space-y-4">
-        <div class="mx-auto w-12 h-12 rounded-full bg-error/10 flex items-center justify-center">
-          <UIcon
-            name="i-lucide-alert-circle"
-            class="w-6 h-6 text-error"
-          />
-        </div>
-        <div>
-          <h3 class="font-medium">
-            {{ t('auth.invalidResetLink') }}
-          </h3>
-          <p class="text-sm text-muted mt-1">
-            {{ t('auth.invalidResetLinkDescription') }}
-          </p>
-        </div>
-        <UButton
-          :label="t('auth.backToLogin')"
-          variant="outline"
-          color="neutral"
-          block
-          @click="goToLogin"
-        />
-      </div>
-    </template>
+    <!-- Error state - invalid, used or expired reset link -->
+    <ResetPasswordInvalidLink v-else-if="!isValidLink || isLinkRejected" />
 
     <!-- Form -->
     <template v-else>
@@ -146,6 +122,7 @@ import { ref, reactive, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import $api from '@/helpers/axios'
+import ResetPasswordInvalidLink from './parts/ResetPasswordInvalidLink.vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -155,6 +132,7 @@ const toast = useToast()
 
 const isLoading = ref(false)
 const isReset = ref(false)
+const isLinkRejected = ref(false)
 const showPassword = ref(false)
 const showPasswordRepeat = ref(false)
 
@@ -214,7 +192,12 @@ async function onSubmit() {
         color: 'error',
       })
     }
-  } catch {
+  } catch (error: unknown) {
+    const reason = (error as { response?: { data?: { reason?: string } } }).response?.data?.reason
+    if (reason === 'invalid_or_expired_code') {
+      isLinkRejected.value = true
+      return
+    }
     toast.add({
       title: t('auth.error'),
       description: t('auth.canNotResetPassword'),

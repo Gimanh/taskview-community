@@ -8,13 +8,17 @@ export function useOrgSwitcher() {
   const orgStore = useOrganizationStore()
   const goalsStore = useGoalsStore()
 
-  function switchOrg(org: Organization) {
+  function activateOrg(org: Organization) {
     if (org.id === orgStore.currentOrg?.id) return
     orgStore.setCurrentOrg(org)
-    // Projects are org-scoped — drop the previous org's list and refetch for the
-    // new one. `initialized = false` keeps the route guard from acting on stale goals.
+    // `initialized = false` keeps the route guard from acting on the previous org's goals.
     goalsStore.initialized = false
     goalsStore.fetchGoals()
+  }
+
+  function switchOrg(org: Organization) {
+    if (org.id === orgStore.currentOrg?.id) return
+    activateOrg(org)
     router.push({ name: 'user', params: { orgSlug: org.slug } })
   }
 
@@ -22,5 +26,5 @@ export function useOrgSwitcher() {
     return orgStore.currentOrg?.id === orgId
   }
 
-  return { switchOrg, isCurrentOrg }
+  return { switchOrg, activateOrg, isCurrentOrg }
 }

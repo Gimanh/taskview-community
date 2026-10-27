@@ -35,7 +35,26 @@ export type KanbanArgUpdateStatus = typeof KanbanArkTypeStatusUpdate.infer;
 
 export type KanbanArgFetchAllStatuses = typeof KanbanArkTypeFetchAllStatuses.infer;
 
+export const KanbanArkTypeReorderStatuses = type({
+    goalId: NumberFromString,
+    statusIds: 'number.integer[]',
+});
+
+export type KanbanArgReorderStatuses = typeof KanbanArkTypeReorderStatuses.infer;
+
+export type KanbanReorderStatusesArgs = {
+    goalId: number;
+    /** every column of the goal, in the new order */
+    statusIds: number[];
+};
+
+export type KanbanReorderStatusesResult =
+    | { ok: true; statuses: KanbanStatusForClient[] }
+    | { ok: false; reason: 'invalid_order' | 'save_failed' };
+
 export type StatusBelongsToGoalArgs = { statusId: number; goalId: number };
+
+export type KanbanGoalTaskArgs = { taskId: number; goalId: number };
 
 export type KanbanStatusInDb = {
     id: number;

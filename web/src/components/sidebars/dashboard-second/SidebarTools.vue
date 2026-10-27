@@ -67,8 +67,11 @@ const {
   canViewKanban,
   canViewGraph,
   canViewSprints,
+  canViewFiles,
+  canViewAutomations,
   canManageUsers,
   canViewIntegrations,
+  canViewWebhooks,
   canViewTimeTracking,
 } = useGoalPermissionsFor(currentProject)
 
@@ -96,11 +99,19 @@ const tools = computed<Tool[]>(() => {
   if (canViewSprints.value) {
     list.push({ key: 'sprints', label: t('contextMenu.sprints'), icon: 'i-lucide-rocket', to: { name: 'sprints', params: { projectId: id } }, active: () => route.name === 'sprints' })
   }
+  if (canViewFiles.value) {
+    list.push({ key: 'files', label: t('contextMenu.files'), icon: 'i-lucide-paperclip', to: { name: 'files', params: { projectId: id } }, active: () => route.name === 'files' })
+  }
+  if (canViewAutomations.value) {
+    list.push({ key: 'automations', label: t('contextMenu.automations'), icon: 'i-lucide-workflow', to: { name: 'automations', params: { projectId: id } }, active: () => route.name === 'automations' })
+  }
   if (canManageUsers.value) {
     list.push({ key: 'collaboration', label: t('contextMenu.collaboration'), icon: 'i-lucide-users', to: { name: 'collaboration', params: { projectId: id } }, active: () => route.name === 'collaboration' })
   }
-  if (canViewIntegrations.value) {
+  if (canViewWebhooks.value) {
     list.push({ key: 'webhooks', label: t('contextMenu.webhooks'), icon: 'i-lucide-webhook', to: { name: 'webhooks', params: { projectId: id } }, active: () => route.name === 'webhooks' })
+  }
+  if (canViewIntegrations.value) {
     list.push({ key: 'integrations', label: t('contextMenu.integrations'), icon: 'i-lucide-plug', to: { name: 'integrations', params: { projectId: id } }, active: () => route.name === 'integrations' })
     list.push({ key: 'messaging', label: t('contextMenu.messaging'), icon: 'i-lucide-send', to: { name: 'messaging', params: { projectId: id } }, active: () => route.name === 'messaging' })
   }

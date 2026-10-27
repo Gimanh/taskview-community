@@ -86,7 +86,7 @@ export class WebhooksController {
     };
 
     fetchDeliveries = async (req: Request, res: Response) => {
-        const data = WebhookArkTypeFetchDeliveries({ ...req.params, ...req.query });
+        const data = WebhookArkTypeFetchDeliveries({ ...req.query, id: req.params.id });
         if (data instanceof ArkErrors) {
             return res.status(400).send(data.summary);
         }

@@ -77,6 +77,7 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useInfiniteScroll } from '@vueuse/core'
 import { useTasksStore } from '@/stores/tasks.store'
+import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
 import { ALL_TASKS_LIST_ID, type Task } from 'taskview-api'
 import TaskItem from '@/components/features/tasks/parts/TaskItem.vue'
 import TasksToolbar from '@/components/features/tasks/parts/TasksToolbar.vue'
@@ -87,6 +88,7 @@ const route = useRoute()
 const toast = useToast()
 const { canViewTasks } = useGoalPermissions()
 const tasksStore = useTasksStore()
+const uiPrefs = useUiPreferencesStore()
 const { tasks, loading, fetchRules } = storeToRefs(tasksStore)
 
 const scrollAreaRef = useTemplateRef('scrollAreaRef')
@@ -108,11 +110,16 @@ watch(
     prevListId.value = numListId
 
     tasksStore.resetTasks()
+    await uiPrefs.ensureLoaded()
+    if (prevProjectId.value !== numProjectId || prevListId.value !== numListId) return
+
     tasksStore.updateFetchRules({
       goalId: numProjectId,
       currentListId: numListId,
       currentPage: 0,
       endOfTasks: false,
+      sortBy: uiPrefs.settings.taskSortBy ?? 'date',
+      firstNew: uiPrefs.settings.taskSortFirstNew ?? 1,
     })
     await tasksStore.fetchTasks()
   },

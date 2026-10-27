@@ -41,7 +41,7 @@ export class SlackInboundManager {
         }
 
         const created = await appUser.tasksManager.addTaskNew({ goalId: goalIds[0], description });
-        if (!created?.[0]) return this.ephemeral('Failed to create the task.');
+        if (!created.ok || !created.tasks[0]) return this.ephemeral('Failed to create the task.');
         return this.ephemeral(`✅ Task created: ${description}`);
     }
 

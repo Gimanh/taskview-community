@@ -193,3 +193,5 @@ dev.env.docker
 
 private-bin.pem
 TaskView.lic
+# files integration tests (local provider)
+.test-data

@@ -800,5 +800,104 @@
             "New organization-level permission billing_can_manage (group 6) narrows what an API or OAuth token may do on the billing surfaces; access itself requires the organization owner or admin role.",
             "Invoice lifecycle: issued_at, paid_at, voided_at, replaces_invoice_id (void and reissue chain), template_version and totals frozen at issue time (subtotal, discount_amount, tax_amount, total). Status transitions are validated by the API; only drafts can be edited or deleted."
         ]
+    },
+    "62": {
+        "version": "1.67.0",
+        "name": "Files: project attachments",
+        "releaseDate": "20260923",
+        "scripts": [
+            "/1.67.0/0.create-files.sql",
+            "/1.67.0/1.create-file-to-task.sql",
+            "/1.67.0/2.file-permissions.sql",
+            "/1.67.0/all-triggers.sql"
+        ],
+        "description": [
+            "New schema tv_files with files (UUID id, goal_id, uploader snapshot, name, mime type, size, sha256 checksum, storage provider and key) and the relation table file_to_task. A file belongs to a project and may be linked to any number of its tasks; unlinking keeps the file, deleting a task only removes its links.",
+            "Storage provider per file (local or s3) so an instance can be migrated between providers without downtime.",
+            "New permission group 7 'files' with file_can_view (list, open, download) and file_can_manage (upload, rename, link, unlink, delete). New projects grant them to editor (both) and executor (view) through the updated add_roles_and_permissions() trigger. Existing projects are not backfilled: owners grant the permissions to their roles in the role editor."
+        ]
+    },
+    "63": {
+        "version": "1.68.0",
+        "name": "Files: storage quotas",
+        "releaseDate": "20261005",
+        "scripts": [
+            "/1.68.0/0.alter-organizations-file-quota.sql"
+        ],
+        "description": [
+            "New column tv_auth.organizations.file_quota_mb (megabytes, NULL by default). Every organization has its own file storage quota: this column when set, otherwise the instance default FILE_QUOTA_ORGANIZATION_MB.",
+            "Quotas are enforced by default (100 MB per organization, FILE_QUOTA_ORGANIZATION_MB); FILE_QUOTA_MODE=off disables them."
+        ]
+    },
+    "64": {
+        "version": "1.69.0",
+        "name": "Automations: project automation rules",
+        "releaseDate": "20261010",
+        "scripts": [
+            "/1.69.0/0.create-automation-rules.sql",
+            "/1.69.0/1.automation-permissions.sql",
+            "/1.69.0/all-triggers.sql"
+        ],
+        "description": [
+            "New schema tv_automations with the rules table. A rule belongs to a project and links a trigger (module, event, params) to an action (module, action, params); actions run on behalf of the rule creator with their current project permissions.",
+            "New permission group 8 'automations' with automation_can_view and automation_can_manage. New projects grant them to editor (both) and executor (view) through the updated add_roles_and_permissions() trigger. Existing projects are not backfilled: owners grant the permissions to their roles in the role editor."
+        ]
+    },
+    "65": {
+        "version": "1.70.0",
+        "name": "SCIM: provisioned users and groups",
+        "releaseDate": "20261015",
+        "scripts": [
+            "/1.70.0/0.create-scim-users.sql",
+            "/1.70.0/1.backfill-scim-users.sql",
+            "/1.70.0/2.remove-orphan-role-links.sql",
+            "/1.70.0/3.create-scim-groups.sql",
+            "/1.70.0/4.create-scim-group-projects.sql"
+        ],
+        "description": [
+            "New table tv_auth.scim_users: users provisioned by an identity provider over SCIM, per SSO configuration. Stores the SCIM id, userName, externalId, email, name attributes and the active flag; deactivated users keep their row and the organization role and project access they had, which are restored on reactivation.",
+            "Existing members of organizations with a SCIM token are backfilled with their email as SCIM id and userName, so identity providers connected before this version keep working.",
+            "Removing a person from a project now also removes their links to that project's roles; links left behind by earlier removals are deleted.",
+            "New tables tv_auth.scim_groups and tv_auth.scim_group_members: groups pushed by an identity provider over SCIM and their members, per SSO configuration. Groups are stored only and do not grant access yet.",
+            "New table tv_auth.scim_group_projects: an organization admin links a SCIM group to a project with a default role. People who join the group, or are in it when the link is made, or are reactivated while in it, are added to the project with that role unless they are already in it. Leaving the group changes nothing: the project is managed in TaskView."
+        ]
+    },
+    "66": {
+        "version": "1.71.0",
+        "name": "Login code limits",
+        "releaseDate": "20261024",
+        "scripts": [
+            "/1.71.0/0.add-login-code-attempts.sql",
+            "/1.71.0/1.create-login-code-requests.sql"
+        ],
+        "description": [
+            "New column tv_auth.users.login_code_attempts: counts wrong guesses of the current email login code. After 5 wrong guesses the code stops working and a new one has to be requested; requesting a new code resets the counter.",
+            "New table tv_auth.login_code_requests: a log of emailed login codes. One account can request at most LOGIN_CODE_HOURLY_LIMIT codes (default 5) in any hour; rows older than an hour are pruned."
+        ]
+    },
+    "67": {
+        "version": "1.72.0",
+        "name": "Account deletion code expiry",
+        "releaseDate": "20261024",
+        "scripts": [
+            "/1.72.0/0.add-account-deletion-created-at.sql"
+        ],
+        "description": [
+            "New column tv_auth.account_deletion.created_at: when the account deletion code was emailed. A code works for 15 minutes; codes issued before this version start their 15 minutes at the upgrade."
+        ]
+    },
+    "68": {
+        "version": "1.73.0",
+        "name": "Webhook permissions",
+        "releaseDate": "20261024",
+        "scripts": [
+            "/1.73.0/0.webhooks-permissions.sql",
+            "/1.73.0/all-triggers.sql"
+        ],
+        "description": [
+            "New permission group 9 'webhooks'. webhooks_can_manage moves there from the organization group, and the new webhooks_can_view lets a project member see the webhooks and their delivery history. Any member whose role grants them can view or manage webhooks, not only the project owner. Neither permission is granted to existing or default roles: owners add them to roles in the role editor.",
+            "A *_can_manage permission no longer includes the matching view permission, and timetracking_can_manage_all no longer includes viewing entries or logging own time: each permission grants only what it names.",
+            "all-triggers.sql: re-applies all triggers idempotently and updates tasks.add_roles_and_permissions() so the editor role of NEW projects also gets timetracking_can_log. Existing projects are not changed: owners grant it to their roles in the role editor."
+        ]
     }
 }

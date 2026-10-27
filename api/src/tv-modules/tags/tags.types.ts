@@ -78,3 +78,14 @@ export const TagItemArkTypeToggle = type({
 });
 
 export type TagItemArgToggle = typeof TagItemArkTypeToggle.infer;
+
+export type TaskTagChange = {
+    taskId: number;
+    tagId: number;
+    added: boolean;
+};
+
+export type TagAddToTaskIfAbsentArgs = {
+    tagId: number;
+    taskId: number;
+};

@@ -1,10 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { $logger } from '../modules/logget';
-
-interface CentrifugoPublishPayload {
-    channel: string;
-    data: Record<string, unknown>;
-}
+import type { CentrifugoApiCall, CentrifugoBroadcastToUsersArgs } from '../types/centrifugo.types';
 
 export class CentrifugoClient {
     private readonly apiUrl: string;
@@ -24,11 +20,23 @@ export class CentrifugoClient {
     }
 
     async publish(channel: string, data: Record<string, unknown>): Promise<boolean> {
+        return this.call({ method: 'publish', payload: { channel, data } });
+    }
+
+    async broadcastToUsers(args: CentrifugoBroadcastToUsersArgs): Promise<boolean> {
+        if (args.userIds.length === 0) return true;
+        return this.call({
+            method: 'broadcast',
+            payload: { channels: args.userIds.map((id) => `personal:#${id}`), data: { event: args.event, ...args.data } },
+        });
+    }
+
+    private async call(args: CentrifugoApiCall): Promise<boolean> {
         if (!this.enabled) return false;
+        const { method, payload } = args;
 
         try {
-            const payload: CentrifugoPublishPayload = { channel, data };
-            const response = await fetch(`${this.apiUrl}/api/publish`, {
+            const response = await fetch(`${this.apiUrl}/api/${method}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -38,13 +46,13 @@ export class CentrifugoClient {
             });
 
             if (!response.ok) {
-                $logger.error({ status: response.status }, '[Centrifugo] Publish failed');
+                $logger.error({ status: response.status, method }, '[Centrifugo] Publish failed');
                 return false;
             }
 
             return true;
         } catch (err) {
-            $logger.error({ err }, '[Centrifugo] Publish error');
+            $logger.error({ err, method }, '[Centrifugo] Publish error');
             return false;
         }
     }

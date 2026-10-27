@@ -37,7 +37,7 @@ export const appUserMiddleware = async (req: Request, res: Response, next: NextF
     }
 
     if (token) {
-        const userPayload = await AuthController.validateTokens(token);
+        const userPayload = await AuthController.validateTokens({ token, type: 'access' });
         if (userPayload) {
             req.appUser = new AppUser(userPayload);
             try {

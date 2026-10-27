@@ -6,11 +6,16 @@ import errorHandler from './middlewares/error-handler';
 import routes from './routes';
 import passport, { initPassportLogin } from './tv-modules/auth/strategies/passport-login';
 import { LoginMethods } from './tv-modules/auth/LoginMethods';
+import SessionStorage from './tv-modules/auth/SessionStorage';
+import { AccountDeletion } from './tv-modules/auth/AccountDeletion';
 import { InviteEmailDispatcher } from './tv-modules/collaboration/InviteEmailDispatcher';
 import { PublicApiUrl } from './modules/public-url';
 import { validateWebhooksEnvOnStartup } from './tv-modules/webhooks/webhooks.utils';
+import { validateSsoEnvOnStartup } from './tv-modules/sso/sso.utils';
+import { FileStorageFactory } from './tv-modules/files/storage/FileStorageFactory';
 import cookieParser from 'cookie-parser';
 import { registerAllEventHandlers, startAllWorkers } from './core/all-events';
+import { ScimBodyErrorHandler } from './tv-modules/scim/middlewares/ScimBodyErrorHandler';
 
 export default class App {
     public app: express.Application;
@@ -18,9 +23,13 @@ export default class App {
 
     constructor(port: number) {
         LoginMethods.validateOnStartup();
+        SessionStorage.validateOnStartup();
+        AccountDeletion.validateOnStartup();
         PublicApiUrl.validateOnStartup();
         InviteEmailDispatcher.validateOnStartup();
         validateWebhooksEnvOnStartup();
+        validateSsoEnvOnStartup();
+        FileStorageFactory.validateOnStartup();
 
         this.app = express();
         this.port = port;
@@ -63,6 +72,8 @@ export default class App {
         this.app.use(corsMiddleware);
         this.app.use(cookieParser());
         this.app.use(express.json({
+            // RFC 7644 §3.1: SCIM clients (Entra ID, Okta, OneLogin) send application/scim+json
+            type: ['application/json', 'application/scim+json'],
             verify: (req: any, _res, buf) => {
                 // Store raw body for webhook signature verification github and gitlab integrations
                 if (req.url?.includes('/webhook/')) {
@@ -87,6 +98,7 @@ export default class App {
         for (const i in routes) {
             this.app.use(i, new routes[i]().getRouter());
         }
+        this.app.use('/scim/v2', ScimBodyErrorHandler);
     }
 
     public listen() {

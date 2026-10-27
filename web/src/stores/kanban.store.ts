@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
 import type { GoalItem, KanbanArgDeleteColumn, KanbanArgUpdateColumn, KanbanArgUpdateTasksOrder, KanbanColumnItem, KanbanFilters, TaskArgAdd, KanbanArgAddColumn } from 'taskview-api'
 import { DEFAULT_ID } from '@/types/app.types'
-import type { KanbanStoreState } from '@/types/kanban.types'
+import type { KanbanMoveStatusArgs, KanbanStoreState } from '@/types/kanban.types'
 import { $tvApi } from '@/plugins/axios'
 import { TaskItem } from '@/types/tasks.types'
+import { hasActiveFilters } from '@/helpers/Helper'
 
 export const useKanbanStore = defineStore('kanban', {
   state(): KanbanStoreState {
@@ -40,7 +41,8 @@ export const useKanbanStore = defineStore('kanban', {
       // if (cursor === null) {
       //   this.tasksData[columnId ?? DEFAULT_ID]!.tasks = result.tasks
       // } else {
-      this.tasksData[columnId ?? DEFAULT_ID]!.tasks.push(...result.tasks)
+      // A task can already be on the board when a real-time insert lands while the page is in flight
+      this.tasksData[columnId ?? DEFAULT_ID]!.tasks.push(...result.tasks.filter((task) => !this.hasTask(task.id)))
       // }
       this.tasksData[columnId ?? DEFAULT_ID]!.nextCursor = result.nextCursor
       this.tasksData[columnId ?? DEFAULT_ID]!.columnVersion = result.columnVersion
@@ -90,6 +92,8 @@ export const useKanbanStore = defineStore('kanban', {
         return
       }
 
+      // The real-time insert of this task may have landed before the response
+      if (this.hasTask(result.id)) return
       this.tasksData[taskArg.statusId ?? DEFAULT_ID]?.tasks.unshift(result)
     },
 
@@ -118,6 +122,31 @@ export const useKanbanStore = defineStore('kanban', {
         tasks: [],
         nextCursor: null,
         columnVersion: null,
+      }
+    },
+
+    async moveStatus(args: KanbanMoveStatusArgs): Promise<boolean> {
+      const backlog = this.statuses.filter((stat) => stat.id === DEFAULT_ID)
+      const columns = this.statuses.filter((stat) => stat.id !== DEFAULT_ID)
+      const index = columns.findIndex((stat) => stat.id === args.statusId)
+      const target = args.direction === 'left' ? index - 1 : index + 1
+      if (index === -1 || target < 0 || target >= columns.length) return false
+
+      const previous = [...this.statuses]
+      const [moved] = columns.splice(index, 1)
+      columns.splice(target, 0, moved)
+      this.statuses = [...backlog, ...columns]
+
+      try {
+        const saved = await $tvApi.kanban.reorderColumns({
+          goalId: this.goalId,
+          statusIds: columns.map((stat) => stat.id),
+        })
+        this.statuses = [...backlog, ...saved]
+        return true
+      } catch {
+        this.statuses = previous
+        return false
       }
     },
 
@@ -154,6 +183,17 @@ export const useKanbanStore = defineStore('kanban', {
         }
         return
       }
+    },
+
+    hasTask(taskId: number): boolean {
+      return Object.values(this.tasksData).some((column) => column?.tasks.some((task) => task.id === taskId))
+    },
+
+    insertTask(task: TaskItem) {
+      if (this.goalId !== task.goalId || task.parentId || hasActiveFilters(this.filters)) return
+      const column = this.tasksData[task.statusId ?? DEFAULT_ID]
+      if (!column || this.hasTask(task.id)) return
+      column.tasks.unshift(task)
     },
 
     removeTask(taskId: number) {

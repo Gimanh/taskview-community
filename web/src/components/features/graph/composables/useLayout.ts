@@ -1,5 +1,7 @@
 import dagre from '@dagrejs/dagre'
-import { type Edge, type Node, Position } from '@vue-flow/core'
+import { type Edge, type GraphNode, type Node, Position, type XYPosition } from '@vue-flow/core'
+import type { GraphPlaceNodeFreeArgs, GraphPlaceNodeNearArgs } from '@/types/graph.types'
+import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
 
 const NODE_WIDTH = 288 // w-72 wrapper in TaskNode
 const NODE_MIN_HEIGHT = 74 // checkbox + priority column with paddings
@@ -19,6 +21,9 @@ const BADGE_CHROME_WIDTH = 34 // badge paddings + icon
 const BADGE_CHAR_WIDTH = 6.5
 const BADGE_GAP = 8
 
+export const NODE_SEP = 50 // minimum space between nodes of one rank
+export const RANK_SEP = 100 // minimum space between ranks
+
 const ISOLATED_GAP_X = 40
 const ISOLATED_GAP_Y = 32
 const ISOLATED_BLOCK_OFFSET = 120
@@ -27,7 +32,7 @@ const ISOLATED_MIN_ROW_WIDTH = 1200
 // Estimates the rendered TaskNode size from task data alone, so the layout can
 // run before (and without) rendering every node — a prerequisite for
 // only-render-visible-elements, where offscreen nodes are never measured.
-function estimateNodeSize(node: Node): { width: number; height: number } {
+export function estimateNodeSize(node: Pick<Node, 'data'>): { width: number; height: number } {
   const task = node.data?.task
   if (!task) return { width: NODE_WIDTH, height: NODE_MIN_HEIGHT }
 
@@ -37,7 +42,8 @@ function estimateNodeSize(node: Node): { width: number; height: number } {
   const badgeWidth = (labelLength: number) =>
     Math.min(CONTENT_WIDTH, BADGE_CHROME_WIDTH + labelLength * BADGE_CHAR_WIDTH)
   const badgeWidths: number[] = []
-  if (task.endDate) badgeWidths.push(badgeWidth(11)) // dd.Mon.yyyy
+  if (useUiPreferencesStore().settings.showTaskId === 1) badgeWidths.push(badgeWidth(String(task.id).length))
+  if (task.endDate) badgeWidths.push(badgeWidth(task.startDate ? 25 : 11)) // dd.Mon.yyyy, or dd.Mon.yyyy → dd.Mon.yyyy
   if (task.recurrenceRuleId) badgeWidths.push(BADGE_CHROME_WIDTH) // icon-only
   if (task.goalListId) badgeWidths.push(badgeWidth(10)) // list name (unknown here)
   if (task.amount) badgeWidths.push(badgeWidth(String(task.amount).length + 1))
@@ -64,6 +70,107 @@ function estimateNodeSize(node: Node): { width: number; height: number } {
   return { width: NODE_WIDTH, height: Math.max(NODE_MIN_HEIGHT, height) + NODE_SAFETY }
 }
 
+// The rendered size once vue-flow has measured the node, the estimate before that
+export function nodeSize(node: Node): { width: number; height: number } {
+  const { dimensions } = node as Partial<GraphNode>
+  if (dimensions?.width && dimensions.height) return { width: dimensions.width, height: dimensions.height }
+  return estimateNodeSize(node)
+}
+
+// Center of the node closest to the middle of the laid-out graph. The middle itself can
+// be empty (say, between the linked graph and the grid of isolated tasks below it), the
+// node never is. Read from positions and estimates only, so it does not depend on what
+// vue-flow has measured so far
+export function layoutCenter(nodes: Node[]): XYPosition {
+  if (!nodes.length) return { x: 0, y: 0 }
+  const rects = nodes.map((node) => ({ ...node.position, ...estimateNodeSize(node) }))
+  const centers = rects.map((rect) => ({ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }))
+  const left = Math.min(...rects.map((rect) => rect.x))
+  const top = Math.min(...rects.map((rect) => rect.y))
+  const right = Math.max(...rects.map((rect) => rect.x + rect.width))
+  const bottom = Math.max(...rects.map((rect) => rect.y + rect.height))
+  const middle = { x: (left + right) / 2, y: (top + bottom) / 2 }
+  const distance = (point: XYPosition) => Math.hypot(point.x - middle.x, point.y - middle.y)
+  return centers.reduce((closest, point) => (distance(point) < distance(closest) ? point : closest))
+}
+
+// The spot one rank before or after the anchor, centered on it; when that spot is taken
+// it slides along the rank to the nearest free one. Successors go right in LR and up in TB
+// (the TB layout is inverted: roots sit at the bottom, matching TaskNode's handles)
+export function placeNodeNear({ anchor, node, side, direction, obstacles }: GraphPlaceNodeNearArgs): XYPosition {
+  const anchorSize = nodeSize(anchor)
+  const size = estimateNodeSize(node)
+  const isHorizontal = direction === 'LR'
+  const towardsEnd = isHorizontal ? side === 'after' : side === 'before'
+
+  const origin = isHorizontal
+    ? {
+      x: towardsEnd ? anchor.position.x + anchorSize.width + RANK_SEP : anchor.position.x - RANK_SEP - size.width,
+      y: anchor.position.y + (anchorSize.height - size.height) / 2,
+    }
+    : {
+      x: anchor.position.x + (anchorSize.width - size.width) / 2,
+      y: towardsEnd ? anchor.position.y + anchorSize.height + RANK_SEP : anchor.position.y - RANK_SEP - size.height,
+    }
+
+  const rects = obstacles.map((item) => ({ ...item.position, ...nodeSize(item) }))
+  const isFree = (position: XYPosition) =>
+    rects.every(
+      (rect) =>
+        position.x + size.width + NODE_SEP <= rect.x ||
+        rect.x + rect.width + NODE_SEP <= position.x ||
+        position.y + size.height + NODE_SEP <= rect.y ||
+        rect.y + rect.height + NODE_SEP <= position.y,
+    )
+
+  // The nearest free spot is either the centered one or flush against a side of some node
+  const axis = isHorizontal ? 'y' : 'x'
+  const extent = isHorizontal ? 'height' : 'width'
+  const candidates = [origin[axis]]
+  for (const rect of rects) {
+    candidates.push(rect[axis] - NODE_SEP - size[extent], rect[axis] + rect[extent] + NODE_SEP)
+  }
+  candidates.sort((a, b) => Math.abs(a - origin[axis]) - Math.abs(b - origin[axis]))
+
+  for (const value of candidates) {
+    const position = { ...origin, [axis]: value }
+    if (isFree(position)) return position
+  }
+  return origin
+}
+
+/**
+ * The free spot nearest to the wanted one: kept as is when nothing is there, otherwise moved
+ * flush against a side of a node in the way, keeping NODE_SEP from every node.
+ */
+export function placeNodeInFreeSpot({ target, node, obstacles }: GraphPlaceNodeFreeArgs): XYPosition {
+  const size = estimateNodeSize(node)
+  const rects = obstacles.map((item) => ({ ...item.position, ...nodeSize(item) }))
+  const isFree = (position: XYPosition) =>
+    rects.every(
+      (rect) =>
+        position.x + size.width + NODE_SEP <= rect.x ||
+        rect.x + rect.width + NODE_SEP <= position.x ||
+        position.y + size.height + NODE_SEP <= rect.y ||
+        rect.y + rect.height + NODE_SEP <= position.y,
+    )
+  if (isFree(target)) return target
+
+  // Slide along one axis at a time, like placeNodeNear, and keep the closest result
+  const candidates: XYPosition[] = []
+  for (const rect of rects) {
+    candidates.push(
+      { x: target.x, y: rect.y - NODE_SEP - size.height },
+      { x: target.x, y: rect.y + rect.height + NODE_SEP },
+      { x: rect.x - NODE_SEP - size.width, y: target.y },
+      { x: rect.x + rect.width + NODE_SEP, y: target.y },
+    )
+  }
+  const distance = (position: XYPosition) => Math.hypot(position.x - target.x, position.y - target.y)
+  candidates.sort((a, b) => distance(a) - distance(b))
+  return candidates.find(isFree) ?? target
+}
+
 /**
  * Composable to run the layout algorithm on the graph.
  * Connected nodes are laid out with `dagre`; isolated nodes (no edges) are
@@ -84,8 +191,8 @@ export function useLayout() {
     dagreGraph.setDefaultEdgeLabel(() => ({}))
     dagreGraph.setGraph({
       rankdir: direction,
-      nodesep: 50, // Minimum space between nodes
-      ranksep: 100, // Minimum space between ranks
+      nodesep: NODE_SEP,
+      ranksep: RANK_SEP,
       marginx: 20,
       marginy: 20,
     })
@@ -165,7 +272,13 @@ export function useLayout() {
       }
     })
 
-    return [...layoutedConnected, ...layoutedIsolated]
+    // vue-flow merges these into its nodes and refreshes computedPosition only for
+    // rendered ones, yet culls by computedPosition under only-render-visible-elements:
+    // a stale one would keep a node that moved into view from ever rendering
+    return [...layoutedConnected, ...layoutedIsolated].map((node) => ({
+      ...node,
+      computedPosition: { z: (node as Partial<GraphNode>).computedPosition?.z ?? 0, ...node.position },
+    }))
   }
 
   return { layout }

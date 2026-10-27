@@ -1,14 +1,13 @@
-import { and, eq, ilike, inArray, isNotNull, isNull, or } from 'drizzle-orm';
-import { GoalsSchema, GoalsListSchema, TasksSchema } from 'taskview-db-schemas';
+import { and, eq, ilike, inArray, isNotNull, isNull } from 'drizzle-orm';
+import { GoalsSchema, GoalsListSchema, TasksSchema, TasksToTagsSchema } from 'taskview-db-schemas';
 import type { AppUser } from '../../core/AppUser';
 import { Database } from '../../modules/db';
 import { $logger } from '../../modules/logget';
 import type { TaskItemInDb } from '../../types/tasks.types';
 import { logError } from '../../utils/api';
 import { callWithCatch } from '../../utils/helpers';
-import type { TagToTaskInDb } from '../tags/tags.types';
 import { TaskItemForClient } from '../tasks/TaskItemForClient';
-import type { AssigneesForTaskFromDb, FetchAllListsResult, SearchTaskArgs, SearchTaskResult, UsersByProjectsFromDb } from './start.types';
+import type { AssigneesForTaskFromDb, FetchAllListsResult, SearchTaskArgs, SearchTaskResult, StartTaskTagFromDb, UsersByProjectsFromDb } from './start.types';
 
 //TODO: refactor 
 export class StartRepository {
@@ -20,21 +19,8 @@ export class StartRepository {
         this.user = user;
     }
 
-    async fetchAllLists(user: AppUser, organizationId?: number): Promise<FetchAllListsResult[] | false> {
-        const userId = user.getUserData()?.id
-        if (!userId) return false
-
-        const sharedGoals = await user.goalsManager.fetchSharedGoals(organizationId)
-        const sharedGoalIds = sharedGoals.map((g) => g.id)
-
-        const ownConditions = [eq(GoalsSchema.owner, userId)]
-        if (organizationId) {
-            ownConditions.push(eq(GoalsSchema.organizationId, organizationId))
-        }
-
-        const goalConditions = sharedGoalIds.length > 0
-            ? or(and(...ownConditions), inArray(GoalsSchema.id, sharedGoalIds))
-            : and(...ownConditions)
+    async fetchListsForGoals(goalIds: number[]): Promise<FetchAllListsResult[]> {
+        if (goalIds.length === 0) return []
 
         const result = await callWithCatch(() =>
             this.db.dbDrizzle
@@ -50,7 +36,7 @@ export class StartRepository {
                     and(
                         eq(GoalsListSchema.archive, 0),
                         isNotNull(GoalsListSchema.id),
-                        goalConditions,
+                        inArray(GoalsSchema.id, goalIds),
                     )
                 )
         )
@@ -103,6 +89,19 @@ export class StartRepository {
         return result.rows
     }
 
+    async fetchTagIdsForTasks(taskIds: number[]): Promise<StartTaskTagFromDb[]> {
+        if (taskIds.length === 0) return [];
+
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({ taskId: TasksToTagsSchema.taskId, tagId: TasksToTagsSchema.tagId })
+                .from(TasksToTagsSchema)
+                .where(inArray(TasksToTagsSchema.taskId, taskIds))
+        );
+
+        return result ?? [];
+    }
+
     async fetchAllActiveTasksForGoals(
         goalsIds: number[],
         assignees?: AssigneesForTaskFromDb[],
@@ -117,7 +116,7 @@ export class StartRepository {
         const map: Map<number, TaskItemForClient> = new Map();
 
         const result = await this.db.query<TaskItemInDb>(
-            `select * from tasks.tasks where goal_id in (${placeholders.join(',')}) and complete = FALSE and parent_id is null and end_date is null ORDER BY priority_id DESC, date_creation DESC LIMIT 30`,
+            `select * from tasks.tasks where goal_id in (${placeholders.join(',')}) and complete = FALSE and parent_id is null and end_date is null ORDER BY date_creation DESC, id DESC LIMIT 30`,
             goalsIds
         );
 
@@ -131,20 +130,10 @@ export class StartRepository {
             }
         });
 
-        const tagsQuery = `select ttt.*
-                            from tasks.tags
-                                    left join tasks.tasks_to_tags ttt on tags.id = ttt.tag_id
-                            where goal_id in (${placeholders.join(',')}) and owner = $${goalsIds.length + 1};`;
-
-        const tagsResult = await this.db.query<TagToTaskInDb>(tagsQuery, [...goalsIds, this.user.getUserData()?.id]);
-
-        if (tagsResult) {
-            tagsResult.rows.forEach((r) => {
-                if (map.get(r.task_id)) {
-                    map.get(r.task_id)?.tags.push(r.tag_id);
-                }
-            });
-        }
+        const taskTags = await this.fetchTagIdsForTasks([...map.keys()]);
+        taskTags.forEach((r) => {
+            map.get(r.taskId)?.tags.push(r.tagId);
+        });
 
         if (assignees) {
             assignees.forEach((i) => {
@@ -204,20 +193,10 @@ export class StartRepository {
             }
         });
 
-        const tagsQuery = `select ttt.*
-                            from tasks.tags
-                                    left join tasks.tasks_to_tags ttt on tags.id = ttt.tag_id
-                            where goal_id in (${placeholders.join(',')}) and owner = $${goalsIds.length + 1};`;
-
-        const tagsResult = await this.db.query<TagToTaskInDb>(tagsQuery, [...goalsIds, this.user.getUserData()?.id]);
-
-        if (tagsResult) {
-            tagsResult.rows.forEach((r) => {
-                if (map.get(r.task_id)) {
-                    map.get(r.task_id)?.tags.push(r.tag_id);
-                }
-            });
-        }
+        const taskTags = await this.fetchTagIdsForTasks([...map.keys()]);
+        taskTags.forEach((r) => {
+            map.get(r.taskId)?.tags.push(r.tagId);
+        });
 
         if (assignees) {
             assignees.forEach((i) => {
@@ -282,20 +261,10 @@ export class StartRepository {
             }
         });
 
-        const tagsQuery = `select ttt.*
-                            from tasks.tags
-                                    left join tasks.tasks_to_tags ttt on tags.id = ttt.tag_id
-                            where goal_id in (${placeholders.join(',')}) and owner = $${goalsIds.length + 1};`;
-
-        const tagsResult = await this.db.query<TagToTaskInDb>(tagsQuery, [...goalsIds, this.user.getUserData()?.id]);
-
-        if (tagsResult) {
-            tagsResult.rows.forEach((r) => {
-                if (map.get(r.task_id)) {
-                    map.get(r.task_id)?.tags.push(r.tag_id);
-                }
-            });
-        }
+        const taskTags = await this.fetchTagIdsForTasks([...map.keys()]);
+        taskTags.forEach((r) => {
+            map.get(r.taskId)?.tags.push(r.tagId);
+        });
 
         if (assignees) {
             assignees.forEach((i) => {
@@ -345,20 +314,10 @@ export class StartRepository {
             }
         });
 
-        const tagsQuery = `select ttt.*
-                            from tasks.tags
-                                    left join tasks.tasks_to_tags ttt on tags.id = ttt.tag_id
-                            where goal_id in (${placeholders.join(',')}) and owner = $${goalsIds.length + 1};`;
-
-        const tagsResult = await this.db.query<TagToTaskInDb>(tagsQuery, [...goalsIds, this.user.getUserData()?.id]);
-
-        if (tagsResult) {
-            tagsResult.rows.forEach((r) => {
-                if (taskIdToTaskMap.get(r.task_id)) {
-                    taskIdToTaskMap.get(r.task_id)?.tags.push(r.tag_id);
-                }
-            });
-        }
+        const taskTags = await this.fetchTagIdsForTasks([...taskIdToTaskMap.keys()]);
+        taskTags.forEach((r) => {
+            taskIdToTaskMap.get(r.taskId)?.tags.push(r.tagId);
+        });
 
         if (assignees) {
             assignees.forEach((i) => {

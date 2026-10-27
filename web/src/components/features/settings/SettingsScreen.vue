@@ -18,6 +18,10 @@
           v-if="item.kind === 'nav'"
           :item="item"
         />
+        <SettingsActionRow
+          v-else-if="item.kind === 'action'"
+          :item="item"
+        />
         <SettingsSelectRow
           v-else
           :item="item"
@@ -38,6 +42,7 @@ import { useSettingsHub } from './composables/useSettingsHub'
 import SettingsProfileHeader from './parts/SettingsProfileHeader.vue'
 import SettingsSection from './parts/SettingsSection.vue'
 import SettingsNavRow from './parts/SettingsNavRow.vue'
+import SettingsActionRow from './parts/SettingsActionRow.vue'
 import SettingsSelectRow from './parts/SettingsSelectRow.vue'
 import SettingsVersionRow from './parts/SettingsVersionRow.vue'
 import SettingsLogoutRow from './parts/SettingsLogoutRow.vue'

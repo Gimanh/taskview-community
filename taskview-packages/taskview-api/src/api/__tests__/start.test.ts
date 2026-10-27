@@ -6,8 +6,12 @@ import {
     beforeAll,
     afterAll,
 } from 'vitest';
-import { initApi } from './init-api';
+import axios from 'axios';
+import { API_URL, initApi } from './init-api';
 import { ymd } from './test-helpers';
+import { openTestDb } from './test-db';
+import { createSessionUser } from './auth-test-helpers';
+import type { AuthTestContext } from './auth-test-helpers.types';
 
 /**
  * The main screen endpoint. It answers "what do I have today" in one request and
@@ -85,5 +89,49 @@ describe('Start screen state', () => {
             .catch((err) => err.status ?? err.response?.status);
 
         expect(status).toBe(400);
+    });
+});
+
+/**
+ * The "recent tasks" bucket lists tasks without a deadline, newest first. A fresh
+ * user keeps it free of tasks other specs create in parallel.
+ */
+describe('Start screen recent tasks', () => {
+    const ctx = {} as AuthTestContext;
+    let $userApi: TvApi;
+    let goalId: number;
+
+    beforeAll(async () => {
+        const init = await initApi();
+        ctx.ownerApi = init.$tvApi;
+        ctx.db = await openTestDb();
+        const org = await ctx.ownerApi.organizations.create({ name: `Recent tasks org ${Date.now()}` });
+        ctx.orgId = org.id;
+
+        const user = await createSessionUser({ ctx, prefix: 'rec' });
+        $userApi = new TvApi(axios.create({
+            baseURL: API_URL,
+            headers: { Authorization: `Bearer ${user.access}` },
+        }));
+        const goal = await $userApi.goals.createGoal({ name: `Recent tasks-${Date.now()}` });
+        goalId = goal!.id!;
+    });
+
+    afterAll(async () => {
+        await $userApi.goals.deleteGoal(goalId).catch(() => {});
+        await ctx.ownerApi.organizations.delete(ctx.orgId).catch(() => {});
+        await ctx.db.end();
+    });
+
+    it('lists the last added task first, whatever the priority, including one whose deadline was removed', async () => {
+        const highPriority = await $userApi.tasks.createTask({ goalId, description: 'Older, high priority', priorityId: 3 });
+        const lowPriority = await $userApi.tasks.createTask({ goalId, description: 'Newer, low priority', priorityId: 1 });
+        const wasToday = await $userApi.tasks.createTask({ goalId, description: 'Added to today', endDate: ymd(0) });
+        await $userApi.tasks.updateTask({ id: wasToday!.id, endDate: null });
+
+        const state = await $userApi.start.fetchAllState({ tz: 'UTC' });
+
+        expect(state!.tasks.map((t) => t.id)).toEqual([wasToday!.id, lowPriority!.id, highPriority!.id]);
+        expect(state!.tasksToday.some((t) => t.id === wasToday!.id)).toBe(false);
     });
 });

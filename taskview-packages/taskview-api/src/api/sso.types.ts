@@ -107,3 +107,54 @@ export type SsoPublicUrls = {
   scimEndpointUrl: string
   apiPublicUrlConfigured: boolean
 }
+
+// The organization is required: the endpoint is restricted to its admins
+export type SsoArgParseMetadata = {
+  url: string
+  organizationId: number
+}
+
+export type SsoParsedMetadata = {
+  samlEntryPoint: string
+  samlCert: string
+  samlLogoutUrl: string
+}
+
+export type SsoScimGroupProject = {
+  goalId: number
+  goalName: string
+  roleId: number
+  roleName: string
+}
+
+export type SsoScimGroup = {
+  id: number
+  displayName: string
+  membersCount: number
+  projects: SsoScimGroupProject[]
+}
+
+export type SsoScimLinkableProject = {
+  goalId: number
+  name: string
+  roles: { id: number, name: string }[]
+}
+
+export type SsoScimGroupsOverview = {
+  groups: SsoScimGroup[]
+  // Projects the current admin may link a group to: the ones where they can manage users
+  projects: SsoScimLinkableProject[]
+}
+
+export type SsoArgLinkScimGroupProject = {
+  configId: number
+  groupId: number
+  goalId: number
+  roleId: number
+}
+
+export type SsoArgUnlinkScimGroupProject = {
+  configId: number
+  groupId: number
+  goalId: number
+}

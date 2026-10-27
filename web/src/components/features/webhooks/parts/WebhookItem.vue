@@ -22,25 +22,7 @@
         </div>
       </div>
     </div>
-    <div
-      v-if="canManage"
-      class="flex items-center gap-2 shrink-0 ml-2"
-    >
-      <UButton
-        icon="i-lucide-pencil"
-        variant="ghost"
-        size="md"
-        :title="t('webhooks.edit')"
-        @click="emit('edit', webhook)"
-      />
-      <UButton
-        icon="i-lucide-send"
-        variant="ghost"
-        size="md"
-        :loading="testing"
-        :title="t('webhooks.test')"
-        @click="handleTest"
-      />
+    <div class="flex items-center gap-2 shrink-0 ml-2">
       <UButton
         icon="i-lucide-history"
         variant="ghost"
@@ -48,25 +30,42 @@
         :title="t('webhooks.deliveries')"
         @click="emit('showDeliveries', webhook.id)"
       />
-      <UButton
-        icon="i-lucide-key-round"
-        variant="ghost"
-        size="md"
-        :title="t('webhooks.rotateSecret')"
-        @click="showRotateConfirm = true"
-      />
-      <USwitch
-        :model-value="webhook.isActive"
-        size="md"
-        @update:model-value="handleToggle"
-      />
-      <UButton
-        icon="i-lucide-trash-2"
-        variant="ghost"
-        color="error"
-        size="md"
-        @click="emit('delete', webhook.id)"
-      />
+      <template v-if="canManage">
+        <UButton
+          icon="i-lucide-pencil"
+          variant="ghost"
+          size="md"
+          :title="t('webhooks.edit')"
+          @click="emit('edit', webhook)"
+        />
+        <UButton
+          icon="i-lucide-send"
+          variant="ghost"
+          size="md"
+          :loading="testing"
+          :title="t('webhooks.test')"
+          @click="handleTest"
+        />
+        <UButton
+          icon="i-lucide-key-round"
+          variant="ghost"
+          size="md"
+          :title="t('webhooks.rotateSecret')"
+          @click="showRotateConfirm = true"
+        />
+        <USwitch
+          :model-value="webhook.isActive"
+          size="md"
+          @update:model-value="handleToggle"
+        />
+        <UButton
+          icon="i-lucide-trash-2"
+          variant="ghost"
+          color="error"
+          size="md"
+          @click="emit('delete', webhook.id)"
+        />
+      </template>
     </div>
   </div>
 

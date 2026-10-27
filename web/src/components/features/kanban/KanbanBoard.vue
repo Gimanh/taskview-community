@@ -8,69 +8,75 @@
     @pointerdown="pointerDownHandler"
     @touchend="boardStopScrolling"
   >
-    <div
-      v-for="status in kanbanStore.statuses"
-      :key="status.id"
-      :data-testid="`kanban-column-${t(status.name)}`"
-      class="h-full max-w-[340px] min-w-[272px] shadow-lg gap-2 flex flex-col w-[91.666667%] rounded-lg"
+    <TransitionGroup
+      tag="div"
+      class="contents"
+      move-class="motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out"
     >
-      <div class="bg-elevated rounded-lg p-2 px-3 flex items-center text-base h-10 rounded-b-none">
-        <span class="grow truncate">
-          {{ t(status.name) }}
-        </span>
-        <KanbanTitleMenu
-          v-if="status.id !== DEFAULT_ID"
-          :status="status"
-        />
-      </div>
-
-      <KanbanAddTask
-        v-if="canAddTask"
-        :goal-id="kanbanStore.goalId"
-        :status-id="status.id"
-        class="mx-1"
-      />
-
-      <draggable
-        v-bind="sortableOptions"
-        :list="kanbanStore.tasksData[status.id]?.tasks"
-        :data-column-id="status.id"
-        :animation="150"
-        class="flex gap-2 p-2 h-full flex-col overflow-auto overflow-x-hidden"
-        item-key="id"
-        group="kanban-tasks"
-        @start="startHandler"
-        @end="onDragEnd"
-        @clone="onClone"
+      <div
+        v-for="status in kanbanStore.statuses"
+        :key="status.id"
+        :data-testid="`kanban-column-${t(status.name)}`"
+        class="h-full max-w-[340px] min-w-[272px] shadow-lg gap-2 flex flex-col w-[91.666667%] rounded-lg"
       >
-        <template #item="{ element }">
-          <div
-            :data-order="element.kanbanOrder"
-            :data-task-id="element.id"
-            data-testid="kanban-task-card"
-          >
-            <TaskItem
-              :task="element"
-              :ui="{ additionalInfo: 'flex-col items-stretch flex-nowrap' }"
-              @toggle="updateTaskChecked"
-            />
-          </div>
-        </template>
+        <div class="bg-elevated rounded-lg p-2 px-3 flex items-center text-base h-10 rounded-b-none">
+          <span class="grow truncate">
+            {{ t(status.name) }}
+          </span>
+          <KanbanTitleMenu
+            v-if="status.id !== DEFAULT_ID"
+            :status="status"
+          />
+        </div>
 
-        <template #footer>
-          <UButton
-            v-if="kanbanStore.tasksData[status.id]?.nextCursor !== null"
-            icon="i-lucide-circle-arrow-down"
-            variant="soft"
-            color="info"
-            class="w-full mt-2"
-            @click="loadMoreTasks(status.id)"
-          >
-            {{ t('kanban.loadMore') }}
-          </UButton>
-        </template>
-      </draggable>
-    </div>
+        <KanbanAddTask
+          v-if="canAddTask"
+          :goal-id="kanbanStore.goalId"
+          :status-id="status.id"
+          class="mx-1"
+        />
+
+        <draggable
+          v-bind="sortableOptions"
+          :list="kanbanStore.tasksData[status.id]?.tasks"
+          :data-column-id="status.id"
+          :animation="150"
+          class="flex gap-2 p-2 h-full flex-col overflow-auto overflow-x-hidden"
+          item-key="id"
+          group="kanban-tasks"
+          @start="startHandler"
+          @end="onDragEnd"
+          @clone="onClone"
+        >
+          <template #item="{ element }">
+            <div
+              :data-order="element.kanbanOrder"
+              :data-task-id="element.id"
+              data-testid="kanban-task-card"
+            >
+              <TaskItem
+                :task="element"
+                :ui="{ additionalInfo: 'flex-col items-stretch flex-nowrap' }"
+                @toggle="updateTaskChecked"
+              />
+            </div>
+          </template>
+
+          <template #footer>
+            <UButton
+              v-if="kanbanStore.tasksData[status.id]?.nextCursor !== null"
+              icon="i-lucide-circle-arrow-down"
+              variant="soft"
+              color="info"
+              class="w-full mt-2"
+              @click="loadMoreTasks(status.id)"
+            >
+              {{ t('kanban.loadMore') }}
+            </UButton>
+          </template>
+        </draggable>
+      </div>
+    </TransitionGroup>
 
     <KanbanAddStatus :goal-id="kanbanStore.goalId" />
   </div>

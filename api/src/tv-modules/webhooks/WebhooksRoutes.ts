@@ -2,9 +2,13 @@ import { Router } from 'express'
 import type { Routable } from '../../types/routable.type'
 import { IsLoggedIn } from '../auth/middlewares/is-logged-in'
 import { WebhooksController } from './WebhooksController'
-import { IsGoalOwnerByGoalId, IsGoalOwnerByWebhookId } from './middlewares/IsGoalOwner'
-import { RequireTokenPermission } from '../../middlewares/require-token-permission';
-import { GoalPermissions } from '../../types/auth.types';
+import {
+    CanCreateWebhook,
+    CanManageWebhook,
+    CanRetryWebhookDelivery,
+    CanViewWebhookDeliveries,
+    CanViewWebhooksOfGoal,
+} from './middlewares/WebhooksPermission'
 
 export default class WebhooksRoutes implements Routable {
     private readonly router: ReturnType<typeof Router>
@@ -21,15 +25,13 @@ export default class WebhooksRoutes implements Routable {
     }
 
     initRoutes() {
-        const canManageWebhooks = RequireTokenPermission(GoalPermissions.WEBHOOKS_CAN_MANAGE)
-
-        this.router.get('', [IsLoggedIn, IsGoalOwnerByGoalId, canManageWebhooks], this.controller.fetch)
-        this.router.post('', [IsLoggedIn, IsGoalOwnerByGoalId, canManageWebhooks], this.controller.create)
-        this.router.patch('', [IsLoggedIn, IsGoalOwnerByWebhookId, canManageWebhooks], this.controller.update)
-        this.router.delete('', [IsLoggedIn, IsGoalOwnerByWebhookId, canManageWebhooks], this.controller.delete)
-        this.router.post('/rotate-secret', [IsLoggedIn, IsGoalOwnerByWebhookId, canManageWebhooks], this.controller.rotateSecret)
-        this.router.post('/test', [IsLoggedIn, IsGoalOwnerByWebhookId, canManageWebhooks], this.controller.testDelivery)
-        this.router.get('/deliveries/:id', [IsLoggedIn, IsGoalOwnerByWebhookId, canManageWebhooks], this.controller.fetchDeliveries)
-        this.router.post('/retry', [IsLoggedIn, IsGoalOwnerByWebhookId, canManageWebhooks], this.controller.retryDelivery)
+        this.router.get('', [IsLoggedIn, CanViewWebhooksOfGoal], this.controller.fetch)
+        this.router.post('', [IsLoggedIn, CanCreateWebhook], this.controller.create)
+        this.router.patch('', [IsLoggedIn, CanManageWebhook], this.controller.update)
+        this.router.delete('', [IsLoggedIn, CanManageWebhook], this.controller.delete)
+        this.router.post('/rotate-secret', [IsLoggedIn, CanManageWebhook], this.controller.rotateSecret)
+        this.router.post('/test', [IsLoggedIn, CanManageWebhook], this.controller.testDelivery)
+        this.router.get('/deliveries/:id', [IsLoggedIn, CanViewWebhookDeliveries], this.controller.fetchDeliveries)
+        this.router.post('/retry', [IsLoggedIn, CanRetryWebhookDelivery], this.controller.retryDelivery)
     }
 }

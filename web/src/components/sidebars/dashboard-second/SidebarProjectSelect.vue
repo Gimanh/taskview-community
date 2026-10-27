@@ -10,7 +10,7 @@
         variant="soft"
         size="xl"
         block
-        :icon="currentProject?.isInbox ? 'i-lucide-inbox' : 'i-lucide-folder'"
+        :icon="currentProject && isOwnInbox(currentProject) ? 'i-lucide-inbox' : 'i-lucide-folder'"
         trailing-icon="i-lucide-chevron-down"
         :ui="{ base: 'rounded-xl', trailingIcon: 'ms-auto' }"
         data-testid="project-select-trigger"
@@ -153,6 +153,7 @@ import { storeToRefs } from 'pinia'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useGoalPermissionsFor } from '@/composables/useGoalPermissions'
 import { useProjectRoute } from '@/composables/useProjectRoute'
+import { useInbox } from '@/composables/useInbox'
 import type { Project, ProjectSaveData } from '@/components/features/projects/types'
 import ProjectEditModal from '@/components/features/projects/parts/ProjectEditModal.vue'
 import ProjectDeleteDialog from '@/components/features/projects/parts/ProjectDeleteDialog.vue'
@@ -161,6 +162,7 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const { projectRoute } = useProjectRoute()
+const { isOwnInbox } = useInbox()
 const goalsStore = useGoalsStore()
 const { goals } = storeToRefs(goalsStore)
 
@@ -170,8 +172,8 @@ const isEditOpen = ref(false)
 const isDeleteOpen = ref(false)
 
 const currentProjectId = computed(() => Number(route.params.projectId) || null)
-const activeProjects = computed(() => goals.value.filter(p => p.archive === 0 && !p.isInbox))
-const archivedProjects = computed(() => goals.value.filter(p => p.archive === 1 && !p.isInbox))
+const activeProjects = computed(() => goals.value.filter(p => p.archive === 0 && !isOwnInbox(p)))
+const archivedProjects = computed(() => goals.value.filter(p => p.archive === 1 && !isOwnInbox(p)))
 const currentProject = computed<Project | null>(() =>
   currentProjectId.value ? goalsStore.goalMap.get(currentProjectId.value) ?? null : null,
 )
@@ -179,7 +181,7 @@ const isArchived = computed(() => currentProject.value?.archive === 1)
 const isInbox = computed(() => currentProject.value?.isInbox === true)
 const currentProjectLabel = computed(() =>
   currentProject.value
-    ? (currentProject.value.isInbox ? t('projects.inbox') : currentProject.value.name)
+    ? (isOwnInbox(currentProject.value) ? t('projects.inbox') : currentProject.value.name)
     : t('projects.selectProject'),
 )
 

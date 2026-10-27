@@ -4,6 +4,7 @@ import AuthController from './AuthController';
 import { IsLoggedIn } from './middlewares/is-logged-in';
 import { RejectApiTokenAuth } from '../api-tokens/middlewares/RejectApiTokenAuth';
 import { RequireAnyLoginMethod, RequireLoginMethod, RequireSocialProvider } from './middlewares/require-login-method';
+import { RequireAccountDeletion } from './middlewares/require-account-deletion';
 import passport from './strategies/passport-login';
 import { ExternalProviderScope } from './strategies/external-auth.types';
 export default class AuthRoutes implements Routable {
@@ -37,8 +38,9 @@ export default class AuthRoutes implements Routable {
         this.router.post('/credentials/change', [IsLoggedIn, RejectApiTokenAuth], this.authController.changeDefaultUserCredentials);
         this.router.post('/logout', [IsLoggedIn], this.authController.logout);
         this.router.post('/refresh/token', this.authController.refreshTokens);
-        this.router.post('/delete/account/code', [IsLoggedIn], this.authController.sendDeleteAccountCode);
-        this.router.post('/delete/account', [IsLoggedIn], this.authController.deleteUserAccaunt);
+        this.router.get('/delete/account/options', [IsLoggedIn], this.authController.getAccountDeletionOptions);
+        this.router.post('/delete/account/code', [IsLoggedIn, RejectApiTokenAuth, RequireAccountDeletion], this.authController.sendDeleteAccountCode);
+        this.router.post('/delete/account', [IsLoggedIn, RejectApiTokenAuth, RequireAccountDeletion], this.authController.deleteUserAccaunt);
 
         this.router.get(
             '/provider/:providerName',

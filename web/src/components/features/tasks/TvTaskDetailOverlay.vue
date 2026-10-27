@@ -25,22 +25,13 @@
         <TaskDetailPanel />
       </template>
       <template #footer>
-        <div class="flex justify-between gap-2 w-full">
-          <UButton
-            :label="t('common.delete')"
-            color="error"
-            variant="soft"
-            data-testid="task-detail-delete-button"
-            @click="openDeleteDialog"
-          />
-          <UButton
-            :label="t('common.close')"
-            color="neutral"
-            variant="soft"
-            data-testid="task-detail-close-button"
-            @click="closeTask"
-          />
-        </div>
+        <TaskDetailFooter
+          :can-move="!!task && canMove(task)"
+          :can-delete="!!task && canDelete(task)"
+          @delete="task && requestDelete(task)"
+          @move="task && requestMove(task)"
+          @close="closeTask"
+        />
       </template>
     </USlideover>
 
@@ -75,40 +66,27 @@
         <TaskDetailPanel />
       </template>
       <template #footer>
-        <div class="flex justify-between gap-2 w-full">
-          <UButton
-            :label="t('common.delete')"
-            color="error"
-            variant="soft"
-            data-testid="task-detail-delete-button"
-            @click="openDeleteDialog"
-          />
-          <UButton
-            :label="t('common.close')"
-            color="neutral"
-            variant="soft"
-            data-testid="task-detail-close-button"
-            @click="closeTask"
-          />
-        </div>
+        <TaskDetailFooter
+          :can-move="!!task && canMove(task)"
+          :can-delete="!!task && canDelete(task)"
+          @delete="task && requestDelete(task)"
+          @move="task && requestMove(task)"
+          @close="closeTask"
+        />
       </template>
     </UModal>
-
-    <!-- Delete Confirmation Dialog -->
-    <TaskDeleteDialog
-      v-model:open="isDeleteDialogOpen"
-      :task="task"
-      @confirm="handleDelete"
-    />
   </template>
+
+  <TaskActionsHost />
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import TaskDetailPanel from './TaskDetailPanel.vue'
-import TaskDeleteDialog from '@/components/features/tasks/parts/TaskDeleteDialog.vue'
+import TaskDetailFooter from '@/components/features/tasks/parts/TaskDetailFooter.vue'
+import TaskActionsHost from '@/components/features/tasks/parts/TaskActionsHost.vue'
 import { useTasksStore } from '@/stores/tasks.store'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useAppStore } from '@/stores/app.store'
@@ -118,6 +96,7 @@ import { AllGoalPermissions } from '@/types/goals.types'
 import { useTaskView } from '@/composables/useTaskView'
 import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
 import { useSelectedTaskSync } from '@/composables/useSelectedTaskSync'
+import { useTaskActions } from '@/composables/useTaskActions'
 
 const { t } = useI18n()
 const tasksStore = useTasksStore()
@@ -125,7 +104,8 @@ const goalsStore = useGoalsStore()
 const appStore = useAppStore()
 const { isFullscreenModal } = useTaskView()
 const { isOpen, closeTask } = useTaskDetailPanel()
-const { broadcastRemoval } = useSelectedTaskSync()
+const { canMove, canDelete, requestMove, requestDelete } = useTaskActions()
+useSelectedTaskSync()
 
 const task = computed(() => tasksStore.selectedTask ?? null)
 
@@ -148,20 +128,5 @@ const canViewTaskDetails = computed(() =>
   !!taskGoal.value?.permissions[AllGoalPermissions.TASK_CAN_WATCH_DETAILS],
 )
 
-const isDeleteDialogOpen = ref(false)
 const { taskDetailDisplayMode: displayMode } = storeToRefs(appStore)
-
-function openDeleteDialog() {
-  isDeleteDialogOpen.value = true
-}
-
-async function handleDelete() {
-  if (!task.value) return
-  const taskId = task.value.id
-  const success = await tasksStore.deleteTask(taskId)
-  if (success) {
-    broadcastRemoval(taskId)
-    closeTask()
-  }
-}
 </script>

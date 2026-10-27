@@ -1,6 +1,7 @@
 import { type } from 'arktype';
 import type { NextFunction, Request, Response } from 'express';
 import { $logger } from '../../../modules/logget';
+import { GoalPermissions } from '../../../types/auth.types';
 import { CollaborationArkTypeDeleteRoleFromGoal } from '../../collaboration/collaboration.server.types';
 
 export const CanDeleteCollaborationRoles = async (req: Request, res: Response, next: NextFunction) => {
@@ -20,7 +21,12 @@ export const CanDeleteCollaborationRoles = async (req: Request, res: Response, n
     }
 
     //Only owners can manage roles itself
-    if (goal.owner === req.appUser.getUserData()?.id) {
+    if (goal.owner !== req.appUser.getUserData()?.id) {
+        return res.status(403).end();
+    }
+
+    const permissions = await req.appUser.permissionsFetcher.getCheckerForGoal(goal.id);
+    if (permissions.hasPermissions(GoalPermissions.GOAL_CAN_MANAGE_USERS)) {
         return next();
     }
 

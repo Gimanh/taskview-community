@@ -2,7 +2,8 @@
     "name": "taskview-ce-api-server",
     "version": "1.17.0",
     "scripts": {
-        "start": "pm2-runtime start ecosystem.config.js --env production"
+        "start": "pm2-runtime start ecosystem.config.js --env production",
+        "files:migrate": "node ./taskview-files-migrate.js"
     },
     "dependencies": {}
 }

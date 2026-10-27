@@ -1,8 +1,8 @@
-import { eq, sql } from 'drizzle-orm';
-import { CollaborationUsersSchema, OrganizationMembersSchema, SsoIdentitiesSchema, UsersSchema } from 'taskview-db-schemas';
+import { and, count, eq, exists, gt, gte, isNotNull, lt, sql } from 'drizzle-orm';
+import { AccountDeletionSchema, CollaborationUsersSchema, LoginCodeRequestsSchema, OrganizationMembersSchema, ScimUsersSchema, SsoIdentitiesSchema, UsersSchema } from 'taskview-db-schemas';
 import { Database } from '../../modules/db';
 import { $logger } from '../../modules/logget';
-import type { RegisterUserInDb, UpdateUserCredentialsArgs, UpdateUserEmailArgs, UpdateUserCredentialsResult, UserDbRecord } from '../../types/auth.types';
+import type { AddDeleteAccountCodeArgs, ConsumeLoginCodeArgs, DeleteAccountByCodeArgs, ConsumeReminderCodeArgs, LoginCodeAttempt, LoginCodeSendReservation, RegisterUserInDb, ReserveLoginCodeSendArgs, UpdateUserCredentialsArgs, UpdateUserEmailArgs, UpdateUserCredentialsResult, UserDbRecord } from '../../types/auth.types';
 
 export default class AuthModel {
     private readonly db: Database;
@@ -13,11 +13,15 @@ export default class AuthModel {
 
     async getUserByLogin(login: string, isEmail: boolean = false): Promise<UserDbRecord | false> {
         const field = isEmail ? 'email' : 'login';
+        // Login and email are stored lowercase; legacy rows may still hold mixed case, oldest account wins
+        const query = isEmail
+            ? 'select * from tv_auth.users where lower(email) = $1 order by id limit 1'
+            : 'select * from tv_auth.users where lower(login) = $1 order by id limit 1';
         $logger.info({ field }, `[AuthModel:getUserByLogin] field`);
         try {
-            const data = await this.db.query<UserDbRecord>(`select * from tv_auth.users where ${field} = $1`, [login]);
+            const data = await this.db.query<UserDbRecord>(query, [login.toLowerCase()]);
 
-            $logger.info({ login }, `[AuthModel:getUserByLogin] select * from tv_auth.users where ${field} = $1`);
+            $logger.info({ login }, `[AuthModel:getUserByLogin] ${query}`);
             $logger.info(data, `[AuthModel:getUserByLogin] data`);
 
             if (data.rows && data.rows.length > 0) {
@@ -35,19 +39,88 @@ export default class AuthModel {
     async updateLoginCode(code: string | null, email: string): Promise<boolean> {
         if (!email) return false;
 
-        //remember_token is used as login code
+        //remember_token is used as login code; a new code starts with a fresh attempt budget
         try {
-            const data = await this.db.query(`update tv_auth.users set remember_token = $1 where email = $2`, [
-                code,
-                email,
-            ]);
-            return !!(data.rowCount && data.rowCount > 0);
+            const rows = await this.db.dbDrizzle
+                .update(UsersSchema)
+                .set({ rememberToken: code, loginCodeAttempts: 0 })
+                .where(sql`lower(${UsersSchema.email}) = ${email.toLowerCase()}`)
+                .returning({ id: UsersSchema.id });
+            return rows.length > 0;
         } catch (error: unknown) {
             $logger.error(error, 'Can not update login code');
             return false;
         }
+    }
 
-        return true;
+    /**
+     * Counts one guess against the user's current login code before it is compared.
+     * The increment is a single UPDATE, so concurrent guesses each get their own attempt number.
+     */
+    async registerLoginCodeAttempt(userId: number): Promise<LoginCodeAttempt | null> {
+        try {
+            const [row] = await this.db.dbDrizzle
+                .update(UsersSchema)
+                .set({ loginCodeAttempts: sql`${UsersSchema.loginCodeAttempts} + 1` })
+                .where(and(eq(UsersSchema.id, userId), isNotNull(UsersSchema.rememberToken)))
+                .returning({ rememberToken: UsersSchema.rememberToken, attempts: UsersSchema.loginCodeAttempts });
+            if (!row?.rememberToken) return null;
+            return { rememberToken: row.rememberToken, attempts: row.attempts };
+        } catch (error: unknown) {
+            $logger.error(error, 'Can not register login code attempt');
+            return null;
+        }
+    }
+
+    /**
+     * Records an emailed login code against the hourly cap, or reports when the next one is allowed.
+     * The user row is locked for the check-and-insert, so concurrent requests cannot both take the last slot.
+     */
+    async reserveLoginCodeSend(args: ReserveLoginCodeSendArgs): Promise<LoginCodeSendReservation> {
+        return this.db.dbDrizzle.transaction(async (tx) => {
+            await tx
+                .select({ id: UsersSchema.id })
+                .from(UsersSchema)
+                .where(eq(UsersSchema.id, args.userId))
+                .for('update');
+
+            await tx
+                .delete(LoginCodeRequestsSchema)
+                .where(lt(LoginCodeRequestsSchema.requestedAt, sql`now() - interval '1 hour'`));
+
+            const [window] = await tx
+                .select({
+                    sent: count(),
+                    retryAfterSeconds: sql<string | null>`ceil(extract(epoch from (min(${LoginCodeRequestsSchema.requestedAt}) + interval '1 hour' - now())))`,
+                })
+                .from(LoginCodeRequestsSchema)
+                .where(eq(LoginCodeRequestsSchema.userId, args.userId));
+
+            if ((window?.sent ?? 0) >= args.hourlyLimit) {
+                return { allowed: false, retryAfterSeconds: Math.max(1, Number(window?.retryAfterSeconds ?? 0)) };
+            }
+
+            await tx.insert(LoginCodeRequestsSchema).values({ userId: args.userId });
+            return { allowed: true };
+        });
+    }
+
+    /**
+     * Clears the login code only if it is still the one that was checked,
+     * so two concurrent requests with the right code cannot both log in.
+     */
+    async consumeLoginCode(args: ConsumeLoginCodeArgs): Promise<boolean> {
+        try {
+            const rows = await this.db.dbDrizzle
+                .update(UsersSchema)
+                .set({ rememberToken: null })
+                .where(and(eq(UsersSchema.id, args.userId), eq(UsersSchema.rememberToken, args.rememberToken)))
+                .returning({ id: UsersSchema.id });
+            return rows.length > 0;
+        } catch (error: unknown) {
+            $logger.error(error, 'Can not consume login code');
+            return false;
+        }
     }
 
     async registerUserInDb(data: RegisterUserInDb): Promise<number | false> {
@@ -55,7 +128,13 @@ export default class AuthModel {
         try {
             const query = `INSERT INTO tv_auth.users (login, email, password, confirm_email_code, block)
                     VALUES ($1, $2, $3, $4, $5) RETURNING id;`;
-            const data = await this.db.query<{ id: number }>(query, [login, email, password, confirmEmailCode, block]);
+            const data = await this.db.query<{ id: number }>(query, [
+                login.toLowerCase(),
+                email.toLowerCase(),
+                password,
+                confirmEmailCode,
+                block,
+            ]);
 
             if (data?.rows && data.rows.length > 0) {
                 $logger.debug('User registration success');
@@ -106,9 +185,9 @@ export default class AuthModel {
     }
 
     async fetchUserByEmail(email: string): Promise<UserDbRecord | false> {
-        const query = 'SELECT * FROM tv_auth.users WHERE email = $1;';
+        const query = 'SELECT * FROM tv_auth.users WHERE lower(email) = $1 ORDER BY id LIMIT 1;';
         try {
-            const result = await this.db.query(query, [email]);
+            const result = await this.db.query(query, [email.toLowerCase()]);
             if (result.rows.length > 0) {
                 return result.rows[0];
             }
@@ -126,7 +205,7 @@ export default class AuthModel {
             const result = await this.db.dbDrizzle
                 .update(UsersSchema)
                 .set({ confirmEmailCode: null, block: 0 })
-                .where(eq(UsersSchema.email, email));
+                .where(sql`lower(${UsersSchema.email}) = ${email.toLowerCase()}`);
             return (result.rowCount ?? 0) > 0;
         } catch (error) {
             $logger.error(error, `Error marking email confirmed for ${email}`);
@@ -137,13 +216,37 @@ export default class AuthModel {
     async confirmEmail(login: string, code: string, block: number): Promise<boolean> {
         const query = `UPDATE tv_auth.users 
                    SET confirm_email_code = NULL, block = $1 
-                   WHERE login = $2 AND confirm_email_code = $3`;
+                   WHERE lower(login) = $2 AND confirm_email_code = $3`;
 
         try {
-            const result = await this.db.query(query, [block, login, code]);
+            const result = await this.db.query(query, [block, login.toLowerCase(), code]);
             return !!(result.rowCount && result.rowCount > 0);
         } catch (_error) {
             $logger.error('Error confirming email', { login, code });
+            return false;
+        }
+    }
+
+    /**
+     * Clears the password reminder code only if it is still the given, unexpired one.
+     * One UPDATE decides, so two concurrent requests with the same code cannot both pass.
+     */
+    async consumeReminderCode(args: ConsumeReminderCodeArgs): Promise<boolean> {
+        try {
+            const rows = await this.db.dbDrizzle
+                .update(UsersSchema)
+                .set({ remindPasswordCode: null, remindPasswordTime: null })
+                .where(
+                    and(
+                        eq(UsersSchema.id, args.userId),
+                        eq(UsersSchema.remindPasswordCode, args.code),
+                        gte(UsersSchema.remindPasswordTime, args.issuedAfter)
+                    )
+                )
+                .returning({ id: UsersSchema.id });
+            return rows.length > 0;
+        } catch (error: unknown) {
+            $logger.error(error, 'Can not consume password reminder code');
             return false;
         }
     }
@@ -156,11 +259,11 @@ export default class AuthModel {
 
         if (code === null && time === null) {
             query =
-                'UPDATE tv_auth.users SET remind_password_code = NULL, remind_password_time = NULL WHERE email = $1';
-            args = [email];
+                'UPDATE tv_auth.users SET remind_password_code = NULL, remind_password_time = NULL WHERE lower(email) = $1';
+            args = [email.toLowerCase()];
         } else {
-            query = 'UPDATE tv_auth.users SET remind_password_code = $1, remind_password_time = $2 WHERE email = $3';
-            args = [code, time, email];
+            query = 'UPDATE tv_auth.users SET remind_password_code = $1, remind_password_time = $2 WHERE lower(email) = $3';
+            args = [code, time, email.toLowerCase()];
         }
 
         try {
@@ -173,23 +276,25 @@ export default class AuthModel {
     }
 
     async updateUserCredentials(args: UpdateUserCredentialsArgs): Promise<UpdateUserCredentialsResult> {
+        const login = args.login.toLowerCase();
+        const email = args.email.toLowerCase();
         try {
             await this.db.dbDrizzle.transaction(async (tx) => {
                 await tx
                     .update(UsersSchema)
-                    .set({ login: args.login, email: args.email, password: args.passwordHash })
+                    .set({ login, email, password: args.passwordHash })
                     .where(eq(UsersSchema.id, args.userId));
                 await tx
                     .update(OrganizationMembersSchema)
-                    .set({ email: args.email })
-                    .where(eq(OrganizationMembersSchema.email, args.oldEmail));
+                    .set({ email })
+                    .where(sql`lower(${OrganizationMembersSchema.email}) = ${args.oldEmail.toLowerCase()}`);
                 await tx
                     .update(CollaborationUsersSchema)
-                    .set({ email: args.email })
-                    .where(eq(CollaborationUsersSchema.email, args.oldEmail));
+                    .set({ email })
+                    .where(sql`lower(${CollaborationUsersSchema.email}) = ${args.oldEmail.toLowerCase()}`);
                 await tx
                     .update(SsoIdentitiesSchema)
-                    .set({ email: args.email })
+                    .set({ email })
                     .where(eq(SsoIdentitiesSchema.userId, args.userId));
             });
             return 'ok';
@@ -205,23 +310,28 @@ export default class AuthModel {
     }
 
     async updateUserEmail(args: UpdateUserEmailArgs): Promise<UpdateUserCredentialsResult> {
+        const email = args.email.toLowerCase();
         try {
             await this.db.dbDrizzle.transaction(async (tx) => {
                 await tx
                     .update(UsersSchema)
-                    .set({ email: args.email })
+                    .set({ email })
                     .where(eq(UsersSchema.id, args.userId));
                 await tx
                     .update(OrganizationMembersSchema)
-                    .set({ email: args.email })
-                    .where(eq(OrganizationMembersSchema.email, args.oldEmail));
+                    .set({ email })
+                    .where(sql`lower(${OrganizationMembersSchema.email}) = ${args.oldEmail.toLowerCase()}`);
                 await tx
                     .update(CollaborationUsersSchema)
-                    .set({ email: args.email })
-                    .where(eq(CollaborationUsersSchema.email, args.oldEmail));
+                    .set({ email })
+                    .where(sql`lower(${CollaborationUsersSchema.email}) = ${args.oldEmail.toLowerCase()}`);
+                await tx
+                    .update(ScimUsersSchema)
+                    .set({ memberEmail: email })
+                    .where(sql`lower(${ScimUsersSchema.memberEmail}) = ${args.oldEmail.toLowerCase()}`);
                 await tx
                     .update(SsoIdentitiesSchema)
-                    .set({ email: args.email })
+                    .set({ email })
                     .where(eq(SsoIdentitiesSchema.userId, args.userId));
             });
             return 'ok';
@@ -257,38 +367,42 @@ export default class AuthModel {
         }
     }
 
-    async addDeleteAccountCode(code: string, userId: number): Promise<boolean> {
+    async addDeleteAccountCode(args: AddDeleteAccountCodeArgs): Promise<boolean> {
         try {
-            const queryDeleteOldData = 'delete from tv_auth.account_deletion where user_id = $1';
-            await this.db.query(queryDeleteOldData, [userId]);
-            const insertQuery = 'insert into tv_auth.account_deletion (code, user_id) values ($1,$2)';
-            const insertResult = await this.db.query(insertQuery, [code, userId]);
-            return !!(insertResult.rowCount && insertResult.rowCount > 0);
-        } catch (error: any) {
-            $logger.error(`Can can not complete delete code for account ${userId}`, {
-                errorMessage: error.message,
-                errorStack: error.stack,
+            return await this.db.dbDrizzle.transaction(async (tx) => {
+                await tx.delete(AccountDeletionSchema).where(eq(AccountDeletionSchema.userId, args.userId));
+                const rows = await tx
+                    .insert(AccountDeletionSchema)
+                    .values({ userId: args.userId, code: args.code })
+                    .returning({ id: AccountDeletionSchema.id });
+                return rows.length > 0;
             });
+        } catch (error: unknown) {
+            $logger.error(error, 'Can not save account deletion code');
             return false;
         }
     }
 
-    async deleteUserAccount(code: string, userId: number): Promise<boolean> {
+    async deleteAccountByCode(args: DeleteAccountByCodeArgs): Promise<boolean> {
         try {
-            const query = 'select user_id from tv_auth.account_deletion where code = $1';
-            const codeData = await this.db.query(query, [code]);
-            if (codeData.rows.length > 0 && userId === codeData.rows[0]['user_id']) {
-                const deleteUser = await this.db.query('delete from tv_auth.users where id = $1', [
-                    codeData.rows[0]['user_id'],
-                ]);
-                return !!(deleteUser.rowCount && deleteUser.rowCount > 0);
-            } else {
-                $logger.error(`Can not fetch user account for code ${code}`);
-            }
-        } catch (_err: any) {
-            $logger.error(`Can not delete user account for code ${code}`);
+            const validCode = this.db.dbDrizzle
+                .select({ id: AccountDeletionSchema.id })
+                .from(AccountDeletionSchema)
+                .where(
+                    and(
+                        eq(AccountDeletionSchema.userId, args.userId),
+                        eq(AccountDeletionSchema.code, args.code),
+                        gt(AccountDeletionSchema.createdAt, sql`now() - make_interval(secs => ${args.ttlSeconds})`)
+                    )
+                );
+            const rows = await this.db.dbDrizzle
+                .delete(UsersSchema)
+                .where(and(eq(UsersSchema.id, args.userId), exists(validCode)))
+                .returning({ id: UsersSchema.id });
+            return rows.length > 0;
+        } catch (error: unknown) {
+            $logger.error(error, 'Can not delete user account');
             return false;
         }
-        return false;
     }
 }

@@ -26,6 +26,7 @@
     <template v-if="showForm">
       <OrgSsoConfigForm
         v-model:form="form"
+        :organization-id="organizationId"
         :is-editing="isEditing"
         :saving="saving"
         :callback-url-placeholder="callbackUrlPlaceholder"

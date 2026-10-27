@@ -1,5 +1,6 @@
 import type { GoalsListSchemaTypeForSelect } from 'taskview-db-schemas';
 import type { AppUser } from '../../core/AppUser';
+import { eventBus } from '../../core/EventBus';
 import type { GoalListInDb } from '../../types/goal-list.types';
 import { GoalListItemForClient } from './GoalListItemForClient';
 import { GoalListsRepository } from './GoalListsRepository';
@@ -71,7 +72,10 @@ export class GoalListManager {
     }
 
     async deleteListNew(data: GoalListArgDelete): Promise<boolean> {
-        return await this.repository.deleteListNew(data);
+        const deleted = await this.repository.deleteListNew(data);
+        if (!deleted) return false;
+        eventBus.emit('list.deleted', { listId: deleted.id, goalId: deleted.goalId, initiatorId: this.user.getUserData()?.id as number });
+        return true;
     }
 
     async updateArchive(listId: number, archive: GoalListInDb['archive']): Promise<boolean> {

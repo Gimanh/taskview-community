@@ -33,11 +33,6 @@ export class TagsController {
         return res.tvJson((await req.appUser.tagsManager.addTagNew(data)) ?? null);
     };
 
-    /** @deprecated use fetchAllTagsForUser instead */
-    fetchAll = async (req: Request, res: Response) => {
-        return res.tvJson(await req.appUser.tagsManager.fetchAll());
-    };
-
     fetchAllTagsForUser = async (req: Request, res: Response) => {
         const organizationId = req.query.organizationId ? Number(req.query.organizationId) : undefined;
         return res.tvJson(await req.appUser.tagsManager.fetchAllTagsForUser(organizationId));

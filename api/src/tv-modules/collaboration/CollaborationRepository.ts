@@ -239,15 +239,30 @@ export class CollaborationRepository {
 
     async deleteUserNew(args: CollaborationArgDeleteUser) {
         const result = await callWithCatch(() =>
-            this.db.dbDrizzle
-                .delete(CollaborationUsersToGoalsSchema)
-                .where(
-                    and(
-                        eq(CollaborationUsersToGoalsSchema.userId, args.id),
-                        eq(CollaborationUsersToGoalsSchema.goalId, args.goalId)
+            this.db.dbDrizzle.transaction(async (tx) => {
+                const goalRoles = tx
+                    .select({ id: CollaborationRolesSchema.id })
+                    .from(CollaborationRolesSchema)
+                    .where(eq(CollaborationRolesSchema.goalId, args.goalId));
+                await tx
+                    .delete(CollaborationUsersToRolesSchema)
+                    .where(
+                        and(
+                            eq(CollaborationUsersToRolesSchema.userId, args.id),
+                            inArray(CollaborationUsersToRolesSchema.roleId, goalRoles)
+                        )
+                    );
+
+                return await tx
+                    .delete(CollaborationUsersToGoalsSchema)
+                    .where(
+                        and(
+                            eq(CollaborationUsersToGoalsSchema.userId, args.id),
+                            eq(CollaborationUsersToGoalsSchema.goalId, args.goalId)
+                        )
                     )
-                )
-                .returning()
+                    .returning();
+            })
         );
 
         return !!(result && result.length > 0);

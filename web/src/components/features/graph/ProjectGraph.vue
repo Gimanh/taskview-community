@@ -88,15 +88,19 @@ import {
   PanOnScrollMode,
   useVueFlow,
   VueFlow,
+  type XYPosition,
 } from '@vue-flow/core'
 import { nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { storeToRefs } from 'pinia'
 import { useGraphStore } from '@/stores/graph.store'
 import type { TaskItem } from '@/types/tasks.types'
+import type { GraphDirection } from '@/types/graph.types'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useAppRouteInfo } from '@/composables/useAppRouteInfo'
 import AddNewTaskToGraph from './AddNewTaskToGraph.vue'
-import { useLayout } from './composables/useLayout'
+import { estimateNodeSize, layoutCenter, placeNodeInFreeSpot, useLayout } from './composables/useLayout'
+import { provideGraphViewportCenter } from './composables/useGraphViewportCenter'
 import TaskNode from './TaskNode.vue'
 
 const listIds = defineModel<number[]>('listIds', { default: () => [] })
@@ -129,7 +133,8 @@ watch(assigneeIds, applyFilters, { deep: true })
 watch(sprintId, applyFilters)
 
 const {
-  fitView,
+  setCenter,
+  onPaneReady,
   onConnect,
   addEdges,
   onEdgesChange,
@@ -137,15 +142,30 @@ const {
   onNodeDragStop,
   removeEdges,
   screenToFlowCoordinate,
+  viewport,
+  dimensions,
 } = useVueFlow()
+
+// Where a new node goes: the middle of what is on screen, or the nearest free spot to it
+provideGraphViewportCenter(() => {
+  const { width, height } = estimateNodeSize({ data: {} })
+  const target = {
+    x: Math.round((dimensions.value.width / 2 - viewport.value.x) / viewport.value.zoom - width / 2),
+    y: Math.round((dimensions.value.height / 2 - viewport.value.y) / viewport.value.zoom - height / 2),
+  }
+  return placeNodeInFreeSpot({ target, node: { data: {} }, obstacles: store.nodes })
+})
 
 const { projectId } = useAppRouteInfo()
 const { layout } = useLayout()
 const store = useGraphStore()
+const { direction: layoutDirection } = storeToRefs(store)
 const { t } = useI18n()
 const { canManageGraph, canViewGraph } = useGoalPermissions()
 
 const layoutReady = ref(false)
+// A center asked for before the pane was ready, applied once it is
+const pendingCenter = ref<XYPosition | null>(null)
 
 const addNewTaskToGraph = ref(false)
 const currentSession = ref<number | null>(null)
@@ -167,7 +187,6 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
 }
 
 const selectedEdge = ref<Edge | null>(null)
-const layoutDirection = ref<'LR' | 'TB'>('TB')
 
 watch(
   projectId,
@@ -290,11 +309,25 @@ const deleteSelectedEdge = async (id: number) => {
   removeEdges([id.toString()])
 }
 
-const layoutGraph = async (direction: 'LR' | 'TB') => {
+// The graph opens at 1:1 around its middle, not fitted as a whole: fitting would
+// render every node and defeat only-render-visible-elements. The fit button in
+// Controls is still there to see the whole graph
+const showLayoutCenter = async () => {
+  const center = layoutCenter(store.nodes)
+  pendingCenter.value = (await setCenter(center.x, center.y, { zoom: 1 })) ? null : center
+}
+
+onPaneReady(() => {
+  if (!pendingCenter.value) return
+  setCenter(pendingCenter.value.x, pendingCenter.value.y, { zoom: 1 })
+  pendingCenter.value = null
+})
+
+const layoutGraph = async (direction: GraphDirection) => {
   layoutDirection.value = direction
   store.nodes = layout(store.nodes, store.edges, direction)
-  nextTick(() => {
-    fitView()
+  nextTick(async () => {
+    await showLayoutCenter()
     layoutReady.value = true
   })
 }

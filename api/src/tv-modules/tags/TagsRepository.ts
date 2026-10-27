@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or, type SQL } from 'drizzle-orm';
 import type { TagsSchemaTypeForSelect } from 'taskview-db-schemas';
 import { GoalsSchema, TagsSchema, TasksSchema, TasksToTagsSchema } from 'taskview-db-schemas';
 import type { AppUser } from '../../core/AppUser';
@@ -6,7 +6,7 @@ import { Database } from '../../modules/db';
 import { GoalPermissions } from '../../types/auth.types';
 import { logError } from '../../utils/api';
 import { callWithCatch } from '../../utils/helpers';
-import type { TagItemArgAdd, TagItemArgUpdate, TagItemInDb } from './tags.types';
+import type { TagAddToTaskIfAbsentArgs, TagItemArgAdd, TagItemArgUpdate, TagItemInDb } from './tags.types';
 
 export class TagsRepository {
     private readonly db: Database;
@@ -74,79 +74,25 @@ export class TagsRepository {
 
         return tagResult;
     }
-    /** @deprecated use fetchAllTagsForUser instead */
-    async fetchAll(userId: number): Promise<TagItemInDb[] | false> {
-        const tags = await this.db.query('SELECT * FROM tasks.tags WHERE owner = $1;', [userId]).catch(logError);
-
-        if (!tags) {
-            return false;
-        }
-
-        const sharedGoals = await this.user.goalsManager.fetchSharedGoals();
-
-        if (sharedGoals.length > 0) {
-            const goalIds: number[] = [];
-            sharedGoals.forEach((goal) => {
-                //Не уверен что тут надо именно данное разрешение
-                if (goal.permissions[GoalPermissions.TASKS_CAN_WATCH_TAGS]) {
-                    goalIds.push(goal.id);
-                }
-            });
-
-            if (goalIds.length > 0) {
-                const placeholders = goalIds.map((_, i) => `$${i + 1}`).join(',');
-
-                const sharedTags = await this.db
-                    .query(`SELECT * FROM tasks.tags WHERE goal_id IN (${placeholders})`, goalIds)
-                    .catch(logError);
-
-                if (sharedTags) {
-                    tags.rows = [...tags.rows, ...sharedTags.rows];
-                }
-            }
-        }
-
-        return tags.rows;
-    }
-
     async fetchAllTagsForUser(userId: number, organizationId?: number): Promise<TagsSchemaTypeForSelect[]> {
-        const ownTagsConditions = [eq(TagsSchema.owner, userId)];
-        if (organizationId) {
-            ownTagsConditions.push(
-                inArray(TagsSchema.goalId, this.db.dbDrizzle.select({ id: GoalsSchema.id }).from(GoalsSchema).where(eq(GoalsSchema.organizationId, organizationId)))
-            );
+        const goalIds = await this.user.goalsManager.fetchAccessibleGoalIds({ organizationId, includeArchivedOwn: true });
+        const access = await this.user.permissionsFetcher.getAccessForGoals(goalIds);
+        const tagGoalIds = access.goalIdsWith(GoalPermissions.TASKS_CAN_WATCH_TAGS);
+
+        const conditions: SQL[] = [];
+        if (tagGoalIds.length > 0) {
+            conditions.push(inArray(TagsSchema.goalId, tagGoalIds));
         }
-        const ownTags = await callWithCatch(() =>
-            this.db.dbDrizzle.select().from(TagsSchema).where(and(...ownTagsConditions))
+        if (!organizationId && this.user.permissionsFetcher.canSeeDataOutsideGoals(GoalPermissions.TASKS_CAN_WATCH_TAGS)) {
+            conditions.push(and(eq(TagsSchema.owner, userId), isNull(TagsSchema.goalId))!);
+        }
+        if (conditions.length === 0) return [];
+
+        const tags = await callWithCatch(() =>
+            this.db.dbDrizzle.select().from(TagsSchema).where(or(...conditions))
         );
 
-        const allTags: TagsSchemaTypeForSelect[] = [];
-
-        if (ownTags) {
-            allTags.push(...ownTags);
-        }
-
-        const sharedGoals = await this.user.goalsManager.fetchSharedGoals(organizationId);
-
-        if (sharedGoals.length > 0) {
-            const goalIds: number[] = [];
-            sharedGoals.forEach((goal) => {
-                if (goal.permissions[GoalPermissions.TASKS_CAN_WATCH_TAGS]) {
-                    goalIds.push(goal.id);
-                }
-            });
-
-            if (goalIds.length > 0) {
-                const sharedTags = await callWithCatch(() =>
-                    this.db.dbDrizzle.select().from(TagsSchema).where(inArray(TagsSchema.goalId, goalIds))
-                );
-                if (sharedTags) {
-                    allTags.push(...sharedTags);
-                }
-            }
-        }
-
-        return allTags;
+        return tags ?? [];
     }
 
     async tagExists(tagId: number, taskId: number): Promise<boolean> {
@@ -212,6 +158,18 @@ export class TagsRepository {
             }
             return 'add';
         }
+    }
+
+    async addTagToTaskIfAbsent(args: TagAddToTaskIfAbsentArgs): Promise<boolean | null> {
+        const inserted = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .insert(TasksToTagsSchema)
+                .values({ tagId: args.tagId, taskId: args.taskId })
+                .onConflictDoNothing()
+                .returning({ taskId: TasksToTagsSchema.taskId })
+        );
+        if (!inserted) return null;
+        return inserted.length > 0;
     }
 
     async addTagToTask(tagId: number, taskId: number): Promise<boolean> {

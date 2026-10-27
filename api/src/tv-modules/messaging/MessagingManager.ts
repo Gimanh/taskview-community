@@ -103,7 +103,7 @@ export class MessagingManager {
         }
 
         const created = await appUser.tasksManager.addTaskNew({ goalId: goalIds[0], description: intent.text });
-        const task = created?.[0];
+        const task = created.ok ? created.tasks[0] : undefined;
         if (!task) return note('Failed to create the task.');
 
         const orgSlug = await this.repository.fetchGoalOrgSlug(goalIds[0]);
@@ -172,7 +172,7 @@ export class MessagingManager {
     }
 
     async toggleProject(id: number, goalId: number, isActive: boolean): Promise<MessagingConnectionForClient | null> {
-        // goalId was verified against the caller by IsGoalOwnerByGoalId; the WHERE
+        // goalId was verified against the caller by CanManageProjectMessaging; the WHERE
         // clause also binds the connection to that goal, so no cross-project mutation.
         const updated = await this.repository.setActiveOwned({ id, ownerType: 'project', ownerId: goalId, isActive });
         return updated ? this.toClient(updated) : null;

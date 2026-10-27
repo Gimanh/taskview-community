@@ -1,6 +1,6 @@
 import TvApiBase from './base';
 import type { AppResponse } from '@/api/base.types';
-import type { KanbanArgAddColumn, KanbanArgDeleteColumn, KanbanArgUpdateColumn, KanbanArgUpdateTasksOrder, KanbanColumnItem, KanbanFilters, KanbanResponseDeleteColumn, KanbanResponseTasksForColumn, KanbanResponseTasksOrderForColumnAndCursor, KanbanResponseUpdateColumn, KanbanResponseUpdateTasksOrder } from './kanban.types';
+import type { KanbanArgAddColumn, KanbanArgDeleteColumn, KanbanArgReorderColumns, KanbanArgUpdateColumn, KanbanArgUpdateTasksOrder, KanbanColumnItem, KanbanFilters, KanbanResponseDeleteColumn, KanbanResponseReorderColumns, KanbanResponseTasksForColumn, KanbanResponseTasksOrderForColumnAndCursor, KanbanResponseUpdateColumn, KanbanResponseUpdateTasksOrder } from './kanban.types';
 import type { Task } from './tasks.api.types';
 
 export default class TvKanban extends TvApiBase {
@@ -41,6 +41,12 @@ export default class TvKanban extends TvApiBase {
     public async updateColumn(data: KanbanArgUpdateColumn) {
         return this.request(
             this.$axios.post<AppResponse<KanbanResponseUpdateColumn>>(`${this.moduleUrl}/update-status`, data)
+        );
+    }
+
+    public async reorderColumns(data: KanbanArgReorderColumns) {
+        return this.request(
+            this.$axios.patch<AppResponse<KanbanResponseReorderColumns>>(`${this.moduleUrl}/reorder-statuses`, data)
         );
     }
 

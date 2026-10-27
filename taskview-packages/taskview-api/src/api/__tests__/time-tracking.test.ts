@@ -577,6 +577,41 @@ describe('TvApi time-tracking tests', () => {
             expect(del?.deleted).toBe(true);
         });
 
+        it('cannot log own time without TIMETRACKING_CAN_LOG', async () => {
+            const status = await $invitedUser.timeTracking.createManual({
+                taskId,
+                startedAt: isoMinutesAgo(45),
+                endedAt: isoMinutesAgo(20),
+            }).then(() => 200).catch((err) => err.status);
+            expect(status).toBe(403);
+        });
+
+        it('cannot list goal entries or read history without TIMETRACKING_CAN_VIEW', async () => {
+            const ownerEntry = await $mainUser.timeTracking.createManual({
+                taskId,
+                startedAt: isoMinutesAgo(60),
+                endedAt: isoMinutesAgo(30),
+            }).catch(console.error);
+            expect(ownerEntry).toBeDefined();
+
+            const listStatus = await $invitedUser.timeTracking.fetchEntries({ goalId })
+                .then(() => 200).catch((err) => err.status);
+            const historyStatus = await $invitedUser.timeTracking.fetchHistory(ownerEntry!.id)
+                .then(() => 200).catch((err) => err.status);
+            expect(listStatus).toBe(403);
+            expect(historyStatus).toBe(403);
+        });
+    });
+
+    describe('5b. Invited user with TIMETRACKING_CAN_MANAGE_ALL, _VIEW and _LOG', () => {
+        beforeEach(async () => {
+            await inviteUserToGoalWithRole(goalId, `tt-manage-view-log-${timestamp}`, [
+                TvPermissions.TIMETRACKING_CAN_MANAGE_ALL,
+                TvPermissions.TIMETRACKING_CAN_VIEW,
+                TvPermissions.TIMETRACKING_CAN_LOG,
+            ]);
+        });
+
         it('sees all goal entries (own and owner) via fetchEntries with goalId', async () => {
             const ownerEntry = await $mainUser.timeTracking.createManual({
                 taskId,

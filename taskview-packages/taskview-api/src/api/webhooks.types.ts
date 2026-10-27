@@ -46,6 +46,7 @@ export const WEBHOOK_EVENTS = [
     'task.created',
     'task.updated',
     'task.deleted',
+    'task.moved',
     'task.assigneesChanged',
     'time-entry.started',
     'time-entry.stopped',
@@ -61,6 +62,11 @@ export const WEBHOOK_EVENTS = [
     'sprint.resumed',
     'sprint.deleted',
     'task.assignedToSprint',
+    'file.uploaded',
+    'file.renamed',
+    'file.deleted',
+    'file.attached',
+    'file.detached',
 ] as const;
 
 export type WebhookEvent = typeof WEBHOOK_EVENTS[number];

@@ -16,7 +16,8 @@ const taskItemMatch = {
     description: 'test task-1761603103605',
     complete: false,
     goalListId: null,
-    creatorId: null,
+    // set by the server to the user who created the task
+    creatorId: 1,
     note: null,
     owner: 1,
     priorityId: 1,

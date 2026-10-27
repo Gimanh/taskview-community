@@ -12,17 +12,6 @@ export const CanFetchRolesPermissionsCollaborationRoles = async (req: Request, r
         return res.status(400).end();
     }
 
-    const goal = await req.appUser.goalsManager.goalsRepository.fetchGoalById(+goalId);
-
-    if (!goal) {
-        $logger.error('Can not get goal for CanFetchRolesPermissionsCollaborationRoles middleware');
-        return res.status(500).end();
-    }
-
-    if (goal.owner === req.appUser.getUserData()?.id) {
-        return next();
-    }
-
     const permissions = await req.appUser.permissionsFetcher
         .getPermissionsForType(Number(goalId), GoalPermissionsFetcher.PERMISSION_TYPE_FOR_GOAL)
         .catch(logError);

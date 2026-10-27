@@ -23,8 +23,9 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
     }
   }
 
-  async function fetch() {
-    if (loading.value) return
+  let pending: Promise<void> | null = null
+
+  async function load() {
     loading.value = true
     try {
       const result = await $tvApi.uiPreferences.fetch()
@@ -34,18 +35,33 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
       loaded.value = true
     } finally {
       loading.value = false
+      pending = null
     }
   }
 
-  const flush = useDebounceFn(async () => {
+  function fetch(): Promise<void> {
+    pending ??= load()
+    return pending
+  }
+
+  async function ensureLoaded() {
+    if (loaded.value) return
+    await fetch().catch(() => undefined)
+  }
+
+  let revision = 0
+  let saveChain: Promise<void> = Promise.resolve()
+
+  async function save() {
     saving.value = true
+    const sentRevision = revision
     try {
       const payload: UiPreferences = { ...prefs.value }
       if (Object.keys(settings.value).length > 0) {
         payload[UI_SETTINGS_KEY] = settings.value
       }
       const result = await $tvApi.uiPreferences.update(payload)
-      if (result) {
+      if (result && sentRevision === revision) {
         const { sections, settings: s } = split(result)
         prefs.value = sections
         settings.value = s
@@ -53,10 +69,16 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
     } finally {
       saving.value = false
     }
+  }
+
+  const flush = useDebounceFn(() => {
+    saveChain = saveChain.then(save, save)
+    return saveChain
   }, SAVE_DEBOUNCE_MS)
 
   function setSection(section: string, items: UiPreferencesItem[]) {
     prefs.value = { ...prefs.value, [section]: items }
+    revision++
     flush()
   }
 
@@ -66,6 +88,7 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
 
   function setSetting<K extends keyof UiSettings>(key: K, value: UiSettings[K]) {
     settings.value = { ...settings.value, [key]: value }
+    revision++
     flush()
   }
 
@@ -76,6 +99,7 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
     loading,
     saving,
     fetch,
+    ensureLoaded,
     setSection,
     getSection,
     setSetting,

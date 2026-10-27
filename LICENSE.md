@@ -1,6 +1,6 @@
 # TaskView Source-Available License
 
-Version 1.0
+Version 1.1
 
 ---
 
@@ -30,6 +30,10 @@ This license makes the TaskView source code available while:
 
 **“Organization”** means the legal entity You represent (if any).
 
+**“Affiliate”** means any legal entity that controls, is controlled by, or is under common control with Your Organization (for example, a parent company, subsidiary, or sister company in the same corporate group), where “control” means ownership of more than 50% of the voting interests or the power to direct the entity's management.
+
+For avoidance of doubt, an Affiliate is a separate legal entity and is a third party under this License. Employees and contractors of an Affiliate are not Your Permitted Users unless they are also Your own employees or contractors acting on Your behalf. Each Affiliate may use the Software for its own Internal Use under its own copy of this License, on its own infrastructure.
+
 **“Internal Use”** means use of the Software solely by Permitted Users for Your own personal or organizational purposes.
 
 **“Managed Service”** means providing the Software (or a material portion of it) to third parties as a hosted service, SaaS, subscription access, or “service bureau” offering, whether paid or free.
@@ -37,6 +41,7 @@ This license makes the TaskView source code available while:
 For avoidance of doubt, Managed Service includes:
 - “hosting or operating the Software for the benefit of a third party (e.g., a client), even if provided as part of consulting or IT services;”
 - “providing third parties access to Your instance of the Software (accounts, workspaces, or shared projects), whether paid or free.”
+- “hosting or operating a single instance of the Software for several Affiliates, or for a corporate group as a whole (for example, shared group IT services), even when no fee is charged between the entities.”
 
 **“Competing Product”** means any software or service whose primary purpose is project/task management or work tracking, that is offered to third parties (commercially or as a service), and that is reasonably substitutable for TaskView, including products targeting a specific vertical market (e.g., medical, legal, or industrial).
 
@@ -91,6 +96,7 @@ If You want to:
 
 * offer TaskView as a hosted or managed service
 * provide access to TaskView to third parties outside Permitted Users
+* run a single TaskView instance shared by several entities of a corporate group (Affiliates)
 * build or sell a competing product based on TaskView
 
 You must obtain a separate commercial license from the copyright holder.

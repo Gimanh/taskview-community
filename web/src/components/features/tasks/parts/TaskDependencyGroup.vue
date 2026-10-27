@@ -1,5 +1,8 @@
 <template>
-  <div class="flex flex-col gap-1 min-w-0 h-full">
+  <div
+    class="flex flex-col gap-1 min-w-0 h-full"
+    :data-testid="`dependency-group-${direction}`"
+  >
     <div class="flex items-center gap-1.5 px-1">
       <UIcon
         :name="icon"
@@ -54,6 +57,7 @@
         :goal-id="goalId"
         :excluded-ids="excludedIds"
         @select="(task) => $emit('add', task)"
+        @created="(task) => $emit('created', task)"
       />
     </div>
   </div>
@@ -61,6 +65,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import type { Task } from 'taskview-api'
 import TaskDependencyPicker from './TaskDependencyPicker.vue'
 import type { DependencyEntry, DependencyTask } from './TaskDependencies.types'
 
@@ -77,6 +82,7 @@ defineProps<{
 defineEmits<{
   open: [taskId: number]
   add: [task: DependencyTask]
+  created: [task: Task]
   remove: [edgeId: number]
 }>()
 

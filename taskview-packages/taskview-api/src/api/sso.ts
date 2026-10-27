@@ -1,6 +1,10 @@
 import TvApiBase from './base'
 import type { AppResponse } from './base.types'
 import type {
+  SsoArgLinkScimGroupProject,
+  SsoArgParseMetadata,
+  SsoArgUnlinkScimGroupProject,
+  SsoParsedMetadata,
   SsoConfig,
   SsoConfigArgCreate,
   SsoConfigArgUpdate,
@@ -8,6 +12,7 @@ import type {
   SsoDomainVerificationStart,
   SsoProviderPublic,
   SsoPublicUrls,
+  SsoScimGroupsOverview,
 } from './sso.types'
 
 export default class TvSsoApi extends TvApiBase {
@@ -45,10 +50,10 @@ export default class TvSsoApi extends TvApiBase {
     )
   }
 
-  public async parseMetadata(url: string) {
+  public async parseMetadata(args: SsoArgParseMetadata) {
     return this.request(
-      this.$axios.get<AppResponse<{ samlEntryPoint: string, samlCert: string, samlLogoutUrl: string }>>(`${this.moduleUrl}/admin/metadata`, {
-        params: { url },
+      this.$axios.get<AppResponse<SsoParsedMetadata>>(`${this.moduleUrl}/admin/metadata`, {
+        params: { url: args.url, organizationId: args.organizationId },
       })
     )
   }
@@ -62,6 +67,29 @@ export default class TvSsoApi extends TvApiBase {
   public async toggleScim(configId: number, enabled: boolean) {
     return this.request(
       this.$axios.patch<AppResponse<{ scimEnabled: number }>>(`${this.moduleUrl}/admin/configs/${configId}/scim`, { enabled })
+    )
+  }
+
+  public async fetchScimGroups(configId: number) {
+    return this.request(
+      this.$axios.get<AppResponse<SsoScimGroupsOverview>>(`${this.moduleUrl}/admin/configs/${configId}/scim-groups`)
+    )
+  }
+
+  public async linkScimGroupProject(args: SsoArgLinkScimGroupProject) {
+    return this.request(
+      this.$axios.put<AppResponse<boolean>>(
+        `${this.moduleUrl}/admin/configs/${args.configId}/scim-groups/${args.groupId}/projects/${args.goalId}`,
+        { roleId: args.roleId },
+      )
+    )
+  }
+
+  public async unlinkScimGroupProject(args: SsoArgUnlinkScimGroupProject) {
+    return this.request(
+      this.$axios.delete<AppResponse<boolean>>(
+        `${this.moduleUrl}/admin/configs/${args.configId}/scim-groups/${args.groupId}/projects/${args.goalId}`,
+      )
     )
   }
 

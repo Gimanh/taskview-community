@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEqual } from 'crypto';
 import { $logger } from '../modules/logget';
 
 const ALGORITHM = 'aes-256-gcm';
@@ -46,4 +46,11 @@ export function decryptField(value: string | null): string | null {
         $logger.warn('Failed to decrypt field — returning raw value (possible migration or key mismatch)')
         return value
     }
+}
+
+export function safeEqual(a: string, b: string): boolean {
+    // Hashing first gives equal-length buffers, so the comparison time does not depend on where the inputs differ
+    const digestA = createHash('sha256').update(a, 'utf8').digest()
+    const digestB = createHash('sha256').update(b, 'utf8').digest()
+    return timingSafeEqual(digestA, digestB)
 }

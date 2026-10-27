@@ -133,7 +133,10 @@ describe('Webhooks: sprint events', () => {
     expect(typeof signature).toBe('string')
     expect(String(signature)).toMatch(/^sha256=/)
 
-    await $api.sprints.remove(sprint.id).catch(() => {})
+    receiver.clear()
+    await $api.sprints.remove(sprint.id)
+    // Drain our own sprint.deleted here: delivered late, it would land in the next test.
+    await receiver.waitForDelivery('sprint.deleted')
   }, 15000)
 
   it('delivers sprint.deleted with ids only (no sprint body)', async () => {

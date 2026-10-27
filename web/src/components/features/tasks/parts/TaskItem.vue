@@ -1,8 +1,9 @@
 <template>
   <div
-    class="flex flex-col gap-3 p-3.5 rounded-2xl hover:bg-elevated bg-accented/20 transition-colors cursor-pointer"
+    class="group flex flex-col gap-3 p-3.5 rounded-2xl hover:bg-elevated bg-accented/20 transition-colors cursor-pointer"
     :data-testid="`task-item-${task.id}`"
     @click="handleOpenTask"
+    @contextmenu="handleContextMenu"
   >
     <div class="flex items-center gap-3">
       <div class="self-start mt-0.5 flex flex-col items-center gap-2">
@@ -32,6 +33,18 @@
           :class="ui?.additionalInfo"
           class="flex flex-wrap items-center gap-2"
         >
+          <span
+            v-if="showTaskId"
+            class="inline-flex"
+            @click.stop
+          >
+            <TaskIdCopy
+              :task-id="task.id"
+              badge
+              :data-testid="`task-card-id-${task.id}`"
+            />
+          </span>
+
           <!-- Date -->
           <UBadge
             v-if="task.endDate"
@@ -56,7 +69,25 @@
             size="md"
             data-testid="task-recurrence-badge"
           />
-          
+
+          <TaskSubtasksProgress
+            v-if="task.subtasks?.length"
+            :subtasks="task.subtasks"
+          />
+
+          <!-- Attached files -->
+          <UBadge
+            v-if="task.filesCount"
+            :label="String(task.filesCount)"
+            icon="i-lucide-paperclip"
+            color="neutral"
+            class="bg-elevated text-muted"
+            :ui="{ base: 'rounded-md', leadingIcon: 'size-3' }"
+            variant="subtle"
+            size="md"
+            data-testid="task-files-badge"
+          />
+
           <!-- Project -->
           <UBadge
             v-if="projectName"
@@ -123,21 +154,38 @@
           </div>
         </div>
       </div>
+
+      <UButton
+        v-if="showActions"
+        icon="i-lucide-ellipsis-vertical"
+        :aria-label="t('tasks.actions')"
+        :data-testid="`task-menu-trigger-${task.id}`"
+        color="neutral"
+        variant="ghost"
+        size="sm"
+        class="nodrag self-start -my-1 -me-1 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100"
+        @click.stop="handleMenuButton"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { type Task } from 'taskview-api'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useGoalListsStore } from '@/stores/goal-lists.store'
 import { useBaseScreenStore } from '@/stores/base-screen.store'
 import { useCollaborationStore } from '@/stores/collaboration.store'
 import { useTagsStore } from '@/stores/tag.store'
-import { formatDate } from '@vueuse/core'
+import { formatDate, normalizeDate } from '@vueuse/core'
 import { AllGoalPermissions } from '@/types/goals.types'
 import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
+import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
+import { useTaskActions } from '@/composables/useTaskActions'
+import TaskIdCopy from './TaskIdCopy.vue'
+import TaskSubtasksProgress from './TaskSubtasksProgress.vue'
 
 const TOGGLE_DELAY = 200
 const props = defineProps<{
@@ -174,10 +222,29 @@ function handleOpenTask() {
   openTask(props.task.id)
 }
 
+const { t } = useI18n()
+const { hasActions, openMenu } = useTaskActions()
+const showActions = computed(() => hasActions(props.task))
+
+function handleMenuButton(event: MouseEvent) {
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  openMenu({ task: props.task, point: { x: rect.right, y: rect.bottom } })
+}
+
+// Touch long-press also fires contextmenu; keep it for drag on kanban
+function handleContextMenu(event: MouseEvent) {
+  if (!showActions.value || !window.matchMedia('(pointer: fine)').matches) return
+  event.preventDefault()
+  openMenu({ task: props.task, point: { x: event.clientX, y: event.clientY } })
+}
+
 const goalListsStore = useGoalListsStore()
 const baseScreenStore = useBaseScreenStore()
 const collaborationStore = useCollaborationStore()
 const tagsStore = useTagsStore()
+const uiPreferencesStore = useUiPreferencesStore()
+
+const showTaskId = computed(() => uiPreferencesStore.settings.showTaskId === 1)
 
 const priorityColor = computed(() => {
   switch (props.task.priorityId) {
@@ -203,17 +270,17 @@ const listName = computed(() => {
     || ''
 })
 
+function formatTaskDate(date: string, time: string | null) {
+  const value = normalizeDate(time ? `${date}T${time}Z` : date)
+  const day = value.getFullYear() === new Date().getFullYear() ? 'DD.MMM' : 'DD.MMM.YYYY'
+  return formatDate(value, time ? `${day} HH:mm` : day)
+}
+
 const formattedDate = computed(() => {
   if (!props.task.endDate) return ''
-  if (props.task.endTime) {
-    const match = props.task.endTime.match(/^(\d{2}):(\d{2})/)
-    if (match) {
-      const utc = new Date(`${props.task.endDate}T${match[1]}:${match[2]}:00Z`)
-      return formatDate(utc, 'DD.MMM.YYYY HH:mm')
-    }
-  }
-  const [y, m, d] = props.task.endDate.split('-').map(Number)
-  return formatDate(new Date(y, m - 1, d), 'DD.MMM.YYYY')
+  const end = formatTaskDate(props.task.endDate, props.task.endTime)
+  if (!props.task.startDate) return end
+  return `${formatTaskDate(props.task.startDate, props.task.startTime)} → ${end}`
 })
 
 const isOverdue = computed(() => {
@@ -260,11 +327,14 @@ const transactionColor = computed(() => {
 })
 
 const hasAdditionalInfo = computed(() => {
-  return projectName.value ||
+  return showTaskId.value ||
+    projectName.value ||
     listName.value ||
     props.task.endDate ||
     props.task.amount ||
     props.task.recurrenceRuleId ||
+    props.task.filesCount ||
+    props.task.subtasks?.length ||
     assigneeEmails.value.length > 0 ||
     taskTags.value.length > 0
 })

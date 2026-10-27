@@ -1,0 +1,19 @@
+services:
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.50@sha256:c2658820e763294a9e9de7b36c81e59b879e3459148351aee4e31a126ca64860
+    restart: unless-stopped
+    environment:
+      AWS_ACCESS_KEY_ID: taskview
+      AWS_SECRET_ACCESS_KEY: taskview-secret
+      S3_BUCKET: taskview,taskview-test
+    ports:
+      - "8333:8333"
+    volumes:
+      - seaweedfs-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/status"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+volumes:
+  seaweedfs-data:

@@ -61,8 +61,8 @@ describe('API token scope on organization-level surfaces', () => {
         expect(login.status).toBe(200);
         jwt = login.data.access;
 
-        // A goal the caller actually owns: otherwise IsGoalOwnerByGoalId answers 403
-        // on its own and the webhook tests below would pass without the token check.
+        // A goal the caller actually owns: otherwise the webhook guard answers 403 for
+        // lack of project permissions and the tests below would pass without the token check.
         const goal = await api.post('/module/goals', { name: `scope-goal-${Date.now()}` }, asUser());
         expect(goal.status).toBe(200);
         ownedGoalId = goal.data.response.id;
@@ -87,8 +87,16 @@ describe('API token scope on organization-level surfaces', () => {
             'SELECT name FROM tv_auth.permissions WHERE permission_group = 6 ORDER BY name',
         );
         expect(result?.rows.map((row) => row.name)).toEqual([
-            'billing_can_manage', 'org_can_manage', 'org_can_manage_members', 'org_can_view', 'sso_can_manage', 'webhooks_can_manage',
+            'billing_can_manage', 'org_can_manage', 'org_can_manage_members', 'org_can_view', 'sso_can_manage',
         ]);
+    });
+
+    it('keeps the webhook permissions in a group of their own', async () => {
+        const db = Database.getInstance();
+        const result = await db.query<{ name: string }>(
+            'SELECT name FROM tv_auth.permissions WHERE permission_group = 9 ORDER BY name',
+        );
+        expect(result?.rows.map((row) => row.name)).toEqual(['webhooks_can_manage', 'webhooks_can_view']);
     });
 
     it('offers the new permissions for selection, with localized descriptions', async () => {
@@ -177,8 +185,8 @@ describe('API token scope on organization-level surfaces', () => {
         expect(response.status).toBe(403);
     });
 
-    it('lets webhooks_can_manage through on that same goal, proving the 403 came from the token', async () => {
-        const token = await issueToken([GoalPermissions.WEBHOOKS_CAN_MANAGE]);
+    it('lets webhooks_can_view through on that same goal, proving the 403 came from the token', async () => {
+        const token = await issueToken([GoalPermissions.WEBHOOKS_CAN_VIEW]);
 
         const response = await api.get(`/module/webhooks?goalId=${ownedGoalId}`, token);
 

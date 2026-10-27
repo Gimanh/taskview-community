@@ -16,6 +16,14 @@
     </div>
 
     <template v-if="config.scimEnabled">
+      <UAlert
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-user-x"
+        :title="t('scim.unmanagedMembersTitle')"
+        :description="t('scim.unmanagedMembersHint')"
+      />
+
       <div class="flex flex-col gap-1">
         <p class="text-xs text-dimmed">
           {{ t('scim.endpointUrl') }}
@@ -59,6 +67,8 @@
         :loading="generating"
         @click="generate"
       />
+
+      <OrgSsoScimGroups :config-id="config.id" />
     </template>
   </div>
 </template>
@@ -68,6 +78,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { $tvApi } from '@/plugins/axios'
 import type { SsoConfig } from 'taskview-api'
+import OrgSsoScimGroups from './OrgSsoScimGroups.vue'
 
 const props = defineProps<{
   config: SsoConfig

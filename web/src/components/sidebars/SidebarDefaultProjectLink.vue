@@ -24,6 +24,7 @@ import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
 import { useGoalsStore } from '@/stores/goals.store'
 
 const { t } = useI18n()
+const toast = useToast()
 const route = useRoute()
 const router = useRouter()
 const uiPrefs = useUiPreferencesStore()
@@ -44,6 +45,10 @@ const label = computed(() => {
 
 async function openDefaultProject() {
   const target = await resolveDefaultRoute()
-  if (target) await router.push(target)
+  if (!target) {
+    toast.add({ title: t('uiCustomization.others.defaultProjectUnavailable'), color: 'warning' })
+    return
+  }
+  await router.push(target)
 }
 </script>

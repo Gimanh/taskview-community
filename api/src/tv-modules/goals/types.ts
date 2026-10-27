@@ -40,3 +40,14 @@ export type GoalsArgCreateInbox = {
     ownerId: number;
     organizationId: number;
 };
+
+export type GoalsArgFetchOwnIds = {
+    userId: number;
+    organizationId?: number;
+    includeArchived?: boolean;
+};
+
+export type GoalsArgFetchAccessibleIds = {
+    organizationId?: number;
+    includeArchivedOwn?: boolean;
+};

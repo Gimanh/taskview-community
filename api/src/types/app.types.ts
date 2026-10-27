@@ -28,6 +28,15 @@ export const AppEnvSchema = z.object({
     // Max invite emails one user may trigger per hour (default 30)
     INVITE_EMAIL_HOURLY_LIMIT: z.string().optional(),
 
+    // Max login codes one account may request by email per hour (default 5)
+    LOGIN_CODE_HOURLY_LIMIT: z.string().optional(),
+
+    // Days a sign-in session lasts, however often its tokens are refreshed (default 90)
+    SESSION_MAX_AGE_DAYS: z.string().optional(),
+
+    // Let users delete their own account (default false)
+    ALLOW_ACCOUNT_DELETION: z.string().optional(),
+
     // Allow outgoing webhooks to target loopback/private/link-local addresses (default off, see SSRF)
     WEBHOOKS_ALLOW_PRIVATE_URLS: z.string().optional(),
 

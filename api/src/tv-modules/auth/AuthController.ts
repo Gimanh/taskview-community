@@ -10,6 +10,7 @@ import {
     ChangeOwnPasswordByPasswordSchema,
     ChangeOwnPasswordSchema,
     ChangePasswordDataScheme,
+    DeleteAccountSchema,
     type PasswordChangeConfirmationMode,
     ConfirmEmailReqDataSchema,
     RefreshTokenSchema,
@@ -17,8 +18,12 @@ import {
     type UserDbRecord,
     type UserJwtPayload,
     UserJwtPayloadSchema,
+    AuthTokenPayloadSchema,
+    type ValidateTokenArgs,
 } from '../../types/auth.types';
+import { safeEqual } from '../../utils/crypto';
 import { generateString, isEmail, time } from '../../utils/helpers';
+import { AccountDeletion } from './AccountDeletion';
 import { LoginMethods } from './LoginMethods';
 import EnEmailTemplate from './mail/confirm-email-en';
 import RuEmailTemplate from './mail/confirm-email-ru';
@@ -28,6 +33,7 @@ import { OrganizationRepository } from '../organizations/OrganizationRepository'
 import { GoalsRepository } from '../goals/GoalsRepository';
 
 const LOGIN_CODE_TTL_MS = 5 * 60 * 1000;
+const LOGIN_CODE_MAX_ATTEMPTS = 5;
 const PASSWORD_CHANGE_CODE_TTL_S = 15 * 60;
 const PASSWORD_CHANGE_CODE_RESEND_COOLDOWN_S = 60;
 // Seeded by migration 0.0.0 (app_permissions.sql) on self-hosted installs.
@@ -66,14 +72,15 @@ export default class AuthController {
             $logger.error('Can not parse JWT payload');
         }
 
+        // typ keeps the two apart: an access token cannot be exchanged for new tokens, a refresh token cannot authorize requests
         //@ts-expect-error 
-        const access = jwt.sign(cleanPayload.data!, process.env.JWT_SIGN as string, {
+        const access = jwt.sign({ ...cleanPayload.data!, typ: 'access' }, process.env.JWT_SIGN as string, {
             algorithm: this.jwtAlg,
             expiresIn: this.jwtExp,
         });
 
         //@ts-expect-error 
-        const refresh = jwt.sign(cleanPayload.data!, process.env.JWT_SIGN as string, {
+        const refresh = jwt.sign({ ...cleanPayload.data!, typ: 'refresh' }, process.env.JWT_SIGN as string, {
             algorithm: this.jwtAlg,
             expiresIn: this.jwtRefreshExp,
         });
@@ -86,19 +93,28 @@ export default class AuthController {
         };
     }
 
-    static validateTokens(token: string): Promise<UserJwtPayload | undefined> {
+    static validateTokens(args: ValidateTokenArgs): Promise<UserJwtPayload | undefined> {
         return new Promise((resolve) => {
             jwt.verify(
-                token,
+                args.token,
                 process.env.JWT_SIGN as string,
                 { algorithms: [process.env.JWT_ALG as Algorithm] },
                 (err, payload) => {
                     if (err) {
-                        // console.log('Can not verify token', err)
                         resolve(undefined);
-                    } else {
-                        resolve(payload as UserJwtPayload);
+                        return;
                     }
+                    // Other JWTs signed with JWT_SIGN (e.g. OAuth state) do not carry a session payload
+                    const parsed = AuthTokenPayloadSchema.safeParse(payload);
+                    if (!parsed.success) {
+                        resolve(undefined);
+                        return;
+                    }
+                    if (parsed.data.typ !== args.type) {
+                        resolve(undefined);
+                        return;
+                    }
+                    resolve({ id: parsed.data.id, userData: parsed.data.userData });
                 }
             );
         });
@@ -195,6 +211,18 @@ export default class AuthController {
             });
         }
 
+        const reservation = await req.appUser.authManager.repository.reserveLoginCodeSend({
+            userId: userData.id,
+            hourlyLimit: LoginMethods.loginCodeHourlyLimit(),
+        });
+        if (!reservation.allowed) {
+            $logger.warn({ userId: userData.id }, '[AuthController:sendLoginCode] hourly login code limit reached');
+            return res.status(429).send({
+                message: 'Too many codes requested, try again later.',
+                retryAfter: reservation.retryAfterSeconds,
+            });
+        }
+
         $logger.info(`[AuthController:sendLoginCode] updating login code for user`);
         await req.appUser.authManager.repository.updateLoginCode(code, email);
         $logger.info(`[AuthController:sendLoginCode] sending code by email to`);
@@ -226,13 +254,16 @@ export default class AuthController {
             return res.status(400).send('User not found');
         }
 
+        // Providers may return mixed-case addresses; every other login path stores emails lowercased
+        const email = user.email.trim().toLowerCase();
+
         let userData = await req.appUser.authManager.repository.getUserByLogin(
-            user.email,
-            isEmail(user.email)
+            email,
+            isEmail(email)
         );
 
         if (!userData) {
-            if (!(await this.canCreateAccount(req, user.email))) {
+            if (!(await this.canCreateAccount(req, email))) {
                 $logger.info(`[AuthController:loginByProvider] public registration disabled, email not invited`);
                 return res.redirect(`${process.env.APP_URL}/login?sso_error=registration-disabled`);
             }
@@ -242,7 +273,7 @@ export default class AuthController {
 
             const id = await req.appUser.authManager.repository.registerUserInDb({
                 login,
-                email: user.email,
+                email,
                 password: hashSync(password, 10),
                 block: 0,
                 confirmEmailCode: '',
@@ -253,17 +284,17 @@ export default class AuthController {
                 return res.status(500).send(`Can not register user`);
             }
 
-            await this.createPersonalWorkspace(id, user.email, login)
+            await this.createPersonalWorkspace(id, email, login)
 
             userData = await req.appUser.authManager.repository.getUserByLogin(
-                user.email,
-                isEmail(user.email)
+                email,
+                isEmail(email)
             );
         }
 
         if (!userData) {
             $logger.error(`Can not find user after registration`);
-            return res.status(500).send(`Can not find user ${user.email} after registration`);
+            return res.status(500).send(`Can not find user ${email} after registration`);
         }
 
         const code = this.generateLoginCode();
@@ -316,7 +347,7 @@ export default class AuthController {
         res.cookie(this.refreshTokenCookieName, refreshToken, {
             httpOnly: true,
             secure: true,
-            sameSite: "none",
+            sameSite: "lax",
             maxAge: this.parseLifetimeToMs(this.jwtRefreshExp),
         });
     }
@@ -325,7 +356,7 @@ export default class AuthController {
         res.clearCookie(this.refreshTokenCookieName, {
             httpOnly: true,
             secure: true,
-            sameSite: "none",
+            sameSite: "lax",
         });
     }
 
@@ -345,17 +376,24 @@ export default class AuthController {
             isEmail(data.data.email)
         );
 
-        if (!userData || !userData.remember_token?.trim()) {
-            return res.status(400).end();
+        // Unknown email, no pending code and a wrong code all answer the same way
+        if (!userData) {
+            return res.status(400).send({ message: 'Invalid code' });
         }
 
-        const tokenFromDb = userData.remember_token?.split(':');
-
-        if (tokenFromDb?.length !== 2) {
-            return res.status(400).end();
+        const attempt = await req.appUser.authManager.repository.registerLoginCodeAttempt(userData.id);
+        if (!attempt) {
+            return res.status(400).send({ message: 'Invalid code' });
         }
 
-        if (tokenFromDb[0] !== data.data.code) {
+        // The code stays in place after the limit, so the resend cooldown of sendLoginCode still applies
+        if (attempt.attempts > LOGIN_CODE_MAX_ATTEMPTS) {
+            return res.status(429).send({ message: 'Too many attempts, get new code' });
+        }
+
+        const tokenFromDb = attempt.rememberToken.split(':');
+
+        if (tokenFromDb.length !== 2 || !safeEqual(tokenFromDb[0], data.data.code)) {
             return res.status(400).send({ message: 'Invalid code' });
         }
 
@@ -365,7 +403,13 @@ export default class AuthController {
         }
 
         // Invalidate code immediately to prevent replay attacks
-        await req.appUser.authManager.repository.updateLoginCode(null, userData.email);
+        const consumed = await req.appUser.authManager.repository.consumeLoginCode({
+            userId: userData.id,
+            rememberToken: attempt.rememberToken,
+        });
+        if (!consumed) {
+            return res.status(400).send({ message: 'Invalid code' });
+        }
 
         if (userData.block) {
             if (!userData.confirm_email_code) {
@@ -580,6 +624,7 @@ export default class AuthController {
         const remindPasswordBody = `<html>
                                     <body>
                                         <p><a href="${remindPasswordUrl}"> Reset password link! </a></p>
+                                        <p>The link expires in 15 minutes.</p>
                                     </body>
                                     </html>`;
 
@@ -604,18 +649,31 @@ export default class AuthController {
             return res.status(400).send();
         }
 
+        // Unknown login, wrong, used and expired codes answer alike, so the reason never hints at a valid code
+        const invalidCode = () => res.status(400).send({ reason: 'invalid_or_expired_code' });
+
         const userData = await req.appUser.authManager.repository.getUserByLogin(parsedData.data.login);
 
         if (!userData) {
-            return res.status(400).send();
+            return invalidCode();
         }
 
-        if (userData.remind_password_code !== parsedData.data.code) {
-            return res.status(400).send();
+        if (!userData.remind_password_code || !safeEqual(userData.remind_password_code, parsedData.data.code)) {
+            return invalidCode();
         }
 
         if (parsedData.data.password !== parsedData.data.passwordRepeat) {
             return res.status(400).send();
+        }
+
+        // Same lifetime as the password-change code: the column is shared by both flows
+        const consumed = await req.appUser.authManager.repository.consumeReminderCode({
+            userId: userData.id,
+            code: parsedData.data.code,
+            issuedAfter: Math.floor(Date.now() / 1000) - PASSWORD_CHANGE_CODE_TTL_S,
+        });
+        if (!consumed) {
+            return invalidCode();
         }
 
         const passwordHash = hashSync(parsedData.data.password, 10);
@@ -627,7 +685,9 @@ export default class AuthController {
             return res.status(500).send();
         }
 
-        await req.appUser.authManager.repository.setReminderCodeAndTime(userData.email, null, null);
+        // A reset is account recovery: every session ends, including any held by whoever had access before
+        await req.appUser.authManager.sessionStorage.deleteAllSessions(userData.id);
+        this.clearRefreshToken(res);
 
         return res.status(200).send({ reset: true });
     };
@@ -652,25 +712,23 @@ export default class AuthController {
     };
 
     refreshTokens = async (req: Request, res: Response) => {
-        let refreshToken = req.cookies[this.refreshTokenCookieName];
+        const cookieToken: string | undefined = req.cookies[this.refreshTokenCookieName] || undefined;
+        const bodyData = RefreshTokenSchema.safeParse(req.body);
+        const bodyToken = bodyData.success && bodyData.data.refreshToken ? bodyData.data.refreshToken : undefined;
 
-        if (!refreshToken) {
-            const refreshData = RefreshTokenSchema.safeParse(req.body);
-
-            if (!refreshData.success) {
-                return res.status(400).send({ message: 'Invalid refresh token' });
-            }
-
-            refreshToken = refreshData.data.refreshToken;
-            $logger.info(`Refresh token found in body`);
-        } else {
-            $logger.info(`Refresh token found in cookies`);
+        if (!cookieToken && !bodyToken) {
+            return res.status(400).send({ message: 'Invalid refresh token' });
         }
 
-        const payload = await AuthController.validateTokens(refreshToken);
+        const cookiePayload = cookieToken ? await AuthController.validateTokens({ token: cookieToken, type: 'refresh' }) : undefined;
+        const bodyPayload = bodyToken ? await AuthController.validateTokens({ token: bodyToken, type: 'refresh' }) : undefined;
+        const payload = cookiePayload ?? bodyPayload;
+        $logger.info(
+            `Refresh token source: ${cookiePayload ? 'cookie' : bodyPayload ? 'body' : 'none valid'}` +
+            ` (cookie: ${cookieToken ? 'yes' : 'no'}, body: ${bodyToken ? 'yes' : 'no'})`
+        );
 
         if (!payload) {
-            $logger.info('Refresh token validation failed');
             this.clearRefreshToken(res);
             return res.status(400).end();
         }
@@ -687,7 +745,9 @@ export default class AuthController {
 
         await this.setRefreshToken(res, newTokens.refresh);
 
-        return res.json(newTokens);
+        if (bodyPayload?.id === payload.id) return res.json(newTokens);
+        const { refresh: _refresh, ...withoutRefresh } = newTokens;
+        return res.json(withoutRefresh);
     };
 
     getLoginOptions = async (_req: Request, res: Response) => {
@@ -886,39 +946,51 @@ export default class AuthController {
 
         const code = generateString(12);
 
+        // Saved before sending, so the emailed code is never one the server does not know
+        const insertCode = await req.appUser.authManager.repository.addDeleteAccountCode({ code, userId });
+        if (!insertCode) {
+            $logger.error(`Can not insert account deletion code for user`);
+            return res.status(500).end();
+        }
+
         const sendResult = await Email.send({
-            text: code,
-            to: userEmail, //'gimanhead@gmail.com',
-            subject: 'Account deletion code!',
+            text: `Your TaskView account deletion code is ${code}\n\nThe code expires in 15 minutes.\n\nIf you didn't request this, ignore this email and consider changing your password.`,
+            to: userEmail,
+            subject: 'Account deletion code',
             from: process.env.SMTP_FROM_EMAIL as string,
         });
 
         if (!sendResult) {
             $logger.error(`Can not send account deletion code for user`);
         }
-        const insertCode = await req.appUser.authManager.repository.addDeleteAccountCode(code, userId);
-
-        if (!insertCode) {
-            $logger.error(`Can not insert account deletion code for user`);
-            return res.status(500).end();
-        }
         return res.status(200).end();
     };
 
+    getAccountDeletionOptions = async (_req: Request, res: Response) => {
+        return res.status(200).send({ allowed: AccountDeletion.allowed() });
+    };
+
     deleteUserAccaunt = async (req: Request, res: Response) => {
-        const { code } = req.body;
+        const invalidCode = () => res.status(400).send({ reason: 'invalid_or_expired_code' });
+
+        const parsed = DeleteAccountSchema.safeParse(req.body);
+        if (!parsed.success) {
+            return invalidCode();
+        }
         const userId = req.appUser.getUserData()?.id;
         if (!userId) {
             $logger.fatal(`Request for account deletion without userId in request`);
             return res.status(400).end();
         }
 
-        const deleteResult = await req.appUser.authManager.repository.deleteUserAccount(code, userId);
-
-        if (!deleteResult) {
-            $logger.error(`Can not delete user account for code ${code}`);
-            return res.status(500).end();
+        const deleted = await req.appUser.authManager.repository.deleteAccountByCode({
+            userId,
+            code: parsed.data.code,
+            ttlSeconds: AccountDeletion.CODE_TTL_S,
+        });
+        if (!deleted) {
+            return invalidCode();
         }
-        return res.status(200).end();
+        return res.tvJson({ del: true });
     };
 }

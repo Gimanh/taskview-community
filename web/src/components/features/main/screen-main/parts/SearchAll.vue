@@ -24,7 +24,7 @@
               taskId: task.id,
             },
           }"
-          class="flex w-full text-base px-4 py-2"
+          class="flex w-full text-base text-start px-4 py-2"
         >
           {{ task.description }}
         </ULink>

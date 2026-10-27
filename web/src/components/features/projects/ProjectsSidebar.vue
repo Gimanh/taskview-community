@@ -26,16 +26,18 @@ import ProjectsList from '@/components/features/projects/ProjectsList.vue'
 import ArchiveList from '@/components/features/projects/ArchiveList.vue'
 import type { Project, ProjectSaveData } from '@/components/features/projects/types'
 import { useProjectRoute } from '@/composables/useProjectRoute'
+import { useInbox } from '@/composables/useInbox'
 
 const router = useRouter()
 const { projectRoute } = useProjectRoute()
+const { isOwnInbox } = useInbox()
 
 const goalsStore = useGoalsStore()
 const orgStore = useOrganizationStore()
 const { goals } = storeToRefs(goalsStore)
 
-const activeProjects = computed(() => goals.value.filter(p => p.archive === 0 && !p.isInbox))
-const archivedProjects = computed(() => goals.value.filter(p => p.archive === 1 && !p.isInbox))
+const activeProjects = computed(() => goals.value.filter(p => p.archive === 0 && !isOwnInbox(p)))
+const archivedProjects = computed(() => goals.value.filter(p => p.archive === 1 && !isOwnInbox(p)))
 
 
 watch(() => orgStore.currentOrg, async () => {

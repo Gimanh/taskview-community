@@ -15,7 +15,7 @@ export const corsMiddleware = cors({
     credentials: true,
     maxAge: 600,
     origin(origin, cb) {
-        if (!origin || origin === 'null') return cb(null, true);
+        if (!origin) return cb(null, true);
         if (allow.has(origin)) return cb(null, true);
         return cb(new Error(`CORS blocked origin: ${origin}`), false);
     },

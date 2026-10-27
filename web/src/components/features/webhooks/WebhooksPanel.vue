@@ -11,13 +11,24 @@
       <p>{{ t('webhooks.selectProject') }}</p>
     </div>
 
+    <div
+      v-else-if="!canViewWebhooks"
+      class="flex flex-col items-center justify-center h-64 text-muted"
+    >
+      <UIcon
+        name="i-lucide-lock"
+        class="size-12 mb-4"
+      />
+      <p>{{ t('webhooks.noAccess') }}</p>
+    </div>
+
     <template v-else>
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold">
           {{ projectName }}
         </h2>
         <UButton
-          v-if="canManageIntegrations"
+          v-if="canManageWebhooks"
           :label="t('webhooks.add')"
           icon="i-lucide-plus"
           color="primary"
@@ -51,7 +62,7 @@
           v-for="item in webhooksStore.webhooks"
           :key="item.id"
           :webhook="item"
-          :can-manage="canManageIntegrations"
+          :can-manage="canManageWebhooks"
           @toggle="handleToggle"
           @delete="handleDelete"
           @show-deliveries="openDeliveries"
@@ -75,6 +86,7 @@
     <WebhookDeliveries
       v-model:open="isDeliveriesOpen"
       :webhook-id="selectedWebhookId"
+      :can-manage="canManageWebhooks"
     />
   </div>
 </template>
@@ -96,7 +108,7 @@ const { t } = useI18n()
 const { projectId } = useAppRouteInfo()
 const goalsStore = useGoalsStore()
 const webhooksStore = useWebhooksStore()
-const { canManageIntegrations } = useGoalPermissions()
+const { canViewWebhooks, canManageWebhooks } = useGoalPermissions()
 
 const loading = ref(false)
 const isAddModalOpen = ref(false)
@@ -109,13 +121,13 @@ const hasGoalSelected = computed(() => projectId.value > 0)
 const projectName = computed(() => goalsStore.goalMap.get(projectId.value)?.name ?? '')
 
 async function fetchData() {
-  if (!hasGoalSelected.value) return
+  if (!hasGoalSelected.value || !canViewWebhooks.value) return
   loading.value = true
   await webhooksStore.fetchWebhooks(projectId.value)
   loading.value = false
 }
 
-watch(projectId, fetchData, { immediate: true })
+watch([projectId, canViewWebhooks], fetchData, { immediate: true })
 
 async function handleToggle(id: number, isActive: boolean) {
   await webhooksStore.updateWebhook({ id, isActive })

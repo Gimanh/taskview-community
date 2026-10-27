@@ -151,6 +151,10 @@ watch(() => model.value?.start, (start) => {
   isRange.value = Boolean(start)
 })
 
+watch(() => !!model.value?.start, (hasStart) => {
+  isRange.value = hasStart
+}, { immediate: true })
+
 // drop the start date when switching back to single-date mode
 watch(isRange, (on) => {
   if (!on && model.value?.start) {

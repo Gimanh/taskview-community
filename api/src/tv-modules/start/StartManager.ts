@@ -1,14 +1,13 @@
 import type { AppUser } from '../../core/AppUser';
-import { $logger } from '../../modules/logget';
+import type { GoalAccess } from '../../core/GoalAccess';
 import { GoalPermissions } from '../../types/auth.types';
-import { logError } from '../../utils/api';
-import type { GoalItemForClient } from '../goals/GoalItemForClient';
+import { hideUnwatchableTaskFields } from '../tasks/task-field-visibility';
 import { StartRepository } from './StartRepository';
+import type { StartTasksVisibilityArgs, StartVisibleTask } from './start.types';
 
 export class StartManager {
     public readonly user: AppUser;
     public readonly repository: StartRepository;
-    private sharedGoals: GoalItemForClient[] = [];
 
     constructor(user: AppUser) {
         this.user = user;
@@ -16,80 +15,55 @@ export class StartManager {
     }
 
     async fetchAllLists(organizationId?: number) {
-        return await this.repository.fetchAllLists(this.user, organizationId);
+        const access = await this.fetchGoalAccess(organizationId);
+        return await this.repository.fetchListsForGoals(access.goalIdsWith(GoalPermissions.GOAL_CAN_WATCH_CONTENT));
     }
 
     async fetchAllState(tz: string, organizationId?: number) {
-        await this.fetchSharedGoals(organizationId);
-        const goalIds = await this.getAllGoalsIds(organizationId);
-        const usersAndProjects = await this.fetchProjectsAndUsers(organizationId);
-        const tasks = await this.repository.fetchAllActiveTasksForGoals(goalIds, usersAndProjects.assignees);
-        const tasksToday = await this.repository.fetchAllTodayTasksForGoals(goalIds, tz, usersAndProjects.assignees);
-        const tasksUpcoming = await this.repository.fetchUpcomingTasksForGoals(goalIds, tz, usersAndProjects.assignees);
-        const tasksLastCompleted = await this.repository.fetchLastCompletedTasksForGoals(
-            goalIds,
-            usersAndProjects.assignees
+        const access = await this.fetchGoalAccess(organizationId);
+        const goalIds = access.goalIdsWith(GoalPermissions.COMPONENT_CAN_WATCH_CONTENT);
+        const assigneeGoalIds = goalIds.filter((id) =>
+            access.checkerFor(id).hasPermissions(GoalPermissions.TASKS_CAN_WATCH_ASSIGNED_USERS)
         );
-        return {
-            tasks,
-            tasksToday,
-            tasksUpcoming,
-            tasksLastCompleted,
-            users: usersAndProjects.users,
-            assignees: usersAndProjects.assignees,
-        };
-    }
 
-    async fetchSharedGoals(organizationId?: number) {
-        this.sharedGoals = await this.user.goalsManager.fetchSharedGoals(organizationId);
-    }
-
-    async getAllGoalsIds(organizationId?: number) {
-        const ownGoalIds = await this.user.goalsManager.fetchAllOwnGoalsIds(organizationId);
-
-        const sharedGoalIds: number[] = [];
-        this.sharedGoals.forEach((g) => {
-            if (g.hasPermissions(GoalPermissions.GOAL_CAN_WATCH_CONTENT)) {
-                sharedGoalIds.push(g.id);
-            }
-        });
-
-        const ids = new Set([...ownGoalIds, ...sharedGoalIds]);
-        return [...ids];
-    }
-
-    async fetchProjectsAndUsers(organizationId?: number) {
-        const ownGoalIds = await this.user.goalsManager.fetchAllOwnGoalsIds(organizationId)
-
-        const goalsIdsForUsers: number[] = [...ownGoalIds]
-        const goalsIdsForAssignee: number[] = [...ownGoalIds]
-
-        this.sharedGoals.forEach((goal) => {
-            if (goal.hasPermissions(GoalPermissions.GOAL_CAN_MANAGE_USERS)) {
-                goalsIdsForUsers.push(goal.id)
-            }
-
-            if (goal.hasPermissions(GoalPermissions.TASKS_CAN_WATCH_ASSIGNED_USERS)) {
-                goalsIdsForAssignee.push(goal.id)
-            }
-        })
-
-        const users = await this.repository.fetchUsersByProjects(goalsIdsForUsers)
-        const assignees = await this.repository.fetchAssigneesForTasks(goalsIdsForAssignee)
+        const users = await this.repository.fetchUsersByProjects(access.goalIdsWith(GoalPermissions.GOAL_CAN_MANAGE_USERS));
+        const assignees = await this.repository.fetchAssigneesForTasks(assigneeGoalIds);
+        const tasks = await this.repository.fetchAllActiveTasksForGoals(goalIds, assignees);
+        const tasksToday = await this.repository.fetchAllTodayTasksForGoals(goalIds, tz, assignees);
+        const tasksUpcoming = await this.repository.fetchUpcomingTasksForGoals(goalIds, tz, assignees);
+        const tasksLastCompleted = await this.repository.fetchLastCompletedTasksForGoals(goalIds, assignees);
 
         return {
+            tasks: this.applyTaskVisibility({ tasks, access }),
+            tasksToday: this.applyTaskVisibility({ tasks: tasksToday, access }),
+            tasksUpcoming: this.applyTaskVisibility({ tasks: tasksUpcoming, access }),
+            tasksLastCompleted: this.applyTaskVisibility({ tasks: tasksLastCompleted, access }),
             users,
             assignees,
-        }
+        };
     }
 
     async searchTaskInAllProjects(description?: string, organizationId?: number) {
         if (!description) return [];
 
-        await this.fetchSharedGoals(organizationId);
-        const goalIds = await this.getAllGoalsIds(organizationId);
-
+        const access = await this.fetchGoalAccess(organizationId);
+        const goalIds = access.goalIdsWith(GoalPermissions.COMPONENT_CAN_WATCH_CONTENT);
         const tasks = await this.repository.searchTask({ description, goalsIds: goalIds });
-        return tasks;
+        return this.applyTaskVisibility({ tasks, access });
+    }
+
+    private async fetchGoalAccess(organizationId?: number): Promise<GoalAccess> {
+        const goalIds = await this.user.goalsManager.fetchAccessibleGoalIds({ organizationId });
+        return await this.user.permissionsFetcher.getAccessForGoals(goalIds);
+    }
+
+    private applyTaskVisibility<T extends StartVisibleTask>(args: StartTasksVisibilityArgs<T>): T[] {
+        return args.tasks.map((task) => {
+            const checker = args.access.checkerFor(task.goalId);
+            if (!checker.hasPermissions(GoalPermissions.TASKS_CAN_WATCH_TAGS)) {
+                task.tags = [];
+            }
+            return hideUnwatchableTaskFields({ task, checker });
+        });
     }
 }

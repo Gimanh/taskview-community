@@ -9,15 +9,19 @@ import { generateLetters, generateString } from '../../utils/helpers'
 import AuthModel from '../auth/AuthModel'
 import { GoalsRepository } from '../goals/GoalsRepository'
 import { OrganizationRepository } from '../organizations/OrganizationRepository'
+import { ScimGroupProjectsManager } from '../scim/ScimGroupProjectsManager'
+import { ScimRepository } from '../scim/ScimRepository'
 import { createSsoProvider } from './providers/provider-factory'
 import { SsoRepository } from './SsoRepository'
 import { parseSamlMetadata } from './saml-metadata-parser'
-import { generateLoginCode, isSsoDomainVerified, stripSecrets, validateMetadataUrl } from './sso.utils'
+import { checkSsoFetchUrl, generateLoginCode, isSsoDomainVerified, stripSecrets } from './sso.utils'
 import {
+  ScimGroupProjectArkType,
   SsoConfigArkTypeCreate,
   SsoConfigArkTypeUpdate,
   SsoDomainNotVerifiedError,
   type ApplySsoIdpEmailArgs,
+  type CheckSsoScimAccessArgs,
   type ResolveSsoUserArgs,
   type ResolveSsoUserResult,
   type SsoCallbackError,
@@ -29,6 +33,8 @@ export class SsoController {
   private readonly authModel = new AuthModel()
   private readonly orgRepo = new OrganizationRepository()
   private readonly goalsRepo = new GoalsRepository()
+  private readonly scimRepo = new ScimRepository()
+  private readonly scimGroupProjects = new ScimGroupProjectsManager()
 
   private async resolveLogin(preferredUsername?: string): Promise<string> {
     const base = preferredUsername?.trim().slice(0, 50)
@@ -127,6 +133,25 @@ export class SsoController {
     return { ok: true, user: created }
   }
 
+  // With SCIM on, the identity provider decides who is in the organization: signing in must not
+  // bring back someone it deactivated or deleted, nor add someone it never provisioned
+  private async checkScimAccess(args: CheckSsoScimAccessArgs): Promise<SsoCallbackError | null> {
+    const { config } = args
+    if (!config.scimEnabled) return null
+
+    const identity = await this.ssoRepo.findIdentity({ ssoConfigId: config.id, externalId: args.externalId })
+    const account = identity ? await this.authModel.fetchUserById(identity.userId) : false
+    const emails = [...new Set([args.email, account ? account.email : null].filter((email): email is string => !!email).map((email) => email.toLowerCase()))]
+
+    const scimUser = await this.scimRepo.findForSignIn({ ssoConfigId: config.id, emails })
+    if (scimUser) return scimUser.active ? null : 'account_deactivated'
+
+    for (const email of emails) {
+      if (await this.orgRepo.getMemberByEmail(config.organizationId, email)) return null
+    }
+    return 'not_provisioned'
+  }
+
   initiateLogin = async (req: Request, res: Response) => {
     const configId = Number(req.params.configId)
     if (!configId) return res.status(400).tvJson({ message: 'Invalid config ID' })
@@ -170,6 +195,16 @@ export class SsoController {
       const domain = ssoResult.email.split('@')[1]
       if (domain !== config.emailDomainRestriction) {
         return res.status(403).tvJson({ message: 'Email domain not allowed for this SSO provider' })
+      }
+
+      const scimDenied = await this.checkScimAccess({
+        config,
+        email: ssoResult.email,
+        externalId: ssoResult.externalId,
+      })
+      if (scimDenied) {
+        $logger.info(`SSO: sign-in to SSO config ${config.id} refused by SCIM (${scimDenied})`)
+        return this.redirectSsoError(res, scimDenied)
       }
 
       const resolved = await this.resolveSsoUser({
@@ -326,7 +361,7 @@ export class SsoController {
     const metadataUrl = req.query.url as string
     if (!metadataUrl) return res.status(400).tvJson({ message: 'url is required' })
 
-    const urlError = validateMetadataUrl(metadataUrl)
+    const urlError = await checkSsoFetchUrl(metadataUrl)
     if (urlError) return res.status(400).tvJson({ message: urlError })
 
     try {
@@ -402,6 +437,44 @@ export class SsoController {
     }
 
     return res.tvJson({ scimEnabled: config.scimEnabled })
+  }
+
+  listScimGroups = async (req: Request, res: Response) => {
+    const config = await this.ssoRepo.findById(Number(req.params.configId))
+    if (!config) return res.status(404).tvJson({ message: 'SSO config not found' })
+
+    return res.tvJson(await this.scimGroupProjects.overview({ config }))
+  }
+
+  linkScimGroupProject = async (req: Request, res: Response) => {
+    const groupId = Number(req.params.groupId)
+    const goalId = Number(req.params.goalId)
+    if (!Number.isInteger(groupId) || !Number.isInteger(goalId)) return res.status(400).end()
+
+    const body = ScimGroupProjectArkType(req.body)
+    if (body instanceof type.errors) return res.status(400).tvJson({ message: body.summary })
+
+    const config = await this.ssoRepo.findById(Number(req.params.configId))
+    if (!config) return res.status(404).tvJson({ message: 'SSO config not found' })
+
+    const result = await this.scimGroupProjects.link({ config, groupId, goalId, roleId: body.roleId })
+    if (result === 'group_not_found') return res.status(404).tvJson({ message: 'SCIM group not found' })
+    if (result === 'project_not_found') return res.status(404).tvJson({ message: 'Project not found' })
+    if (result === 'role_not_in_project') return res.status(400).tvJson({ message: 'The role does not belong to this project' })
+    return res.tvJson(true)
+  }
+
+  unlinkScimGroupProject = async (req: Request, res: Response) => {
+    const groupId = Number(req.params.groupId)
+    const goalId = Number(req.params.goalId)
+    if (!Number.isInteger(groupId) || !Number.isInteger(goalId)) return res.status(400).end()
+
+    const config = await this.ssoRepo.findById(Number(req.params.configId))
+    if (!config) return res.status(404).tvJson({ message: 'SSO config not found' })
+
+    const result = await this.scimGroupProjects.unlink({ config, groupId, goalId })
+    if (result === 'not_found') return res.status(404).tvJson({ message: 'Link not found' })
+    return res.tvJson(true)
   }
 
   deleteConfig = async (req: Request, res: Response) => {

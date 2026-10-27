@@ -23,8 +23,7 @@ export const canAccessTimeEntry = (action: Action) => async (req: Request, res: 
 
     if (action === 'view') {
         if (
-            checker.hasPermissions(GoalPermissions.TIMETRACKING_CAN_VIEW) ||
-            checker.hasPermissions(GoalPermissions.TIMETRACKING_CAN_MANAGE_ALL)
+            checker.hasPermissions(GoalPermissions.TIMETRACKING_CAN_VIEW)
         ) {
             return next()
         }

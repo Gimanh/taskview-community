@@ -142,9 +142,9 @@ export const TvPermissions: Record<Uppercase<keyof GoalPermissions>, keyof GoalP
      */
     TIMETRACKING_CAN_LOG: 'timetracking_can_log',
     /**
-     * Full time-tracking access on this project: log own time, view all entries
-     * (own and other members'), and edit/delete entries of any project member.
-     * Implies both view and log permissions.
+     * Edit and delete time entries of any project member and stop their timers.
+     * Does not include viewing entries (TIMETRACKING_CAN_VIEW) or logging own
+     * time (TIMETRACKING_CAN_LOG) — grant those separately.
      */
     TIMETRACKING_CAN_MANAGE_ALL: 'timetracking_can_manage_all',
 
@@ -164,6 +164,33 @@ export const TvPermissions: Record<Uppercase<keyof GoalPermissions>, keyof GoalP
      * Can view sprint analytics (burndown, velocity)
      */
     SPRINT_CAN_VIEW_ANALYTICS: 'sprint_can_view_analytics',
+
+    /**
+     * Can list, open and download project files
+     */
+    FILE_CAN_VIEW: 'file_can_view',
+    /**
+     * Can upload, rename, link/unlink and delete project files
+     */
+    FILE_CAN_MANAGE: 'file_can_manage',
+
+    /**
+     * Can view the project's automation rules
+     */
+    AUTOMATION_CAN_VIEW: 'automation_can_view',
+    /**
+     * Can create, edit, enable, disable and delete automation rules
+     */
+    AUTOMATION_CAN_MANAGE: 'automation_can_manage',
+
+    /**
+     * Can see the project's webhooks, their URLs and the delivery history with payloads
+     */
+    WEBHOOKS_CAN_VIEW: 'webhooks_can_view',
+    /**
+     * Can create, edit, delete and test the project's webhooks and retry deliveries
+     */
+    WEBHOOKS_CAN_MANAGE: 'webhooks_can_manage',
 } as const;
 
 export type GoalPermissions = {
@@ -217,4 +244,13 @@ export type GoalPermissions = {
     sprint_can_manage?: true;
     sprint_can_assign_tasks?: true;
     sprint_can_view_analytics?: true;
+
+    file_can_view?: true;
+    file_can_manage?: true;
+
+    automation_can_view?: true;
+    automation_can_manage?: true;
+
+    webhooks_can_view?: true;
+    webhooks_can_manage?: true;
 };

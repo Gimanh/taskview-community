@@ -55,16 +55,22 @@ const code = ref('')
 
 async function handleConfirm() {
   const result = await $api
-    .post<AppResponse<{ del: boolean }>>('/module/auth/delete/account', { code: code.value })
+    .post<AppResponse<{ del: boolean }>>('/module/auth/delete/account', { code: code.value.trim() })
     .catch((err) => console.log(err))
 
-  if (result && result.data.response.del) {
+  if (!result?.data?.response?.del) {
     toast.add({
-      title: t('account.deleted'),
-      color: 'success',
+      title: t('account.deleteCodeInvalid'),
+      color: 'error',
     })
-    $ls.invalidateTokens()
-    router.push('/')
+    return
   }
+
+  toast.add({
+    title: t('account.deleted'),
+    color: 'success',
+  })
+  $ls.invalidateTokens()
+  router.push('/')
 }
 </script>

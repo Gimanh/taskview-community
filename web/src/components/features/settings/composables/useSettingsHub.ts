@@ -8,6 +8,9 @@ import { useUserStore } from '@/stores/user.store'
 import { useOrganizationStore } from '@/stores/organization.store'
 import { useOrgSwitcher } from '@/composables/useOrgSwitcher'
 import { saveLocale } from '@/plugins/i18n'
+import { useTaskView } from '@/composables/useTaskView'
+import { SHORTCUTS } from '@/shortcuts/registry'
+import { useShortcutsHelp } from '@/shortcuts/useShortcutsHelp'
 import type { SettingsSection } from '../types'
 
 const LANGUAGE_OPTIONS = [
@@ -25,6 +28,8 @@ export function useSettingsHub() {
   const userStore = useUserStore()
   const orgStore = useOrganizationStore()
   const { switchOrg } = useOrgSwitcher()
+  const { isDesktop } = useTaskView()
+  const shortcutsHelp = useShortcutsHelp()
 
   const identity = computed(() => ({
     name: userStore.login || userStore.email,
@@ -74,6 +79,14 @@ export function useSettingsHub() {
           ],
           get: () => colorMode.value,
           set: (value) => { colorMode.value = value as typeof colorMode.value },
+        },
+        {
+          kind: 'nav',
+          key: 'theme-colors',
+          icon: 'i-lucide-palette',
+          color: 'cyan',
+          title: t('uiCustomization.theme.navTitle'),
+          to: { name: 'ui-customization', query: { tab: 'theme' } },
         },
         {
           kind: 'select',
@@ -133,7 +146,25 @@ export function useSettingsHub() {
       ],
     }
 
-    return [account, appearance, layout, about]
+    const shortcuts: SettingsSection = {
+      key: 'shortcuts',
+      title: '',
+      items: [
+        {
+          kind: 'action',
+          key: 'shortcuts',
+          icon: 'i-lucide-keyboard',
+          color: 'zinc',
+          title: t('userMenu.shortcuts'),
+          kbds: SHORTCUTS.showShortcuts.kbds,
+          onSelect: shortcutsHelp.open,
+        },
+      ],
+    }
+
+    return isDesktop.value
+      ? [account, appearance, layout, about, shortcuts]
+      : [account, appearance, layout, about]
   })
 
   return { identity, sections }

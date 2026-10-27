@@ -1,4 +1,5 @@
 import { type } from 'arktype'
+import { THEME_NEUTRAL_COLORS, THEME_PRIMARY_COLORS } from 'taskview-api'
 
 const MAX_SECTIONS = 20
 const MAX_ITEMS_PER_SECTION = 200
@@ -42,10 +43,35 @@ const firstDayOfWeekArkType = type('number.integer').narrow((v, ctx) =>
   v >= 0 && v <= 6 ? true : ctx.mustBe('an integer 0..6 (0=Sunday)'),
 )
 
+const hexColorArkType = type(/^#[0-9a-fA-F]{6}$/)
+
+const CustomThemePaletteArkType = type({
+  '+': 'reject',
+  background: hexColorArkType,
+  surface: hexColorArkType,
+  border: hexColorArkType,
+  text: hexColorArkType,
+  accent: hexColorArkType,
+})
+
+const CustomThemeArkType = type({
+  '+': 'reject',
+  light: CustomThemePaletteArkType,
+  dark: CustomThemePaletteArkType,
+})
+
 export const UiSettingsArkType = type({
   'firstDayOfWeek?': firstDayOfWeekArkType,
   'defaultProjectId?': 'number.integer >= 1',
   'defaultView?': "'tasks' | 'kanban' | 'graph' | 'sprints'",
+  'taskSortBy?': "'date' | 'priority'",
+  'taskSortFirstNew?': '0 | 1',
+  'showTaskId?': '0 | 1',
+  'keyboardShortcuts?': '0 | 1',
+  'primaryColor?': type.enumerated(...THEME_PRIMARY_COLORS),
+  'neutralColor?': type.enumerated(...THEME_NEUTRAL_COLORS),
+  'customTheme?': CustomThemeArkType,
+  'customThemeActive?': '0 | 1',
 })
 
 export type UiSettings = typeof UiSettingsArkType.infer

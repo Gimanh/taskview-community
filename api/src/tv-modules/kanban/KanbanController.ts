@@ -3,6 +3,7 @@ import {
     KanbanArkTypeFetchTasksForColumn,
     KanbanArkTypeFilters,
     KanbanArkTypeGetTasksOrderForColumnAndCursor,
+    KanbanArkTypeReorderStatuses,
     KanbanArkTypeUpdateTasksOrder,
     KanbanSchemaAddStatus,
     KanbanSchemaFetchAllStatuses,
@@ -27,6 +28,20 @@ export class KanbanController {
         }
 
         return res.tvJson(await req.appUser.kanbanManager.updateStatus(data.data));
+    };
+
+    reorderStatuses = async (req: Request, res: Response) => {
+        const data = KanbanArkTypeReorderStatuses(req.body);
+        if (data instanceof ArkErrors) {
+            return res.status(400).send(data.summary);
+        }
+
+        const result = await req.appUser.kanbanManager.reorderStatuses({ goalId: data.goalId, statusIds: data.statusIds });
+        if (!result.ok) {
+            return res.status(result.reason === 'invalid_order' ? 400 : 500).json({ code: result.reason });
+        }
+
+        return res.tvJson(result.statuses);
     };
 
     addStatus = async (req: Request, res: Response) => {
@@ -79,6 +94,8 @@ export class KanbanController {
             return res.status(400).send(data.summary);
         }
 
-        return res.tvJson(await req.appUser.kanbanManager.updateTasksOrderAndColumn(data));
+        const result = await req.appUser.kanbanManager.updateTasksOrderAndColumn(data);
+        if (!result) return res.status(404).end();
+        return res.tvJson(result);
     };
 }

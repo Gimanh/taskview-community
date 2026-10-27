@@ -51,12 +51,18 @@
           {{ userStore.email }}
         </div>
 
-        <div>
+        <div v-if="deletionAllowed">
           <DeleteAccountButton
             @code-sent="showCodeModal = true"
             @error="onCodeSendError"
           />
         </div>
+        <p
+          v-else-if="deletionAllowed === false"
+          class="text-sm text-muted"
+        >
+          {{ t('account.deletionDisabled') }}
+        </p>
       </div>
     </UPageCard>
 
@@ -65,8 +71,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import $api from '@/helpers/axios'
+import { logError } from '@/helpers/Helper'
 import { useUserStore } from '@/stores/user.store'
 import DeleteAccountButton from './parts/DeleteAccountButton.vue'
 import DeleteAccountCodeModal from './parts/DeleteAccountCodeModal.vue'
@@ -82,6 +90,15 @@ const userStore = useUserStore()
 const toast = useToast()
 
 const showCodeModal = ref(false)
+// null until the server answers, so the button does not flash on servers where deletion is off
+const deletionAllowed = ref<boolean | null>(null)
+
+onMounted(async () => {
+  const result = await $api
+    .get<{ allowed: boolean }>('/module/auth/delete/account/options')
+    .catch(logError)
+  if (result) deletionAllowed.value = result.data.allowed
+})
 
 // Seeded default user on self-hosted installs (migration 0.0.0); backend enforces the same check
 const isDefaultUser = computed(() => userStore.email.toLowerCase() === 'test@mail.dest')

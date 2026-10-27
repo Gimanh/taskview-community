@@ -1,6 +1,7 @@
 import { createHash } from 'crypto'
 import type { NextFunction, Request, Response } from 'express'
 import { SsoRepository } from '../../sso/SsoRepository'
+import { isSsoDomainVerified } from '../../sso/sso.utils'
 import { OrganizationRepository } from '../../organizations/OrganizationRepository'
 
 const ssoRepo = new SsoRepository()
@@ -25,6 +26,14 @@ export const ScimAuth = async (req: Request, res: Response, next: NextFunction) 
       schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'],
       detail: 'Invalid SCIM token',
       status: '401',
+    })
+  }
+
+  if (!isSsoDomainVerified(config)) {
+    return res.status(403).json({
+      schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'],
+      detail: 'Verify the SSO email domain before using SCIM provisioning',
+      status: '403',
     })
   }
 

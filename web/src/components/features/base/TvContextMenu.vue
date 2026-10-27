@@ -17,6 +17,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import type { TvContextMenuPoint } from './TvContextMenu.types'
 
 const isOpen = defineModel<boolean>('open', { default: false })
 
@@ -53,12 +54,18 @@ function openAt(event: MouseEvent) {
   isOpen.value = true
 }
 
+function openAtPoint(point: TvContextMenuPoint) {
+  anchorPosition.value = { ...point }
+  isOpen.value = true
+}
+
 function close() {
   isOpen.value = false
 }
 
 defineExpose({
   openAt,
+  openAtPoint,
   close,
 })
 </script>

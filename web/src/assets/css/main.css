@@ -2,6 +2,8 @@
 
 @import "@nuxt/ui";
 
+@import "./theme-palettes.css";
+
 @source "../../";
 
 @source "../../../vite.ui.options.ts";

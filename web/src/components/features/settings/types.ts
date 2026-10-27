@@ -37,7 +37,13 @@ export type SettingsSelectRowItem = SettingsRowBase & {
   set: (value: string) => void
 }
 
-export type SettingsRowItem = SettingsNavRowItem | SettingsSelectRowItem
+export type SettingsActionRowItem = SettingsRowBase & {
+  kind: 'action'
+  kbds?: string[]
+  onSelect: () => void
+}
+
+export type SettingsRowItem = SettingsNavRowItem | SettingsSelectRowItem | SettingsActionRowItem
 
 export type SettingsSection = {
   key: string

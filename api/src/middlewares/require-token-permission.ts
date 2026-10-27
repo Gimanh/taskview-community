@@ -4,7 +4,7 @@ import type { GoalPermissionType } from '../types/auth.types';
 /**
  * Narrows what a restricted API / OAuth token may do on surfaces that are guarded
  * by an organization role or by project ownership rather than by the project RBAC
- * — organizations, SSO configuration, webhooks. Those checks never consult
+ * — organizations, SSO configuration, billing. Those checks never consult
  * GoalPermissionsFetcher, so without this the scope chosen when the token was
  * issued would simply not apply to them.
  *
