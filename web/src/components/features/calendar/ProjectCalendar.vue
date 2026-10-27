@@ -78,7 +78,7 @@
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef, watch } from 'vue'
-import { addDays, eachDayOfInterval, getDay, isWeekend } from 'date-fns'
+import { addDays, eachDayOfInterval, format, getDay, isWeekend } from 'date-fns'
 import { useI18n } from 'vue-i18n'
 import FullCalendar from '@fullcalendar/vue3'
 import type { CalendarOptions, DatesSetInfo, EventChangeInfo, EventClickInfo, EventDropInfo, EventResizeDoneInfo } from '@fullcalendar/vue3'
@@ -105,6 +105,8 @@ import { isScheduled, occupiesDay, shiftTaskDates, taskToEvent, type TaskCalenda
 
 const props = defineProps<{ goalId: number }>()
 
+const DAY_FORMAT = 'yyyy-MM-dd'
+
 const FC_VIEWS: Record<CalendarView, string> = {
   month: 'dayGridMonth',
   week: 'dayGridWeek',
@@ -128,7 +130,6 @@ const title = ref('')
 const initialView = FC_VIEWS[view.value]
 const initialDate = date.value
 
-watch(() => props.goalId, (goalId) => calendarStore.fetchTasks(goalId), { immediate: true })
 
 const events = computed(() => calendarStore.tasks
   .map(taskToEvent)
@@ -139,6 +140,13 @@ const events = computed(() => calendarStore.tasks
 // Only when tasks can't be moved: FullCalendar finds the day under the pointer assuming equal-width
 // columns, so a narrow column would make drops and resizes land on the wrong day.
 const visibleRange = ref<{ start: Date; end: Date }>()
+
+// Load the visible period only, one day wider on each side: a task with a time is stored in UTC
+// and can fall on a neighbouring local day. activeEnd is exclusive, so it already adds a day.
+watch([() => props.goalId, visibleRange], ([goalId, range]) => {
+  if (!range) return
+  calendarStore.fetchTasks(goalId, { from: format(addDays(range.start, -1), DAY_FORMAT), to: format(range.end, DAY_FORMAT) })
+})
 const collapsedWeekdays = computed(() => {
   if (!visibleRange.value || canEditTaskDeadline.value) return new Set<number>()
   const { start, end } = visibleRange.value
@@ -158,7 +166,11 @@ watch(view, (value) => api()?.changeView(FC_VIEWS[value]))
 function onDatesSet(info: DatesSetInfo) {
   title.value = info.view.title
   date.value = info.view.currentStart
-  visibleRange.value = { start: info.view.activeStart, end: info.view.activeEnd }
+  const { activeStart: start, activeEnd: end } = info.view
+  // datesSet also fires on re-renders of the same period: only a real change should reload
+  if (visibleRange.value?.start.getTime() !== start.getTime() || visibleRange.value?.end.getTime() !== end.getTime()) {
+    visibleRange.value = { start, end }
+  }
 }
 
 // Tapping a day number opens that week as a list, the readable view on any screen size

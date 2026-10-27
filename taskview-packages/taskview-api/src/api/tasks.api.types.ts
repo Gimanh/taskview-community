@@ -89,6 +89,9 @@ export type TaskArgFetch = {
     filters?: TaskFilters;
     unlimited?: boolean;
     ignoreCompleted?: boolean;
+    /** Only tasks whose dates overlap this period, inclusive ('YYYY-MM-DD'); tasks without dates are left out */
+    dateFrom?: string;
+    dateTo?: string;
 };
 
 export type TaskResponseFetch = Task[];

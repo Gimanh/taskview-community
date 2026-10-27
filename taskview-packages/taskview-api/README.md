@@ -222,6 +222,8 @@ const tasks = await api.tasks.fetch({
         priority: 1,
         selectedTags: { '12': true, '15': true },
     },
+    dateFrom: '2026-10-01', // optional: only tasks whose dates overlap
+    dateTo: '2026-10-31',   // this period (tasks without dates are left out)
 });
 
 // Create a task

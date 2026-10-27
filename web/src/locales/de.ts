@@ -307,7 +307,7 @@ export default {
     subtasks: 'Unteraufgaben: {count}',
     moveError: 'Die neuen Termine konnten nicht gespeichert werden. Die Aufgabe ist wieder an ihrem Platz.',
     empty: {
-      title: 'Hier erscheinen Aufgaben mit Datum',
+      title: 'Für diesen Zeitraum ist nichts geplant',
       description: 'Öffnen Sie eine Aufgabe und legen Sie ein Start- oder Enddatum fest, um sie im Kalender zu sehen.',
     },
   },

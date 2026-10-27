@@ -307,7 +307,7 @@ export default {
     subtasks: 'Subtareas: {count}',
     moveError: 'No se pudieron guardar las fechas nuevas. La tarea volvió a su lugar.',
     empty: {
-      title: 'Aquí aparecen las tareas con fecha',
+      title: 'No hay nada programado en estas fechas',
       description: 'Abre una tarea y ponle fecha de inicio o de fin para verla en el calendario.',
     },
   },

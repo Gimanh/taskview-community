@@ -320,7 +320,7 @@ export default {
     subtasks: 'Subtarefas: {count}',
     moveError: 'Não foi possível salvar as novas datas. A tarefa voltou ao lugar.',
     empty: {
-      title: 'Aqui aparecem as tarefas com data',
+      title: 'Nada agendado para estas datas',
       description: 'Abra uma tarefa e defina uma data de início ou de término para vê-la no calendário.',
     },
   },

@@ -23,8 +23,9 @@ export const useCalendarStore = defineStore('use-calendar-store', {
   }),
 
   actions: {
-    // Own request instead of tasksStore.fetchAllTasks, so the List view's search and filters don't leak in
-    async fetchTasks(goalId: GoalItem['id']) {
+    // Own request instead of tasksStore.fetchAllTasks, so the List view's search and filters don't leak in.
+    // Only the tasks overlapping the given period ('YYYY-MM-DD', inclusive) are loaded.
+    async fetchTasks(goalId: GoalItem['id'], period: { from: string; to: string }) {
       // Don't show the previous project's tasks while the new ones load
       if (this.goalId !== goalId) this.tasks = []
       this.goalId = goalId
@@ -41,6 +42,8 @@ export const useCalendarStore = defineStore('use-calendar-store', {
           ignoreCompleted: true,
           firstNew: 0,
           unlimited: true,
+          dateFrom: period.from,
+          dateTo: period.to,
         })
         .catch(logError)
 
