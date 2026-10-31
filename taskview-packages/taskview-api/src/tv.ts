@@ -9,6 +9,7 @@ import TvIntegrationsApi from "./api/integrations";
 import TvKanban from "./api/kanban";
 import TvNotificationsApi from "./api/notifications";
 import TvWebhooks from "./api/webhooks";
+import TvImport from "./api/import";
 import TvMessagingApi from "./api/messaging";
 import TvApiTokens from "./api/api-tokens";
 import TvOAuth from "./api/oauth";
@@ -49,6 +50,7 @@ export class TvApi {
     public notifications: TvNotificationsApi;
 
     public webhooks: TvWebhooks;
+    public import: TvImport;
 
     public messaging: TvMessagingApi;
 
@@ -100,6 +102,7 @@ export class TvApi {
         this.notifications = new TvNotificationsApi(this.$axios);
 
         this.webhooks = new TvWebhooks(this.$axios);
+        this.import = new TvImport(this.$axios);
 
         this.messaging = new TvMessagingApi(this.$axios);
 

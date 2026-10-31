@@ -899,5 +899,16 @@
             "A *_can_manage permission no longer includes the matching view permission, and timetracking_can_manage_all no longer includes viewing entries or logging own time: each permission grants only what it names.",
             "all-triggers.sql: re-applies all triggers idempotently and updates tasks.add_roles_and_permissions() so the editor role of NEW projects also gets timetracking_can_log. Existing projects are not changed: owners grant it to their roles in the role editor."
         ]
+    },
+    "69": {
+        "version": "1.74.0",
+        "name": "Import from other systems",
+        "releaseDate": "20261027",
+        "scripts": [
+            "/1.74.0/0.create-import-jobs.sql"
+        ],
+        "description": [
+            "New table tasks.import_jobs: one row per import run from an external system (Trello first). Source credentials are stored encrypted only while the run is being prepared or executed and are wiped when it finishes."
+        ]
     }
 }

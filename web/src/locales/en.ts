@@ -562,6 +562,8 @@ export default {
     noteCollapse: 'Collapse',
     sourceOfTruthTitle: '{provider} is the source of truth',
     sourceOfTruthDescription: 'This task is linked to an issue in {provider}. If the title or description is edited there, the task is updated automatically.',
+    importedFromTitle: 'Imported from {provider}',
+    importedFromDescription: 'This task was copied from {provider} during an import. Changes in {provider} are not synced.',
     priority: 'Priority',
     priorityNone: 'No priority',
     priorityLow: 'Low',
@@ -752,6 +754,7 @@ export default {
     organizations: 'Organizations',
     analytics: 'Analytics',
     timeReports: 'Time reports',
+    import: 'Import',
     invoices: 'Invoices',
     switchOrganization: 'Switch organization',
     logout: 'Log out',
@@ -1789,6 +1792,250 @@ export default {
       limit_reached: 'This project has reached the automation rules limit',
       not_found: 'The rule no longer exists',
       deleteFailed: 'Failed to delete the rule',
+    },
+  },
+  import: {
+    title: 'Import from other systems',
+    noAccess: 'Only organization owners and admins can import data.',
+    back: 'Back',
+    steps: {
+      connect: 'Connect',
+      project: 'Project',
+      settings: 'Settings',
+      progress: 'Import',
+    },
+    connect: {
+      title: 'Where are you moving from?',
+      description: 'The data is copied into a new project in this organization. Nothing is changed in the source system.',
+      popup: 'Connect {provider}',
+      useManual: 'Enter an API key and token instead',
+      usePopup: 'Connect in a pop-up window instead',
+      popupFailed: 'The authorization window was closed or blocked. Allow pop-ups for this site or enter the key manually.',
+      submit: 'Connect',
+      providersFailed: 'Could not load import sources. Check that the server is updated and running, then try again.',
+      retry: 'Try again',
+    },
+    project: {
+      title: 'Choose a project to import',
+      connectedAs: 'Connected as {account}',
+      search: 'Search projects',
+      empty: 'No projects found',
+    },
+    settings: {
+      newProject: 'A new project with the same name will be created.',
+      start: 'Start import',
+    },
+    summary: {
+      tasks: 'Tasks',
+      archived: 'Archived',
+      attachments: 'Files',
+      attachmentsSize: 'Files size',
+    },
+    people: {
+      title: 'People',
+      description: 'Match people from the source project with organization members. Matched people are added to the project and keep their assignments.',
+      notAssigned: 'Do not assign',
+    },
+    progress: {
+      cancel: 'Cancel import',
+      another: 'Import another project',
+      openProject: 'Open project',
+      phase: {
+        structure: 'Reading the source project',
+        tasks: 'Creating tasks',
+        attachments: 'Uploading files',
+        finalizing: 'Finishing',
+      },
+    },
+    status: {
+      draft: 'Draft',
+      pending: 'Queued',
+      running: 'Running',
+      completed: 'Completed',
+      failed: 'Failed',
+      cancelled: 'Cancelled',
+    },
+    result: {
+      tasksCreated: 'Tasks',
+      statusesCreated: 'Columns',
+      listsCreated: 'Lists',
+      tagsCreated: 'Tags',
+      membersAdded: 'Members added',
+      attachmentsUploaded: 'Files',
+      warningsTitle: 'Warnings: {count}',
+      warningsTruncated: 'Only the first warnings are shown.',
+    },
+    warnings: {
+      parent_missing: 'Subtask imported without its parent',
+      attachment_storage_disabled: 'File storage is not configured on this server, files were skipped',
+      attachment_too_large: 'File is larger than the allowed size',
+      attachment_quota_exceeded: 'Organization file quota is exceeded',
+      attachment_failed: 'File could not be downloaded',
+    },
+    errors: {
+      invalid_credentials: 'The key or token was rejected. Check them and try again.',
+      invalid_url: 'The site address is invalid. Check it and try again.',
+      private_url: 'This address is on a private network. A TaskView administrator can allow it with IMPORT_ALLOW_PRIVATE_URLS=true.',
+      not_found: 'The project was not found or is not available to this account.',
+      rate_limited: 'The source system limited the request rate. Try again in a minute.',
+      unavailable: 'The source system is unavailable. Try again later.',
+      goal_creation_failed: 'The project could not be created.',
+      forbidden: 'You are no longer an owner or admin of this organization.',
+      interrupted: 'The import was interrupted by a server restart. Start it again.',
+      internal: 'Something went wrong. Try again.',
+      unknown_provider: 'This import source is not supported.',
+      not_draft: 'This import has already started. Begin a new one.',
+      invalid_options: 'Import settings are invalid.',
+      invalid_people_mapping: 'Some selected people are no longer members of the organization.',
+      not_cancellable: 'The import has already finished.',
+      too_large: 'The project is too large to import in one run.',
+      already_running: 'Another import is already running. Wait for it to finish.',
+      too_many_drafts: 'Too many import attempts. Try again in an hour.',
+    },
+    history: {
+      title: 'Recent imports',
+      tasks: 'tasks: {count}',
+    },
+    callback: {
+      done: 'Connected. You can close this window.',
+      failed: 'Open the import page and connect again.',
+    },
+    providers: {
+      trello: {
+        fields: {
+          apiKey: 'API key',
+          token: 'Token',
+        },
+        manualHelp: {
+          title: 'How to get a Trello API key and token',
+          step1: 'Open the Power-Up admin page and create a Power-Up:',
+          step2: 'On the API key tab, generate a key and copy it.',
+          step3: 'Next to the key, follow the Token link, allow access and copy the token. The token starts with ATTA — the Secret field on the same page does not fit here.',
+        },
+        options: {
+          listAs: {
+            label: 'Trello lists become',
+            values: {
+              status: 'Kanban columns',
+              list: 'Project lists',
+            },
+          },
+          checklistsAs: {
+            label: 'Checklists become',
+            values: {
+              subtasks: 'Subtasks',
+              note: 'A checklist in the task note',
+            },
+          },
+          includeArchived: {
+            label: 'Import archived cards and lists',
+            description: 'Archived cards are imported as completed tasks.',
+          },
+          commentsToNote: {
+            label: 'Add comments to the task note',
+          },
+          includeAttachments: {
+            label: 'Import attached files',
+            description: 'Files count toward the organization file quota. Links stay links in the note.',
+          },
+        },
+      },
+      todoist: {
+        fields: {
+          token: 'API token',
+        },
+        manualHelp: {
+          title: 'How to get a Todoist API token',
+          step1: 'Open the Todoist integration settings:',
+          step2: 'The Developer tab with your API token opens.',
+          step3: 'Copy the API token and paste it below. TaskView only reads data with it; the token is used only for this import and is deleted when it finishes.',
+        },
+        options: {
+          sectionsAs: {
+            label: 'Todoist sections become',
+            values: {
+              status: 'Kanban columns',
+              list: 'Project lists',
+            },
+          },
+          includeCompleted: {
+            label: 'Import completed tasks',
+            description: 'All completed tasks of the project are imported as completed tasks.',
+          },
+          commentsToNote: {
+            label: 'Add comments to the task note',
+          },
+          includeAttachments: {
+            label: 'Import files from comments',
+            description: 'Files count toward the organization file quota. Links stay links in the note.',
+          },
+        },
+      },
+      'jira-cloud': {
+        fields: {
+          siteUrl: 'Jira site address',
+          email: 'Atlassian account email',
+          token: 'API token',
+        },
+        manualHelp: {
+          title: 'How to get a Jira Cloud API token',
+          step1: 'Open the API tokens page of your Atlassian account:',
+          step2: 'Click "Create API token" (the classic one, without scopes), name it and copy it.',
+          step3: 'Enter your site address (https://your-company.atlassian.net), your account email and the token. The token has the same access as your account; TaskView only reads data with it, and the token is deleted when the import finishes.',
+        },
+        options: {
+          epicsAs: {
+            label: 'Jira epics become',
+            values: {
+              list: 'Project lists',
+              task: 'Parent tasks with subtasks',
+            },
+          },
+          includeDone: {
+            label: 'Import done issues',
+            description: 'Issues in a Done-category status are imported as completed tasks.',
+          },
+          commentsToNote: {
+            label: 'Add comments to the task note',
+          },
+          includeAttachments: {
+            label: 'Import attached files',
+            description: 'Files count toward the organization file quota.',
+          },
+        },
+      },
+      'jira-dc': {
+        fields: {
+          siteUrl: 'Jira address',
+          token: 'Personal access token',
+        },
+        manualHelp: {
+          title: 'How to get a Jira personal access token',
+          step1: 'In Jira, open your avatar menu → Profile → Personal Access Tokens.',
+          step2: 'Create a token, set an expiry date and copy it. Jira Data Center and Server 8.14 or later are supported.',
+          step3: 'Enter the Jira address as you open it in the browser (for example https://jira.company.com) and the token. TaskView only reads data with it, and the token is deleted when the import finishes.',
+        },
+        options: {
+          epicsAs: {
+            label: 'Jira epics become',
+            values: {
+              list: 'Project lists',
+              task: 'Parent tasks with subtasks',
+            },
+          },
+          includeDone: {
+            label: 'Import done issues',
+            description: 'Issues in a Done-category status are imported as completed tasks.',
+          },
+          commentsToNote: {
+            label: 'Add comments to the task note',
+          },
+          includeAttachments: {
+            label: 'Import attached files',
+            description: 'Files count toward the organization file quota.',
+          },
+        },
+      },
     },
   },
 }

@@ -12,6 +12,7 @@ import { InviteEmailDispatcher } from './tv-modules/collaboration/InviteEmailDis
 import { PublicApiUrl } from './modules/public-url';
 import { validateWebhooksEnvOnStartup } from './tv-modules/webhooks/webhooks.utils';
 import { validateSsoEnvOnStartup } from './tv-modules/sso/sso.utils';
+import { validateImportEnvOnStartup } from './tv-modules/import/import.utils';
 import { FileStorageFactory } from './tv-modules/files/storage/FileStorageFactory';
 import cookieParser from 'cookie-parser';
 import { registerAllEventHandlers, startAllWorkers } from './core/all-events';
@@ -29,6 +30,7 @@ export default class App {
         InviteEmailDispatcher.validateOnStartup();
         validateWebhooksEnvOnStartup();
         validateSsoEnvOnStartup();
+        validateImportEnvOnStartup();
         FileStorageFactory.validateOnStartup();
 
         this.app = express();
