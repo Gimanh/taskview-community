@@ -48,3 +48,43 @@
 .tv-calendar .tv-calendar-collapsed {
   flex: 0 0 4.5rem !important;
 }
+
+/* "+ Add task" on the hovered day (see ProjectCalendar's showAddHint): in the day number row in
+   the month, right below the day's last card in the week. Not on a hovered card, which opens the
+   task instead, and not on touch screens, which have no hover. */
+@media (hover: hover) {
+  .tv-calendar-addable [role='gridcell'][data-date] {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .tv-calendar-addable [role='gridcell'][data-date]:hover:not(:has(.tv-calendar-card:hover)) {
+    background-color: color-mix(in oklab, var(--ui-bg-accented) 50%, transparent);
+  }
+
+  /* In the week, the cell's second child holds the cards, stacked in a box as tall as they are */
+  .tv-calendar-add-month [role='gridcell'][data-date]:hover:not(:has(.tv-calendar-card:hover))::after,
+  .tv-calendar-add-week [role='gridcell'][data-date]:hover:not(:has(.tv-calendar-card:hover)) > :nth-child(2) > :first-child::after {
+    content: var(--tv-calendar-add-label);
+    position: absolute;
+    left: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: calc(var(--ui-radius) * 1.5);
+    background: color-mix(in oklab, var(--ui-primary) 12%, var(--ui-bg));
+    color: var(--ui-primary);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    line-height: var(--text-xs--line-height);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .tv-calendar-add-month [role='gridcell'][data-date]:hover:not(:has(.tv-calendar-card:hover))::after {
+    top: 0.25rem;
+    left: 0.375rem;
+  }
+
+  .tv-calendar-add-week [role='gridcell'][data-date]:hover:not(:has(.tv-calendar-card:hover)) > :nth-child(2) > :first-child::after {
+    top: calc(100% + 0.25rem);
+  }
+}

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ALL_TASKS_LIST_ID, type GoalItem, type TaskArgUpdate } from 'taskview-api'
+import { ALL_TASKS_LIST_ID, type GoalItem, type TaskArgAdd, type TaskArgUpdate } from 'taskview-api'
 import { $tvApi } from '@/plugins/axios'
 import { logError } from '@/helpers/Helper'
 import { useTasksStore } from '@/stores/tasks.store'
@@ -12,6 +12,8 @@ type CalendarStore = {
 }
 
 let latestRequest = 0
+// Tasks added while a fetch is in flight: its response may predate them, so they're kept on top of it
+const addedDuringFetch = new Map<number, TaskItem>()
 // Per task, the latest date update: an older response must not undo a newer move
 const latestDateUpdate = new Map<number, number>()
 
@@ -23,13 +25,15 @@ export const useCalendarStore = defineStore('use-calendar-store', {
   }),
 
   actions: {
-    // Own request instead of tasksStore.fetchAllTasks, so the List view's search and filters don't leak in
-    async fetchTasks(goalId: GoalItem['id']) {
+    // Own request instead of tasksStore.fetchAllTasks, so the List view's search and filters don't leak in.
+    // Only the tasks overlapping the given period ('YYYY-MM-DD', inclusive) are loaded.
+    async fetchTasks(goalId: GoalItem['id'], period: { from: string; to: string }) {
       // Don't show the previous project's tasks while the new ones load
       if (this.goalId !== goalId) this.tasks = []
       this.goalId = goalId
       this.loading = true
       const request = ++latestRequest
+      addedDuringFetch.clear()
 
       const tasks = await $tvApi.tasks
         .fetch({
@@ -41,13 +45,16 @@ export const useCalendarStore = defineStore('use-calendar-store', {
           ignoreCompleted: true,
           firstNew: 0,
           unlimited: true,
+          dateFrom: period.from,
+          dateTo: period.to,
         })
         .catch(logError)
 
       // Only the latest request may update state: a slower, older response must not overwrite it
       if (request !== latestRequest) return
       this.loading = false
-      if (tasks) this.tasks = tasks
+      if (tasks) this.tasks = [...tasks, ...[...addedDuringFetch.values()].filter((added) => !tasks.some((t) => t.id === added.id))]
+      addedDuringFetch.clear()
     },
 
     // Applied right away, as FullCalendar already shows the move: a second drag before the response
@@ -72,6 +79,16 @@ export const useCalendarStore = defineStore('use-calendar-store', {
         useTasksStore().updateSelectedTask(task)
       }
       return task
+    },
+
+    // A task created from the calendar goes in no list, like one added from the main screen
+    async addTask(task: Omit<TaskArgAdd, 'goalListId'>) {
+      const created = await $tvApi.tasks.createTask({ ...task, goalListId: null }).catch(logError)
+      if (!created) return null
+      if (created.goalId !== this.goalId) return created
+      this.tasks.push(created)
+      if (this.loading) addedDuringFetch.set(created.id, created)
+      return created
     },
 
     syncTask(task: TaskItem) {

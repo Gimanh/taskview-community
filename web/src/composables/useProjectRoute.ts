@@ -8,16 +8,18 @@ export const VIEW_ROUTES: Record<DefaultView, string> = {
   kanban: 'kanban',
   graph: 'graph',
   sprints: 'sprints',
+  calendar: 'calendar',
 }
 
-const VIEW_PERMISSIONS: Record<Exclude<DefaultView, 'tasks'>, (keyof GoalPermissions)[]> = {
+// Tasks and Calendar need no permission beyond seeing the project's tasks
+const VIEW_PERMISSIONS: Record<Exclude<DefaultView, 'tasks' | 'calendar'>, (keyof GoalPermissions)[]> = {
   kanban: [AllGoalPermissions.KANBAN_CAN_VIEW],
   graph: [AllGoalPermissions.GRAPH_CAN_VIEW],
   sprints: [AllGoalPermissions.SPRINT_CAN_VIEW],
 }
 
 function canOpenView(goal: GoalItem, view: DefaultView): boolean {
-  if (view === 'tasks') return true
+  if (view === 'tasks' || view === 'calendar') return true
   return VIEW_PERMISSIONS[view].some((perm) => !!goal.permissions[perm])
 }
 

@@ -63,7 +63,8 @@ const CustomThemeArkType = type({
 export const UiSettingsArkType = type({
   'firstDayOfWeek?': firstDayOfWeekArkType,
   'defaultProjectId?': 'number.integer >= 1',
-  'defaultView?': "'tasks' | 'kanban' | 'graph' | 'sprints'",
+  'defaultView?': "'tasks' | 'kanban' | 'graph' | 'sprints' | 'calendar'",
+  'calendarDragStep?': '5 | 10 | 15 | 30 | 60',
   'taskSortBy?': "'date' | 'priority'",
   'taskSortFirstNew?': '0 | 1',
   'showTaskId?': '0 | 1',

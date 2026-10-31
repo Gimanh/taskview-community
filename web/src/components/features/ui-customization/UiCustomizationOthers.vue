@@ -46,6 +46,22 @@
       />
     </UFormField>
 
+    <UFormField
+      :label="t('uiCustomization.others.calendarDragStep')"
+      :description="t('uiCustomization.others.calendarDragStepHint')"
+    >
+      <USelectMenu
+        v-model="calendarDragStep"
+        :items="dragStepItems"
+        value-key="value"
+        data-testid="calendar-drag-step-select"
+        variant="soft"
+        class="w-full lg:w-72"
+        size="xl"
+        :ui="{ base: 'rounded-xl' }"
+      />
+    </UFormField>
+
     <USwitch
       v-model="showTaskId"
       :label="t('uiCustomization.others.showTaskId')"
@@ -65,9 +81,10 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { DefaultView, FirstDayOfWeek } from 'taskview-api'
+import type { CalendarDragStep, DefaultView, FirstDayOfWeek } from 'taskview-api'
 import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
 import { useGoalsStore } from '@/stores/goals.store'
+import { DEFAULT_CALENDAR_DRAG_STEP } from '@/composables/useCalendarDragStep'
 
 const { t } = useI18n()
 const store = useUiPreferencesStore()
@@ -94,6 +111,18 @@ const defaultView = computed<DefaultView>({
   },
 })
 
+const calendarDragStep = computed<CalendarDragStep>({
+  get: () => store.settings.calendarDragStep ?? DEFAULT_CALENDAR_DRAG_STEP,
+  set: (value) => {
+    store.setSetting('calendarDragStep', value === DEFAULT_CALENDAR_DRAG_STEP ? undefined : value)
+  },
+})
+
+const dragStepItems = computed(() => ([5, 10, 15, 30, 60] as const).map((minutes) => ({
+  value: minutes,
+  label: t('uiCustomization.others.minutes', { count: minutes }),
+})))
+
 const showTaskId = computed<boolean>({
   get: () => store.settings.showTaskId === 1,
   set: (value) => {
@@ -118,6 +147,7 @@ const viewItems = computed(() => [
   { value: 'kanban', label: t('uiCustomization.others.viewKanban') },
   { value: 'graph', label: t('uiCustomization.others.viewGraph') },
   { value: 'sprints', label: t('uiCustomization.others.viewSprints') },
+  { value: 'calendar', label: t('uiCustomization.others.viewCalendar') },
 ])
 
 const weekStart = computed<number>({
