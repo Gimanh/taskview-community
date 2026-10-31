@@ -10,6 +10,7 @@ import { MessagingDispatcher } from '../tv-modules/messaging/MessagingDispatcher
 import { InviteEmailDispatcher } from '../tv-modules/collaboration/InviteEmailDispatcher';
 import { FilesDispatcher } from '../tv-modules/files/FilesDispatcher';
 import { AutomationsDispatcher } from '../tv-modules/automations/AutomationsDispatcher';
+import { ImportDispatcher } from '../tv-modules/import/ImportDispatcher';
 
 const dispatchers: Dispatcher[] = [
     new NotificationDispatcher(),
@@ -22,6 +23,7 @@ const dispatchers: Dispatcher[] = [
     new InviteEmailDispatcher(),
     new FilesDispatcher(),
     new AutomationsDispatcher(),
+    new ImportDispatcher(),
 ];
 
 export function registerAllEventHandlers() {

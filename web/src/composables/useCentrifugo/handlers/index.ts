@@ -4,6 +4,7 @@ import { handleGoalsChanged } from './goals-changed'
 import { handleRecurrenceInstanceCreated } from './recurrence'
 import { handleFilesChanged } from './files'
 import { handleTasksChanged } from './tasks'
+import { handleImportFinished, handleImportProgress } from './import'
 import {
   handleTimeEntryCreated,
   handleTimeEntryDeleted,
@@ -23,4 +24,6 @@ export const eventHandlers: { [K in keyof RealtimeEventMap]: RealtimeHandler<K> 
   'recurrence.instanceCreated': handleRecurrenceInstanceCreated,
   'files.changed': handleFilesChanged,
   'tasks.changed': handleTasksChanged,
+  'import.progress': handleImportProgress,
+  'import.finished': handleImportFinished,
 }

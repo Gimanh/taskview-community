@@ -40,6 +40,9 @@ export const AppEnvSchema = z.object({
     // Allow outgoing webhooks to target loopback/private/link-local addresses (default off, see SSRF)
     WEBHOOKS_ALLOW_PRIVATE_URLS: z.string().optional(),
 
+    // Allow imports (Jira Data Center) to reach loopback/private/link-local addresses (default off, see SSRF)
+    IMPORT_ALLOW_PRIVATE_URLS: z.string().optional(),
+
     // How account password changes are confirmed: code sent by email (default) or current password
     PASSWORD_CHANGE_CONFIRMATION: z.enum(['email', 'password']).optional(),
 

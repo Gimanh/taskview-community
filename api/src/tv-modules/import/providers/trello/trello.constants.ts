@@ -1,0 +1,36 @@
+export const TRELLO_PROVIDER_ID = 'trello';
+
+export const TRELLO_DEFAULT_LABEL_COLOR = '#8590A2';
+
+export const TRELLO_LABEL_COLORS: Record<string, string> = {
+    green: '#4BCE97',
+    yellow: '#F5CD47',
+    orange: '#FEA362',
+    red: '#F87168',
+    purple: '#9F8FEF',
+    blue: '#579DFF',
+    sky: '#6CC3E0',
+    lime: '#94C748',
+    pink: '#E774BB',
+    black: '#8590A2',
+    green_dark: '#1F845A',
+    yellow_dark: '#946F00',
+    orange_dark: '#C25100',
+    red_dark: '#C9372C',
+    purple_dark: '#6E5DC6',
+    blue_dark: '#0C66E4',
+    sky_dark: '#227D9B',
+    lime_dark: '#5B7F24',
+    pink_dark: '#AE4787',
+    black_dark: '#626F86',
+    green_light: '#BAF3DB',
+    yellow_light: '#F8E6A0',
+    orange_light: '#FEDEC8',
+    red_light: '#FFD5D2',
+    purple_light: '#DFD8FD',
+    blue_light: '#CCE0FF',
+    sky_light: '#C6EDFB',
+    lime_light: '#D3F1A7',
+    pink_light: '#FDD0EC',
+    black_light: '#DCDFE4',
+};

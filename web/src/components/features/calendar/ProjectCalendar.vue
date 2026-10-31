@@ -17,47 +17,52 @@
       class="relative min-h-0 flex-1"
       :class="{ 'overflow-x-auto': scrollWeek }"
     >
-      <FullCalendar
-        ref="calendarRef"
-        :options="calendarOptions"
+      <!-- FullCalendar owns its root element's classes; a class bound there is wiped on every re-render -->
+      <div
+        class="h-full"
         :class="{ 'min-w-240': scrollWeek }"
       >
-        <template #dayHeaderContent="arg">
-          <div
-            v-if="arg.view.type === FC_VIEWS.week || arg.view.type === FC_VIEWS.hours"
-            class="flex flex-col items-start gap-0.5 px-1 py-1.5"
-          >
-            <span class="text-xs font-normal text-muted">{{ arg.weekdayText }}</span>
+        <FullCalendar
+          ref="calendarRef"
+          :options="calendarOptions"
+        >
+          <template #dayHeaderContent="arg">
+            <div
+              v-if="arg.view.type === FC_VIEWS.week || arg.view.type === FC_VIEWS.hours"
+              class="flex flex-col items-start gap-0.5 px-1 py-1.5"
+            >
+              <span class="text-xs font-normal text-muted">{{ arg.weekdayText }}</span>
+              <span
+                class="rounded-10 px-1.5 text-2xl leading-9 font-semibold tabular-nums"
+                :class="arg.isToday ? 'bg-primary text-inverted' : 'text-highlighted'"
+              >{{ arg.dayNumberText }}</span>
+            </div>
             <span
-              class="rounded-10 px-1.5 text-2xl leading-9 font-semibold tabular-nums"
-              :class="arg.isToday ? 'bg-primary text-inverted' : 'text-highlighted'"
+              v-else
+              class="text-xs font-normal text-muted"
+            >{{ arg.text }}</span>
+          </template>
+
+          <template #dayCellTopContent="arg">
+            <span
+              class="inline-flex min-w-6 justify-center rounded-md px-1 text-xs tabular-nums"
+              :class="arg.isToday ? 'bg-primary font-semibold text-inverted' : 'text-muted'"
             >{{ arg.dayNumberText }}</span>
-          </div>
-          <span
-            v-else
-            class="text-xs font-normal text-muted"
-          >{{ arg.text }}</span>
-        </template>
+          </template>
 
-        <template #dayCellTopContent="arg">
-          <span
-            class="inline-flex min-w-6 justify-center rounded-md px-1 text-xs tabular-nums"
-            :class="arg.isToday ? 'bg-primary font-semibold text-inverted' : 'text-muted'"
-          >{{ arg.dayNumberText }}</span>
-        </template>
-
-        <template #eventContent="arg">
-          <CalendarTaskCard
-            :task="arg.event.extendedProps.task"
-            :time-text="arg.event.allDay ? undefined : arg.timeText"
-            :compact="arg.view.type !== FC_VIEWS.week"
-            :dot="isMobile && arg.view.type === FC_VIEWS.month"
-            :resizable="arg.isEndResizable"
-            :lifted="arg.isMirror"
-            :fill="arg.view.type === FC_VIEWS.hours"
-          />
-        </template>
-      </FullCalendar>
+          <template #eventContent="arg">
+            <CalendarTaskCard
+              :task="arg.event.extendedProps.task"
+              :time-text="arg.event.allDay ? undefined : arg.timeText"
+              :compact="arg.view.type !== FC_VIEWS.week"
+              :dot="isMobile && arg.view.type === FC_VIEWS.month"
+              :resizable="arg.isEndResizable"
+              :lifted="arg.isMirror"
+              :fill="arg.view.type === FC_VIEWS.hours"
+            />
+          </template>
+        </FullCalendar>
+      </div>
 
       <div
         v-if="showEmptyState"
@@ -281,6 +286,8 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   events: events.value,
   eventDisplay: 'block',
   eventClass: 'cursor-pointer',
+  // The list view's color dot: CalendarTaskCard is the whole event, and the dot is invisible with a transparent eventColor
+  listItemEventBeforeClass: 'hidden',
   eventColor: 'transparent',
   eventContrastColor: 'var(--ui-text)',
   dayMaxEvents: true,

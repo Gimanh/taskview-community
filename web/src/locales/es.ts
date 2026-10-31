@@ -555,6 +555,8 @@ export default {
     noteCollapse: 'Contraer',
     sourceOfTruthTitle: '{provider} es la fuente de verdad',
     sourceOfTruthDescription: 'Esta tarea está vinculada a una issue en {provider}. Si allí se edita el título o la descripción, la tarea se actualiza automáticamente.',
+    importedFromTitle: 'Importado de {provider}',
+    importedFromDescription: 'Esta tarea se copió de {provider} durante una importación. Los cambios en {provider} no se sincronizan.',
     priority: 'Prioridad',
     priorityNone: 'Sin prioridad',
     priorityLow: 'Baja',
@@ -749,6 +751,7 @@ export default {
     organizations: 'Organizaciones',
     analytics: 'Analíticas',
     timeReports: 'Informes de tiempo',
+    import: 'Importar',
     invoices: 'Facturas',
     switchOrganization: 'Cambiar de organización',
     logout: 'Cerrar sesión',
@@ -1790,6 +1793,250 @@ export default {
       limit_reached: 'El proyecto alcanzó el límite de reglas de automatización',
       not_found: 'La regla ya no existe',
       deleteFailed: 'No se pudo eliminar la regla',
+    },
+  },
+  import: {
+    title: 'Importar desde otros sistemas',
+    noAccess: 'Solo los propietarios y administradores de la organización pueden importar datos.',
+    back: 'Atrás',
+    steps: {
+      connect: 'Conectar',
+      project: 'Proyecto',
+      settings: 'Ajustes',
+      progress: 'Importación',
+    },
+    connect: {
+      title: '¿Desde dónde te mudas?',
+      description: 'Los datos se copian a un proyecto nuevo de esta organización. No se modifica nada en el sistema de origen.',
+      popup: 'Conectar {provider}',
+      useManual: 'Introducir una clave de API y un token',
+      usePopup: 'Conectar en una ventana emergente',
+      popupFailed: 'La ventana de autorización se cerró o fue bloqueada. Permite las ventanas emergentes para este sitio o introduce la clave manualmente.',
+      submit: 'Conectar',
+      providersFailed: 'No se pudieron cargar las fuentes de importación. Comprueba que el servidor esté actualizado y en marcha e inténtalo de nuevo.',
+      retry: 'Reintentar',
+    },
+    project: {
+      title: 'Elige un proyecto para importar',
+      connectedAs: 'Conectado como {account}',
+      search: 'Buscar proyectos',
+      empty: 'No se encontraron proyectos',
+    },
+    settings: {
+      newProject: 'Se creará un proyecto nuevo con el mismo nombre.',
+      start: 'Iniciar importación',
+    },
+    summary: {
+      tasks: 'Tareas',
+      archived: 'Archivadas',
+      attachments: 'Archivos',
+      attachmentsSize: 'Tamaño de archivos',
+    },
+    people: {
+      title: 'Personas',
+      description: 'Relaciona a las personas del proyecto de origen con los miembros de la organización. Las personas relacionadas se añaden al proyecto y conservan sus asignaciones.',
+      notAssigned: 'No asignar',
+    },
+    progress: {
+      cancel: 'Cancelar importación',
+      another: 'Importar otro proyecto',
+      openProject: 'Abrir proyecto',
+      phase: {
+        structure: 'Leyendo el proyecto de origen',
+        tasks: 'Creando tareas',
+        attachments: 'Subiendo archivos',
+        finalizing: 'Finalizando',
+      },
+    },
+    status: {
+      draft: 'Borrador',
+      pending: 'En cola',
+      running: 'En curso',
+      completed: 'Completado',
+      failed: 'Fallido',
+      cancelled: 'Cancelado',
+    },
+    result: {
+      tasksCreated: 'Tareas',
+      statusesCreated: 'Columnas',
+      listsCreated: 'Listas',
+      tagsCreated: 'Etiquetas',
+      membersAdded: 'Miembros añadidos',
+      attachmentsUploaded: 'Archivos',
+      warningsTitle: 'Advertencias: {count}',
+      warningsTruncated: 'Solo se muestran las primeras advertencias.',
+    },
+    warnings: {
+      parent_missing: 'Subtarea importada sin su tarea principal',
+      attachment_storage_disabled: 'El almacenamiento de archivos no está configurado en este servidor, se omitieron los archivos',
+      attachment_too_large: 'El archivo supera el tamaño permitido',
+      attachment_quota_exceeded: 'Se superó la cuota de archivos de la organización',
+      attachment_failed: 'No se pudo descargar el archivo',
+    },
+    errors: {
+      invalid_credentials: 'La clave o el token fueron rechazados. Revísalos e inténtalo de nuevo.',
+      invalid_url: 'La dirección del sitio no es válida. Revísala e inténtalo de nuevo.',
+      private_url: 'Esta dirección está en una red privada. Un administrador de TaskView puede permitirla con IMPORT_ALLOW_PRIVATE_URLS=true.',
+      not_found: 'No se encontró el proyecto o no está disponible para esta cuenta.',
+      rate_limited: 'El sistema de origen limitó la frecuencia de solicitudes. Inténtalo en un minuto.',
+      unavailable: 'El sistema de origen no está disponible. Inténtalo más tarde.',
+      goal_creation_failed: 'No se pudo crear el proyecto.',
+      forbidden: 'Ya no eres propietario ni administrador de esta organización.',
+      interrupted: 'La importación se interrumpió por un reinicio del servidor. Iníciala de nuevo.',
+      internal: 'Algo salió mal. Inténtalo de nuevo.',
+      unknown_provider: 'Esta fuente de importación no es compatible.',
+      not_draft: 'Esta importación ya se inició. Comienza una nueva.',
+      invalid_options: 'La configuración de importación no es válida.',
+      invalid_people_mapping: 'Algunas personas seleccionadas ya no son miembros de la organización.',
+      not_cancellable: 'La importación ya terminó.',
+      too_large: 'El proyecto es demasiado grande para importarlo de una vez.',
+      already_running: 'Ya hay otra importación en curso. Espera a que termine.',
+      too_many_drafts: 'Demasiados intentos de importación. Inténtalo dentro de una hora.',
+    },
+    history: {
+      title: 'Importaciones recientes',
+      tasks: 'tareas: {count}',
+    },
+    callback: {
+      done: 'Conectado. Puedes cerrar esta ventana.',
+      failed: 'Abre la página de importación y vuelve a conectar.',
+    },
+    providers: {
+      trello: {
+        fields: {
+          apiKey: 'Clave de API',
+          token: 'Token',
+        },
+        manualHelp: {
+          title: 'Cómo obtener la clave de API y el token de Trello',
+          step1: 'Abre la administración de Power-Ups y crea un Power-Up:',
+          step2: 'En la pestaña API key, genera una clave y cópiala.',
+          step3: 'Junto a la clave, abre el enlace Token, permite el acceso y copia el token. El token empieza por ATTA; el campo Secret de la misma página no sirve aquí.',
+        },
+        options: {
+          listAs: {
+            label: 'Las listas de Trello se convierten en',
+            values: {
+              status: 'Columnas del kanban',
+              list: 'Listas del proyecto',
+            },
+          },
+          checklistsAs: {
+            label: 'Las checklists se convierten en',
+            values: {
+              subtasks: 'Subtareas',
+              note: 'Una checklist en la nota de la tarea',
+            },
+          },
+          includeArchived: {
+            label: 'Importar tarjetas y listas archivadas',
+            description: 'Las tarjetas archivadas se importan como tareas completadas.',
+          },
+          commentsToNote: {
+            label: 'Añadir comentarios a la nota de la tarea',
+          },
+          includeAttachments: {
+            label: 'Importar archivos adjuntos',
+            description: 'Los archivos cuentan para la cuota de archivos de la organización. Los enlaces quedan como enlaces en la nota.',
+          },
+        },
+      },
+      todoist: {
+        fields: {
+          token: 'Token de API',
+        },
+        manualHelp: {
+          title: 'Cómo obtener un token de API de Todoist',
+          step1: 'Abre la configuración de integraciones de Todoist:',
+          step2: 'Se abre la pestaña para desarrolladores (Developer) con tu token de API.',
+          step3: 'Copia el token de API y pégalo abajo. TaskView solo lee datos con él; el token se usa solo para esta importación y se elimina al terminar.',
+        },
+        options: {
+          sectionsAs: {
+            label: 'Las secciones de Todoist se convierten en',
+            values: {
+              status: 'Columnas del kanban',
+              list: 'Listas del proyecto',
+            },
+          },
+          includeCompleted: {
+            label: 'Importar tareas completadas',
+            description: 'Todas las tareas completadas del proyecto se importan como tareas completadas.',
+          },
+          commentsToNote: {
+            label: 'Añadir comentarios a la nota de la tarea',
+          },
+          includeAttachments: {
+            label: 'Importar archivos de los comentarios',
+            description: 'Los archivos cuentan para la cuota de archivos de la organización. Los enlaces se quedan como enlaces en la nota.',
+          },
+        },
+      },
+      'jira-cloud': {
+        fields: {
+          siteUrl: 'Dirección del sitio de Jira',
+          email: 'Correo de la cuenta de Atlassian',
+          token: 'Token de API',
+        },
+        manualHelp: {
+          title: 'Cómo obtener un token de API de Jira Cloud',
+          step1: 'Abre la página de tokens de API de tu cuenta de Atlassian:',
+          step2: 'Pulsa «Create API token» (el clásico, sin scopes), ponle un nombre y cópialo.',
+          step3: 'Introduce la dirección del sitio (https://your-company.atlassian.net), el correo de tu cuenta y el token. El token tiene el mismo acceso que tu cuenta; TaskView solo lee datos con él, y el token se elimina al terminar la importación.',
+        },
+        options: {
+          epicsAs: {
+            label: 'Las épicas de Jira se convierten en',
+            values: {
+              list: 'Listas del proyecto',
+              task: 'Tareas principales con subtareas',
+            },
+          },
+          includeDone: {
+            label: 'Importar incidencias terminadas',
+            description: 'Las incidencias en un estado de la categoría Done se importan como tareas completadas.',
+          },
+          commentsToNote: {
+            label: 'Añadir los comentarios a la nota de la tarea',
+          },
+          includeAttachments: {
+            label: 'Importar archivos adjuntos',
+            description: 'Los archivos cuentan para la cuota de archivos de la organización.',
+          },
+        },
+      },
+      'jira-dc': {
+        fields: {
+          siteUrl: 'Dirección de Jira',
+          token: 'Token de acceso personal',
+        },
+        manualHelp: {
+          title: 'Cómo obtener un token de acceso personal de Jira',
+          step1: 'En Jira, abre el menú de tu avatar → Perfil → Personal Access Tokens.',
+          step2: 'Crea un token, establece una fecha de caducidad y cópialo. Se admiten Jira Data Center y Server 8.14 o posterior.',
+          step3: 'Introduce la dirección de Jira tal como la abres en el navegador (por ejemplo, https://jira.company.com) y el token. TaskView solo lee datos con él, y el token se elimina al terminar la importación.',
+        },
+        options: {
+          epicsAs: {
+            label: 'Las épicas de Jira se convierten en',
+            values: {
+              list: 'Listas del proyecto',
+              task: 'Tareas principales con subtareas',
+            },
+          },
+          includeDone: {
+            label: 'Importar incidencias terminadas',
+            description: 'Las incidencias en un estado de la categoría Done se importan como tareas completadas.',
+          },
+          commentsToNote: {
+            label: 'Añadir los comentarios a la nota de la tarea',
+          },
+          includeAttachments: {
+            label: 'Importar archivos adjuntos',
+            description: 'Los archivos cuentan para la cuota de archivos de la organización.',
+          },
+        },
+      },
     },
   },
 }

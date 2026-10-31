@@ -48,6 +48,13 @@ function buildRoutes(extensions: TvWebExtension[]): RouteRecordRaw[] {
       component: () => import('./pages/oauth-consent.vue'),
       beforeEnter: [authenticatedWithReturn],
     },
+    {
+      // Trello's authorize popup returns the token here; the page only hands
+      // it to the opener window, so it needs neither a session nor a layout.
+      path: '/import-callback',
+      name: 'import-callback',
+      component: () => import('./pages/import-callback.vue'),
+    },
     ...extensionRoutes,
     {
       path: '/:orgSlug',
@@ -148,6 +155,11 @@ function buildRoutes(extensions: TvWebExtension[]): RouteRecordRaw[] {
           path: 'ui-customization',
           name: 'ui-customization',
           component: () => import('./pages/user/ui-customization.vue'),
+        },
+        {
+          path: 'import',
+          name: 'import',
+          component: () => import('./pages/user/import.vue'),
         },
         {
           path: 'time-reports',
