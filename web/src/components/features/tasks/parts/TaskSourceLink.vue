@@ -22,16 +22,16 @@
         color="neutral"
         size="xs"
         class="text-muted hover:text-default"
-        :aria-label="t('tasks.sourceOfTruthTitle', { provider: provider.label })"
+        :aria-label="infoTitle"
         data-testid="task-source-info"
       />
       <template #content>
         <div class="p-3 max-w-72 flex flex-col gap-1 text-sm">
           <p class="font-medium">
-            {{ t('tasks.sourceOfTruthTitle', { provider: provider.label }) }}
+            {{ infoTitle }}
           </p>
           <p class="text-muted">
-            {{ t('tasks.sourceOfTruthDescription', { provider: provider.label }) }}
+            {{ infoDescription }}
           </p>
         </div>
       </template>
@@ -44,6 +44,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { INTEGRATION_PROVIDERS } from '@/components/features/integrations/integrationProviders'
 import type { IntegrationProviderMeta } from '@/components/features/integrations/integrationProviders.types'
+import { IMPORT_PROVIDERS } from '@/components/features/import/importProviders'
 
 const props = defineProps<{
   sourceUrl: string
@@ -51,7 +52,33 @@ const props = defineProps<{
 
 const { t } = useI18n()
 
+const importProvider = computed(() => {
+  try {
+    const hostname = new URL(props.sourceUrl).hostname
+    return (
+      Object.values(IMPORT_PROVIDERS).find(
+        (meta) => meta.sourceHost && (hostname === meta.sourceHost || hostname.endsWith(`.${meta.sourceHost}`)),
+      ) ?? null
+    )
+  } catch {
+    return null
+  }
+})
+
+const infoTitle = computed(() =>
+  importProvider.value
+    ? t('tasks.importedFromTitle', { provider: importProvider.value.label })
+    : t('tasks.sourceOfTruthTitle', { provider: provider.value.label }),
+)
+
+const infoDescription = computed(() =>
+  importProvider.value
+    ? t('tasks.importedFromDescription', { provider: importProvider.value.label })
+    : t('tasks.sourceOfTruthDescription', { provider: provider.value.label }),
+)
+
 const provider = computed<IntegrationProviderMeta>(() => {
+  if (importProvider.value) return { label: importProvider.value.label, icon: importProvider.value.icon }
   const url = props.sourceUrl
   if (url.includes('github')) return INTEGRATION_PROVIDERS.github
   if (url.includes('gitlab')) return INTEGRATION_PROVIDERS.gitlab
@@ -67,6 +94,7 @@ const provider = computed<IntegrationProviderMeta>(() => {
 // GitLab's extra "-" path segment is dropped; anything unparseable falls
 // back to the raw URL.
 const issueRef = computed(() => {
+  if (importProvider.value) return importProvider.value.label
   try {
     const url = new URL(props.sourceUrl)
     const segments = url.pathname.split('/').filter((s) => s && s !== '-')

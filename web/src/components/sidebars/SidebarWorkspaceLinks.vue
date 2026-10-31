@@ -34,5 +34,6 @@ const links = computed(() => [
   { name: 'analytics', icon: 'i-lucide-bar-chart-3', label: t('userMenu.analytics') },
   ...(isAdmin.value ? [{ name: 'invoices', icon: 'i-lucide-receipt', label: t('userMenu.invoices') }] : []),
   { name: 'time-reports', icon: 'i-lucide-clock-4', label: t('userMenu.timeReports') },
+  ...(isAdmin.value ? [{ name: 'import', icon: 'i-lucide-download', label: t('userMenu.import') }] : []),
 ])
 </script>

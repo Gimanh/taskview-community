@@ -1,4 +1,4 @@
-import type { Notification, TimeEntryItem } from 'taskview-api'
+import type { ImportJobProgress, ImportJobStatus, Notification, TimeEntryItem } from 'taskview-api'
 
 export type RealtimeEventMap = {
   'notification': {
@@ -52,6 +52,16 @@ export type RealtimeEventMap = {
     goalId: number
     taskIds: number[]
     kind: RealtimeTaskChangeKind
+  }
+  'import.progress': {
+    event: 'import.progress'
+    jobId: number
+    progress: ImportJobProgress
+  }
+  'import.finished': {
+    event: 'import.finished'
+    jobId: number
+    status: ImportJobStatus
   }
 }
 

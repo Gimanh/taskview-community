@@ -548,6 +548,8 @@ export default {
     noteCollapse: 'Zuklappen',
     sourceOfTruthTitle: '{provider} ist die Datenquelle',
     sourceOfTruthDescription: 'Diese Aufgabe ist mit einem Issue in {provider} verknüpft. Werden dort Titel oder Beschreibung geändert, wird die Aufgabe automatisch aktualisiert.',
+    importedFromTitle: 'Aus {provider} importiert',
+    importedFromDescription: 'Diese Aufgabe wurde beim Import aus {provider} kopiert. Änderungen in {provider} werden nicht synchronisiert.',
     priority: 'Priorität',
     priorityNone: 'Keine Priorität',
     priorityLow: 'Niedrig',
@@ -738,6 +740,7 @@ export default {
     organizations: 'Organisationen',
     analytics: 'Analytik',
     timeReports: 'Zeitberichte',
+    import: 'Import',
     invoices: 'Rechnungen',
     switchOrganization: 'Organisation wechseln',
     logout: 'Abmelden',
@@ -1775,6 +1778,250 @@ export default {
       limit_reached: 'Das Projekt hat das Limit für Automatisierungsregeln erreicht',
       not_found: 'Die Regel existiert nicht mehr',
       deleteFailed: 'Regel konnte nicht gelöscht werden',
+    },
+  },
+  import: {
+    title: 'Import aus anderen Systemen',
+    noAccess: 'Nur Eigentümer und Admins der Organisation können Daten importieren.',
+    back: 'Zurück',
+    steps: {
+      connect: 'Verbinden',
+      project: 'Projekt',
+      settings: 'Einstellungen',
+      progress: 'Import',
+    },
+    connect: {
+      title: 'Woher ziehen Sie um?',
+      description: 'Die Daten werden in ein neues Projekt dieser Organisation kopiert. Im Quellsystem wird nichts geändert.',
+      popup: '{provider} verbinden',
+      useManual: 'Stattdessen API-Schlüssel und Token eingeben',
+      usePopup: 'Stattdessen im Pop-up-Fenster verbinden',
+      popupFailed: 'Das Autorisierungsfenster wurde geschlossen oder blockiert. Erlauben Sie Pop-ups für diese Seite oder geben Sie den Schlüssel manuell ein.',
+      submit: 'Verbinden',
+      providersFailed: 'Importquellen konnten nicht geladen werden. Prüfen Sie, ob der Server aktualisiert ist und läuft, und versuchen Sie es erneut.',
+      retry: 'Erneut versuchen',
+    },
+    project: {
+      title: 'Projekt für den Import auswählen',
+      connectedAs: 'Verbunden als {account}',
+      search: 'Projekte durchsuchen',
+      empty: 'Keine Projekte gefunden',
+    },
+    settings: {
+      newProject: 'Es wird ein neues Projekt mit demselben Namen erstellt.',
+      start: 'Import starten',
+    },
+    summary: {
+      tasks: 'Aufgaben',
+      archived: 'Archiviert',
+      attachments: 'Dateien',
+      attachmentsSize: 'Dateigröße',
+    },
+    people: {
+      title: 'Personen',
+      description: 'Ordnen Sie Personen aus dem Quellprojekt den Mitgliedern der Organisation zu. Zugeordnete Personen werden dem Projekt hinzugefügt und behalten ihre Zuweisungen.',
+      notAssigned: 'Nicht zuweisen',
+    },
+    progress: {
+      cancel: 'Import abbrechen',
+      another: 'Weiteres Projekt importieren',
+      openProject: 'Projekt öffnen',
+      phase: {
+        structure: 'Quellprojekt wird gelesen',
+        tasks: 'Aufgaben werden erstellt',
+        attachments: 'Dateien werden hochgeladen',
+        finalizing: 'Abschluss',
+      },
+    },
+    status: {
+      draft: 'Entwurf',
+      pending: 'In Warteschlange',
+      running: 'Läuft',
+      completed: 'Abgeschlossen',
+      failed: 'Fehlgeschlagen',
+      cancelled: 'Abgebrochen',
+    },
+    result: {
+      tasksCreated: 'Aufgaben',
+      statusesCreated: 'Spalten',
+      listsCreated: 'Listen',
+      tagsCreated: 'Tags',
+      membersAdded: 'Mitglieder hinzugefügt',
+      attachmentsUploaded: 'Dateien',
+      warningsTitle: 'Warnungen: {count}',
+      warningsTruncated: 'Es werden nur die ersten Warnungen angezeigt.',
+    },
+    warnings: {
+      parent_missing: 'Unteraufgabe ohne übergeordnete Aufgabe importiert',
+      attachment_storage_disabled: 'Der Dateispeicher ist auf diesem Server nicht konfiguriert, Dateien wurden übersprungen',
+      attachment_too_large: 'Datei ist größer als erlaubt',
+      attachment_quota_exceeded: 'Dateikontingent der Organisation überschritten',
+      attachment_failed: 'Datei konnte nicht heruntergeladen werden',
+    },
+    errors: {
+      invalid_credentials: 'Schlüssel oder Token wurden abgelehnt. Prüfen Sie sie und versuchen Sie es erneut.',
+      invalid_url: 'Die Website-Adresse ist ungültig. Prüfen Sie sie und versuchen Sie es erneut.',
+      private_url: 'Diese Adresse liegt in einem privaten Netzwerk. Ein TaskView-Administrator kann sie mit IMPORT_ALLOW_PRIVATE_URLS=true erlauben.',
+      not_found: 'Das Projekt wurde nicht gefunden oder ist für dieses Konto nicht verfügbar.',
+      rate_limited: 'Das Quellsystem hat die Anfragerate begrenzt. Versuchen Sie es in einer Minute erneut.',
+      unavailable: 'Das Quellsystem ist nicht erreichbar. Versuchen Sie es später erneut.',
+      goal_creation_failed: 'Das Projekt konnte nicht erstellt werden.',
+      forbidden: 'Sie sind nicht mehr Eigentümer oder Admin dieser Organisation.',
+      interrupted: 'Der Import wurde durch einen Serverneustart unterbrochen. Starten Sie ihn erneut.',
+      internal: 'Etwas ist schiefgelaufen. Versuchen Sie es erneut.',
+      unknown_provider: 'Diese Importquelle wird nicht unterstützt.',
+      not_draft: 'Dieser Import wurde bereits gestartet. Beginnen Sie einen neuen.',
+      invalid_options: 'Die Importeinstellungen sind ungültig.',
+      invalid_people_mapping: 'Einige ausgewählte Personen sind keine Mitglieder der Organisation mehr.',
+      not_cancellable: 'Der Import ist bereits abgeschlossen.',
+      too_large: 'Das Projekt ist zu groß für einen einzelnen Import.',
+      already_running: 'Es läuft bereits ein anderer Import. Warten Sie, bis er abgeschlossen ist.',
+      too_many_drafts: 'Zu viele Importversuche. Versuchen Sie es in einer Stunde erneut.',
+    },
+    history: {
+      title: 'Letzte Importe',
+      tasks: 'Aufgaben: {count}',
+    },
+    callback: {
+      done: 'Verbunden. Sie können dieses Fenster schließen.',
+      failed: 'Öffnen Sie die Importseite und verbinden Sie sich erneut.',
+    },
+    providers: {
+      trello: {
+        fields: {
+          apiKey: 'API-Schlüssel',
+          token: 'Token',
+        },
+        manualHelp: {
+          title: 'So erhalten Sie API-Schlüssel und Token für Trello',
+          step1: 'Öffnen Sie die Power-Up-Verwaltung und erstellen Sie ein Power-Up:',
+          step2: 'Erzeugen Sie auf dem Tab „API key“ einen Schlüssel und kopieren Sie ihn.',
+          step3: 'Folgen Sie neben dem Schlüssel dem Link „Token“, erlauben Sie den Zugriff und kopieren Sie das Token. Das Token beginnt mit ATTA – das Feld „Secret“ auf derselben Seite passt hier nicht.',
+        },
+        options: {
+          listAs: {
+            label: 'Trello-Listen werden zu',
+            values: {
+              status: 'Kanban-Spalten',
+              list: 'Projektlisten',
+            },
+          },
+          checklistsAs: {
+            label: 'Checklisten werden zu',
+            values: {
+              subtasks: 'Unteraufgaben',
+              note: 'Eine Checkliste in der Aufgabennotiz',
+            },
+          },
+          includeArchived: {
+            label: 'Archivierte Karten und Listen importieren',
+            description: 'Archivierte Karten werden als erledigte Aufgaben importiert.',
+          },
+          commentsToNote: {
+            label: 'Kommentare zur Aufgabennotiz hinzufügen',
+          },
+          includeAttachments: {
+            label: 'Angehängte Dateien importieren',
+            description: 'Dateien zählen zum Dateikontingent der Organisation. Links bleiben Links in der Notiz.',
+          },
+        },
+      },
+      todoist: {
+        fields: {
+          token: 'API-Token',
+        },
+        manualHelp: {
+          title: 'So erhalten Sie ein Todoist-API-Token',
+          step1: 'Öffnen Sie die Todoist-Integrationseinstellungen:',
+          step2: 'Es öffnet sich der Entwickler-Tab (Developer) mit Ihrem API-Token.',
+          step3: 'Kopieren Sie das API-Token und fügen Sie es unten ein. TaskView liest damit nur Daten; das Token wird nur für diesen Import verwendet und danach gelöscht.',
+        },
+        options: {
+          sectionsAs: {
+            label: 'Todoist-Abschnitte werden zu',
+            values: {
+              status: 'Kanban-Spalten',
+              list: 'Projektlisten',
+            },
+          },
+          includeCompleted: {
+            label: 'Erledigte Aufgaben importieren',
+            description: 'Alle erledigten Aufgaben des Projekts werden als abgeschlossene Aufgaben importiert.',
+          },
+          commentsToNote: {
+            label: 'Kommentare zur Aufgabennotiz hinzufügen',
+          },
+          includeAttachments: {
+            label: 'Dateien aus Kommentaren importieren',
+            description: 'Dateien zählen zum Dateikontingent der Organisation. Links bleiben Links in der Notiz.',
+          },
+        },
+      },
+      'jira-cloud': {
+        fields: {
+          siteUrl: 'Jira-Website-Adresse',
+          email: 'E-Mail des Atlassian-Kontos',
+          token: 'API-Token',
+        },
+        manualHelp: {
+          title: 'So erhalten Sie ein Jira-Cloud-API-Token',
+          step1: 'Öffnen Sie die Seite mit den API-Tokens Ihres Atlassian-Kontos:',
+          step2: 'Klicken Sie auf „Create API token“ (das klassische, ohne Scopes), vergeben Sie einen Namen und kopieren Sie es.',
+          step3: 'Geben Sie die Website-Adresse (https://your-company.atlassian.net), die E-Mail Ihres Kontos und das Token ein. Das Token hat dieselben Rechte wie Ihr Konto; TaskView liest damit nur Daten, und das Token wird nach dem Import gelöscht.',
+        },
+        options: {
+          epicsAs: {
+            label: 'Jira-Epics werden zu',
+            values: {
+              list: 'Projektlisten',
+              task: 'Übergeordnete Aufgaben mit Unteraufgaben',
+            },
+          },
+          includeDone: {
+            label: 'Erledigte Vorgänge importieren',
+            description: 'Vorgänge in einem Status der Kategorie Done werden als erledigte Aufgaben importiert.',
+          },
+          commentsToNote: {
+            label: 'Kommentare zur Aufgabennotiz hinzufügen',
+          },
+          includeAttachments: {
+            label: 'Angehängte Dateien importieren',
+            description: 'Dateien zählen zum Dateikontingent der Organisation.',
+          },
+        },
+      },
+      'jira-dc': {
+        fields: {
+          siteUrl: 'Jira-Adresse',
+          token: 'Persönliches Zugriffstoken',
+        },
+        manualHelp: {
+          title: 'So erhalten Sie ein persönliches Jira-Zugriffstoken',
+          step1: 'Öffnen Sie in Jira das Avatar-Menü → Profil → Personal Access Tokens.',
+          step2: 'Erstellen Sie ein Token, legen Sie ein Ablaufdatum fest und kopieren Sie es. Unterstützt werden Jira Data Center und Server ab 8.14.',
+          step3: 'Geben Sie die Jira-Adresse so ein, wie Sie sie im Browser öffnen (zum Beispiel https://jira.company.com), und das Token. TaskView liest damit nur Daten, und das Token wird nach dem Import gelöscht.',
+        },
+        options: {
+          epicsAs: {
+            label: 'Jira-Epics werden zu',
+            values: {
+              list: 'Projektlisten',
+              task: 'Übergeordnete Aufgaben mit Unteraufgaben',
+            },
+          },
+          includeDone: {
+            label: 'Erledigte Vorgänge importieren',
+            description: 'Vorgänge in einem Status der Kategorie Done werden als erledigte Aufgaben importiert.',
+          },
+          commentsToNote: {
+            label: 'Kommentare zur Aufgabennotiz hinzufügen',
+          },
+          includeAttachments: {
+            label: 'Angehängte Dateien importieren',
+            description: 'Dateien zählen zum Dateikontingent der Organisation.',
+          },
+        },
+      },
     },
   },
 }
