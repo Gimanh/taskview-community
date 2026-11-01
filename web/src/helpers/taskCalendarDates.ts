@@ -1,5 +1,6 @@
-import { addDays, addHours, format } from 'date-fns'
+import { addDays, addHours, addMinutes, format } from 'date-fns'
 import type { Task, TaskArgUpdate } from 'taskview-api'
+import type { TaskDropArgs } from './taskCalendarDates.types'
 
 // Which task fields a single-day event was built from, so later writes can target the same field
 export type TaskDateShape = 'range' | 'start' | 'end'
@@ -134,6 +135,21 @@ export function eventToTaskDates(
     return { id, startDate: null, startTime: null, endDate: end.date, endTime: null }
   }
   return { id, startDate: start.date, startTime: start.time, endDate: end.date, endTime: end.time }
+}
+
+/**
+ * The dates of a task dropped onto the calendar from the unscheduled panel. A day gets a deadline,
+ * as the date picker stores a single date; a time slot gets a range one slot long.
+ */
+export function droppedTaskDates({ taskId, date, allDay, minutes }: TaskDropArgs): TaskArgUpdate {
+  if (allDay) return { id: taskId, startDate: null, startTime: null, endDate: format(date, DAY_FORMAT), endTime: null }
+  const start = toStoredDateTime(date)
+  const end = toStoredDateTime(addMinutes(date, minutes))
+  return { id: taskId, startDate: start.date, startTime: start.time, endDate: end.date, endTime: end.time }
+}
+
+export function clearedTaskDates(taskId: number): TaskArgUpdate {
+  return { id: taskId, startDate: null, startTime: null, endDate: null, endTime: null }
 }
 
 function toLocalDate(value: string | Date): Date {
