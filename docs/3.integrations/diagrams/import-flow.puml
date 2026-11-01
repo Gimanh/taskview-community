@@ -1,0 +1,85 @@
+@startuml import-flow
+title TaskView — Import from Trello (sequence)
+
+actor "Org admin" as User
+participant "Web\n(ImportWizard)" as Web
+participant "Trello" as Trello
+participant "API\n(Routes + Controller)" as API
+participant "ImportManager" as Mgr
+participant "TrelloProvider" as Prov
+queue "pg-boss" as Q
+participant "ImportApplier" as Applier
+participant "CE core\n(Goals / Collaborators / Files)" as Core
+database "PostgreSQL" as DB
+participant "Centrifugo" as Rt
+
+== Connect ==
+User -> Web: Choose Trello → Connect
+Web -> Trello: popup 1/authorize (scope=read, expiration=1day)
+Trello --> Web: /import-callback#token → postMessage to opener
+note right of Web: fallback: manual API key + token
+Web -> API: POST /jobs {organizationId, provider, credentials}
+API -> Mgr: createJob
+Mgr -> Prov: validateCredentials
+Prov -> Trello: GET /members/me
+Mgr -> DB: INSERT import_jobs (draft, credentials encrypted)
+API --> Web: job {id}
+
+== Pick board & settings ==
+Web -> API: GET /jobs/:id/projects
+API -> Prov: listRemoteProjects
+Prov -> Trello: GET /members/me/boards
+Web -> API: GET /jobs/:id/projects/:boardId
+API -> Prov: fetchProjectMeta (people, counts)
+User -> Web: options + people → org members mapping
+
+== Start ==
+Web -> API: POST /jobs/:id/start {board, options, peopleMapping, locale}
+API -> Mgr: start
+Mgr -> DB: draft → pending (config saved)
+Mgr -> Q: send import-run {jobId}
+note right of Mgr: send fails → revertToDraft
+API --> Web: job (pending)
+
+== Run (worker) ==
+Q -> Applier: run(jobId)
+Applier -> DB: pending → running
+Applier -> Applier: prepare: re-check org admin,\ndecrypt credentials, createReader
+Applier -> Prov: readStructure
+Prov -> Trello: board, lists, labels, cards, checklists, comments
+Applier -> Core: createGoal (new project)
+Applier -> DB: setGoal(goal_id)
+Applier -> DB: statuses, lists, tags
+Applier -> Core: add mapped members (executor role if new)
+loop task batches (parents before children)
+  Applier -> Applier: ensureActive (cancelled? still admin?)
+  Applier -> DB: tasks, task tags, assignees
+  Applier -> Rt: import.progress (≤ 1/s)
+  Rt --> Web: progress
+end
+loop attachments
+  Applier -> Prov: downloadAttachment
+  Prov -> Trello: GET attachment (OAuth header)
+  Applier -> Core: FilesManager.upload
+end
+Applier -> DB: completed + stats, credentials wiped
+Applier -> Rt: import.finished, goals.changed
+Rt --> Web: refetch job + history
+
+== Failure / cancel ==
+alt tasks not fully written
+  Applier -> Core: delete goal
+else attachments phase
+  Applier -> Applier: keep project, warn on skipped files
+end
+Applier -> DB: failed | cancelled + error, credentials wiped
+
+== Cleanup (every 30 min) ==
+Q -> Applier: import-cleanup (ImportDispatcher)
+note right of Applier
+  drafts > 24h → delete
+  stale pending → expire
+  running > 6h10m → interrupted
+  (goal deleted if before attachments phase)
+end note
+@enduml
