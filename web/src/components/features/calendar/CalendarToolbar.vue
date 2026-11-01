@@ -54,6 +54,8 @@
         @click="view = item.value"
       />
     </UFieldGroup>
+
+    <slot />
   </div>
 </template>
 

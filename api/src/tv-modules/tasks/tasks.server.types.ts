@@ -46,6 +46,12 @@ export const TaskArkTypeFetchTasksNewFilters = type({
     'priority?': TaskArkTypePriorityToNumber,
     'selectedTags?': TaskArkTypeSelectedTagsToNumber,
     'sprintId?': TaskArkTypeNumberFromString,
+    // Any of these assignees; 0 stands for tasks without an assignee
+    'assignees?': 'number.integer[]',
+    // Any of these kanban statuses; 0 stands for tasks without a status
+    'statuses?': 'number.integer[]',
+    // Any of these priorities; 0 stands for tasks without a priority
+    'priorities?': '(0 | 1 | 2 | 3)[]',
 });
 
 // A calendar day, as task dates are stored. The round trip rejects days that don't exist (2026-02-30),
@@ -80,6 +86,12 @@ export const TaskArkTypeFetchTasksNew = type({
     // Only tasks whose dates overlap this period (inclusive); tasks without dates are left out
     'dateFrom?': TaskArkTypeDay,
     'dateTo?': TaskArkTypeDay,
+    // Only tasks with neither a start nor an end date
+    'undated?': type('string').pipe((v) => v === 'true'),
+    // Keyset paging: the tasks that come after this one in the requested order, instead of `page`.
+    // Unlike an offset, it doesn't skip or repeat tasks when the ones already loaded change.
+    'afterId?': TaskArkTypeNumberFromString,
+    'afterPriority?': type("'1' | '2' | '3' | 'null'").pipe((v) => (v === 'null' ? null : (Number(v) as 1 | 2 | 3))),
 });
 
 export type TaskArgFetchTasksNew = typeof TaskArkTypeFetchTasksNew.infer;

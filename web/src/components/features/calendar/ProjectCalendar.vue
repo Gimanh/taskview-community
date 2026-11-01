@@ -11,83 +11,112 @@
       @today="api()?.today()"
       @prev="api()?.prev()"
       @next="api()?.next()"
-    />
-
-    <div
-      class="relative min-h-0 flex-1"
-      :class="{ 'overflow-x-auto': scrollWeek }"
     >
-      <!-- FullCalendar owns its root element's classes; a class bound there is wiped on every re-render -->
+      <UButton
+        icon="i-lucide-inbox"
+        :color="panelShown ? 'primary' : 'neutral'"
+        :variant="panelShown ? 'soft' : 'ghost'"
+        :size="isMobile ? 'md' : 'lg'"
+        class="shrink-0"
+        square
+        :aria-label="t('calendar.unscheduled.toggle')"
+        :title="t('calendar.unscheduled.toggle')"
+        :aria-pressed="panelShown"
+        data-testid="calendar-unscheduled-toggle"
+        @click="toggleUnscheduled"
+      />
+    </CalendarToolbar>
+
+    <div class="flex min-h-0 flex-1 gap-3">
       <div
-        class="h-full"
-        :class="{ 'min-w-240': scrollWeek }"
+        class="relative min-h-0 min-w-0 flex-1"
+        :class="{ 'overflow-x-auto': scrollWeek }"
       >
-        <FullCalendar
-          ref="calendarRef"
-          :options="calendarOptions"
+        <!-- FullCalendar owns its root element's classes; a class bound there is wiped on every re-render -->
+        <div
+          class="h-full"
+          :class="{ 'min-w-240': scrollWeek }"
         >
-          <template #dayHeaderContent="arg">
-            <div
-              v-if="arg.view.type === FC_VIEWS.week || arg.view.type === FC_VIEWS.hours"
-              class="flex flex-col items-start gap-0.5 px-1 py-1.5"
-            >
-              <span class="text-xs font-normal text-muted">{{ arg.weekdayText }}</span>
+          <FullCalendar
+            ref="calendarRef"
+            :options="calendarOptions"
+          >
+            <template #dayHeaderContent="arg">
+              <div
+                v-if="arg.view.type === FC_VIEWS.week || arg.view.type === FC_VIEWS.hours"
+                class="flex flex-col items-start gap-0.5 px-1 py-1.5"
+              >
+                <span class="text-xs font-normal text-muted">{{ arg.weekdayText }}</span>
+                <span
+                  class="rounded-10 px-1.5 text-2xl leading-9 font-semibold tabular-nums"
+                  :class="arg.isToday ? 'bg-primary text-inverted' : 'text-highlighted'"
+                >{{ arg.dayNumberText }}</span>
+              </div>
               <span
-                class="rounded-10 px-1.5 text-2xl leading-9 font-semibold tabular-nums"
-                :class="arg.isToday ? 'bg-primary text-inverted' : 'text-highlighted'"
+                v-else
+                class="text-xs font-normal text-muted"
+              >{{ arg.text }}</span>
+            </template>
+
+            <template #dayCellTopContent="arg">
+              <span
+                class="inline-flex min-w-6 justify-center rounded-md px-1 text-xs tabular-nums"
+                :class="arg.isToday ? 'bg-primary font-semibold text-inverted' : 'text-muted'"
               >{{ arg.dayNumberText }}</span>
-            </div>
-            <span
-              v-else
-              class="text-xs font-normal text-muted"
-            >{{ arg.text }}</span>
-          </template>
+            </template>
 
-          <template #dayCellTopContent="arg">
-            <span
-              class="inline-flex min-w-6 justify-center rounded-md px-1 text-xs tabular-nums"
-              :class="arg.isToday ? 'bg-primary font-semibold text-inverted' : 'text-muted'"
-            >{{ arg.dayNumberText }}</span>
-          </template>
+            <template #eventContent="arg">
+              <CalendarTaskCard
+                v-if="arg.event.extendedProps.task"
+                :task="arg.event.extendedProps.task"
+                :time-text="arg.event.allDay ? undefined : arg.timeText"
+                :compact="arg.view.type !== FC_VIEWS.week"
+                :dot="isMobile && arg.view.type === FC_VIEWS.month"
+                :resizable="arg.isEndResizable"
+                :lifted="arg.isMirror"
+                :fill="arg.view.type === FC_VIEWS.hours"
+                :short="arg.view.type === FC_VIEWS.hours && isShortEvent(arg.event)"
+              />
+            </template>
+          </FullCalendar>
+        </div>
 
-          <template #eventContent="arg">
-            <CalendarTaskCard
-              :task="arg.event.extendedProps.task"
-              :time-text="arg.event.allDay ? undefined : arg.timeText"
-              :compact="arg.view.type !== FC_VIEWS.week"
-              :dot="isMobile && arg.view.type === FC_VIEWS.month"
-              :resizable="arg.isEndResizable"
-              :lifted="arg.isMirror"
-              :fill="arg.view.type === FC_VIEWS.hours"
+        <div
+          v-if="showEmptyState"
+          class="pointer-events-none absolute inset-0 flex items-center justify-center p-6"
+          data-testid="calendar-empty"
+        >
+          <div class="max-w-xs rounded-14 border border-default bg-elevated/90 p-4 text-center backdrop-blur-sm">
+            <UIcon
+              name="i-lucide-calendar-days"
+              class="mb-2 size-6 text-muted"
             />
-          </template>
-        </FullCalendar>
-      </div>
-
-      <div
-        v-if="showEmptyState"
-        class="pointer-events-none absolute inset-0 flex items-center justify-center p-6"
-        data-testid="calendar-empty"
-      >
-        <div class="max-w-xs rounded-14 border border-default bg-elevated/90 p-4 text-center backdrop-blur-sm">
-          <UIcon
-            name="i-lucide-calendar-days"
-            class="mb-2 size-6 text-muted"
-          />
-          <p class="text-sm font-medium text-highlighted">
-            {{ t('calendar.empty.title') }}
-          </p>
-          <p class="mt-1 text-sm text-muted">
-            {{ t(canCreate ? 'calendar.empty.descriptionCanAdd' : 'calendar.empty.description') }}
-          </p>
+            <p class="text-sm font-medium text-highlighted">
+              {{ t('calendar.empty.title') }}
+            </p>
+            <p class="mt-1 text-sm text-muted">
+              {{ t(canCreate ? 'calendar.empty.descriptionCanAdd' : 'calendar.empty.description') }}
+            </p>
+          </div>
         </div>
       </div>
+
+      <CalendarUnscheduledPanel
+        v-if="panelShown"
+        ref="panel"
+        :drop-target="draggingFromCalendar"
+        @close="panelOpen = false"
+      />
     </div>
 
     <CalendarAddTaskDialog
       v-model:open="addOpen"
       :span="addSpan"
       :goal-id="goalId"
+    />
+    <CalendarUnscheduledDrawer
+      v-if="isMobile"
+      v-model:open="drawerOpen"
     />
   </div>
 </template>
@@ -113,20 +142,23 @@ import '@/assets/css/calendar.css'
 import CalendarToolbar from './CalendarToolbar.vue'
 import CalendarTaskCard from './CalendarTaskCard.vue'
 import CalendarAddTaskDialog from './CalendarAddTaskDialog.vue'
+import CalendarUnscheduledPanel from './parts/CalendarUnscheduledPanel.vue'
+import CalendarUnscheduledDrawer from './parts/CalendarUnscheduledDrawer.vue'
 import { useCalendarStore } from '@/stores/calendar.store'
-import type { TaskItem } from '@/types/tasks.types'
 import type { TaskArgUpdate } from 'taskview-api'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
 import { useTaskView } from '@/composables/useTaskView'
 import { useWeekStart } from '@/composables/useWeekStart'
-import { NO_STATUS, useCalendarFilters, useCalendarRouteState, type CalendarView } from '@/composables/useCalendarRouteState'
+import { useCalendarFilters, useCalendarRouteState, useCalendarUnscheduledPanel, type CalendarView } from '@/composables/useCalendarRouteState'
 import { eventToTaskDates, type CalendarSpan, isScheduled, occupiesDay, shiftTaskDates, taskToEvent, type TaskCalendarEvent } from '@/helpers/taskCalendarDates'
-import { useCalendarDragStep } from '@/composables/useCalendarDragStep'
+import { useCalendarDragStep, useCalendarSlotMinutes } from '@/composables/useCalendarDragStep'
+import { useCalendarUnscheduledDrop, useCalendarUnscheduledLoader } from '@/composables/useCalendarUnscheduled'
 
 const props = defineProps<{ goalId: number }>()
 
 const DAY_FORMAT = 'yyyy-MM-dd'
+const ONE_LINE_EVENT_MINUTES = 60
 
 const FC_VIEWS: Record<CalendarView, string> = {
   month: 'dayGridMonth',
@@ -145,7 +177,7 @@ const canCreate = computed(() => canAddTask.value && canEditTaskDeadline.value)
 const toast = useToast()
 const weekStart = useWeekStart()
 const dragStep = useCalendarDragStep()
-const slotMinutes = computed(() => Math.max(30, dragStep.value))
+const slotMinutes = useCalendarSlotMinutes()
 const { view, date } = useCalendarRouteState(isMobile.value ? 'list' : 'week')
 const filters = useCalendarFilters()
 
@@ -157,21 +189,26 @@ const title = ref('')
 const initialView = FC_VIEWS[view.value]
 const initialDate = date.value
 
-// Filters apply on the client: only the visible period is loaded, so this stays small and instant.
-// Within each filter any selected value matches; different filters must all match.
-function matchesFilters(task: TaskItem): boolean {
-  const { assignees, tags, statuses } = filters
-  return (!assignees.value.length || task.assignedUsers.some((id) => assignees.value.includes(id)))
-    && (!tags.value.length || task.tags.some((id) => tags.value.includes(id)))
-    && (!statuses.value.length || statuses.value.includes(task.statusId ?? NO_STATUS))
-}
-
 const events = computed(() => calendarStore.tasks
-  .filter(matchesFilters)
+  .filter(filters.matches)
   .map(taskToEvent)
   .filter((event): event is TaskCalendarEvent => event !== null))
 
 const visibleRange = ref<{ start: Date; end: Date }>()
+
+// Tasks without dates wait in a panel beside the calendar (a drawer on phones) to be dragged onto a day
+const panelOpen = useCalendarUnscheduledPanel()
+const drawerOpen = ref(false)
+const panelShown = computed(() => !isMobile.value && panelOpen.value)
+const panelRef = useTemplateRef<InstanceType<typeof CalendarUnscheduledPanel>>('panel')
+const { draggingFromCalendar, onDrop, onEventDragStart, onEventDragStop } = useCalendarUnscheduledDrop(() => panelRef.value?.$el)
+
+function toggleUnscheduled() {
+  if (isMobile.value) drawerOpen.value = true
+  else panelOpen.value = !panelOpen.value
+}
+
+useCalendarUnscheduledLoader(() => props.goalId)
 
 // Load the visible period only, one day wider on each side: a task with a time is stored in UTC
 // and can fall on a neighbouring local day. activeEnd is exclusive, so it already adds a day.
@@ -218,6 +255,13 @@ function onDatesSet(info: DatesSetInfo) {
 function onNavLinkDayClick(day: Date) {
   view.value = 'list'
   api()?.gotoDate(day)
+}
+
+// Under an hour: too low for the regular two-line card
+function isShortEvent(event: { start: Date | null; end: Date | null; allDay: boolean }) {
+  // Without an end, FullCalendar draws a timed event an hour long
+  if (event.allDay || !event.start || !event.end) return false
+  return differenceInMinutes(event.end, event.start) < ONE_LINE_EVENT_MINUTES
 }
 
 function onEventClick(info: EventClickInfo) {
@@ -302,6 +346,8 @@ const calendarOptions = computed<CalendarOptions>(() => ({
       snapDuration: { minutes: dragStep.value },
       scrollTime: '08:00:00',
       nowIndicator: true,
+      // Tall enough for one line of the card, however short the event
+      eventMinHeight: 20,
     },
   },
   datesSet: onDatesSet,
@@ -311,5 +357,9 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   eventResize: onEventResize,
   selectable: canCreate.value,
   select: onSelect,
+  droppable: canEditTaskDeadline.value,
+  drop: onDrop,
+  eventDragStart: onEventDragStart,
+  eventDragStop: onEventDragStop,
 }))
 </script>

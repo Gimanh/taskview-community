@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, exists, gt, ilike, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, exists, gt, ilike, inArray, isNotNull, isNull, lt, notExists, or, sql } from 'drizzle-orm';
 import type { TasksSchemaTypeForSelect } from 'taskview-db-schemas';
 import { GoalsListSchema, TasksAssigneeSchema, TasksSchema, TasksStatusesSchema, TasksToTagsSchema } from 'taskview-db-schemas';
 import { FetchTasksQueryBuilder } from '../../core/FetchTasksQueryBuilder';
@@ -557,6 +557,24 @@ export class TasksRepository {
         return result?.[0] ?? null;
     }
 
+    // The tasks after the cursor in fetch()'s order. Priorities sort with nulls last, ties newest first.
+    private afterCursorCondition(data: TaskArgFetchTasksNew) {
+        const id = data.afterId!;
+        const descending = +data.firstNew === 1;
+        if (data.sortBy !== 'priority') {
+            return descending ? lt(TasksSchema.id, id) : gt(TasksSchema.id, id);
+        }
+        const priority = data.afterPriority ?? null;
+        if (priority === null) {
+            return and(isNull(TasksSchema.priorityId), lt(TasksSchema.id, id))!;
+        }
+        return or(
+            descending ? lt(TasksSchema.priorityId, priority) : gt(TasksSchema.priorityId, priority),
+            and(eq(TasksSchema.priorityId, priority), lt(TasksSchema.id, id)),
+            isNull(TasksSchema.priorityId)
+        )!;
+    }
+
     async fetchTaskByIdNew(taskId: number): Promise<TasksSchemaTypeForSelect | null> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.select().from(TasksSchema).where(eq(TasksSchema.id, taskId))
@@ -569,18 +587,24 @@ export class TasksRepository {
 
         const unlimited = data.unlimited ?? false;
 
-        const conditions = [isNull(TasksSchema.parentId)];
-
-        // goal / list
+        // Always scoped to the goal: the caller's permissions were checked for this goal, so a list from another goal yields nothing
+        const conditions = [isNull(TasksSchema.parentId), eq(TasksSchema.goalId, data.goalId)];
         if (+data.componentId !== ALL_TASKS_LIST_ID && +data.componentId !== -1) {
             conditions.push(eq(TasksSchema.goalListId, data.componentId));
-        } else {
-            conditions.push(eq(TasksSchema.goalId, data.goalId));
         }
 
         // priority
         if (data.filters?.priority !== undefined) {
             conditions.push(eq(TasksSchema.priorityId, data.filters.priority as 1 | 2 | 3));
+        }
+
+        if (data.filters?.priorities?.length) {
+            const priorityIds = data.filters.priorities.filter((id) => id !== 0);
+            const priorityMatches = [
+                ...(priorityIds.length ? [inArray(TasksSchema.priorityId, priorityIds)] : []),
+                ...(data.filters.priorities.includes(0) ? [isNull(TasksSchema.priorityId)] : []),
+            ];
+            conditions.push(or(...priorityMatches)!);
         }
 
         // sprint
@@ -594,6 +618,9 @@ export class TasksRepository {
         }
         if (data.dateTo !== undefined) {
             conditions.push(sql`COALESCE(${TasksSchema.startDate}, ${TasksSchema.endDate}) <= ${data.dateTo}`);
+        }
+        if (data.undated) {
+            conditions.push(isNull(TasksSchema.startDate), isNull(TasksSchema.endDate));
         }
 
         // search
@@ -622,6 +649,34 @@ export class TasksRepository {
                         )
                 )
             );
+        }
+
+        if (data.filters?.assignees?.length) {
+            const assigneeIds = data.filters.assignees.filter((id) => id !== 0);
+            const assigneeOf = (userIds?: number[]) =>
+                this.db.dbDrizzle
+                    .select({ one: sql`1` })
+                    .from(TasksAssigneeSchema)
+                    .where(
+                        and(
+                            eq(TasksAssigneeSchema.taskId, TasksSchema.id),
+                            userIds ? inArray(TasksAssigneeSchema.collabUserId, userIds) : undefined
+                        )
+                    );
+            const assigneeMatches = [
+                ...(assigneeIds.length ? [exists(assigneeOf(assigneeIds))] : []),
+                ...(data.filters.assignees.includes(0) ? [notExists(assigneeOf())] : []),
+            ];
+            conditions.push(or(...assigneeMatches)!);
+        }
+
+        if (data.filters?.statuses?.length) {
+            const statusIds = data.filters.statuses.filter((id) => id !== 0);
+            const statusMatches = [
+                ...(statusIds.length ? [inArray(TasksSchema.statusId, statusIds)] : []),
+                ...(data.filters.statuses.includes(0) ? [isNull(TasksSchema.statusId)] : []),
+            ];
+            conditions.push(or(...statusMatches)!);
         }
 
         // tags filter — by EXISTS (any of the list)
@@ -655,8 +710,12 @@ export class TasksRepository {
                 ]
                 : [descending ? desc(TasksSchema.id) : asc(TasksSchema.id)];
 
+        if (data.afterId !== undefined) {
+            conditions.push(this.afterCursorCondition(data));
+        }
+
         const limit = 30;
-        const offset = (data.page ?? 0) * limit;
+        const offset = data.afterId !== undefined ? 0 : (data.page ?? 0) * limit;
 
         let dbv;
         if (unlimited) {

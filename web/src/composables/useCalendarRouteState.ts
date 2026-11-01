@@ -1,12 +1,17 @@
 import { computed } from 'vue'
 import { useRoute, useRouter, type LocationQuery } from 'vue-router'
 import { format, isValid, parseISO } from 'date-fns'
+import type { TaskItem } from '@/types/tasks.types'
+import { useGoalPermissions } from '@/composables/useGoalPermissions'
 
 export const CALENDAR_VIEWS = ['month', 'week', 'hours', 'list'] as const
 export type CalendarView = typeof CALENDAR_VIEWS[number]
 
 // In the statuses filter, stands for tasks without a status
 export const NO_STATUS = 0
+// In the unscheduled panel's filters, stand for tasks without an assignee or a priority
+export const NO_ASSIGNEE = 0
+export const NO_PRIORITY = 0
 
 const DAY_FORMAT = 'yyyy-MM-dd'
 
@@ -66,18 +71,69 @@ function idsFromQuery(value: unknown): number[] {
   return typeof value === 'string' && value ? value.split(',').map(Number).filter(Number.isInteger) : []
 }
 
-// Keeps the calendar's filters in the query string too (?assignees=3,5&tags=2&statuses=0,4&weekends=hidden)
-export function useCalendarFilters() {
+// Whether the unscheduled panel is hidden (?unscheduled=hidden): it's open by default
+export function useCalendarUnscheduledPanel() {
   const { route, patchQuery } = useQueryPatch()
+  return computed<boolean>({
+    get: () => route.query.unscheduled !== 'hidden',
+    set: (open) => patchQuery({ unscheduled: open ? undefined : 'hidden' }),
+  })
+}
 
-  const idsFilter = (key: 'assignees' | 'tags' | 'statuses') => computed<number[]>({
+function useIdsQuery() {
+  const { route, patchQuery } = useQueryPatch()
+  return (key: string) => computed<number[]>({
     get: () => idsFromQuery(route.query[key]),
     set: (ids) => patchQuery({ [key]: ids.length ? ids.join(',') : undefined }),
   })
+}
 
-  const assignees = idsFilter('assignees')
-  const tags = idsFilter('tags')
-  const statuses = idsFilter('statuses')
+export type UnscheduledPriorityFilter = typeof NO_PRIORITY | NonNullable<TaskItem['priorityId']>
+
+function isPriorityFilter(value: number): value is UnscheduledPriorityFilter {
+  return [NO_PRIORITY, 1, 2, 3].includes(value)
+}
+
+// The unscheduled panel is an inbox for handing out work, so it has its own filters,
+// apart from the calendar's (?planAssignees=0,3&planPriorities=3,0)
+export function useCalendarUnscheduledFilters() {
+  const { patchQuery } = useQueryPatch()
+  const idsQuery = useIdsQuery()
+  const { canViewTaskPriority, canViewAssignedUsersToTask } = useGoalPermissions()
+  const assignees = idsQuery('planAssignees')
+  const priorities = idsQuery('planPriorities')
+
+  // A filter on a field the user can't see is ignored, the same as on the server
+  const activeAssignees = computed(() => (canViewAssignedUsersToTask.value ? assignees.value : []))
+  const activePriorities = computed(() =>
+    (canViewTaskPriority.value ? priorities.value.filter(isPriorityFilter) : []))
+
+  const isFiltered = computed(() => activeAssignees.value.length > 0 || activePriorities.value.length > 0)
+
+  function reset() {
+    patchQuery({ planAssignees: undefined, planPriorities: undefined })
+  }
+
+  function matches(task: Pick<TaskItem, 'assignedUsers' | 'priorityId'>): boolean {
+    const ids = activeAssignees.value
+    const levels = activePriorities.value
+    const assigneeMatches = !ids.length
+      || task.assignedUsers.some((id) => ids.includes(id))
+      || (!task.assignedUsers.length && ids.includes(NO_ASSIGNEE))
+    return assigneeMatches && (!levels.length || levels.includes(task.priorityId ?? NO_PRIORITY))
+  }
+
+  return { assignees, priorities, activeAssignees, activePriorities, isFiltered, reset, matches }
+}
+
+// Keeps the calendar's filters in the query string too (?assignees=3,5&tags=2&statuses=0,4&weekends=hidden)
+export function useCalendarFilters() {
+  const { route, patchQuery } = useQueryPatch()
+  const idsQuery = useIdsQuery()
+
+  const assignees = idsQuery('assignees')
+  const tags = idsQuery('tags')
+  const statuses = idsQuery('statuses')
 
   const hideWeekends = computed<boolean>({
     get: () => route.query.weekends === 'hidden',
@@ -91,5 +147,13 @@ export function useCalendarFilters() {
     patchQuery({ assignees: undefined, tags: undefined, statuses: undefined, weekends: undefined })
   }
 
-  return { assignees, tags, statuses, hideWeekends, isFiltered, reset }
+  // Filters apply on the client: only the visible period is loaded, so this stays small and instant.
+  // Within each filter any selected value matches; different filters must all match.
+  function matches(task: Pick<TaskItem, 'assignedUsers' | 'tags' | 'statusId'>): boolean {
+    return (!assignees.value.length || task.assignedUsers.some((id) => assignees.value.includes(id)))
+      && (!tags.value.length || task.tags.some((id) => tags.value.includes(id)))
+      && (!statuses.value.length || statuses.value.includes(task.statusId ?? NO_STATUS))
+  }
+
+  return { assignees, tags, statuses, hideWeekends, isFiltered, reset, matches }
 }

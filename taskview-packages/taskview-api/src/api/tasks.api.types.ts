@@ -74,6 +74,12 @@ export type TaskFilters = {
     selectedUser?: number;
     priority?: number;
     selectedTags?: Record<string, true>;
+    /** Any of these assignees; 0 stands for tasks without an assignee */
+    assignees?: number[];
+    /** Any of these kanban statuses; 0 stands for tasks without a status */
+    statuses?: number[];
+    /** Any of these priorities; 0 stands for tasks without a priority */
+    priorities?: Array<0 | 1 | 2 | 3>;
 };
 
 export type TaskSortBy = 'date' | 'priority';
@@ -92,6 +98,12 @@ export type TaskArgFetch = {
     /** Only tasks whose dates overlap this period, inclusive ('YYYY-MM-DD'); tasks without dates are left out */
     dateFrom?: string;
     dateTo?: string;
+    /** Only tasks with neither a start nor an end date */
+    undated?: boolean;
+    /** Keyset paging: the tasks after this one in the requested order, instead of `page` */
+    afterId?: number;
+    /** The priority of the `afterId` task, needed when sorting by priority */
+    afterPriority?: 1 | 2 | 3 | null;
 };
 
 export type TaskResponseFetch = Task[];

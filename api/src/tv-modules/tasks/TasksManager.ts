@@ -306,9 +306,30 @@ export class TasksManager {
     }
 
     async fetchTasksNew(data: TaskArgFetchTasksNew) {
-        const tasks = await this.repository.fetch(data);
+        const tasks = await this.repository.fetch(await this.withVisibleCriteria(data));
         if (!tasks) return [];
         return await this.extendTasksWithTagsAndAssignees(tasks);
+    }
+
+    // Filtering or sorting by a field the user can't see would reveal its values, so those criteria are dropped
+    private async withVisibleCriteria(data: TaskArgFetchTasksNew): Promise<TaskArgFetchTasksNew> {
+        const checker = await this.user.permissionsFetcher.getCheckerForGoal(data.goalId);
+        const canSeePriority = checker.hasPermissions(GoalPermissions.TASKS_CAN_WATCH_PRIORITY);
+        const canSeeAssignees = checker.hasPermissions(GoalPermissions.TASKS_CAN_WATCH_ASSIGNED_USERS);
+        const canSeeTags = checker.hasPermissions(GoalPermissions.TASKS_CAN_WATCH_TAGS);
+        if (canSeePriority && canSeeAssignees && canSeeTags) return data;
+
+        const filters = data.filters && {
+            ...data.filters,
+            ...(canSeePriority ? {} : { priority: undefined, priorities: undefined }),
+            ...(canSeeAssignees ? {} : { selectedUser: undefined, assignees: undefined }),
+            ...(canSeeTags ? {} : { selectedTags: undefined }),
+        };
+        return {
+            ...data,
+            filters,
+            ...(canSeePriority ? {} : { sortBy: 'date' as const, afterPriority: undefined }),
+        };
     }
 
     async fetchTaskByIdNew(data: TaskArgFetchTaskByIdNew) {

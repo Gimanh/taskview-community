@@ -9,8 +9,14 @@
   />
   <div
     v-else
-    class="tv-calendar-card group relative flex w-full min-w-0 items-start gap-1.5 rounded-10 border px-1.5 py-1 text-sm text-default"
-    :class="{ 'opacity-60': task.complete && !lifted, 'pr-3': resizable, 'shadow-lg': lifted, 'h-full': fill }"
+    ref="card"
+    class="tv-calendar-card group relative flex w-full min-w-0 gap-1.5 rounded-10 border px-1.5 text-default"
+    :class="[
+      short ? 'items-center py-0 text-xs' : 'items-start py-1 text-sm',
+      // A tall event: the time on top, the title wrapping below it for as many lines as the height allows
+      { 'flex-wrap content-start gap-y-0.5': tall },
+      { 'opacity-60': task.complete && !lifted, 'pr-3': resizable, 'shadow-lg': lifted, 'h-full overflow-hidden': fill },
+    ]"
     :style="{ backgroundColor: tint.backgroundColor, borderColor: tint.borderColor }"
     :data-testid="`calendar-task-${task.id}`"
   >
@@ -18,7 +24,8 @@
       v-if="assignees.length"
       size="3xs"
       :max="2"
-      class="mt-px shrink-0"
+      class="shrink-0"
+      :class="{ 'mt-px': !short }"
     >
       <UAvatar
         v-for="email in assignees"
@@ -29,20 +36,44 @@
       />
     </UAvatarGroup>
 
+    <!-- One line: the whole time range always shows, the title takes what is left and truncates -->
     <span
-      v-if="timeText"
-      class="mt-px shrink-0 text-xs text-muted tabular-nums"
-    >{{ timeText }}</span>
+      v-if="short"
+      class="flex min-w-0 flex-1 items-center gap-x-1.5 leading-snug"
+      :title="cardTitle"
+    >
+      <span
+        v-if="timeText"
+        class="shrink-0 text-muted tabular-nums"
+      >{{ timeText }}</span>
+      <span
+        class="min-w-0 truncate"
+        :class="{ 'line-through text-muted': task.complete }"
+      >{{ task.description }}</span>
+    </span>
 
-    <span
-      class="min-w-0 flex-1 leading-snug"
-      :class="[compact ? 'truncate' : 'line-clamp-2 break-words', { 'line-through text-muted': task.complete }]"
-      :title="task.description"
-    >{{ task.description }}</span>
+    <template v-else>
+      <span
+        v-if="timeText"
+        class="mt-px shrink-0 text-xs text-muted tabular-nums"
+      >{{ timeText }}</span>
+      <span
+        ref="title"
+        class="min-w-0 leading-snug"
+        :class="[
+          tall ? 'line-clamp-1 basis-full break-words hyphens-auto' : ['flex-1', compact ? 'truncate' : 'line-clamp-2 break-words'],
+          { 'line-through text-muted': task.complete },
+        ]"
+        :style="titleLines ? { WebkitLineClamp: titleLines } : undefined"
+        :lang="locale"
+        :title="cardTitle"
+      >{{ task.description }}</span>
+    </template>
 
     <span
       v-if="canViewTaskSubtasks && task.subtasks.length"
-      class="mt-px flex shrink-0 items-center gap-0.5 text-xs text-muted tabular-nums"
+      class="flex shrink-0 items-center gap-0.5 text-xs text-muted tabular-nums"
+      :class="{ 'mt-px': !short }"
       :title="t('calendar.subtasks', { count: task.subtasks.length })"
     >
       <UIcon
@@ -62,11 +93,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { TaskItem } from '@/types/tasks.types'
 import { useCollaborationStore } from '@/stores/collaboration.store'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
+import { useCalendarCardTitleLines } from '@/composables/useCalendarCardTitleLines'
 
 const props = defineProps<{
   task: TaskItem
@@ -81,9 +113,11 @@ const props = defineProps<{
   lifted?: boolean
   // In the hours view the card fills the event, so its height shows the duration
   fill?: boolean
+  // An event too low for two lines: one line, centered, in a smaller font
+  short?: boolean
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const collaborationStore = useCollaborationStore()
 const { canViewTaskPriority, canViewAssignedUsersToTask, canViewTaskSubtasks } = useGoalPermissions()
 
@@ -103,6 +137,15 @@ const tint = computed(() => {
     solidColor: base,
   }
 })
+
+const tall = computed(() => Boolean(props.fill && !props.short))
+const titleLines = useCalendarCardTitleLines({
+  card: useTemplateRef<HTMLElement>('card'),
+  title: useTemplateRef<HTMLElement>('title'),
+  enabled: tall,
+})
+
+const cardTitle = computed(() => (props.timeText ? `${props.timeText} ${props.task.description}` : props.task.description))
 
 const assignees = computed(() => {
   if (!canViewAssignedUsersToTask.value) return []

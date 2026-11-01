@@ -9,3 +9,9 @@ export function useCalendarDragStep(): ComputedRef<CalendarDragStep> {
   const store = useUiPreferencesStore()
   return computed(() => store.settings.calendarDragStep ?? DEFAULT_CALENDAR_DRAG_STEP)
 }
+
+// The hours view's slot length: never shorter than half an hour, so the grid stays readable
+export function useCalendarSlotMinutes(): ComputedRef<number> {
+  const dragStep = useCalendarDragStep()
+  return computed(() => Math.max(30, dragStep.value))
+}
