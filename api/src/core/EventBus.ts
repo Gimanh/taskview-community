@@ -44,6 +44,8 @@ export interface AppEvents {
     'recurrence.deleted': { ruleId: number; goalId: number; initiatorId: number };
     'recurrence.instanceSkipped': { ruleId: number; goalId: number; date: string; initiatorId: number };
     'kanban.statusDeleted': { statusId: number; goalId: number; initiatorId: number };
+    'tag.created': { tagId: number; goalId: number; initiatorId: number };
+    'tag.updated': { tagId: number; goalId: number; initiatorId: number };
     'tag.deleted': { tagId: number; goalId: number; initiatorId: number };
     'list.deleted': { listId: number; goalId: number; initiatorId: number };
     'files.changed': { goalId: number; taskIds: number[]; initiatorId: number };

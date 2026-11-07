@@ -7,3 +7,9 @@ export type RealtimeTasksChangedArgs = {
     taskIds: number[];
     kind: RealtimeTaskChangeKind;
 };
+
+export const REALTIME_TAGS_CHANGED_EVENT = 'tags.changed';
+
+export type RealtimeTagsChangedArgs = {
+    goalId: number;
+};

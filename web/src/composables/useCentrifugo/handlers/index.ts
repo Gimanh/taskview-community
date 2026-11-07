@@ -3,6 +3,7 @@ import { handleNotification } from './notification'
 import { handleGoalsChanged } from './goals-changed'
 import { handleRecurrenceInstanceCreated } from './recurrence'
 import { handleFilesChanged } from './files'
+import { handleTagsChanged } from './tags'
 import { handleTasksChanged } from './tasks'
 import { handleImportFinished, handleImportProgress } from './import'
 import {
@@ -23,6 +24,7 @@ export const eventHandlers: { [K in keyof RealtimeEventMap]: RealtimeHandler<K> 
   'time-entry.deleted': handleTimeEntryDeleted,
   'recurrence.instanceCreated': handleRecurrenceInstanceCreated,
   'files.changed': handleFilesChanged,
+  'tags.changed': handleTagsChanged,
   'tasks.changed': handleTasksChanged,
   'import.progress': handleImportProgress,
   'import.finished': handleImportFinished,

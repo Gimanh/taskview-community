@@ -38,7 +38,11 @@ export class TagsManager {
     }
 
     async addTagNew(data: TagItemArgAdd) {
-        return await this.repository.addTagNew(data);
+        const tag = await this.repository.addTagNew(data);
+        if (tag?.goalId) {
+            eventBus.emit('tag.created', { tagId: tag.id, goalId: tag.goalId, initiatorId: this.user.getUserData()?.id as number });
+        }
+        return tag;
     }
 
     async fetchAllTagsForUser(organizationId?: number) {
@@ -104,7 +108,11 @@ export class TagsManager {
     }
 
     async updateTagNew(data: TagItemArgUpdate): Promise<TagsSchemaTypeForSelect | null> {
-        return await this.repository.updateTagNew(data);
+        const tag = await this.repository.updateTagNew(data);
+        if (tag?.goalId) {
+            eventBus.emit('tag.updated', { tagId: tag.id, goalId: tag.goalId, initiatorId: this.user.getUserData()?.id as number });
+        }
+        return tag;
     }
 
     private emitTagsChanged(change: TaskTagChange): void {

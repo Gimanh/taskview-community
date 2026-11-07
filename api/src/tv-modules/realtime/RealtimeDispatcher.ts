@@ -6,7 +6,12 @@ import { eventBus, type AppEvents } from '../../core/EventBus';
 import { Database } from '../../modules/db';
 import { $logger } from '../../modules/logget';
 import { RealtimeRepository } from './RealtimeRepository';
-import { REALTIME_TASKS_CHANGED_EVENT, type RealtimeTasksChangedArgs } from './types';
+import {
+    REALTIME_TAGS_CHANGED_EVENT,
+    REALTIME_TASKS_CHANGED_EVENT,
+    type RealtimeTagsChangedArgs,
+    type RealtimeTasksChangedArgs,
+} from './types';
 
 export class RealtimeDispatcher implements Dispatcher {
     private readonly repository = new RealtimeRepository();
@@ -22,6 +27,10 @@ export class RealtimeDispatcher implements Dispatcher {
         eventBus.on('task.moved', (data) => this.onTaskMoved(data));
         eventBus.on('task.assigneesChanged', (data) => this.onTaskRelationsChanged(data.taskId));
         eventBus.on('task.tagsChanged', (data) => this.onTaskRelationsChanged(data.taskId));
+
+        eventBus.on('tag.created', (data) => this.publishTagsChanged({ goalId: data.goalId }));
+        eventBus.on('tag.updated', (data) => this.publishTagsChanged({ goalId: data.goalId }));
+        eventBus.on('tag.deleted', (data) => this.publishTagsChanged({ goalId: data.goalId }));
     }
 
     async registerWorkers(): Promise<void> {}
@@ -71,6 +80,17 @@ export class RealtimeDispatcher implements Dispatcher {
             await centrifugo.broadcastToUsers({ userIds: memberIds, event: REALTIME_TASKS_CHANGED_EVENT, data: args });
         } catch (err) {
             $logger.error(err, '[RealtimeDispatcher] tasks.changed publish failed');
+        }
+    }
+
+    private async publishTagsChanged(args: RealtimeTagsChangedArgs): Promise<void> {
+        const centrifugo = getCentrifugoClient();
+        if (!centrifugo.isEnabled()) return;
+        try {
+            const memberIds = await this.repository.fetchGoalMemberIds(args.goalId);
+            await centrifugo.broadcastToUsers({ userIds: memberIds, event: REALTIME_TAGS_CHANGED_EVENT, data: args });
+        } catch (err) {
+            $logger.error(err, '[RealtimeDispatcher] tags.changed publish failed');
         }
     }
 

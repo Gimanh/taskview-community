@@ -76,4 +76,25 @@ describe('RealtimeDispatcher tasks.changed', () => {
         expect(repository.fetchTaskGoalId).not.toHaveBeenCalled();
         expect(centrifugo.broadcastToUsers).not.toHaveBeenCalled();
     });
+
+    it('tells every project member that the project tags changed', async () => {
+        eventBus.emit('tag.created', { tagId: 3, goalId: 10, initiatorId: 1 });
+        eventBus.emit('tag.updated', { tagId: 3, goalId: 10, initiatorId: 1 });
+        eventBus.emit('tag.deleted', { tagId: 3, goalId: 10, initiatorId: 1 });
+        await settle();
+        expect(repository.fetchGoalMemberIds.mock.calls).toEqual([[10], [10], [10]]);
+        expect(broadcasts()).toEqual([
+            { userIds: [1, 2], event: 'tags.changed', data: { goalId: 10 } },
+            { userIds: [1, 2], event: 'tags.changed', data: { goalId: 10 } },
+            { userIds: [1, 2], event: 'tags.changed', data: { goalId: 10 } },
+        ]);
+    });
+
+    it('does not publish tag changes when real-time is not configured', async () => {
+        centrifugo.isEnabled.mockReturnValue(false);
+        eventBus.emit('tag.created', { tagId: 3, goalId: 10, initiatorId: 1 });
+        await settle();
+        expect(repository.fetchGoalMemberIds).not.toHaveBeenCalled();
+        expect(centrifugo.broadcastToUsers).not.toHaveBeenCalled();
+    });
 });
