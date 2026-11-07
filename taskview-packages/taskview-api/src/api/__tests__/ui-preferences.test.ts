@@ -156,6 +156,53 @@ describe('UI preferences: remembered task sort', () => {
     })
   })
 
+  it('stores the recently used projects in order', async () => {
+    const saved = await api.uiPreferences.update({
+      ...original,
+      [UI_SETTINGS_KEY]: { ...settingsOf(original), recentProjectIds: [12, 3, 7] },
+    })
+    expect(settingsOf(saved).recentProjectIds).toEqual([12, 3, 7])
+    expect(settingsOf(await api.uiPreferences.fetch()).recentProjectIds).toEqual([12, 3, 7])
+  })
+
+  it('rejects recent projects that are not unique positive ids or exceed the limit', async () => {
+    const invalid = [[1, 1], [0], [1.5], ['1'], Array.from({ length: 51 }, (_, i) => i + 1)]
+    for (const recentProjectIds of invalid) {
+      await expectApiError({
+        request: api.uiPreferences.update({ [UI_SETTINGS_KEY]: { recentProjectIds: recentProjectIds as never } }),
+        status: 400,
+      })
+    }
+  })
+
+  it('moves a used project to the front without touching other settings', async () => {
+    await api.uiPreferences.update({
+      ...original,
+      [UI_SETTINGS_KEY]: { ...settingsOf(original), recentProjectIds: [12, 3, 7], defaultView: 'kanban' },
+    })
+
+    expect(await api.uiPreferences.markProjectUsed(7)).toEqual([7, 12, 3])
+    expect(await api.uiPreferences.markProjectUsed(40)).toEqual([40, 7, 12, 3])
+
+    expect(settingsOf(await api.uiPreferences.fetch())).toMatchObject({ recentProjectIds: [40, 7, 12, 3], defaultView: 'kanban' })
+  })
+
+  it('keeps only the most recent projects when marking one as used', async () => {
+    const full = Array.from({ length: 50 }, (_, i) => i + 1)
+    await api.uiPreferences.update({ ...original, [UI_SETTINGS_KEY]: { ...settingsOf(original), recentProjectIds: full } })
+
+    const recent = await api.uiPreferences.markProjectUsed(100)
+    expect(recent).toHaveLength(50)
+    expect(recent?.[0]).toBe(100)
+    expect(recent).not.toContain(50)
+  })
+
+  it('rejects marking something that is not a project id as used', async () => {
+    for (const projectId of [0, -1, 1.5, '1']) {
+      await expectApiError({ request: api.uiPreferences.markProjectUsed(projectId as never), status: 400 })
+    }
+  })
+
   it('rejects a sort field or direction the task list does not support', async () => {
     await expectApiError({
       request: api.uiPreferences.update({ [UI_SETTINGS_KEY]: { taskSortBy: 'name' as never } }),

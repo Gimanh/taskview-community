@@ -92,6 +92,17 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
     flush()
   }
 
+  async function markProjectUsed(projectId: number) {
+    const current = settings.value.recentProjectIds ?? []
+    if (current[0] === projectId) return
+    settings.value = {
+      ...settings.value,
+      recentProjectIds: [projectId, ...current.filter((id) => id !== projectId)],
+    }
+    const recentProjectIds = await $tvApi.uiPreferences.markProjectUsed(projectId)
+    if (recentProjectIds) settings.value = { ...settings.value, recentProjectIds }
+  }
+
   return {
     prefs,
     settings,
@@ -103,5 +114,6 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
     setSection,
     getSection,
     setSetting,
+    markProjectUsed,
   }
 })

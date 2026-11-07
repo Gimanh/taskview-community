@@ -45,6 +45,7 @@ import { useOrganizationStore } from '@/stores/organization.store'
 import { useOrgSwitcher } from '@/composables/useOrgSwitcher'
 import { useTimeTrackingStore } from '@/stores/time-tracking.store'
 import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
+import { useRecentProjects } from '@/composables/useRecentProjects'
 
 const { connect: connectCentrifugo } = useCentrifugo()
 const { init: initPush } = usePushNotifications()
@@ -55,6 +56,7 @@ const goalsStore = useGoalsStore()
 const orgStore = useOrganizationStore()
 const timeTrackingStore = useTimeTrackingStore()
 const uiPrefsStore = useUiPreferencesStore()
+const { markProjectUsed } = useRecentProjects()
 
 useWidgetSnapshot()
 useWidgetDeepLink()
@@ -88,6 +90,14 @@ watch(
       router.replace({ name: 'user' })
     }
   },
+)
+
+watch(
+  () => [uiPrefsStore.loaded, Number(route.params.projectId) || null] as const,
+  ([loaded, projectId]) => {
+    if (loaded && projectId) markProjectUsed(projectId)
+  },
+  { immediate: true },
 )
 
 let updateInProgress = false

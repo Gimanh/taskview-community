@@ -47,6 +47,7 @@ export type CustomTheme = {
 export type UiSettings = {
   firstDayOfWeek?: FirstDayOfWeek
   defaultProjectId?: number
+  recentProjectIds?: number[]
   defaultView?: DefaultView
   calendarDragStep?: CalendarDragStep
   taskSortBy?: TaskSortBy

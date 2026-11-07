@@ -22,4 +22,10 @@ export class UiPreferencesManager {
     if (!userId) return null
     return this.repository.upsert({ userId, prefs })
   }
+
+  async markProjectUsed(projectId: number): Promise<number[] | null> {
+    const userId = this.user.getUserData()?.id
+    if (!userId) return null
+    return this.repository.markProjectUsed({ userId, projectId })
+  }
 }

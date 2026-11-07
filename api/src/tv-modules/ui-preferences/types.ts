@@ -43,6 +43,18 @@ const firstDayOfWeekArkType = type('number.integer').narrow((v, ctx) =>
   v >= 0 && v <= 6 ? true : ctx.mustBe('an integer 0..6 (0=Sunday)'),
 )
 
+export const MAX_RECENT_PROJECTS = 50
+
+const recentProjectIdsArkType = type('(number.integer >= 1)[]').narrow((ids, ctx) => {
+  if (ids.length > MAX_RECENT_PROJECTS) {
+    return ctx.mustBe(`at most ${MAX_RECENT_PROJECTS} project ids`)
+  }
+  if (new Set(ids).size !== ids.length) {
+    return ctx.mustBe('unique project ids')
+  }
+  return true
+})
+
 const hexColorArkType = type(/^#[0-9a-fA-F]{6}$/)
 
 const CustomThemePaletteArkType = type({
@@ -63,6 +75,7 @@ const CustomThemeArkType = type({
 export const UiSettingsArkType = type({
   'firstDayOfWeek?': firstDayOfWeekArkType,
   'defaultProjectId?': 'number.integer >= 1',
+  'recentProjectIds?': recentProjectIdsArkType,
   'defaultView?': "'tasks' | 'kanban' | 'graph' | 'sprints' | 'calendar'",
   'calendarDragStep?': '5 | 10 | 15 | 30 | 60',
   'taskSortBy?': "'date' | 'priority'",
@@ -111,4 +124,13 @@ export type UiPreferences = typeof UiPreferencesArkType.infer
 export type UpdateUiPreferencesArgs = {
   userId: number
   prefs: UiPreferences
+}
+
+export const MarkProjectUsedArkType = type({
+  projectId: 'number.integer >= 1',
+})
+
+export type MarkProjectUsedArgs = {
+  userId: number
+  projectId: number
 }

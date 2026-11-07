@@ -154,6 +154,7 @@ import { useGoalsStore } from '@/stores/goals.store'
 import { useGoalPermissionsFor } from '@/composables/useGoalPermissions'
 import { useProjectRoute } from '@/composables/useProjectRoute'
 import { useInbox } from '@/composables/useInbox'
+import { useRecentProjects } from '@/composables/useRecentProjects'
 import type { Project, ProjectSaveData } from '@/components/features/projects/types'
 import ProjectEditModal from '@/components/features/projects/parts/ProjectEditModal.vue'
 import ProjectDeleteDialog from '@/components/features/projects/parts/ProjectDeleteDialog.vue'
@@ -163,6 +164,7 @@ const route = useRoute()
 const router = useRouter()
 const { projectRoute } = useProjectRoute()
 const { isOwnInbox } = useInbox()
+const { sortByRecent } = useRecentProjects()
 const goalsStore = useGoalsStore()
 const { goals } = storeToRefs(goalsStore)
 
@@ -172,7 +174,7 @@ const isEditOpen = ref(false)
 const isDeleteOpen = ref(false)
 
 const currentProjectId = computed(() => Number(route.params.projectId) || null)
-const activeProjects = computed(() => goals.value.filter(p => p.archive === 0 && !isOwnInbox(p)))
+const activeProjects = computed(() => sortByRecent(goals.value.filter(p => p.archive === 0 && !isOwnInbox(p))))
 const archivedProjects = computed(() => goals.value.filter(p => p.archive === 1 && !isOwnInbox(p)))
 const currentProject = computed<Project | null>(() =>
   currentProjectId.value ? goalsStore.goalMap.get(currentProjectId.value) ?? null : null,
