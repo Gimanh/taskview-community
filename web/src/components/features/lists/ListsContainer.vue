@@ -48,8 +48,10 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { ALL_TASKS_LIST_ID } from 'taskview-api'
 import { useRoute, useRouter } from 'vue-router'
 import { useGoalListsStore } from '@/stores/goal-lists.store'
+import { useTasksStore } from '@/stores/tasks.store'
 import TvCollapseSidebarDesktop from '@/components/features/base/TvCollapseSidebarDesktop.vue'
 import ListAddInput from './parts/ListAddInput.vue'
 import ListsList from './ListsList.vue'
@@ -63,6 +65,7 @@ const route = useRoute()
 const router = useRouter()
 
 const listsStore = useGoalListsStore()
+const tasksStore = useTasksStore()
 const { lists } = storeToRefs(listsStore)
 
 const projectId = computed(() => Number(route.params.projectId) || null)
@@ -94,7 +97,12 @@ async function handleSave(list: List, data: { name: string }) {
 }
 
 async function handleDelete(list: List) {
-  await listsStore.deleteList(list.id)
+  const deleted = await listsStore.deleteList(list.id)
+  if (!deleted) return
+  tasksStore.removeTasksOfList(list.id)
+  if (Number(route.params.listId) === list.id && projectId.value) {
+    await router.push({ name: 'user', params: { projectId: projectId.value, listId: ALL_TASKS_LIST_ID, taskId: '' } })
+  }
 }
 
 async function handleArchive(list: List) {
