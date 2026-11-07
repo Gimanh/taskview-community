@@ -239,7 +239,7 @@ const canAdd = computed(() =>
 )
 
 async function addTask() {
-  if (!canAdd.value || !selectedGoalId.value) return
+  if (loading.value || !canAdd.value || !selectedGoalId.value) return
 
   loading.value = true
 
