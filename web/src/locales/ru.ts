@@ -1710,6 +1710,9 @@ export default {
       event: 'Событие',
       action: 'Действие',
     },
+    validation: {
+      required: 'Обязательное поле',
+    },
     placeholders: {
       module: 'Выберите модуль',
       event: 'Выберите событие',

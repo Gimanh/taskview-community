@@ -1761,6 +1761,9 @@ export default {
       event: 'Ereignis',
       action: 'Aktion',
     },
+    validation: {
+      required: 'Pflichtfeld',
+    },
     placeholders: {
       module: 'Modul wählen',
       event: 'Ereignis wählen',

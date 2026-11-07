@@ -13,6 +13,7 @@ import {
     type CompleteOAuthCallbackArgs,
     type GetOAuthUrlArgs,
     type IntegrationProvider,
+    type IntegrationPublic,
     type IntegrationsArgAdd,
     type IntegrationsArgDelete,
     type IntegrationsArgFetch,
@@ -38,7 +39,7 @@ export class IntegrationsManager {
         this.repository = new IntegrationsRepository();
     }
 
-    async create(data: IntegrationsArgAdd): Promise<IntegrationsSchemaTypeForSelect | false> {
+    async create(data: IntegrationsArgAdd): Promise<IntegrationPublic | false> {
         return this.repository.create(data);
     }
 
@@ -46,7 +47,7 @@ export class IntegrationsManager {
         return this.repository.delete(data);
     }
 
-    async toggle(data: IntegrationsArgToggle): Promise<IntegrationsSchemaTypeForSelect | false> {
+    async toggle(data: IntegrationsArgToggle): Promise<IntegrationPublic | false> {
         const result = await this.repository.toggle(data);
         if (result && data.isActive) {
             this.syncIssues(data.id).catch(logError);
@@ -54,7 +55,7 @@ export class IntegrationsManager {
         return result;
     }
 
-    async fetch(data: IntegrationsArgFetch): Promise<IntegrationsSchemaTypeForSelect[]> {
+    async fetch(data: IntegrationsArgFetch): Promise<IntegrationPublic[]> {
         const projectId = Number(data.projectId);
         if (isNaN(projectId)) return [];
         return this.repository.fetchByProjectId(projectId);
@@ -188,7 +189,7 @@ export class IntegrationsManager {
         return [];
     }
 
-    async selectRepo(data: IntegrationsArgSelectRepo): Promise<IntegrationsSchemaTypeForSelect | false> {
+    async selectRepo(data: IntegrationsArgSelectRepo): Promise<IntegrationPublic | false> {
         const integration = await this.repository.fetchById(data.integrationId);
         if (!integration) return false;
 

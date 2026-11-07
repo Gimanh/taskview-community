@@ -1,6 +1,8 @@
+import type { Ref } from 'vue'
 import type {
   AutomationApiError,
   AutomationCatalog,
+  AutomationCatalogModule,
   AutomationDataSourceName,
   AutomationOption,
   AutomationParamDefinition,
@@ -56,11 +58,6 @@ export type AutomationSetParamArgs = {
   value: number | undefined
 }
 
-export type AutomationHasParamsArgs = {
-  definitions: AutomationParamDefinition[] | undefined
-  params: AutomationParams
-}
-
 export type AutomationStepDescription = {
   module: string
   label: string
@@ -73,4 +70,28 @@ export type AutomationSelectItem = {
   value: string
   disabled?: boolean
   description?: string
+}
+
+export type AutomationStepErrors = {
+  module: boolean
+  item: boolean
+  params: string[]
+}
+
+export type AutomationRuleFormErrors = {
+  name: boolean
+  trigger: AutomationStepErrors
+  action: AutomationStepErrors
+}
+
+export type AutomationStepValidationArgs = {
+  moduleName: string
+  itemName: string
+  definitions: AutomationParamDefinition[] | undefined
+  params: AutomationParams
+}
+
+export type AutomationRuleValidationArgs = {
+  value: Ref<AutomationRuleFormValue>
+  modules: Ref<AutomationCatalogModule[]>
 }

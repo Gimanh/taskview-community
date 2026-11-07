@@ -1,27 +1,18 @@
-import type { Request } from 'express';
 import { IntegrationsRepository } from '../IntegrationsRepository';
+import type { ResolveIntegrationProjectArgs } from '../types';
 
 /**
- * Resolves the project to authorize the request against.
- *
- * When the request names an integration, the project is derived from that
- * integration and a projectId supplied by the caller is ignored: every handler
- * that takes an integration id acts on the integration, so authorizing a
- * caller-supplied project would guard a different object than the one touched.
- *
- * Only create and fetch carry no integration id — there the project itself is
- * the object being acted on, so it is read from the request.
+ * Resolves the project to authorize against from exactly one request field —
+ * the same field the route's handler acts on. Every other field is ignored, so
+ * a caller cannot pass one object to the guard and another to the handler.
  */
-export async function resolveProjectId(req: Request): Promise<number | null> {
-    const integrationId = Number(req.body?.integrationId || req.query?.integrationId || req.body?.id);
-    if (integrationId && !isNaN(integrationId)) {
-        const repo = new IntegrationsRepository();
-        const integration = await repo.fetchById(integrationId);
-        return integration?.projectId ?? null;
-    }
+export async function resolveProjectId(args: ResolveIntegrationProjectArgs): Promise<number | null> {
+    const container = args.target.location === 'body' ? args.req.body : args.req.query;
+    const id = Number(container?.[args.target.field]);
+    if (!Number.isInteger(id) || id <= 0) return null;
 
-    const projectId = Number(req.body?.projectId || req.query?.projectId);
-    if (!projectId || isNaN(projectId)) return null;
+    if (args.target.source === 'project') return id;
 
-    return projectId;
+    const integration = await new IntegrationsRepository().fetchById(id);
+    return integration?.projectId ?? null;
 }
