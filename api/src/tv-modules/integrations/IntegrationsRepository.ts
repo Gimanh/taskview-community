@@ -2,23 +2,34 @@ import { and, eq, ne, isNull, sql } from 'drizzle-orm';
 import { GoalsSchema, IntegrationsSchema, IntegrationTaskMapSchema, OrganizationsSchema, TasksSchema, UsersSchema, type IntegrationsSchemaTypeForSelect, type IntegrationTaskMapSchemaTypeForSelect } from 'taskview-db-schemas';
 import { Database } from '../../modules/db';
 import { callWithCatch } from '../../utils/helpers';
-import type { IntegrationProvider, IntegrationsArgAdd, IntegrationsArgDelete, IntegrationsArgSelectRepo, IntegrationsArgToggle } from './types';
+import type { IntegrationProvider, IntegrationPublic, IntegrationsArgAdd, IntegrationsArgDelete, IntegrationsArgSelectRepo, IntegrationsArgToggle } from './types';
 import { TasksRepository } from '../tasks/TasksRepository';
 
 export class IntegrationsRepository {
     private readonly db: Database;
 
+    private readonly publicColumns = {
+        id: IntegrationsSchema.id,
+        provider: IntegrationsSchema.provider,
+        repoFullName: IntegrationsSchema.repoFullName,
+        repoExternalId: IntegrationsSchema.repoExternalId,
+        projectId: IntegrationsSchema.projectId,
+        isActive: IntegrationsSchema.isActive,
+        createdAt: IntegrationsSchema.createdAt,
+        updatedAt: IntegrationsSchema.updatedAt,
+    };
+
     constructor() {
         this.db = Database.getInstance();
     }
 
-    async create(data: IntegrationsArgAdd): Promise<IntegrationsSchemaTypeForSelect | false> {
+    async create(data: IntegrationsArgAdd): Promise<IntegrationPublic | false> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.insert(IntegrationsSchema).values({
                 provider: data.provider,
                 repoFullName: data.repoFullName,
                 projectId: data.projectId,
-            }).returning()
+            }).returning(this.publicColumns)
         );
         if (!result) return false;
         return result[0];
@@ -32,20 +43,20 @@ export class IntegrationsRepository {
         return !!(result?.rowCount && result.rowCount > 0);
     }
 
-    async toggle(data: IntegrationsArgToggle): Promise<IntegrationsSchemaTypeForSelect | false> {
+    async toggle(data: IntegrationsArgToggle): Promise<IntegrationPublic | false> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.update(IntegrationsSchema)
                 .set({ isActive: data.isActive, updatedAt: new Date() })
                 .where(eq(IntegrationsSchema.id, data.id))
-                .returning()
+                .returning(this.publicColumns)
         );
         if (!result) return false;
         return result[0];
     }
 
-    async fetchByProjectId(projectId: number): Promise<IntegrationsSchemaTypeForSelect[]> {
+    async fetchByProjectId(projectId: number): Promise<IntegrationPublic[]> {
         const result = await callWithCatch(() =>
-            this.db.dbDrizzle.select().from(IntegrationsSchema)
+            this.db.dbDrizzle.select(this.publicColumns).from(IntegrationsSchema)
                 .where(eq(IntegrationsSchema.projectId, projectId))
         );
         if (!result) return [];
@@ -94,7 +105,7 @@ export class IntegrationsRepository {
         return !!result && result.length > 0;
     }
 
-    async updateRepo(data: IntegrationsArgSelectRepo): Promise<IntegrationsSchemaTypeForSelect | false> {
+    async updateRepo(data: IntegrationsArgSelectRepo): Promise<IntegrationPublic | false> {
         const result = await callWithCatch(() =>
             this.db.dbDrizzle.update(IntegrationsSchema)
                 .set({
@@ -103,7 +114,7 @@ export class IntegrationsRepository {
                     updatedAt: new Date(),
                 })
                 .where(eq(IntegrationsSchema.id, data.integrationId))
-                .returning()
+                .returning(this.publicColumns)
         );
         if (!result) return false;
         return result[0];

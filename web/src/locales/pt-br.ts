@@ -1772,6 +1772,9 @@ export default {
       event: 'Evento',
       action: 'Ação',
     },
+    validation: {
+      required: 'Campo obrigatório',
+    },
     placeholders: {
       module: 'Selecione um módulo',
       event: 'Selecione um evento',

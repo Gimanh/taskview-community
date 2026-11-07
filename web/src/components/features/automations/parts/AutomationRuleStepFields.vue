@@ -8,6 +8,8 @@
     <div class="flex flex-col gap-3 lg:flex-row">
       <UFormField
         :label="t('automations.fields.module')"
+        :error="errors?.module ? t('automations.validation.required') : false"
+        required
         class="flex-1"
       >
         <USelect
@@ -21,6 +23,8 @@
 
       <UFormField
         :label="t(kind === 'event' ? 'automations.fields.event' : 'automations.fields.action')"
+        :error="errors?.item ? t('automations.validation.required') : false"
+        required
         class="flex-1"
       >
         <USelect
@@ -40,6 +44,7 @@
       :model-value="params[definition.key]"
       :goal-id="goalId"
       :definition="definition"
+      :invalid="!!errors?.params.includes(definition.key)"
       @update:model-value="(value) => setParam({ key: definition.key, value })"
     />
   </div>
@@ -52,13 +57,14 @@ import type { AutomationCatalogAction, AutomationCatalogEvent, AutomationCatalog
 import AutomationParamSelect from './AutomationParamSelect.vue'
 import { useAutomationLabels } from '@/composables/useAutomationLabels'
 import { useGoalsStore } from '@/stores/goals.store'
-import type { AutomationSelectItem, AutomationSetParamArgs } from '@/types/automations.types'
+import type { AutomationSelectItem, AutomationSetParamArgs, AutomationStepErrors } from '@/types/automations.types'
 
 const props = defineProps<{
   goalId: number
   kind: 'event' | 'action'
   title: string
   modules: AutomationCatalogModule[]
+  errors?: AutomationStepErrors | null
 }>()
 
 const moduleName = defineModel<string>('module', { required: true })

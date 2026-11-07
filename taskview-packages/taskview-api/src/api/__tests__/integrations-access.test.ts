@@ -2,7 +2,7 @@ import { TvApi } from '@/tv'
 import { TvPermissions } from '@/api/permissions'
 import axios, { type AxiosInstance } from 'axios'
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { API_URL, DEFAULT_PASSWORD, DEFAULT_USER_2, initApi } from './init-api'
+import { API_URL, DEFAULT_PASSWORD, DEFAULT_USER, DEFAULT_USER_2, initApi } from './init-api'
 
 /**
  * The integrations guards resolve the project to authorize against via
@@ -232,5 +232,155 @@ describe('Integrations object-level access control', () => {
 
     const deleted = await outsiderApi.integrations.deleteIntegration(created.id)
     expect(deleted).toBeTruthy()
+  })
+})
+
+describe('Integrations guard confusion via integrationId', () => {
+  let ownerApi: TvApi
+  let outsiderApi: TvApi
+  let deleteAllGoals: () => Promise<void>
+  let ownerAxios: AxiosInstance
+  let attackerAxios: AxiosInstance
+  let victimGoalId: number
+  let attackerIntegrationId: number
+
+  async function loginAxios(login: string): Promise<AxiosInstance> {
+    const auth = await axios.post(`${API_URL}/module/auth/login`, { login, password: DEFAULT_PASSWORD })
+    return axios.create({
+      baseURL: API_URL,
+      headers: { Authorization: `Bearer ${auth.data.access}` },
+      validateStatus: () => true,
+    })
+  }
+
+  beforeAll(async () => {
+    const init = await initApi()
+    ownerApi = init.$tvApi
+    outsiderApi = init.$tvApiForSecondUser
+    deleteAllGoals = init.deleteAllGoals
+
+    ownerAxios = await loginAxios(DEFAULT_USER)
+    attackerAxios = await loginAxios(DEFAULT_USER_2)
+
+    const victimGoal = await ownerApi.goals.createGoal({ name: `Victim project ${Date.now()}` })
+    if (!victimGoal) throw new Error('Failed to create victim goal')
+    victimGoalId = victimGoal.id
+
+    const attackerGoal = await outsiderApi.goals.createGoal({ name: `Attacker project ${Date.now()}` })
+    if (!attackerGoal) throw new Error('Failed to create attacker goal')
+
+    const attackerIntegration = await outsiderApi.integrations.createIntegration({
+      provider: 'github',
+      repoFullName: `attacker-org/own-repo-${Date.now()}`,
+      projectId: attackerGoal.id,
+    })
+    if (!attackerIntegration) throw new Error('Failed to create attacker integration')
+    attackerIntegrationId = attackerIntegration.id
+  })
+
+  afterAll(async () => {
+    await deleteAllGoals()
+  })
+
+  async function createVictimIntegration(): Promise<number> {
+    const created = await ownerApi.integrations.createIntegration({
+      provider: 'github',
+      repoFullName: `victim-org/private-repo-${Date.now()}`,
+      projectId: victimGoalId,
+    })
+    if (!created) throw new Error('Failed to create victim integration')
+    return created.id
+  }
+
+  async function fetchVictimIntegrations() {
+    return (await ownerApi.integrations.fetchIntegrations(victimGoalId)) ?? []
+  }
+
+  it('rejects deleting another project integration when a self-owned integrationId is supplied', async () => {
+    const integrationId = await createVictimIntegration()
+
+    const response = await attackerAxios.delete('/module/integrations', {
+      data: { id: integrationId, integrationId: attackerIntegrationId },
+    })
+
+    expect(
+      (await fetchVictimIntegrations()).some(i => i.id === integrationId),
+      `victim integration ${integrationId} was deleted by a non-member`,
+    ).toBe(true)
+    expect(response.status).toBe(403)
+  })
+
+  it('rejects the same delete bypass when integrationId arrives via the query string', async () => {
+    const integrationId = await createVictimIntegration()
+
+    const response = await attackerAxios.delete('/module/integrations', {
+      params: { integrationId: attackerIntegrationId },
+      data: { id: integrationId },
+    })
+
+    expect(
+      (await fetchVictimIntegrations()).some(i => i.id === integrationId),
+      `victim integration ${integrationId} was deleted via a query-string integrationId`,
+    ).toBe(true)
+    expect(response.status).toBe(403)
+  })
+
+  it('rejects disabling another project integration when a self-owned integrationId is supplied', async () => {
+    const integrationId = await createVictimIntegration()
+
+    const response = await attackerAxios.patch('/module/integrations/toggle', {
+      id: integrationId,
+      isActive: false,
+      integrationId: attackerIntegrationId,
+    })
+
+    const victim = (await fetchVictimIntegrations()).find(i => i.id === integrationId)
+    expect(victim?.isActive, `victim integration ${integrationId} was disabled by a non-member`).toBe(true)
+    expect(response.status).toBe(403)
+  })
+
+  it('rejects planting an integration into another project when a self-owned integrationId is supplied', async () => {
+    const repoFullName = `attacker-org/planted-repo-${Date.now()}`
+
+    const response = await attackerAxios.post('/module/integrations', {
+      provider: 'github',
+      repoFullName,
+      projectId: victimGoalId,
+      integrationId: attackerIntegrationId,
+    })
+
+    expect(
+      (await fetchVictimIntegrations()).some(i => i.repoFullName === repoFullName),
+      `integration ${repoFullName} was planted into project ${victimGoalId} by a non-member`,
+    ).toBe(false)
+    expect(response.status).toBe(403)
+  })
+
+  it('rejects listing another project integrations when a self-owned integrationId is supplied', async () => {
+    await createVictimIntegration()
+
+    const response = await attackerAxios.get('/module/integrations', {
+      params: { projectId: victimGoalId, integrationId: attackerIntegrationId },
+    })
+
+    expect(
+      response.status,
+      `Leaked integrations of project ${victimGoalId}: ${JSON.stringify(response.data)}`,
+    ).toBe(403)
+  })
+
+  it('does not return encrypted token columns when listing integrations', async () => {
+    await createVictimIntegration()
+
+    const response = await ownerAxios.get('/module/integrations', { params: { projectId: victimGoalId } })
+
+    expect(response.status).toBe(200)
+    const items: Record<string, unknown>[] = response.data.response
+    expect(items.length).toBeGreaterThan(0)
+    for (const item of items) {
+      expect(item).not.toHaveProperty('accessTokenEncrypted')
+      expect(item).not.toHaveProperty('refreshTokenEncrypted')
+      expect(item).not.toHaveProperty('webhookSecretEncrypted')
+    }
   })
 })

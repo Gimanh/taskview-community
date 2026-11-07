@@ -1,5 +1,9 @@
 <template>
-  <UFormField :label="paramLabel(definition.key)">
+  <UFormField
+    :label="paramLabel(definition.key)"
+    :error="invalid ? t('automations.validation.required') : false"
+    required
+  >
     <USelect
       v-model="model"
       :items="items"
@@ -21,6 +25,7 @@ import { useAutomationLabels } from '@/composables/useAutomationLabels'
 const props = defineProps<{
   goalId: number
   definition: AutomationParamDefinition
+  invalid?: boolean
 }>()
 
 const model = defineModel<number | undefined>()

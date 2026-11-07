@@ -1775,6 +1775,9 @@ export default {
       event: 'Event',
       action: 'Action',
     },
+    validation: {
+      required: 'Required field',
+    },
     placeholders: {
       module: 'Select a module',
       event: 'Select an event',

@@ -1,6 +1,7 @@
 import { type } from 'arktype';
 import type { Request } from 'express';
 import type { AppUser } from '../../core/AppUser';
+import type { IntegrationsSchemaTypeForSelect } from 'taskview-db-schemas';
 
 export const IntegrationsArkTypeAdd = type({
     provider: "'github' | 'gitlab' | 'gitea'",
@@ -114,3 +115,21 @@ export type AppUserFromIdArgs = {
     req: Request;
     userId: number;
 };
+
+export type IntegrationAccessSource = 'project' | 'integration';
+
+export type IntegrationAccessTarget = {
+    source: IntegrationAccessSource;
+    location: 'body' | 'query';
+    field: 'projectId' | 'id' | 'integrationId';
+};
+
+export type ResolveIntegrationProjectArgs = {
+    req: Request;
+    target: IntegrationAccessTarget;
+};
+
+export type IntegrationPublic = Pick<
+    IntegrationsSchemaTypeForSelect,
+    'id' | 'provider' | 'repoFullName' | 'repoExternalId' | 'projectId' | 'isActive' | 'createdAt' | 'updatedAt'
+>;
