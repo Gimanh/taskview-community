@@ -90,6 +90,13 @@ export const useCalendarStore = defineStore('use-calendar-store', {
       await this.loadUnscheduledPage(false)
     },
 
+    // The panel's first page again, e.g. after a task left the calendar elsewhere than through the panel
+    async reloadUnscheduled() {
+      if (!unscheduledQuery) return
+      this.unscheduledCursor = null
+      await this.loadUnscheduledPage(false)
+    },
+
     async fetchMoreUnscheduled() {
       if (this.unscheduledLoading || !this.unscheduledHasMore) return
       await this.loadUnscheduledPage(true)

@@ -316,9 +316,15 @@ export default {
     agenda: {
       empty: 'No hay tareas este día',
     },
+    main: {
+      pickProject: 'Proyecto con tareas sin fecha',
+      allProjects: 'Todos los proyectos',
+      findProject: 'Buscar un proyecto',
+    },
     subtasks: 'Subtareas: {count}',
     moveError: 'No se pudieron guardar las fechas nuevas. La tarea volvió a su lugar.',
     unscheduled: {
+      pickProject: 'Elige un proyecto para ver sus tareas sin fecha y repartirlas por días.',
       title: 'Sin fecha',
       toggle: 'Tareas sin fecha',
       hide: 'Ocultar panel',

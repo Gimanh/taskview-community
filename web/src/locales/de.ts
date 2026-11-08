@@ -316,9 +316,15 @@ export default {
     agenda: {
       empty: 'Keine Aufgaben an diesem Tag',
     },
+    main: {
+      pickProject: 'Projekt mit Aufgaben ohne Datum',
+      allProjects: 'Alle Projekte',
+      findProject: 'Projekt suchen',
+    },
     subtasks: 'Unteraufgaben: {count}',
     moveError: 'Die neuen Termine konnten nicht gespeichert werden. Die Aufgabe ist wieder an ihrem Platz.',
     unscheduled: {
+      pickProject: 'Wählen Sie ein Projekt, um seine Aufgaben ohne Datum zu sehen und auf die Tage zu verteilen.',
       title: 'Ohne Datum',
       toggle: 'Aufgaben ohne Datum',
       hide: 'Bereich ausblenden',

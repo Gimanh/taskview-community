@@ -1,6 +1,7 @@
 import TvApiBase from './base';
 import type { AppResponse } from '@/api/base.types';
-import type { StartScreenState, StartStateArgs } from './start.types';
+import type { Task } from './tasks.api.types';
+import type { StartCalendarArgs, StartScreenState, StartStateArgs } from './start.types';
 
 /**
  * The main screen module. Its routes sit under /module/about for historical
@@ -25,5 +26,19 @@ export default class TvStartApi extends TvApiBase {
         return this.request(
             this.$axios.get<AppResponse<StartScreenState>>(`${this.moduleUrl}/fetchallstate?${params.toString()}`)
         );
+    }
+
+    /**
+     * Top-level tasks of every project the caller can see whose dates overlap the period,
+     * for the calendar on the main screen. Fields the caller may not see in a task's
+     * project come back empty, the same as in that project's own calendar.
+     */
+    public async fetchCalendarTasks(args: StartCalendarArgs) {
+        const params = new URLSearchParams({ from: args.from, to: args.to });
+        if (args.organizationId) {
+            params.set('organizationId', String(args.organizationId));
+        }
+
+        return this.request(this.$axios.get<AppResponse<Task[]>>(`${this.moduleUrl}/calendar?${params.toString()}`));
     }
 }

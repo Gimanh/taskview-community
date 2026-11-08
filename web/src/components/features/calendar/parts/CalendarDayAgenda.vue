@@ -17,6 +17,7 @@
       <CalendarTaskCard
         :task="event.extendedProps.task"
         :time-text="timeText(event)"
+        v-bind="cardProps?.(event.extendedProps.task)"
       />
     </button>
 
@@ -46,11 +47,14 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CalendarTaskCard from '../CalendarTaskCard.vue'
 import type { TaskCalendarEvent } from '@/helpers/taskCalendarDates'
+import type { TaskItem } from '@/types/tasks.types'
 
 const props = defineProps<{
   day: Date
   events: TaskCalendarEvent[]
   canCreate: boolean
+  // Extra card props, e.g. the project's name and color when tasks of several projects mix
+  cardProps?: (task: TaskItem) => Record<string, unknown>
 }>()
 
 const emit = defineEmits<{

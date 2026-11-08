@@ -37,7 +37,17 @@ export function useGoalPermissionsFor(goalRef: Ref<GoalItem | null>) {
     canManageAutomations: can('AUTOMATION_CAN_MANAGE'),
     canViewWebhooks: can('WEBHOOKS_CAN_VIEW'),
     canManageWebhooks: can('WEBHOOKS_CAN_MANAGE'),
+    canAddTask: can('COMPONENT_CAN_ADD_TASKS'),
+    canEditTaskDeadline: can('TASK_CAN_EDIT_DEADLINE'),
+    canViewTaskPriority: can('TASK_CAN_WATCH_PRIORITY'),
+    canViewAssignedUsersToTask: can('TASK_CAN_WATCH_ASSIGNED_USERS'),
+    canViewTaskSubtasks: can('TASK_CAN_WATCH_SUBTASKS'),
   }
+}
+
+/** Whether the user holds a permission in a project, for code that works across projects (the main screen calendar). */
+export function goalHasPermission(goal: GoalItem | null | undefined, perm: PermissionName): boolean {
+  return hasPermission(goal, perm)
 }
 
 export const useGoalPermissions = () => {

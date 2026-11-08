@@ -14,7 +14,8 @@ function eventStart(event: TaskCalendarEvent): number {
 /** The phone month: a grid with a dot per task and, below it, the tasks of the day picked in it. */
 export function useCalendarMonthAgenda(args: UseCalendarMonthAgendaArgs) {
   const { events, visibleRange } = args
-  const { taskColor } = useCalendarTaskColor()
+  const { taskColor: priorityColor } = useCalendarTaskColor()
+  const taskColor = (task: TaskCalendarEvent['extendedProps']['task']) => args.taskColor?.(task) ?? priorityColor(task)
 
   const selectedDay = ref(startOfDay(new Date()))
 

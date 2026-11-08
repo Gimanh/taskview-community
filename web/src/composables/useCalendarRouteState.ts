@@ -169,3 +169,39 @@ export function useCalendarFilters() {
 
   return { assignees, tags, statuses, hideWeekends, isFiltered, reset, matches }
 }
+
+// The main screen calendar mixes every project, so it filters by project (?projects=3,7&weekends=hidden)
+export function useMainCalendarFilters() {
+  const { route, patchQuery } = useQueryPatch()
+  const projects = useIdsQuery()('projects')
+
+  const hideWeekends = computed<boolean>({
+    get: () => route.query.weekends === 'hidden',
+    set: (hide) => patchQuery({ weekends: hide ? 'hidden' : undefined }),
+  })
+
+  const isFiltered = computed(() => projects.value.length > 0 || hideWeekends.value)
+
+  function reset() {
+    patchQuery({ projects: undefined, weekends: undefined })
+  }
+
+  function matches(task: Pick<TaskItem, 'goalId'>): boolean {
+    return !projects.value.length || projects.value.includes(task.goalId)
+  }
+
+  return { projects, hideWeekends, isFiltered, reset, matches }
+}
+
+// The project whose undated tasks the main screen calendar hands out (?planProject=7). The panel loads
+// one project at a time: its tasks are paged and filtered with that project's permissions
+export function useMainCalendarPlanProject() {
+  const { route, patchQuery } = useQueryPatch()
+  return computed<number | null>({
+    get: () => {
+      const id = Number(route.query.planProject)
+      return Number.isInteger(id) && id > 0 ? id : null
+    },
+    set: (id) => patchQuery({ planProject: id ? String(id) : undefined }),
+  })
+}

@@ -330,9 +330,15 @@ export default {
     agenda: {
       empty: 'No tasks on this day',
     },
+    main: {
+      pickProject: 'Project with undated tasks',
+      allProjects: 'All projects',
+      findProject: 'Find a project',
+    },
     subtasks: 'Subtasks: {count}',
     moveError: 'Couldn\'t save the new dates. The task is back where it was.',
     unscheduled: {
+      pickProject: 'Pick a project to see its tasks without a date and spread them over the days.',
       title: 'No date',
       toggle: 'Tasks without a date',
       hide: 'Hide panel',

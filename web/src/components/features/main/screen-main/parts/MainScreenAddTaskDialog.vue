@@ -152,6 +152,8 @@ const props = withDefaults(defineProps<{
   defaultListId?: number
   /** show the deadline field but leave it empty */
   emptyDeadline?: boolean
+  /** deadline to start from, e.g. the calendar day the task is added on */
+  defaultDeadline?: Date
 }>(), {
   title: '',
   disabled: false,
@@ -161,6 +163,7 @@ const props = withDefaults(defineProps<{
   defaultGoalId: undefined,
   defaultListId: undefined,
   emptyDeadline: false,
+  defaultDeadline: undefined,
 })
 
 const emit = defineEmits<{
@@ -202,7 +205,10 @@ watch(() => props.taskName, (newVal) => {
 watch(model, async (isOpen) => {
   if (isOpen) {
     // Set default deadline based on widget type
-    if (!props.noDates && !props.emptyDeadline) {
+    if (!props.noDates && props.defaultDeadline) {
+      const day = props.defaultDeadline
+      deadline.value = new CalendarDate(day.getFullYear(), day.getMonth() + 1, day.getDate())
+    } else if (!props.noDates && !props.emptyDeadline) {
       const today = new Date()
       if (props.upcomingTask) {
         today.setDate(today.getDate() + 1)

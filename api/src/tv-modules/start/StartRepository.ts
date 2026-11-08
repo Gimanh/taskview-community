@@ -1,5 +1,5 @@
-import { and, eq, ilike, inArray, isNotNull, isNull } from 'drizzle-orm';
-import { GoalsSchema, GoalsListSchema, TasksSchema, TasksToTagsSchema } from 'taskview-db-schemas';
+import { and, eq, ilike, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
+import { GoalsSchema, GoalsListSchema, TasksSchema, TasksToTagsSchema, type TasksSchemaTypeForSelect } from 'taskview-db-schemas';
 import type { AppUser } from '../../core/AppUser';
 import { Database } from '../../modules/db';
 import { $logger } from '../../modules/logget';
@@ -7,7 +7,7 @@ import type { TaskItemInDb } from '../../types/tasks.types';
 import { logError } from '../../utils/api';
 import { callWithCatch } from '../../utils/helpers';
 import { TaskItemForClient } from '../tasks/TaskItemForClient';
-import type { AssigneesForTaskFromDb, FetchAllListsResult, SearchTaskArgs, SearchTaskResult, StartTaskTagFromDb, UsersByProjectsFromDb } from './start.types';
+import type { AssigneesForTaskFromDb, FetchAllListsResult, FetchTasksInPeriodArgs, SearchTaskArgs, SearchTaskResult, StartTaskTagFromDb, UsersByProjectsFromDb } from './start.types';
 
 //TODO: refactor 
 export class StartRepository {
@@ -17,6 +17,26 @@ export class StartRepository {
     constructor(user: AppUser) {
         this.db = Database.getInstance();
         this.user = user;
+    }
+
+    // Same period rule as the project calendar: a task with a single date spans just that day
+    async fetchTasksInPeriod(args: FetchTasksInPeriodArgs): Promise<TasksSchemaTypeForSelect[]> {
+        if (args.goalIds.length === 0) return [];
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select()
+                .from(TasksSchema)
+                .where(
+                    and(
+                        inArray(TasksSchema.goalId, args.goalIds),
+                        isNull(TasksSchema.parentId),
+                        sql`COALESCE(${TasksSchema.endDate}, ${TasksSchema.startDate}) >= ${args.from}`,
+                        sql`COALESCE(${TasksSchema.startDate}, ${TasksSchema.endDate}) <= ${args.to}`
+                    )
+                )
+                .orderBy(TasksSchema.id)
+        );
+        return result ?? [];
     }
 
     async fetchListsForGoals(goalIds: number[]): Promise<FetchAllListsResult[]> {

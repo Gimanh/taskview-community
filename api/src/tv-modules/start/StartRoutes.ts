@@ -21,6 +21,7 @@ export default class StartRoutes implements Routable {
     initRoutes() {
         this.router.get('/fetch/lists', [IsLoggedIn, IsOrgMemberIfProvided], this.controller.fetchAllLists)
         this.router.get('/fetchallstate', [IsLoggedIn, IsOrgMemberIfProvided], this.controller.fetchAllState)
+        this.router.get('/calendar', [IsLoggedIn, IsOrgMemberIfProvided], this.controller.fetchCalendarTasks)
         this.router.get('/search-task', [IsLoggedIn, IsOrgMemberIfProvided], this.controller.searchTaskInAllProjects)
     }
 }

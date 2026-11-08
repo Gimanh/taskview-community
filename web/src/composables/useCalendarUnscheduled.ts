@@ -1,14 +1,15 @@
 import { computed, ref, toRef, watch, type Ref } from 'vue'
 import { refDebounced, useInfiniteScroll } from '@vueuse/core'
-import type { DropInfo, EventDragStopInfo } from '@fullcalendar/vue3'
+import type { DropInfo, EventDragStartInfo, EventDragStopInfo } from '@fullcalendar/vue3'
 import { useI18n } from 'vue-i18n'
-import type { TaskArgUpdate } from 'taskview-api'
+import type { Task, TaskArgUpdate } from 'taskview-api'
 import { useCalendarStore } from '@/stores/calendar.store'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useCalendarUnscheduledFilters } from '@/composables/useCalendarRouteState'
 import { useCalendarSlotMinutes } from '@/composables/useCalendarDragStep'
 import { clearedTaskDates, droppedTaskDates } from '@/helpers/taskCalendarDates'
 import type { CalendarUnscheduledCursor, CalendarUnscheduledQuery } from '@/types/calendar.types'
+import type { UseCalendarUnscheduledDropArgs } from './useCalendarUnscheduled.types'
 
 // The panel's order, the same as the server's: most urgent first (no priority last), then newest
 function compareUnscheduled(byPriority: boolean) {
@@ -95,7 +96,8 @@ function pointerPosition(event: MouseEvent | TouchEvent) {
 
 // Dragging a task from the panel onto the calendar gives it dates; dragging one from the calendar
 // onto the panel clears them. The panel is found by its element, as FullCalendar only knows its own grid.
-export function useCalendarUnscheduledDrop(panel: () => HTMLElement | null | undefined) {
+export function useCalendarUnscheduledDrop(args: UseCalendarUnscheduledDropArgs) {
+  const { panel, accepts = () => true } = args
   const calendarStore = useCalendarStore()
   const slotMinutes = useCalendarSlotMinutes()
   const { saveDates } = useCalendarSchedule()
@@ -107,13 +109,15 @@ export function useCalendarUnscheduledDrop(panel: () => HTMLElement | null | und
     saveDates(droppedTaskDates({ taskId, date: info.date, allDay: info.allDay, minutes: slotMinutes.value }))
   }
 
-  function onEventDragStart() {
-    draggingFromCalendar.value = true
+  function onEventDragStart(info: EventDragStartInfo) {
+    draggingFromCalendar.value = accepts(info.event.extendedProps.task as Task)
   }
 
   // Dropped outside the grid, FullCalendar puts the event back on its own; clearing the dates then removes it
   function onEventDragStop(info: EventDragStopInfo) {
+    const accepted = draggingFromCalendar.value
     draggingFromCalendar.value = false
+    if (!accepted) return
     const el = panel()
     const point = pointerPosition(info.jsEvent as MouseEvent | TouchEvent)
     if (!el || !point) return

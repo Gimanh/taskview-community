@@ -1,20 +1,11 @@
 <template>
   <div
-    v-if="dot"
-    class="h-1.5 w-full rounded-full"
-    :class="{ 'opacity-40': task.complete }"
-    :style="{ backgroundColor: tint.solidColor }"
-    :title="task.description"
-    :data-testid="`calendar-task-${task.id}`"
-  />
-  <div
-    v-else
     ref="card"
     class="tv-calendar-card group relative flex w-full min-w-0 gap-1.5 rounded-10 border px-1.5 text-default"
     :class="[
       short ? 'items-center py-0 text-xs' : 'items-start py-1 text-sm',
       // A tall event: the time on top, the title wrapping below it for as many lines as the height allows
-      { 'flex-wrap content-start gap-y-0.5': tall },
+      { 'flex-wrap content-start gap-y-0.5': tall || showProject },
       { 'opacity-60': task.complete && !lifted, 'pr-3': resizable, 'shadow-lg': lifted, 'h-full overflow-hidden': fill },
     ]"
     :style="{ backgroundColor: tint.backgroundColor, borderColor: tint.borderColor }"
@@ -83,6 +74,19 @@
       {{ task.subtasks.length }}
     </span>
 
+    <span
+      v-if="showProject"
+      class="flex min-w-0 basis-full items-center gap-1 text-xs text-muted"
+      data-testid="calendar-task-project"
+    >
+      <UIcon
+        name="i-lucide-folder"
+        class="size-3 shrink-0"
+        :style="color ? { color } : undefined"
+      />
+      <span class="truncate">{{ projectName }}</span>
+    </span>
+
     <!-- Only a hint: FullCalendar's own resize handle sits on top of it and takes the pointer -->
     <span
       v-if="resizable"
@@ -97,7 +101,8 @@ import { computed, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { TaskItem } from '@/types/tasks.types'
 import { useCollaborationStore } from '@/stores/collaboration.store'
-import { useGoalPermissions } from '@/composables/useGoalPermissions'
+import { useGoalPermissionsFor } from '@/composables/useGoalPermissions'
+import { useGoalsStore } from '@/stores/goals.store'
 import { useCalendarCardTitleLines } from '@/composables/useCalendarCardTitleLines'
 import { useCalendarTaskColor } from '@/composables/useCalendarTaskColor'
 
@@ -106,8 +111,6 @@ const props = defineProps<{
   timeText?: string
   // Month cells fit a single line; the week columns have room for two
   compact?: boolean
-  // Phone-width month: cells are too narrow for text, show a priority-colored bar
-  dot?: boolean
   // Its end can be dragged to change the duration: show a grip on hover
   resizable?: boolean
   // The copy that follows the pointer while dragging
@@ -116,23 +119,31 @@ const props = defineProps<{
   fill?: boolean
   // An event too low for two lines: one line, centered, in a smaller font
   short?: boolean
+  // Tint instead of the priority color, e.g. the project's color when tasks of several projects mix
+  color?: string
+  // The task's project, shown under the title when tasks of several projects mix
+  projectName?: string
 }>()
 
 const { t, locale } = useI18n()
 const collaborationStore = useCollaborationStore()
-const { canViewAssignedUsersToTask, canViewTaskSubtasks } = useGoalPermissions()
+// The task's own project decides what is shown: the main screen calendar mixes projects
+const goalsStore = useGoalsStore()
+const goal = computed(() => goalsStore.goalMap.get(props.task.goalId) ?? null)
+const { canViewAssignedUsersToTask, canViewTaskSubtasks } = useGoalPermissionsFor(goal)
 const { taskColor } = useCalendarTaskColor()
 
 const tint = computed(() => {
-  const base = taskColor(props.task)
+  const base = props.color ?? taskColor(props.task)
   return {
     backgroundColor: `color-mix(in oklab, ${base} 16%, var(--ui-bg))`,
     borderColor: `color-mix(in oklab, ${base} 30%, transparent)`,
-    solidColor: base,
   }
 })
 
 const tall = computed(() => Boolean(props.fill && !props.short))
+// Only where the card has room for a second line
+const showProject = computed(() => Boolean(props.projectName && !props.short && !tall.value && !props.compact))
 const titleLines = useCalendarCardTitleLines({
   card: useTemplateRef<HTMLElement>('card'),
   title: useTemplateRef<HTMLElement>('title'),

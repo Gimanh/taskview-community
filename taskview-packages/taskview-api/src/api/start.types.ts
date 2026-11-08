@@ -28,3 +28,11 @@ export type StartStateArgs = {
     tz: string;
     organizationId?: number;
 };
+
+export type StartCalendarArgs = {
+    /** First day of the period, YYYY-MM-DD, inclusive */
+    from: string;
+    /** Last day of the period, YYYY-MM-DD, inclusive; at most 100 days after `from` */
+    to: string;
+    organizationId?: number;
+};

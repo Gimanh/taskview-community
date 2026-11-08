@@ -1,4 +1,6 @@
 import type { Request, Response } from 'express';
+import { type } from 'arktype';
+import { FetchCalendarTasksArkType } from './start.types';
 
 export class StartController {
     fetchAllLists = async (req: Request, res: Response) => {
@@ -12,6 +14,20 @@ export class StartController {
         }
         const organizationId = req.query.organizationId ? Number(req.query.organizationId) : undefined;
         return res.tvJson(await req.appUser.startManager.fetchAllState(req.query.tz as string, organizationId));
+    };
+
+    fetchCalendarTasks = async (req: Request, res: Response) => {
+        const query = FetchCalendarTasksArkType(req.query);
+        if (query instanceof type.errors) {
+            return res.status(400).tvJson({ message: query.summary });
+        }
+        return res.tvJson(
+            await req.appUser.startManager.fetchCalendarTasks({
+                from: query.from,
+                to: query.to,
+                organizationId: query.organizationId,
+            })
+        );
     };
 
     searchTaskInAllProjects = async (req: Request, res: Response) => {

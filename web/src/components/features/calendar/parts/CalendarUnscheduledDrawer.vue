@@ -2,60 +2,72 @@
   <UDrawer
     v-model:open="open"
     :title="t('calendar.unscheduled.title')"
-    :description="canEditTaskDeadline ? t('calendar.unscheduled.hintMobile') : undefined"
+    :description="!waiting && canEditTaskDeadline ? t('calendar.unscheduled.hintMobile') : undefined"
     :ui="{ body: 'flex min-h-0 flex-col gap-3' }"
     data-testid="calendar-unscheduled-drawer"
   >
     <template #body>
-      <div class="flex items-center gap-2">
-        <UInput
-          v-model="calendarStore.unscheduledSearch"
-          icon="i-lucide-search"
-          :placeholder="t('calendar.unscheduled.search')"
-          size="lg"
-          class="min-w-0 flex-1"
-        />
-        <CalendarUnscheduledFilters size="md" />
-      </div>
+      <slot name="picker" />
 
-      <ul
-        ref="list"
-        class="flex max-h-[60dvh] flex-col gap-1.5 overflow-y-auto"
+      <p
+        v-if="waiting"
+        class="py-4 text-sm text-muted"
+        data-testid="calendar-unscheduled-waiting"
       >
-        <li
-          v-for="task in tasks"
-          :key="task.id"
-        >
-          <CalendarSchedulePopover
-            v-if="canEditTaskDeadline"
-            :task="task"
-            @open-task="showTask"
-          />
-          <button
-            v-else
-            type="button"
-            class="block w-full text-left"
-            @click="showTask(task.id)"
-          >
-            <CalendarTaskCard :task="task" />
-          </button>
-        </li>
-        <li
-          v-if="calendarStore.unscheduledLoading"
-          class="flex justify-center py-2"
-        >
-          <UIcon
-            name="i-lucide-loader-circle"
-            class="size-4 animate-spin text-muted"
-          />
-        </li>
-      </ul>
+        {{ t('calendar.unscheduled.pickProject') }}
+      </p>
 
-      <CalendarUnscheduledEmpty
-        v-if="!calendarStore.unscheduledLoading && !tasks.length"
-        :searching="narrowed"
-        class="py-6"
-      />
+      <template v-else>
+        <div class="flex items-center gap-2">
+          <UInput
+            v-model="calendarStore.unscheduledSearch"
+            icon="i-lucide-search"
+            :placeholder="t('calendar.unscheduled.search')"
+            size="lg"
+            class="min-w-0 flex-1"
+          />
+          <CalendarUnscheduledFilters size="md" />
+        </div>
+
+        <ul
+          ref="list"
+          class="flex max-h-[60dvh] flex-col gap-1.5 overflow-y-auto"
+        >
+          <li
+            v-for="task in tasks"
+            :key="task.id"
+          >
+            <CalendarSchedulePopover
+              v-if="canEditTaskDeadline"
+              :task="task"
+              @open-task="showTask"
+            />
+            <button
+              v-else
+              type="button"
+              class="block w-full text-left"
+              @click="showTask(task.id)"
+            >
+              <CalendarTaskCard :task="task" />
+            </button>
+          </li>
+          <li
+            v-if="calendarStore.unscheduledLoading"
+            class="flex justify-center py-2"
+          >
+            <UIcon
+              name="i-lucide-loader-circle"
+              class="size-4 animate-spin text-muted"
+            />
+          </li>
+        </ul>
+
+        <CalendarUnscheduledEmpty
+          v-if="!calendarStore.unscheduledLoading && !tasks.length"
+          :searching="narrowed"
+          class="py-6"
+        />
+      </template>
     </template>
   </UDrawer>
 </template>
@@ -73,6 +85,11 @@ import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
 import { useCalendarUnscheduledScroll, useCalendarUnscheduledTasks } from '@/composables/useCalendarUnscheduled'
 
 const open = defineModel<boolean>('open', { default: false })
+
+defineProps<{
+  // No project is picked yet (main screen): there is nothing to list
+  waiting?: boolean
+}>()
 
 const { t } = useI18n()
 const calendarStore = useCalendarStore()

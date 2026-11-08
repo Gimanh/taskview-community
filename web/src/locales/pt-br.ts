@@ -329,9 +329,15 @@ export default {
     agenda: {
       empty: 'Nenhuma tarefa neste dia',
     },
+    main: {
+      pickProject: 'Projeto com tarefas sem data',
+      allProjects: 'Todos os projetos',
+      findProject: 'Encontrar um projeto',
+    },
     subtasks: 'Subtarefas: {count}',
     moveError: 'Não foi possível salvar as novas datas. A tarefa voltou ao lugar.',
     unscheduled: {
+      pickProject: 'Escolha um projeto para ver as tarefas sem data e distribuí-las pelos dias.',
       title: 'Sem data',
       toggle: 'Tarefas sem data',
       hide: 'Ocultar painel',

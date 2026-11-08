@@ -56,7 +56,7 @@ export const TaskArkTypeFetchTasksNewFilters = type({
 
 // A calendar day, as task dates are stored. The round trip rejects days that don't exist (2026-02-30),
 // which Postgres would otherwise turn into a 500.
-const TaskArkTypeDay = type(/^\d{4}-\d{2}-\d{2}$/).narrow((value, ctx) => {
+export const TaskArkTypeDay = type(/^\d{4}-\d{2}-\d{2}$/).narrow((value, ctx) => {
     const date = new Date(`${value}T00:00:00Z`);
     return (!Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value) || ctx.mustBe('a valid date');
 });

@@ -3,7 +3,8 @@ import type { GoalAccess } from '../../core/GoalAccess';
 import { GoalPermissions } from '../../types/auth.types';
 import { hideUnwatchableTaskFields } from '../tasks/task-field-visibility';
 import { StartRepository } from './StartRepository';
-import type { StartTasksVisibilityArgs, StartVisibleTask } from './start.types';
+import type { TaskForClientNew } from '../tasks/tasks.server.types';
+import type { FetchCalendarTasksArgs, StartTasksVisibilityArgs, StartVisibleTask } from './start.types';
 
 export class StartManager {
     public readonly user: AppUser;
@@ -50,6 +51,21 @@ export class StartManager {
         const goalIds = access.goalIdsWith(GoalPermissions.COMPONENT_CAN_WATCH_CONTENT);
         const tasks = await this.repository.searchTask({ description, goalsIds: goalIds });
         return this.applyTaskVisibility({ tasks, access });
+    }
+
+    async fetchCalendarTasks(args: FetchCalendarTasksArgs): Promise<TaskForClientNew[]> {
+        const access = await this.fetchGoalAccess(args.organizationId);
+        const goalIds = access.goalIdsWith(GoalPermissions.COMPONENT_CAN_WATCH_CONTENT);
+        const tasks = await this.repository.fetchTasksInPeriod({ goalIds, from: args.from, to: args.to });
+
+        const byGoal = new Map<number, typeof tasks>();
+        for (const task of tasks) {
+            byGoal.set(task.goalId, [...(byGoal.get(task.goalId) ?? []), task]);
+        }
+        const extended = await Promise.all(
+            [...byGoal.values()].map((goalTasks) => this.user.tasksManager.extendTasksWithTagsAndAssignees(goalTasks))
+        );
+        return extended.flat();
     }
 
     private async fetchGoalAccess(organizationId?: number): Promise<GoalAccess> {

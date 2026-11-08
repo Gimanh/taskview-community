@@ -8,7 +8,10 @@
       <h3 class="text-sm font-semibold text-highlighted">
         {{ t('calendar.unscheduled.title') }}
       </h3>
-      <CalendarUnscheduledFilters class="ml-auto" />
+      <CalendarUnscheduledFilters
+        v-if="!waiting"
+        class="ml-auto"
+      />
       <UButton
         icon="i-lucide-panel-right-close"
         color="neutral"
@@ -16,64 +19,83 @@
         size="sm"
         square
         :aria-label="t('calendar.unscheduled.hide')"
+        :class="{ 'ml-auto': waiting }"
         @click="emit('close')"
       />
     </div>
 
-    <p
-      v-if="canEditTaskDeadline && tasks.length"
-      class="px-3 pt-0.5 text-xs text-muted"
+    <div
+      v-if="$slots.picker"
+      class="px-3 pt-2.5"
     >
-      {{ t('calendar.unscheduled.hint') }}
+      <slot name="picker" />
+    </div>
+
+    <p
+      v-if="waiting"
+      class="px-3 pt-3 text-sm text-muted"
+      data-testid="calendar-unscheduled-waiting"
+    >
+      {{ t('calendar.unscheduled.pickProject') }}
     </p>
 
-    <UInput
-      v-model="calendarStore.unscheduledSearch"
-      icon="i-lucide-search"
-      :placeholder="t('calendar.unscheduled.search')"
-      size="sm"
-      class="mx-3 mt-2.5"
-      data-testid="calendar-unscheduled-search"
-    />
+    <template v-else>
+      <p
+        v-if="canEditTaskDeadline && tasks.length"
+        class="px-3 pt-0.5 text-xs text-muted"
+      >
+        {{ t('calendar.unscheduled.hint') }}
+      </p>
 
-    <ul
-      ref="list"
-      class="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-3"
-    >
-      <template v-if="calendarStore.unscheduledLoading && !tasks.length">
+      <UInput
+        v-model="calendarStore.unscheduledSearch"
+        icon="i-lucide-search"
+        :placeholder="t('calendar.unscheduled.search')"
+        size="sm"
+        class="mx-3 mt-2.5"
+        data-testid="calendar-unscheduled-search"
+      />
+
+      <ul
+        ref="list"
+        class="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-3"
+      >
+        <template v-if="calendarStore.unscheduledLoading && !tasks.length">
+          <li
+            v-for="n in 4"
+            :key="n"
+          >
+            <USkeleton class="h-12 rounded-10" />
+          </li>
+        </template>
         <li
-          v-for="n in 4"
-          :key="n"
+          v-for="task in tasks"
+          :key="task.id"
+          :data-task-id="task.id"
+          class="list-none"
+          :class="canEditTaskDeadline ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'"
+          @click="openTask(task.id)"
         >
-          <USkeleton class="h-12 rounded-10" />
+          <CalendarTaskCard :task="task" />
         </li>
-      </template>
-      <li
-        v-for="task in tasks"
-        :key="task.id"
-        :data-task-id="task.id"
-        class="list-none"
-        :class="canEditTaskDeadline ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'"
-        @click="openTask(task.id)"
-      >
-        <CalendarTaskCard :task="task" />
-      </li>
-      <li
-        v-if="calendarStore.unscheduledLoading && tasks.length"
-        class="flex list-none justify-center py-2"
-      >
-        <UIcon
-          name="i-lucide-loader-circle"
-          class="size-4 animate-spin text-muted"
-        />
-      </li>
-    </ul>
+        <li
+          v-if="calendarStore.unscheduledLoading && tasks.length"
+          class="flex list-none justify-center py-2"
+        >
+          <UIcon
+            name="i-lucide-loader-circle"
+            class="size-4 animate-spin text-muted"
+          />
+        </li>
+      </ul>
 
-    <CalendarUnscheduledEmpty
-      v-if="!calendarStore.unscheduledLoading && !tasks.length"
-      :searching="narrowed"
-      class="absolute inset-x-3 top-24"
-    />
+      <CalendarUnscheduledEmpty
+        v-if="!calendarStore.unscheduledLoading && !tasks.length"
+        :searching="narrowed"
+        class="absolute inset-x-3"
+        :class="$slots.picker ? 'top-36' : 'top-24'"
+      />
+    </template>
 
     <div
       v-if="dropTarget"
@@ -107,9 +129,11 @@ import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
 import { useCalendarUnscheduledScroll, useCalendarUnscheduledTasks } from '@/composables/useCalendarUnscheduled'
 import { useCalendarSlotMinutes } from '@/composables/useCalendarDragStep'
 
-defineProps<{
+const props = defineProps<{
   // A task is being dragged on the calendar: the panel takes it to clear its dates
   dropTarget?: boolean
+  // No project is picked yet (main screen): there is nothing to list
+  waiting?: boolean
 }>()
 
 const emit = defineEmits<{ close: [] }>()
@@ -137,7 +161,7 @@ function eventData(el: HTMLElement) {
   }
 }
 
-watch([list, canEditTaskDeadline], ([el, canEdit]) => {
+watch([list, canEditTaskDeadline, () => props.waiting], ([el, canEdit]) => {
   draggable?.destroy()
   draggable = el && canEdit
     ? new Draggable(el, { itemSelector: '[data-task-id]', eventData, minDistance: 5, longPressDelay: 300 })
