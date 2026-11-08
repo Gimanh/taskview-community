@@ -604,6 +604,7 @@ export default {
     dueDate: 'Fecha de vencimiento',
     deadline: 'Fecha límite',
     addDueDate: 'Añadir fecha de vencimiento',
+    deadlineNoPermission: 'No puedes establecer fechas límite en este proyecto',
     assignees: 'Responsables',
     selectAssignees: 'Seleccionar responsables',
     searchUsers: 'Buscar usuarios...',

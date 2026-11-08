@@ -189,6 +189,8 @@ export type TaskAddResult =
     | { ok: true; tasks: TaskForClientNew[] }
     | { ok: false; reason: 'foreign_reference' };
 
+export const TASK_DEADLINE_FIELDS = ['startDate', 'endDate', 'startTime', 'endTime'] as const;
+
 export const TaskFieldPermissionsForEditOrCreation = {
     description: GoalPermissions.TASKS_CAN_EDIT_DESCRIPTION,
     note: GoalPermissions.TASKS_CAN_EDIT_NOTE,

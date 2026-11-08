@@ -1,6 +1,6 @@
 import { type } from 'arktype';
 import type { NextFunction, Request, Response } from 'express';
-import { TaskArkTypeAdd } from '../tasks.server.types';
+import { TASK_DEADLINE_FIELDS, TaskArkTypeAdd } from '../tasks.server.types';
 import { GoalPermissionsFetcher } from '../../../core/GoalPermissionsFetcher';
 import { GoalPermissions } from '../../../types/auth.types';
 
@@ -23,6 +23,11 @@ export const CanAddTaskNew = async (req: Request, res: Response, next: NextFunct
 
     if (!checker.hasPermissions(GoalPermissions.COMPONENT_CAN_ADD_TASKS)) {
         return res.status(403).send('You are not allowed to add tasks to this list');
+    }
+
+    const setsDeadline = TASK_DEADLINE_FIELDS.some((field) => output[field] != null);
+    if (setsDeadline && !checker.hasPermissions(GoalPermissions.TASKS_CAN_EDIT_DEADLINE)) {
+        return res.status(403).send('You are not allowed to set the deadline of tasks in this project');
     }
 
     return next();

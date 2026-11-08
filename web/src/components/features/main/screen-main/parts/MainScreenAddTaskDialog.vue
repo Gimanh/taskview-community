@@ -66,10 +66,12 @@
         <UFormField
           v-if="!noDates"
           :label="t('tasks.deadline')"
+          :help="canSetDeadline ? undefined : t('tasks.deadlineNoPermission')"
         >
-          <UPopover>
+          <UPopover :disabled="!canSetDeadline">
             <UButton
-              :label="formattedDeadline || t('tasks.addDueDate')"
+              :label="(canSetDeadline && formattedDeadline) || t('tasks.addDueDate')"
+              :disabled="!canSetDeadline"
               icon="i-lucide-calendar"
               color="neutral"
               variant="soft"
@@ -135,6 +137,7 @@ import { useTaskView } from '@/composables/useTaskView'
 import { useInbox } from '@/composables/useInbox'
 import { useWeekStart } from '@/composables/useWeekStart'
 import { projectColor } from '@/helpers/color'
+import { goalHasPermission } from '@/composables/useGoalPermissions'
 
 const weekStart = useWeekStart()
 
@@ -256,6 +259,10 @@ const goalOptions = computed(() => {
 
 const selectedGoalColor = computed(() => goalOptions.value.find(o => o.value === selectedGoalId.value)?.color ?? null)
 
+const canSetDeadline = computed(() =>
+  goalHasPermission(goalsStore.goalMap.get(selectedGoalId.value ?? 0), 'TASK_CAN_EDIT_DEADLINE'),
+)
+
 const formattedDeadline = computed(() => {
   if (!deadline.value) return ''
   return `${deadline.value.day}.${String(deadline.value.month).padStart(2, '0')}.${deadline.value.year}`
@@ -274,7 +281,7 @@ async function addTask() {
     // Remember the chosen project for the next time the dialog is opened.
     await $ls.setValue(LAST_SELECTED_PROJECT_KEY, selectedGoalId.value.toString())
 
-    const endDate = deadline.value
+    const endDate = deadline.value && canSetDeadline.value
       ? `${deadline.value.year}-${String(deadline.value.month).padStart(2, '0')}-${String(deadline.value.day).padStart(2, '0')}`
       : null
 

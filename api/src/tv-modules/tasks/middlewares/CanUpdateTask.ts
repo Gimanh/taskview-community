@@ -18,7 +18,7 @@ export const CanUpdateTask = async (req: Request, res: Response, next: NextFunct
     const checkResult = await entityPermissionChecker.check();
 
     if (checkResult !== true) {
-        return res.status(403).send(checkResult);
+        return res.status(403).send(entityPermissionChecker.getMessage());
     }
 
     return next();

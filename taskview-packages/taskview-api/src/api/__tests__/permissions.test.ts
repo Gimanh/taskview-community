@@ -544,6 +544,42 @@ describe('TvApi permissions tests', () => {
         expect(editTaskDeadlineStatus?.startDate).toBe(`2025-01-14`);
     });
 
+    it('[TvPermissions.TASK_CAN_EDIT_DEADLINE] should not allow add a task with a deadline without permission', async () => {
+        await enableTaskAddPermission();
+
+        const addTaskStatus = await $invitedUser.tasks.createTask({
+            goalId: mainUserGoalId,
+            description: `new-task-${timestampTestFetch}`,
+            endDate: `2025-01-15`,
+        }).catch((err) => err.status);
+        expect(addTaskStatus).toBe(403);
+    });
+
+    it('[TvPermissions.TASK_CAN_EDIT_DEADLINE] should allow add a task with empty dates without permission', async () => {
+        await enableTaskAddPermission();
+
+        const addedTask = await $invitedUser.tasks.createTask({
+            goalId: mainUserGoalId,
+            description: `new-task-${timestampTestFetch}`,
+            startDate: null,
+            endDate: null,
+        }).catch(console.error);
+        expect(addedTask?.owner).toBe(1);
+    });
+
+    it('[TvPermissions.TASK_CAN_EDIT_DEADLINE] should allow add a task with a deadline with permission', async () => {
+        await enableTaskAddPermission();
+        await addPermissionForInvitedUser(TvPermissions.TASK_CAN_EDIT_DEADLINE);
+        await addPermissionForInvitedUser(TvPermissions.COMPONENT_CAN_WATCH_CONTENT);
+
+        const addedTask = await $invitedUser.tasks.createTask({
+            goalId: mainUserGoalId,
+            description: `new-task-${timestampTestFetch}`,
+            endDate: `2025-01-15`,
+        }).catch(console.error);
+        expect(addedTask?.endDate).toBe(`2025-01-15`);
+    });
+
     it('[TvPermissions.TASK_CAN_ADD_SUBTASKS] should not allow add subtasks without permission', async () => {
         await enableTaskAddPermission();
         const addSubtasksStatus = await $invitedUser.tasks.createTask({

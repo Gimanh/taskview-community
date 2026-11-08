@@ -584,6 +584,7 @@ export default {
     dueDate: 'Срок выполнения',
     deadline: 'Дедлайн',
     addDueDate: 'Добавить срок',
+    deadlineNoPermission: 'В этом проекте у вас нет права устанавливать сроки',
     assignees: 'Исполнители',
     selectAssignees: 'Выбрать исполнителей',
     searchUsers: 'Поиск пользователей...',

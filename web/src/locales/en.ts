@@ -618,6 +618,7 @@ export default {
     dueDate: 'Due Date',
     deadline: 'Deadline',
     addDueDate: 'Add due date',
+    deadlineNoPermission: 'You can not set deadlines in this project',
     assignees: 'Assignees',
     selectAssignees: 'Select assignees',
     searchUsers: 'Search users...',

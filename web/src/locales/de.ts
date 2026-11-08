@@ -604,6 +604,7 @@ export default {
     dueDate: 'Fälligkeitsdatum',
     deadline: 'Frist',
     addDueDate: 'Fälligkeitsdatum hinzufügen',
+    deadlineNoPermission: 'In diesem Projekt dürfen Sie keine Fristen festlegen',
     assignees: 'Zugewiesene',
     selectAssignees: 'Zugewiesene auswählen',
     searchUsers: 'Benutzer suchen...',
