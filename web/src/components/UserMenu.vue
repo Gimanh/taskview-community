@@ -10,6 +10,7 @@
       block
       :square="collapsed"
       class="data-[state=open]:bg-elevated"
+      data-testid="user-menu"
       :ui="{
         trailingIcon: 'text-dimmed'
       }"
@@ -39,6 +40,7 @@
       </template>
     </UButton>
   </UDropdownMenu>
+  <ExtensionOutlet name="user-menu" />
 </template>
 
 <script setup lang="ts">
@@ -52,6 +54,8 @@ import { useUserStore } from '@/stores/user.store'
 import { useOrganizationStore } from '@/stores/organization.store'
 import { useOrgSwitcher } from '@/composables/useOrgSwitcher'
 import avatarImg from '@/assets/images/avatar-1.jpeg'
+import ExtensionOutlet from '@/components/ExtensionOutlet.vue'
+import { getUserMenuItemProviders } from '@/extensions/registry'
 
 defineProps<{
   collapsed?: boolean
@@ -77,6 +81,8 @@ async function handleLogout() {
     })
   }
 }
+
+const extensionItems = getUserMenuItemProviders().map((provide) => provide())
 
 const user = computed(() => ({
   name: orgStore.currentOrg?.name || userStore.login || userStore.email,
@@ -144,6 +150,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
       ],
     },
   ],
+  extensionItems.flatMap((items) => items.value),
   [
     {
       label: t('userMenu.logout'),
