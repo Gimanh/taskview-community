@@ -3,9 +3,21 @@ import { useRoute, useRouter, type LocationQuery } from 'vue-router'
 import { format, isValid, parseISO } from 'date-fns'
 import type { TaskItem } from '@/types/tasks.types'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
+import type { FitCalendarViewArgs } from './useCalendarRouteState.types'
 
-export const CALENDAR_VIEWS = ['month', 'week', 'hours', 'list'] as const
+export const CALENDAR_VIEWS = ['month', 'week', 'hours', 'list', 'days3', 'day'] as const
 export type CalendarView = typeof CALENDAR_VIEWS[number]
+
+// Seven columns don't fit a phone: there the week views give way to three days and a single day
+export const DESKTOP_CALENDAR_VIEWS: CalendarView[] = ['month', 'week', 'hours', 'list']
+export const MOBILE_CALENDAR_VIEWS: CalendarView[] = ['month', 'days3', 'day', 'list']
+
+/** The closest view the screen offers, so a link opened on another device still shows the same period. */
+export function fitCalendarView(args: FitCalendarViewArgs): CalendarView {
+  const { view, mobile } = args
+  if (mobile) return view === 'week' || view === 'hours' ? 'days3' : view
+  return view === 'days3' || view === 'day' ? 'hours' : view
+}
 
 // In the statuses filter, stands for tasks without a status
 export const NO_STATUS = 0

@@ -37,19 +37,16 @@
     </h2>
 
     <UFieldGroup
-      :size="compact ? 'md' : 'lg'"
+      size="lg"
       class="ml-auto shrink-0"
     >
       <UButton
         v-for="item in viewItems"
         :key="item.value"
-        :icon="compact ? item.icon : undefined"
-        :label="compact ? undefined : item.label"
-        :aria-label="item.label"
+        :label="item.label"
         :aria-pressed="view === item.value"
         :color="view === item.value ? 'primary' : 'neutral'"
         :variant="view === item.value ? 'soft' : 'ghost'"
-        :square="compact"
         :data-testid="`calendar-view-${item.value}`"
         @click="view = item.value"
       />
@@ -62,12 +59,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { CalendarView } from '@/composables/useCalendarRouteState'
+import { DESKTOP_CALENDAR_VIEWS, type CalendarView } from '@/composables/useCalendarRouteState'
 
 defineProps<{
   title: string
-  // Icon-only view switcher for narrow screens
-  compact?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -80,10 +75,5 @@ const view = defineModel<CalendarView>('view', { required: true })
 
 const { t } = useI18n()
 
-const viewItems = computed(() => [
-  { value: 'month' as const, label: t('calendar.views.month'), icon: 'i-lucide-calendar' },
-  { value: 'week' as const, label: t('calendar.views.week'), icon: 'i-lucide-columns-3' },
-  { value: 'hours' as const, label: t('calendar.views.hours'), icon: 'i-lucide-clock' },
-  { value: 'list' as const, label: t('calendar.views.list'), icon: 'i-lucide-list' },
-])
+const viewItems = computed(() => DESKTOP_CALENDAR_VIEWS.map((value) => ({ value, label: t(`calendar.views.${value}`) })))
 </script>

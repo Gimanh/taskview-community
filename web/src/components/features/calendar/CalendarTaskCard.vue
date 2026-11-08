@@ -99,6 +99,7 @@ import type { TaskItem } from '@/types/tasks.types'
 import { useCollaborationStore } from '@/stores/collaboration.store'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useCalendarCardTitleLines } from '@/composables/useCalendarCardTitleLines'
+import { useCalendarTaskColor } from '@/composables/useCalendarTaskColor'
 
 const props = defineProps<{
   task: TaskItem
@@ -119,18 +120,11 @@ const props = defineProps<{
 
 const { t, locale } = useI18n()
 const collaborationStore = useCollaborationStore()
-const { canViewTaskPriority, canViewAssignedUsersToTask, canViewTaskSubtasks } = useGoalPermissions()
-
-// Same mapping as the priority dot in TaskItem: 3 high, 2 medium, 1 low
-const PRIORITY_COLORS: Record<number, string> = {
-  3: 'var(--ui-error)',
-  2: 'var(--ui-warning)',
-  1: 'var(--ui-success)',
-}
+const { canViewAssignedUsersToTask, canViewTaskSubtasks } = useGoalPermissions()
+const { taskColor } = useCalendarTaskColor()
 
 const tint = computed(() => {
-  const color = canViewTaskPriority.value ? PRIORITY_COLORS[props.task.priorityId] : undefined
-  const base = color ?? 'var(--ui-text-muted)'
+  const base = taskColor(props.task)
   return {
     backgroundColor: `color-mix(in oklab, ${base} 16%, var(--ui-bg))`,
     borderColor: `color-mix(in oklab, ${base} 30%, transparent)`,

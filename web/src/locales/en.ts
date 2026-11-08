@@ -324,6 +324,11 @@ export default {
       month: 'Month',
       week: 'Week',
       list: 'List',
+      days3: '3 days',
+      day: 'Day',
+    },
+    agenda: {
+      empty: 'No tasks on this day',
     },
     subtasks: 'Subtasks: {count}',
     moveError: 'Couldn\'t save the new dates. The task is back where it was.',

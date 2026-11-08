@@ -4,11 +4,11 @@
     :class="showAddHint && ['tv-calendar-addable', `tv-calendar-add-${view}`]"
     :style="showAddHint ? { '--tv-calendar-add-label': addHintLabel } : undefined"
   >
-    <CalendarToolbar
+    <component
+      :is="isMobile ? CalendarMobileToolbar : CalendarToolbar"
       v-model:view="view"
       :title="title"
-      :compact="isMobile"
-      @today="api()?.today()"
+      @today="goToday"
       @prev="api()?.prev()"
       @next="api()?.next()"
     >
@@ -25,26 +25,25 @@
         data-testid="calendar-unscheduled-toggle"
         @click="toggleUnscheduled"
       />
-    </CalendarToolbar>
+    </component>
 
     <div class="flex min-h-0 flex-1 gap-3">
       <div
+        ref="swipeArea"
         class="relative min-h-0 min-w-0 flex-1"
-        :class="{ 'overflow-x-auto': scrollWeek }"
+        data-testid="calendar-swipe-area"
+        :class="{ 'flex flex-col overflow-y-auto': agendaMode }"
       >
         <!-- FullCalendar owns its root element's classes; a class bound there is wiped on every re-render -->
-        <div
-          class="h-full"
-          :class="{ 'min-w-240': scrollWeek }"
-        >
+        <div :class="agendaMode ? 'tv-calendar-agenda-month shrink-0' : 'h-full'">
           <FullCalendar
             ref="calendarRef"
             :options="calendarOptions"
           >
             <template #dayHeaderContent="arg">
               <div
-                v-if="arg.view.type === FC_VIEWS.week || arg.view.type === FC_VIEWS.hours"
-                class="flex flex-col items-start gap-0.5 px-1 py-1.5"
+                v-if="arg.view.type === FC_VIEWS.week || isTimeGrid(arg.view.type)"
+                class="flex flex-col items-center gap-0.5 px-1 py-1.5"
               >
                 <span class="text-xs font-normal text-muted">{{ arg.weekdayText }}</span>
                 <span
@@ -59,7 +58,17 @@
             </template>
 
             <template #dayCellTopContent="arg">
+              <CalendarMonthDayCell
+                v-if="agendaMode"
+                :date="arg.date"
+                :day-number-text="arg.dayNumberText"
+                :is-today="arg.isToday"
+                :is-other="arg.isOther"
+                :selected="agenda.isSelected(arg.date)"
+                :dots="agenda.dotsOf(arg.date)"
+              />
               <span
+                v-else
                 class="inline-flex min-w-6 justify-center rounded-md px-1 text-xs tabular-nums"
                 :class="arg.isToday ? 'bg-primary font-semibold text-inverted' : 'text-muted'"
               >{{ arg.dayNumberText }}</span>
@@ -71,18 +80,26 @@
                 :task="arg.event.extendedProps.task"
                 :time-text="arg.event.allDay ? undefined : arg.timeText"
                 :compact="arg.view.type !== FC_VIEWS.week"
-                :dot="isMobile && arg.view.type === FC_VIEWS.month"
                 :resizable="arg.isEndResizable"
                 :lifted="arg.isMirror"
-                :fill="arg.view.type === FC_VIEWS.hours"
-                :short="arg.view.type === FC_VIEWS.hours && isShortEvent(arg.event)"
+                :fill="isTimeGrid(arg.view.type)"
+                :short="isTimeGrid(arg.view.type) && isShortEvent(arg.event)"
               />
             </template>
           </FullCalendar>
         </div>
 
+        <CalendarDayAgenda
+          v-if="agendaMode"
+          :day="agenda.selectedDay.value"
+          :events="agenda.selectedDayEvents.value"
+          :can-create="canCreate"
+          @open="openTask"
+          @add="addOnDay(agenda.selectedDay.value)"
+        />
+
         <div
-          v-if="showEmptyState"
+          v-if="showEmptyState && !agendaMode"
           class="pointer-events-none absolute inset-0 flex items-center justify-center p-6"
           data-testid="calendar-empty"
         >
@@ -118,15 +135,25 @@
       v-if="isMobile"
       v-model:open="drawerOpen"
     />
+    <UButton
+      v-if="isMobile && canCreate"
+      icon="i-lucide-plus"
+      size="xl"
+      class="fixed right-4 bottom-[calc(var(--tv-safe-area-inset-bottom)+5.5rem)] z-40 rounded-full p-4 shadow-lg"
+      :ui="{ leadingIcon: 'size-6' }"
+      :aria-label="t('calendar.add.title')"
+      data-testid="calendar-add-fab"
+      @click="addOnDay(fabDay)"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef, watch } from 'vue'
-import { addDays, addMinutes, differenceInMinutes, eachDayOfInterval, format, getDay, isWeekend } from 'date-fns'
+import { addDays, addMinutes, differenceInMinutes, eachDayOfInterval, format, getDay, isWeekend, startOfDay } from 'date-fns'
 import { useI18n } from 'vue-i18n'
 import FullCalendar from '@fullcalendar/vue3'
-import type { CalendarOptions, DateSelectInfo, DatesSetInfo, EventChangeInfo, EventClickInfo, EventDropInfo, EventResizeDoneInfo } from '@fullcalendar/vue3'
+import type { CalendarOptions, DateClickInfo, DateSelectInfo, DatesSetInfo, EventChangeInfo, EventClickInfo, EventDropInfo, EventResizeDoneInfo } from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/vue3/daygrid'
 import interactionPlugin from '@fullcalendar/vue3/interaction'
 import timeGridPlugin from '@fullcalendar/vue3/timegrid'
@@ -140,6 +167,9 @@ import '@fullcalendar/vue3/skeleton.css'
 import '@fullcalendar/vue3/themes/classic/theme.css'
 import '@/assets/css/calendar.css'
 import CalendarToolbar from './CalendarToolbar.vue'
+import CalendarMobileToolbar from './CalendarMobileToolbar.vue'
+import CalendarDayAgenda from './parts/CalendarDayAgenda.vue'
+import CalendarMonthDayCell from './parts/CalendarMonthDayCell.vue'
 import CalendarTaskCard from './CalendarTaskCard.vue'
 import CalendarAddTaskDialog from './CalendarAddTaskDialog.vue'
 import CalendarUnscheduledPanel from './parts/CalendarUnscheduledPanel.vue'
@@ -150,7 +180,9 @@ import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
 import { useTaskView } from '@/composables/useTaskView'
 import { useWeekStart } from '@/composables/useWeekStart'
-import { useCalendarFilters, useCalendarRouteState, useCalendarUnscheduledPanel, type CalendarView } from '@/composables/useCalendarRouteState'
+import { fitCalendarView, useCalendarFilters, useCalendarRouteState, useCalendarUnscheduledPanel, type CalendarView } from '@/composables/useCalendarRouteState'
+import { useCalendarMonthAgenda } from '@/composables/useCalendarMonthAgenda'
+import { useCalendarSwipe } from '@/composables/useCalendarSwipe'
 import { eventToTaskDates, type CalendarSpan, isScheduled, occupiesDay, shiftTaskDates, taskToEvent, type TaskCalendarEvent } from '@/helpers/taskCalendarDates'
 import { useCalendarDragStep, useCalendarSlotMinutes } from '@/composables/useCalendarDragStep'
 import { useCalendarUnscheduledDrop, useCalendarUnscheduledLoader } from '@/composables/useCalendarUnscheduled'
@@ -165,6 +197,15 @@ const FC_VIEWS: Record<CalendarView, string> = {
   week: 'dayGridWeek',
   hours: 'timeGridWeek',
   list: 'listWeek',
+  days3: 'timeGrid3Day',
+  day: 'timeGridDay',
+}
+
+// The views laid out by the hour: the week on a desktop, three days and a single day on a phone
+const TIME_GRID_VIEWS = new Set([FC_VIEWS.hours, FC_VIEWS.days3, FC_VIEWS.day])
+
+function isTimeGrid(viewType: string): boolean {
+  return TIME_GRID_VIEWS.has(viewType)
 }
 
 const { t, locale } = useI18n()
@@ -178,15 +219,21 @@ const toast = useToast()
 const weekStart = useWeekStart()
 const dragStep = useCalendarDragStep()
 const slotMinutes = useCalendarSlotMinutes()
-const { view, date } = useCalendarRouteState(isMobile.value ? 'list' : 'week')
+const { view, date } = useCalendarRouteState(isMobile.value ? 'month' : 'week')
 const filters = useCalendarFilters()
 
 const calendarRef = useTemplateRef<InstanceType<typeof FullCalendar>>('calendarRef')
 const api = () => calendarRef.value?.getApi()
 
 const title = ref('')
+// A link opened on another device asks for a view this screen doesn't offer: show the closest one
+watch([view, isMobile], ([value, mobile]) => {
+  const fitted = fitCalendarView({ view: value, mobile })
+  if (fitted !== value) view.value = fitted
+}, { immediate: true })
+
 // Read once: FullCalendar owns navigation after mount and reports it back through datesSet
-const initialView = FC_VIEWS[view.value]
+const initialView = FC_VIEWS[fitCalendarView({ view: view.value, mobile: isMobile.value })]
 const initialDate = date.value
 
 const events = computed(() => calendarStore.tasks
@@ -195,6 +242,10 @@ const events = computed(() => calendarStore.tasks
   .filter((event): event is TaskCalendarEvent => event !== null))
 
 const visibleRange = ref<{ start: Date; end: Date }>()
+
+// On a phone the month is a compact grid with a dot per task and the tasks of the picked day below it
+const agendaMode = computed(() => isMobile.value && view.value === 'month')
+const agenda = useCalendarMonthAgenda({ events, visibleRange })
 
 // Tasks without dates wait in a panel beside the calendar (a drawer on phones) to be dragged onto a day
 const panelOpen = useCalendarUnscheduledPanel()
@@ -230,9 +281,6 @@ const collapsedWeekdays = computed(() => {
 })
 const weekendClass = (arg: { dow: number }) => (collapsedWeekdays.value.has(arg.dow) ? 'tv-calendar-collapsed' : '')
 
-// Seven readable columns don't fit a phone: let the week scroll sideways instead of squeezing cards
-const scrollWeek = computed(() => isMobile.value && (view.value === 'week' || view.value === 'hours'))
-
 // Day views show "+ Add task" on the hovered day, so it's clear a click adds one (see calendar.css)
 const showAddHint = computed(() => canCreate.value && (view.value === 'month' || view.value === 'week'))
 const addHintLabel = computed(() => JSON.stringify(`+ ${t('calendar.add.submit')}`))
@@ -244,6 +292,7 @@ watch(view, (value) => api()?.changeView(FC_VIEWS[value]))
 function onDatesSet(info: DatesSetInfo) {
   title.value = info.view.title
   date.value = info.view.currentStart
+  if (info.view.type === FC_VIEWS.month) agenda.keepInMonth(info.view.currentStart)
   const { activeStart: start, activeEnd: end } = info.view
   // datesSet also fires on re-renders of the same period: only a real change should reload
   if (visibleRange.value?.start.getTime() !== start.getTime() || visibleRange.value?.end.getTime() !== end.getTime()) {
@@ -264,6 +313,38 @@ function isShortEvent(event: { start: Date | null; end: Date | null; allDay: boo
   return differenceInMinutes(event.end, event.start) < ONE_LINE_EVENT_MINUTES
 }
 
+function onDateClick(info: DateClickInfo) {
+  if (agendaMode.value) agenda.selectDay(info.date)
+}
+
+function goToday() {
+  api()?.today()
+  agenda.selectDay(new Date())
+}
+
+// Where the "+" button adds a task: the picked day in the month, otherwise today when it is on
+// screen, or the first day shown
+const fabDay = computed(() => {
+  if (agendaMode.value) return agenda.selectedDay.value
+  const range = visibleRange.value
+  const today = startOfDay(new Date())
+  if (!range || (today >= range.start && today < range.end)) return today
+  return range.start
+})
+
+function addOnDay(day: Date) {
+  addSpan.value = { start: startOfDay(day), end: addDays(startOfDay(day), 1), allDay: true }
+  addOpen.value = true
+}
+
+const draggingEvent = ref(false)
+useCalendarSwipe({
+  target: useTemplateRef<HTMLElement>('swipeArea'),
+  enabled: () => isMobile.value && !draggingEvent.value,
+  onNext: () => api()?.next(),
+  onPrev: () => api()?.prev(),
+})
+
 function onEventClick(info: EventClickInfo) {
   info.jsEvent.preventDefault()
   openTask((info.event.extendedProps.task as TaskCalendarEvent['extendedProps']['task']).id)
@@ -279,7 +360,7 @@ async function saveDates(info: EventChangeInfo, patch: TaskArgUpdate) {
 // Day grids move events by whole days, so their deltas carry days only and keep each time as it is.
 // In the hours view, an event that lands on (or leaves) a time slot is read from where it landed.
 function movedByDays(info: EventChangeInfo) {
-  return view.value !== 'hours' || (info.event.allDay && info.oldEvent.allDay)
+  return !isTimeGrid(FC_VIEWS[view.value]) || (info.event.allDay && info.oldEvent.allDay)
 }
 
 function landed(info: EventChangeInfo) {
@@ -322,12 +403,13 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   initialView,
   initialDate,
   headerToolbar: false,
-  height: '100%',
+  height: agendaMode.value ? 'auto' : '100%',
   locales: [deLocale, esLocale, ptBrLocale, ruLocale],
   locale: locale.value.toLowerCase(),
   // Unset means "follow the locale"
   ...(weekStart.value !== undefined ? { firstDay: weekStart.value } : {}),
-  events: events.value,
+  // The phone month shows tasks as dots in the day cells and as a list below the grid
+  events: agendaMode.value ? [] : events.value,
   eventDisplay: 'block',
   eventClass: 'cursor-pointer',
   // The list view's color dot: CalendarTaskCard is the whole event, and the dot is invisible with a transparent eventColor
@@ -336,11 +418,13 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   eventContrastColor: 'var(--ui-text)',
   dayMaxEvents: true,
   weekends: !filters.hideWeekends.value,
-  navLinks: true,
+  // On a phone a tap on a day picks it (month) or adds a task; jumping to another view surprises there
+  navLinks: !isMobile.value,
   navLinkDayClick: onNavLinkDayClick,
   views: {
     dayGridWeek: { dayMaxEvents: false, dayHeaderClass: weekendClass, dayCellClass: weekendClass },
-    timeGridWeek: {
+    timeGrid3Day: { type: 'timeGrid', duration: { days: 3 } },
+    timeGrid: {
       // FullCalendar ignores a snap step that doesn't divide the slot, so a 60-minute step needs 60-minute slots
       slotDuration: { minutes: slotMinutes.value },
       snapDuration: { minutes: dragStep.value },
@@ -355,11 +439,18 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   editable: canEditTaskDeadline.value,
   eventDrop: onEventDrop,
   eventResize: onEventResize,
-  selectable: canCreate.value,
+  selectable: canCreate.value && !agendaMode.value,
+  dateClick: onDateClick,
   select: onSelect,
   droppable: canEditTaskDeadline.value,
   drop: onDrop,
-  eventDragStart: onEventDragStart,
-  eventDragStop: onEventDragStop,
+  eventDragStart: () => {
+    draggingEvent.value = true
+    onEventDragStart()
+  },
+  eventDragStop: (info) => {
+    draggingEvent.value = false
+    onEventDragStop(info)
+  },
 }))
 </script>

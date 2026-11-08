@@ -310,6 +310,11 @@ export default {
       month: 'Monat',
       week: 'Woche',
       list: 'Liste',
+      days3: '3 Tage',
+      day: 'Tag',
+    },
+    agenda: {
+      empty: 'Keine Aufgaben an diesem Tag',
     },
     subtasks: 'Unteraufgaben: {count}',
     moveError: 'Die neuen Termine konnten nicht gespeichert werden. Die Aufgabe ist wieder an ihrem Platz.',

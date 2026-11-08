@@ -323,6 +323,11 @@ export default {
       month: 'Mês',
       week: 'Semana',
       list: 'Lista',
+      days3: '3 dias',
+      day: 'Dia',
+    },
+    agenda: {
+      empty: 'Nenhuma tarefa neste dia',
     },
     subtasks: 'Subtarefas: {count}',
     moveError: 'Não foi possível salvar as novas datas. A tarefa voltou ao lugar.',

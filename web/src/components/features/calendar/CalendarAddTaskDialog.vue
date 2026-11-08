@@ -29,6 +29,7 @@
         :label="t('calendar.add.submit')"
         :loading="saving"
         :disabled="!description.trim()"
+        variant="soft"
         data-testid="calendar-add-submit"
         @click="submit"
       />

@@ -310,6 +310,11 @@ export default {
       month: 'Mes',
       week: 'Semana',
       list: 'Lista',
+      days3: '3 días',
+      day: 'Día',
+    },
+    agenda: {
+      empty: 'No hay tareas este día',
     },
     subtasks: 'Subtareas: {count}',
     moveError: 'No se pudieron guardar las fechas nuevas. La tarea volvió a su lugar.',
