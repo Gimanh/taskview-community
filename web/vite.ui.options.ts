@@ -187,8 +187,8 @@ export const uiPluginOptions: NuxtUIOptions = {
     },
     checkbox: {
       slots: {
-        base: 'ring-2',
-        root: 'cursor-pointer',
+        base: 'ring-2 cursor-pointer',
+        label: 'cursor-pointer',
       },
       variants: {
         size: {
