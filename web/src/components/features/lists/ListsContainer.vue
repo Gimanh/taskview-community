@@ -12,7 +12,11 @@
     ]"
   >
     <template #header>
-      <UDashboardNavbar :ui="{ right: 'flex-1', root: 'px-2!' }">
+      <UDashboardNavbar
+        :toggle="navbarToggle"
+        v-bind="navbarAttrs"
+        :ui="{ right: 'flex-1', root: 'px-2!' }"
+      >
         <template #leading>
           <TvCollapseSidebarDesktop />
         </template>
@@ -46,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCurrentProjectColor } from '@/composables/useCurrentProjectColor'
 import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { ALL_TASKS_LIST_ID } from 'taskview-api'
@@ -58,6 +63,8 @@ import ListsList from './ListsList.vue'
 import ListsArchive from './ListsArchive.vue'
 import type { List } from './types'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
+
+const { navbarToggle, navbarAttrs } = useCurrentProjectColor()
 
 const { canAddTaskList } = useGoalPermissions()
 

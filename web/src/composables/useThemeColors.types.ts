@@ -1,4 +1,4 @@
-import type { CustomTheme, ThemeNeutralColor, ThemePrimaryColor } from 'taskview-api'
+import type { CustomTheme, ProjectTheme, ThemeNeutralColor, ThemePrimaryColor } from 'taskview-api'
 
 export type ThemeColors = {
   primary: ThemePrimaryColor
@@ -7,4 +7,14 @@ export type ThemeColors = {
 
 export type ThemeSnapshot = ThemeColors & {
   customTheme: CustomTheme | null
+}
+
+export type ThemeCache = {
+  global: ThemeSnapshot
+  projects: Record<string, ThemeSnapshot>
+}
+
+export type SetProjectThemeArgs = {
+  projectId: number
+  theme: ProjectTheme | null
 }

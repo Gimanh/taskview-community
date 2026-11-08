@@ -13,8 +13,19 @@
         :icon="currentProject && isOwnInbox(currentProject) ? 'i-lucide-inbox' : 'i-lucide-folder'"
         trailing-icon="i-lucide-chevron-down"
         :ui="{ base: 'rounded-xl', trailingIcon: 'ms-auto' }"
+        :data-project-color="currentColor ?? undefined"
         data-testid="project-select-trigger"
       >
+        <template
+          v-if="currentColor"
+          #leading
+        >
+          <UIcon
+            name="i-lucide-folder"
+            class="size-5 shrink-0"
+            :style="{ color: currentColor }"
+          />
+        </template>
         <span
           class="flex-1 text-left truncate"
           :class="currentProject ? '' : 'text-muted'"
@@ -36,7 +47,18 @@
             class="justify-start"
             :data-testid="`project-option-${project.name}`"
             @click="selectProject(project)"
-          />
+          >
+            <template
+              v-if="projectColor(project)"
+              #leading
+            >
+              <UIcon
+                name="i-lucide-folder"
+                class="size-5 shrink-0"
+                :style="{ color: projectColor(project) ?? undefined }"
+              />
+            </template>
+          </UButton>
           <p
             v-if="!activeProjects.length"
             class="text-sm text-muted px-3 py-2"
@@ -120,6 +142,10 @@
         data-testid="project-edit-button"
         @click="isEditOpen = true"
       />
+      <ProjectThemeButton
+        v-else
+        :project-id="currentProject.id"
+      />
       <UButton
         v-if="canDeleteGoal && !isInbox"
         icon="i-lucide-trash-2"
@@ -155,9 +181,11 @@ import { useGoalPermissionsFor } from '@/composables/useGoalPermissions'
 import { useProjectRoute } from '@/composables/useProjectRoute'
 import { useInbox } from '@/composables/useInbox'
 import { useRecentProjects } from '@/composables/useRecentProjects'
+import { projectColor } from '@/helpers/color'
 import type { Project, ProjectSaveData } from '@/components/features/projects/types'
 import ProjectEditModal from '@/components/features/projects/parts/ProjectEditModal.vue'
 import ProjectDeleteDialog from '@/components/features/projects/parts/ProjectDeleteDialog.vue'
+import ProjectThemeButton from '@/components/features/projects/parts/ProjectThemeButton.vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -179,6 +207,7 @@ const archivedProjects = computed(() => goals.value.filter(p => p.archive === 1 
 const currentProject = computed<Project | null>(() =>
   currentProjectId.value ? goalsStore.goalMap.get(currentProjectId.value) ?? null : null,
 )
+const currentColor = computed(() => (currentProject.value && !isOwnInbox(currentProject.value) ? projectColor(currentProject.value) : null))
 const isArchived = computed(() => currentProject.value?.archive === 1)
 const isInbox = computed(() => currentProject.value?.isInbox === true)
 const currentProjectLabel = computed(() =>
@@ -211,6 +240,7 @@ async function onSave(data: ProjectSaveData) {
     name: data.name,
     description: data.description,
     estimateUnit: data.estimateUnit,
+    color: data.color,
   })
 }
 

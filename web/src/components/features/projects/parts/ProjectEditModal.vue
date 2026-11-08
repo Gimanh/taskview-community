@@ -1,5 +1,8 @@
 <template>
-  <UModal v-model:open="isOpen">
+  <UModal
+    v-model:open="isOpen"
+    :fullscreen="isFullscreenModal"
+  >
     <template #header>
       <h3 class="font-semibold">
         {{ t('projects.edit') }}
@@ -37,6 +40,25 @@
             data-testid="project-edit-estimate-unit"
           />
         </UFormField>
+        <UFormField
+          :label="t('projects.color')"
+          :description="t('projects.colorHint')"
+        >
+          <TvColorPresetPicker
+            v-model="form.color"
+            clearable
+            picker-test-id="project-edit-color"
+          />
+        </UFormField>
+        <UFormField
+          :label="t('projects.theme')"
+          :description="t('projects.themeHint')"
+        >
+          <ProjectThemePicker
+            v-model="theme"
+            class="mt-1"
+          />
+        </UFormField>
       </div>
     </template>
 
@@ -61,9 +83,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Project, ProjectSaveData } from '@/components/features/projects/types'
+import TvColorPresetPicker from '@/components/features/base/TvColorPresetPicker.vue'
+import { projectColor } from '@/helpers/color'
+import { useTaskView } from '@/composables/useTaskView'
+import { useProjectTheme } from '@/composables/useProjectTheme'
+import ProjectThemePicker from './ProjectThemePicker.vue'
+import type { ProjectTheme } from 'taskview-api'
 
 const props = defineProps<{
   project: Project | null
@@ -76,11 +104,16 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { isFullscreenModal } = useTaskView()
+const { projectThemeOf, setProjectTheme } = useProjectTheme()
+
+const theme = ref<ProjectTheme | null>(null)
 
 const form = reactive<ProjectSaveData>({
   name: '',
   description: '',
   estimateUnit: 'points',
+  color: null,
 })
 
 const estimateUnitItems = computed(() => [
@@ -89,12 +122,14 @@ const estimateUnitItems = computed(() => [
 ])
 
 watch(
-  () => props.project,
-  (project) => {
+  () => [props.project, isOpen.value] as const,
+  ([project]) => {
     if (project) {
       form.name = project.name
       form.description = project.description || ''
       form.estimateUnit = project.estimateUnit ?? 'points'
+      form.color = projectColor(project)
+      theme.value = projectThemeOf(project.id)
     }
   },
   { immediate: true },
@@ -105,7 +140,11 @@ function close() {
 }
 
 function save() {
-  emit('save', { name: form.name, description: form.description, estimateUnit: form.estimateUnit })
+  const project = props.project
+  if (project && JSON.stringify(theme.value) !== JSON.stringify(projectThemeOf(project.id))) {
+    setProjectTheme({ projectId: project.id, theme: theme.value })
+  }
+  emit('save', { name: form.name, description: form.description, estimateUnit: form.estimateUnit, color: form.color })
   close()
 }
 </script>

@@ -1,7 +1,11 @@
 <template>
   <UDashboardPanel id="sprints">
     <template #header>
-      <UDashboardNavbar :title="`${projectName} - ${t('sprints.title')}`">
+      <UDashboardNavbar
+        :toggle="navbarToggle"
+        v-bind="navbarAttrs"
+        :title="`${projectName} - ${t('sprints.title')}`"
+      >
         <template #leading>
           <TvCollapseSidebarDesktop />
         </template>
@@ -213,6 +217,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCurrentProjectColor } from '@/composables/useCurrentProjectColor'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
@@ -238,6 +243,8 @@ import { $tvApi } from '@/plugins/axios'
 import { logError } from '@/helpers/Helper'
 import { useGoalPermissionsFor } from '@/composables/useGoalPermissions'
 import type { SprintTask } from '@/types/sprints.types'
+
+const { navbarToggle, navbarAttrs } = useCurrentProjectColor()
 
 type SprintTab = 'active' | 'planned' | 'backlog' | 'completed'
 

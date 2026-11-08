@@ -96,9 +96,21 @@
             color="neutral"
             class="bg-elevated text-muted max-w-full"
             :ui="{ base: 'rounded-md', leadingIcon: 'size-3' }"
+            :data-project-color="projectBadgeColor ?? undefined"
             variant="subtle"
             size="md"
-          />
+          >
+            <template
+              v-if="projectBadgeColor"
+              #leading
+            >
+              <UIcon
+                name="i-lucide-folder"
+                class="size-3 shrink-0"
+                :style="{ color: projectBadgeColor }"
+              />
+            </template>
+          </UBadge>
 
           <!-- List -->
           <UBadge
@@ -185,6 +197,7 @@ import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
 import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
 import { useTaskActions } from '@/composables/useTaskActions'
 import TaskIdCopy from './TaskIdCopy.vue'
+import { projectColor } from '@/helpers/color'
 import TaskSubtasksProgress from './TaskSubtasksProgress.vue'
 
 const TOGGLE_DELAY = 200
@@ -262,6 +275,8 @@ const priorityColor = computed(() => {
 const projectName = computed(() => {
   return goalsStore.goalMap.get(props.task.goalId)?.name || ''
 })
+
+const projectBadgeColor = computed(() => projectColor(goalsStore.goalMap.get(props.task.goalId)))
 
 const listName = computed(() => {
   if (!props.task.goalListId) return ''

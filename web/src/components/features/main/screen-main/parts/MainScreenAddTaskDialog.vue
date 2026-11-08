@@ -42,7 +42,25 @@
             value-key="value"
             option-key="value"
             class="w-full"
-          />
+            data-testid="main-add-task-project"
+          >
+            <template
+              v-if="selectedGoalColor"
+              #leading
+            >
+              <span
+                class="size-2.5 rounded-full shrink-0"
+                :style="{ backgroundColor: selectedGoalColor }"
+              />
+            </template>
+            <template #item-leading="{ item }">
+              <span
+                class="size-2.5 rounded-full shrink-0"
+                :class="item.color ? '' : 'border border-accented'"
+                :style="item.color ? { backgroundColor: item.color } : undefined"
+              />
+            </template>
+          </USelectMenu>
         </UFormField>
 
         <UFormField
@@ -116,6 +134,7 @@ import { $ls, $tvApi } from '@/plugins/axios'
 import { useTaskView } from '@/composables/useTaskView'
 import { useInbox } from '@/composables/useInbox'
 import { useWeekStart } from '@/composables/useWeekStart'
+import { projectColor } from '@/helpers/color'
 
 const weekStart = useWeekStart()
 
@@ -222,12 +241,14 @@ const goalOptions = computed(() => {
   const active = goalsStore.goals.filter(g => !g.archive)
   const options = active
     .filter(g => !isOwnInbox(g))
-    .map(g => ({ label: g.name, value: g.id }))
+    .map(g => ({ label: g.name, value: g.id, color: projectColor(g) }))
   if (inbox.value) {
-    options.unshift({ label: t('projects.inbox'), value: inbox.value.id })
+    options.unshift({ label: t('projects.inbox'), value: inbox.value.id, color: null })
   }
   return options
 })
+
+const selectedGoalColor = computed(() => goalOptions.value.find(o => o.value === selectedGoalId.value)?.color ?? null)
 
 const formattedDeadline = computed(() => {
   if (!deadline.value) return ''

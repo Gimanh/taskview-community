@@ -4,7 +4,11 @@
     :ui="{ body: 'sm:p-4 sm:pb-0' }"
   >
     <template #header>
-      <UDashboardNavbar :title="`${projectName} - ${t('kanban.title')}`">
+      <UDashboardNavbar
+        :toggle="navbarToggle"
+        v-bind="navbarAttrs"
+        :title="`${projectName} - ${t('kanban.title')}`"
+      >
         <template #leading>
           <TvCollapseSidebarDesktop />
         </template>
@@ -57,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCurrentProjectColor } from '@/composables/useCurrentProjectColor'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import KanbanBoard from '@/components/features/kanban/KanbanBoard.vue'
@@ -69,6 +74,8 @@ import { useProjectDataLoader } from '@/composables/useProjectDataLoader'
 import { useTaskView } from '@/composables/useTaskView'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useKanbanStore } from '@/stores/kanban.store'
+
+const { navbarToggle, navbarAttrs } = useCurrentProjectColor()
 
 const { t } = useI18n()
 const { projectId } = useAppRouteInfo()

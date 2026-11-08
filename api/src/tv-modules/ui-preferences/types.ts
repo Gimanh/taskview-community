@@ -1,5 +1,5 @@
 import { type } from 'arktype'
-import { THEME_NEUTRAL_COLORS, THEME_PRIMARY_COLORS } from 'taskview-api'
+import { MAX_PROJECT_THEMES, MAX_SAVED_THEMES, SAVED_THEME_NAME_MAX_LENGTH, THEME_NEUTRAL_COLORS, THEME_PRIMARY_COLORS } from 'taskview-api'
 
 const MAX_SECTIONS = 20
 const MAX_ITEMS_PER_SECTION = 200
@@ -66,10 +66,44 @@ const CustomThemePaletteArkType = type({
   accent: hexColorArkType,
 })
 
-const CustomThemeArkType = type({
+const themeIdArkType = type(/^[a-zA-Z0-9_-]{1,40}$/)
+
+const savedThemeNameArkType = type('string').narrow((name, ctx) =>
+  name.trim().length > 0 && name.length <= SAVED_THEME_NAME_MAX_LENGTH
+    ? true
+    : ctx.mustBe(`a non-empty name of at most ${SAVED_THEME_NAME_MAX_LENGTH} chars`),
+)
+
+const SavedThemeArkType = type({
   '+': 'reject',
+  id: themeIdArkType,
+  'name?': savedThemeNameArkType,
   light: CustomThemePaletteArkType,
   dark: CustomThemePaletteArkType,
+})
+
+const savedThemesArkType = SavedThemeArkType.array().narrow((themes, ctx) => {
+  if (themes.length > MAX_SAVED_THEMES) {
+    return ctx.mustBe(`at most ${MAX_SAVED_THEMES} saved themes`)
+  }
+  if (new Set(themes.map((theme) => theme.id)).size !== themes.length) {
+    return ctx.mustBe('saved themes with unique ids')
+  }
+  return true
+})
+
+const ProjectThemeArkType = type({ '+': 'reject', preset: themeIdArkType })
+  .or({ '+': 'reject', savedThemeId: themeIdArkType })
+
+const PROJECT_ID_KEY = /^[1-9][0-9]{0,9}$/
+
+const projectThemesArkType = type({ '[string]': ProjectThemeArkType }).narrow((themes, ctx) => {
+  const keys = Object.keys(themes)
+  if (keys.length > MAX_PROJECT_THEMES) {
+    return ctx.mustBe(`at most ${MAX_PROJECT_THEMES} project themes`)
+  }
+  const invalid = keys.find((key) => !PROJECT_ID_KEY.test(key))
+  return invalid === undefined ? true : ctx.mustBe(`keyed by project id (got "${invalid}")`)
 })
 
 export const UiSettingsArkType = type({
@@ -84,8 +118,9 @@ export const UiSettingsArkType = type({
   'keyboardShortcuts?': '0 | 1',
   'primaryColor?': type.enumerated(...THEME_PRIMARY_COLORS),
   'neutralColor?': type.enumerated(...THEME_NEUTRAL_COLORS),
-  'customTheme?': CustomThemeArkType,
-  'customThemeActive?': '0 | 1',
+  'savedThemes?': savedThemesArkType,
+  'activeSavedThemeId?': themeIdArkType,
+  'projectThemes?': projectThemesArkType,
 })
 
 export type UiSettings = typeof UiSettingsArkType.infer

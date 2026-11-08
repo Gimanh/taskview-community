@@ -31,7 +31,7 @@ export function registerGoalsTools(server: McpServer, api: TvApi) {
       inputSchema: {
         name: z.string().describe('Project name'),
         description: z.string().optional().describe('Project description'),
-        color: z.string().optional().describe('Project color (hex)'),
+        color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional().describe('Project color as #rrggbb'),
         organizationId: z.coerce.number().optional().describe('Organization ID to create the project in'),
       },
     },
@@ -54,7 +54,7 @@ export function registerGoalsTools(server: McpServer, api: TvApi) {
         id: z.coerce.number().describe('Project (goal) ID'),
         name: z.string().optional().describe('New name'),
         description: z.string().optional().describe('New description'),
-        color: z.string().optional().describe('New color (hex)'),
+        color: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional().describe('New color as #rrggbb, null removes it'),
         archive: z.union([z.literal(0), z.literal(1)]).optional().describe('Archive status: 0=active, 1=archived'),
       },
     },

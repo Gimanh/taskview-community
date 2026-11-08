@@ -92,6 +92,16 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
     flush()
   }
 
+  function patchSettings(patch: Partial<UiSettings>) {
+    const next: UiSettings = { ...settings.value, ...patch }
+    for (const key of Object.keys(patch) as (keyof UiSettings)[]) {
+      if (patch[key] === undefined) delete next[key]
+    }
+    settings.value = next
+    revision++
+    flush()
+  }
+
   async function markProjectUsed(projectId: number) {
     const current = settings.value.recentProjectIds ?? []
     if (current[0] === projectId) return
@@ -114,6 +124,7 @@ export const useUiPreferencesStore = defineStore('uiPreferences', () => {
     setSection,
     getSection,
     setSetting,
+    patchSettings,
     markProjectUsed,
   }
 })

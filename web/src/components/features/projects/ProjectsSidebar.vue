@@ -51,6 +51,7 @@ async function handleSave(project: Project, data: ProjectSaveData) {
     name: data.name,
     description: data.description,
     estimateUnit: data.estimateUnit,
+    color: data.color,
   })
 }
 

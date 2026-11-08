@@ -40,6 +40,7 @@
       </div>
       <div class="flex items-center flex-wrap gap-x-1 min-w-0 -mt-2 mb-1">
         <TaskIdCopy :task-id="task.id" />
+        <TaskProjectLabel :goal-id="task.goalId" />
         <TaskSourceLink
           v-if="task.sourceUrl"
           :source-url="task.sourceUrl"
@@ -192,6 +193,7 @@ import TaskSubtasks from '@/components/features/tasks/parts/TaskSubtasks.vue'
 import TaskFiles from '@/components/features/tasks/parts/TaskFiles.vue'
 import TaskDependencies from '@/components/features/tasks/parts/TaskDependencies.vue'
 import TaskIdCopy from '@/components/features/tasks/parts/TaskIdCopy.vue'
+import TaskProjectLabel from '@/components/features/tasks/parts/TaskProjectLabel.vue'
 import TvSprintSelect from '@/components/features/base/TvSprintSelect.vue'
 import TaskEstimateInput from '@/components/features/tasks/parts/TaskEstimateInput.vue'
 import type { PriorityValue } from '@/composables/usePriorityOptions'

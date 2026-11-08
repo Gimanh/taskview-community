@@ -2,6 +2,8 @@
   <UDashboardPanel id="calendar">
     <template #header>
       <UDashboardNavbar
+        :toggle="navbarToggle"
+        v-bind="navbarAttrs"
         :title="`${projectName} - ${t('calendar.title')}`"
         :ui="{title: 'shrink-0'}"
       >
@@ -53,6 +55,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCurrentProjectColor } from '@/composables/useCurrentProjectColor'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ProjectCalendar from '@/components/features/calendar/ProjectCalendar.vue'
@@ -64,6 +67,8 @@ import { useGoalsStore } from '@/stores/goals.store'
 import { useProjectDataLoader } from '@/composables/useProjectDataLoader'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useCalendarFilters } from '@/composables/useCalendarRouteState'
+
+const { navbarToggle, navbarAttrs } = useCurrentProjectColor()
 
 const { t } = useI18n()
 const { projectId } = useAppRouteInfo()
