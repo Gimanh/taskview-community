@@ -336,6 +336,11 @@ export default {
     },
     subtasks: 'Subtarefas: {count}',
     moveError: 'Não foi possível salvar as novas datas. A tarefa voltou ao lugar.',
+    complete: {
+      done: 'Marcar como concluída',
+      reopen: 'Marcar como não concluída',
+      error: 'Não foi possível salvar o status da tarefa.',
+    },
     unscheduled: {
       pickProject: 'Escolha um projeto para ver as tarefas sem data e distribuí-las pelos dias.',
       title: 'Sem data',

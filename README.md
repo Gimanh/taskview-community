@@ -207,6 +207,7 @@ The MCP server is published as [`taskview-mcp`](https://www.npmjs.com/package/ta
 |---|---|---|
 | `TASKVIEW_URL` | yes | TaskView API server URL (e.g. `https://api.taskview.tech`, or your self-hosted instance) |
 | `TASKVIEW_TOKEN` | yes | API token with the `tvk_` prefix |
+| `TASKVIEW_APP_URL` | no | TaskView web app URL (e.g. `https://app.taskview.tech`), used to return links to tasks |
 
 See the [TaskView MCP documentation](https://taskview.tech/docs/integrations/mcp) and the [`taskview-mcp` package README](taskview-packages/taskview-mcp/README.md) for the full tool list and more options.
 

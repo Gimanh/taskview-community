@@ -71,6 +71,7 @@ Then use `"command": "taskview-mcp"` (no `args` needed).
 | Variable | Required | Description |
 |---|---|---|
 | `TASKVIEW_URL` | yes | TaskView API server URL (e.g. `https://api.taskview.tech`) |
+| `TASKVIEW_APP_URL` | no | TaskView web app URL (e.g. `https://app.taskview.tech`). When set, `get_task`, `create_task` and `update_task` return a `url` field linking to the task in the app; when unset, no link is returned |
 | `TASKVIEW_TOKEN` | yes (stdio mode) | API token with `tvk_` prefix. Not used in HTTP mode — each caller sends their own token |
 | `MCP_HTTP_PORT` | no (HTTP mode) | Port for the HTTP server, default `3100` |
 | `MCP_PUBLIC_URL` | no (HTTP mode) | Public URL of this server as clients reach it — the OAuth resource identifier. Include the path when the server is mounted under one (`https://api.example.com/mcp`); derived from the request host when unset |

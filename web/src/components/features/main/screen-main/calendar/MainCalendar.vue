@@ -7,7 +7,9 @@
     :can-edit-task="canEditTask"
     :hide-weekends="filters.hideWeekends.value"
     :collapse-empty-weekends="false"
-    :save-dates="store.updateTaskDates"
+    :save-dates="store.updateTask"
+    :can-complete-task="canCompleteTask"
+    :save-complete="saveComplete"
     :task-project="taskProject"
     :droppable="canPlan"
     :side-open="panelShown"
@@ -67,7 +69,7 @@ import { computed, ref, useTemplateRef, watch } from 'vue'
 import { addDays, format } from 'date-fns'
 import { useI18n } from 'vue-i18n'
 import TaskCalendar from '@/components/features/calendar/TaskCalendar.vue'
-import type { TaskCalendarRange } from '@/components/features/calendar/TaskCalendar.types'
+import type { TaskCalendarRange, TaskCompleteArgs } from '@/components/features/calendar/TaskCalendar.types'
 import MainScreenAddTaskDialog from '@/components/features/main/screen-main/parts/MainScreenAddTaskDialog.vue'
 import MainCalendarUnscheduled from './MainCalendarUnscheduled.vue'
 import { useCalendarStore } from '@/stores/calendar.store'
@@ -104,6 +106,17 @@ const canCreate = computed(() => goalsStore.goals.some((goal) => !goal.archive
 
 function canEditTask(task: TaskItem): boolean {
   return goalHasPermission(goalsStore.goalMap.get(task.goalId), 'TASK_CAN_EDIT_DEADLINE')
+}
+
+function canCompleteTask(task: TaskItem): boolean {
+  return goalHasPermission(goalsStore.goalMap.get(task.goalId), 'TASK_CAN_EDIT_STATUS')
+}
+
+// Completing a repeating task makes its next occurrence on the server: load it into the calendar
+async function saveComplete({ task, complete }: TaskCompleteArgs): Promise<boolean> {
+  const saved = await store.updateTask({ id: task.id, complete })
+  if (saved && complete && task.recurrenceRuleId) store.refresh()
+  return saved
 }
 
 function taskProject(task: TaskItem) {
@@ -156,7 +169,7 @@ function toggleUnscheduled() {
 // The panel saves through the project calendar's store: a task it dates or undates shows up here after a reload,
 // and one undated from this calendar joins the panel's list
 calendarStore.$onAction(({ name, after }) => {
-  if (name !== 'updateTaskDates') return
+  if (name !== 'updateTask') return
   after((task) => {
     if (!task) return
     store.refresh()

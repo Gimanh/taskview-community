@@ -337,6 +337,11 @@ export default {
     },
     subtasks: 'Subtasks: {count}',
     moveError: 'Couldn\'t save the new dates. The task is back where it was.',
+    complete: {
+      done: 'Mark as done',
+      reopen: 'Mark as not done',
+      error: 'Couldn\'t save the task status.',
+    },
     unscheduled: {
       pickProject: 'Pick a project to see its tasks without a date and spread them over the days.',
       title: 'No date',

@@ -9,8 +9,8 @@
       v-model:view="view"
       :title="title"
       @today="goToday"
-      @prev="api()?.prev()"
-      @next="api()?.next()"
+      @prev="go('prev')"
+      @next="go('next')"
     >
       <slot name="actions" />
     </component>
@@ -18,12 +18,15 @@
     <div class="flex min-h-0 flex-1">
       <div
         ref="swipeArea"
-        class="relative min-h-0 min-w-0 flex-1"
+        class="relative min-h-0 min-w-0 flex-1 overflow-x-hidden"
         data-testid="calendar-swipe-area"
         :class="{ 'flex flex-col overflow-y-auto': agendaMode }"
       >
         <!-- FullCalendar owns its root element's classes; a class bound there is wiped on every re-render -->
-        <div :class="agendaMode ? 'shrink-0' : 'h-full'">
+        <div
+          :class="agendaMode ? 'shrink-0' : 'h-full'"
+          :style="swipe.style.value"
+        >
           <FullCalendar
             ref="calendarRef"
             :options="calendarOptions"
@@ -67,12 +70,15 @@
                 v-if="arg.event.extendedProps.task"
                 :task="arg.event.extendedProps.task"
                 :time-text="arg.event.allDay ? undefined : arg.timeText"
+                :time-range="arg.event.allDay || !arg.event.start ? undefined : { start: arg.event.start, end: arg.event.end }"
                 :compact="arg.view.type !== FC_VIEWS.week && arg.view.type !== FC_VIEWS.list"
                 :resizable="arg.isEndResizable"
                 :lifted="arg.isMirror"
-                :fill="isTimeGrid(arg.view.type)"
+                :fill="isTimeGrid(arg.view.type) && !arg.event.allDay"
                 :short="isTimeGrid(arg.view.type) && isShortEvent(arg.event)"
+                :can-complete="canCompleteTask(arg.event.extendedProps.task)"
                 v-bind="cardProject(arg.event.extendedProps.task)"
+                @toggle-complete="toggleComplete({ task: arg.event.extendedProps.task, complete: $event })"
               />
             </template>
           </FullCalendar>
@@ -84,7 +90,10 @@
           :events="agenda.selectedDayEvents.value"
           :can-create="canCreate"
           :card-props="cardProject"
+          :can-complete="canCompleteTask"
+          :style="swipe.style.value"
           @open="openTask"
+          @toggle-complete="toggleComplete"
           @add="addOnDay(agenda.selectedDay.value)"
         />
 
@@ -164,7 +173,7 @@ import CalendarMobileToolbar from './CalendarMobileToolbar.vue'
 import CalendarTaskCard from './CalendarTaskCard.vue'
 import CalendarDayAgenda from './parts/CalendarDayAgenda.vue'
 import CalendarMonthDayCell from './parts/CalendarMonthDayCell.vue'
-import type { TaskCalendarEmits, TaskCalendarProps } from './TaskCalendar.types'
+import type { TaskCalendarEmits, TaskCalendarProps, TaskCompleteArgs } from './TaskCalendar.types'
 import type { TaskItem } from '@/types/tasks.types'
 import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
 import { useTaskView } from '@/composables/useTaskView'
@@ -172,6 +181,7 @@ import { useWeekStart } from '@/composables/useWeekStart'
 import { fitCalendarView, useCalendarRouteState, type CalendarView } from '@/composables/useCalendarRouteState'
 import { useCalendarMonthAgenda } from '@/composables/useCalendarMonthAgenda'
 import { useCalendarSwipe } from '@/composables/useCalendarSwipe'
+import type { CalendarSwipeDirection } from '@/composables/useCalendarSwipe.types'
 import { useCalendarDragStep, useCalendarSlotMinutes } from '@/composables/useCalendarDragStep'
 import { eventToTaskDates, isScheduled, occupiesDay, shiftTaskDates, taskToEvent, type TaskCalendarEvent } from '@/helpers/taskCalendarDates'
 
@@ -305,12 +315,19 @@ function addOnDay(day: Date) {
 }
 
 const draggingEvent = ref(false)
-useCalendarSwipe({
+const swipe = useCalendarSwipe({
   target: useTemplateRef<HTMLElement>('swipeArea'),
   enabled: () => isMobile.value && !draggingEvent.value,
   onNext: () => api()?.next(),
   onPrev: () => api()?.prev(),
 })
+
+// On a phone the toolbar's arrows slide the grid like a swipe does
+function go(direction: CalendarSwipeDirection) {
+  if (isMobile.value) swipe.slide(direction)
+  else if (direction === 'next') api()?.next()
+  else api()?.prev()
+}
 
 function onEventClick(info: EventClickInfo) {
   info.jsEvent.preventDefault()
@@ -322,6 +339,11 @@ async function saveDates(info: EventChangeInfo, patch: TaskArgUpdate) {
   if (await props.saveDates(patch)) return
   info.revert()
   toast.add({ title: t('calendar.moveError'), color: 'error' })
+}
+
+async function toggleComplete(args: TaskCompleteArgs) {
+  if (await props.saveComplete(args)) return
+  toast.add({ title: t('calendar.complete.error'), color: 'error' })
 }
 
 // Day grids move events by whole days, so their deltas carry days only and keep each time as it is.

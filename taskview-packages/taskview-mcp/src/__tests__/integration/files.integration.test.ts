@@ -7,7 +7,7 @@ import { api, captureServer, call, parse, ts } from './setup.js'
 
 const { server, tools } = captureServer()
 registerGoalsTools(server, api)
-registerTasksTools(server, api)
+registerTasksTools({ server, api })
 registerFilesTools(server, api)
 
 const content = `mcp files integration ${ts()}`

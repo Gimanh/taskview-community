@@ -323,6 +323,11 @@ export default {
     },
     subtasks: 'Subtareas: {count}',
     moveError: 'No se pudieron guardar las fechas nuevas. La tarea volvió a su lugar.',
+    complete: {
+      done: 'Marcar como hecha',
+      reopen: 'Marcar como pendiente',
+      error: 'No se pudo guardar el estado de la tarea.',
+    },
     unscheduled: {
       pickProject: 'Elige un proyecto para ver sus tareas sin fecha y repartirlas por días.',
       title: 'Sin fecha',

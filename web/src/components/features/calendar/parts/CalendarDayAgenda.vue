@@ -7,19 +7,25 @@
       {{ dayTitle }}
     </h3>
 
-    <button
+    <!-- Not a <button>: the card holds a checkbox, and a control may not sit inside a button -->
+    <div
       v-for="event in events"
       :key="event.id"
-      type="button"
-      class="w-full rounded-10 text-left focus-visible:ring-2 focus-visible:ring-primary focus:outline-none"
+      role="button"
+      tabindex="0"
+      class="w-full cursor-pointer rounded-10 text-left focus-visible:ring-2 focus-visible:ring-primary focus:outline-none"
       @click="emit('open', event.extendedProps.task.id)"
+      @keydown.enter.self.prevent="emit('open', event.extendedProps.task.id)"
+      @keydown.space.self.prevent="emit('open', event.extendedProps.task.id)"
     >
       <CalendarTaskCard
         :task="event.extendedProps.task"
         :time-text="timeText(event)"
+        :can-complete="canComplete?.(event.extendedProps.task)"
         v-bind="cardProps?.(event.extendedProps.task)"
+        @toggle-complete="emit('toggleComplete', { task: event.extendedProps.task, complete: $event })"
       />
-    </button>
+    </div>
 
     <div
       v-if="!events.length"
@@ -48,6 +54,7 @@ import { useI18n } from 'vue-i18n'
 import CalendarTaskCard from '../CalendarTaskCard.vue'
 import type { TaskCalendarEvent } from '@/helpers/taskCalendarDates'
 import type { TaskItem } from '@/types/tasks.types'
+import type { TaskCompleteArgs } from '../TaskCalendar.types'
 
 const props = defineProps<{
   day: Date
@@ -55,11 +62,13 @@ const props = defineProps<{
   canCreate: boolean
   // Extra card props, e.g. the project's name and color when tasks of several projects mix
   cardProps?: (task: TaskItem) => Record<string, unknown>
+  canComplete?: (task: TaskItem) => boolean
 }>()
 
 const emit = defineEmits<{
   open: [taskId: number]
   add: []
+  toggleComplete: [args: TaskCompleteArgs]
 }>()
 
 const { t, locale } = useI18n()

@@ -5,6 +5,11 @@ import type { CalendarSpan } from '@/helpers/taskCalendarDates'
 
 export type TaskCalendarRange = { start: Date; end: Date }
 
+export type TaskCompleteArgs = {
+  task: TaskItem
+  complete: boolean
+}
+
 export type TaskCalendarProps = {
   tasks: TaskItem[]
   loading: boolean
@@ -20,6 +25,10 @@ export type TaskCalendarProps = {
   droppable?: boolean
   // Saves dates changed by a drag or a resize; false puts the task back
   saveDates: (patch: TaskArgUpdate) => Promise<boolean>
+  // Whether this task may be marked done or reopened from its card
+  canCompleteTask: (task: TaskItem) => boolean
+  // Saves a task marked done or reopened from its card; false unticks it again
+  saveComplete: (args: TaskCompleteArgs) => Promise<boolean>
   // The side slot (the unscheduled panel) is shown; it slides in and out
   sideOpen?: boolean
   // Tint and project label when tasks of several projects mix

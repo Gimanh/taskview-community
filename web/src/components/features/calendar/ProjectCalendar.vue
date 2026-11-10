@@ -9,6 +9,8 @@
     :collapse-empty-weekends="!canEditTaskDeadline"
     :droppable="canEditTaskDeadline"
     :save-dates="saveDates"
+    :can-complete-task="() => canEditTaskStatus"
+    :save-complete="saveComplete"
     :side-open="panelShown"
     @range="loadRange"
     @add="openAdd"
@@ -61,7 +63,7 @@ import TaskCalendar from './TaskCalendar.vue'
 import CalendarAddTaskDialog from './CalendarAddTaskDialog.vue'
 import CalendarUnscheduledPanel from './parts/CalendarUnscheduledPanel.vue'
 import CalendarUnscheduledDrawer from './parts/CalendarUnscheduledDrawer.vue'
-import type { TaskCalendarRange } from './TaskCalendar.types'
+import type { TaskCalendarRange, TaskCompleteArgs } from './TaskCalendar.types'
 import { useCalendarStore } from '@/stores/calendar.store'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useTaskView } from '@/composables/useTaskView'
@@ -76,7 +78,7 @@ const DAY_FORMAT = 'yyyy-MM-dd'
 const { t } = useI18n()
 const calendarStore = useCalendarStore()
 const { isMobile } = useTaskView()
-const { canEditTaskDeadline, canAddTask } = useGoalPermissions()
+const { canEditTaskDeadline, canAddTask, canEditTaskStatus } = useGoalPermissions()
 // A task created on a day gets that date, so it takes both permissions
 const canCreate = computed(() => canAddTask.value && canEditTaskDeadline.value)
 const filters = useCalendarFilters()
@@ -105,13 +107,22 @@ function loadRange(value: TaskCalendarRange) {
   range.value = value
 }
 
-watch([() => props.goalId, range], ([goalId, value]) => {
-  if (!value) return
-  calendarStore.fetchTasks(goalId, { from: format(addDays(value.start, -1), DAY_FORMAT), to: format(value.end, DAY_FORMAT) })
-})
+function loadTasks() {
+  if (!range.value) return
+  calendarStore.fetchTasks(props.goalId, { from: format(addDays(range.value.start, -1), DAY_FORMAT), to: format(range.value.end, DAY_FORMAT) })
+}
+
+watch([() => props.goalId, range], loadTasks)
 
 async function saveDates(patch: TaskArgUpdate): Promise<boolean> {
-  return Boolean(await calendarStore.updateTaskDates(patch))
+  return Boolean(await calendarStore.updateTask(patch))
+}
+
+// Completing a repeating task makes its next occurrence on the server: load it into the calendar
+async function saveComplete({ task, complete }: TaskCompleteArgs): Promise<boolean> {
+  const saved = await calendarStore.updateTask({ id: task.id, complete })
+  if (saved && complete && task.recurrenceRuleId) loadTasks()
+  return Boolean(saved)
 }
 
 const calendarRef = useTemplateRef<InstanceType<typeof TaskCalendar>>('calendar')

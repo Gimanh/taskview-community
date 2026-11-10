@@ -19,7 +19,7 @@ function registerEverything() {
   const { server, tools } = mockServer()
   const api = mockApi()
   registerGoalsTools(server, api)
-  registerTasksTools(server, api)
+  registerTasksTools({ server, api })
   registerListsTools(server, api)
   registerTagsTools(server, api)
   registerKanbanTools(server, api)

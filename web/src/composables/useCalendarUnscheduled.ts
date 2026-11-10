@@ -83,7 +83,7 @@ export function useCalendarSchedule() {
   const calendarStore = useCalendarStore()
 
   async function saveDates(patch: TaskArgUpdate) {
-    if (await calendarStore.updateTaskDates(patch)) return
+    if (await calendarStore.updateTask(patch)) return
     toast.add({ title: t('calendar.moveError'), color: 'error' })
   }
 

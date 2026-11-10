@@ -4,13 +4,20 @@
     class="tv-calendar-card group relative flex w-full min-w-0 gap-1.5 rounded-10 border px-1.5 text-default"
     :class="[
       short ? 'items-center py-0 text-xs' : 'items-start py-1 text-sm',
-      // A tall event: the time on top, the title wrapping below it for as many lines as the height allows
+      // A tall event: the checkbox and the time on top, the title wrapping below for as many lines as the height allows
       { 'flex-wrap content-start gap-y-0.5': tall || showProject },
       { 'opacity-60': task.complete && !lifted, 'pr-3': resizable, 'shadow-lg': lifted, 'h-full overflow-hidden': fill },
     ]"
     :style="{ backgroundColor: tint.backgroundColor, borderColor: tint.borderColor }"
     :data-testid="`calendar-task-${task.id}`"
   >
+    <CalendarTaskCompleteCheckbox
+      v-if="canComplete && !lifted && !tall"
+      :complete="!!task.complete"
+      :class="{ 'mt-0.5': !short }"
+      @toggle="emit('toggleComplete', $event)"
+    />
+
     <UAvatarGroup
       v-if="assignees.length"
       size="3xs"
@@ -45,7 +52,7 @@
 
     <template v-else>
       <span
-        v-if="timeText"
+        v-if="timeText && !tall"
         class="mt-px shrink-0 text-xs text-muted tabular-nums"
       >{{ timeText }}</span>
       <span
@@ -73,6 +80,14 @@
       />
       {{ task.subtasks.length }}
     </span>
+
+    <CalendarTaskCardTimeRow
+      v-if="tall && (timeRange || (canComplete && !lifted))"
+      :complete="!!task.complete"
+      :can-complete="Boolean(canComplete && !lifted)"
+      :time-range="timeRange"
+      @toggle="emit('toggleComplete', $event)"
+    />
 
     <span
       v-if="showProject"
@@ -105,6 +120,9 @@ import { useGoalPermissionsFor } from '@/composables/useGoalPermissions'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useCalendarCardTitleLines } from '@/composables/useCalendarCardTitleLines'
 import { useCalendarTaskColor } from '@/composables/useCalendarTaskColor'
+import CalendarTaskCompleteCheckbox from './parts/CalendarTaskCompleteCheckbox.vue'
+import CalendarTaskCardTimeRow from './parts/CalendarTaskCardTimeRow.vue'
+import type { CalendarTimeRange } from '@/types/calendar.types'
 
 const props = defineProps<{
   task: TaskItem
@@ -123,6 +141,14 @@ const props = defineProps<{
   color?: string
   // The task's project, shown under the title when tasks of several projects mix
   projectName?: string
+  // A checkbox marks the task done or reopens it without opening the task
+  canComplete?: boolean
+  // When a timed event starts and ends: a tall card shows it above the title
+  timeRange?: CalendarTimeRange
+}>()
+
+const emit = defineEmits<{
+  toggleComplete: [complete: boolean]
 }>()
 
 const { t, locale } = useI18n()

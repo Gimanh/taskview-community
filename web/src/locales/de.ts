@@ -323,6 +323,11 @@ export default {
     },
     subtasks: 'Unteraufgaben: {count}',
     moveError: 'Die neuen Termine konnten nicht gespeichert werden. Die Aufgabe ist wieder an ihrem Platz.',
+    complete: {
+      done: 'Als erledigt markieren',
+      reopen: 'Als nicht erledigt markieren',
+      error: 'Der Aufgabenstatus konnte nicht gespeichert werden.',
+    },
     unscheduled: {
       pickProject: 'Wählen Sie ein Projekt, um seine Aufgaben ohne Datum zu sehen und auf die Tage zu verteilen.',
       title: 'Ohne Datum',

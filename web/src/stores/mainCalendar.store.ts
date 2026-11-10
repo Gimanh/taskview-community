@@ -37,8 +37,8 @@ export const useMainCalendarStore = defineStore('main-calendar-store', {
       if (this.period) await this.fetchTasks(this.period)
     },
 
-    // FullCalendar has already moved the task: keep the local copy in step, or undo it if saving fails
-    async updateTaskDates(patch: TaskArgUpdate): Promise<boolean> {
+    // The calendar already shows the change: keep the local copy in step, or undo it if saving fails
+    async updateTask(patch: TaskArgUpdate): Promise<boolean> {
       const local = this.tasks.find((task) => task.id === patch.id)
       const previous = local && { ...local }
       if (local) Object.assign(local, patch)

@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import type { TvApi } from 'taskview-api'
+import type { CreateMcpServerArgs } from './server.types.js'
+import { TaskUrlBuilder } from './tools/task-url.js'
 import { registerGoalsTools } from './tools/goals.js'
 import { registerListsTools } from './tools/lists.js'
 import { registerTasksTools } from './tools/tasks.js'
@@ -31,9 +32,11 @@ AGENDA: for "what do I have today", "what is coming up" or "what did I finish re
 
 TASK FIELDS: "description" is the task title (short, one line). "note" is the task body, stored as HTML - send <p>, <ul>, <ol>, <b> markup, never plain newlines. update_task replaces the note entirely, so to append read it with get_task first and send the merged HTML.
 
-FILES: tasks and projects can have file attachments, identified by a uuid fileId. list_files shows them (pass taskId for one task, omit it for the whole project), get_file_download_url gives a 5-minute link to the bytes, attach_files_to_task / detach_file_from_task move existing files between tasks. Uploading new files is not available over MCP — ask the user to upload in the app, then attach.`
+FILES: tasks and projects can have file attachments, identified by a uuid fileId. list_files shows them (pass taskId for one task, omit it for the whole project), get_file_download_url gives a 5-minute link to the bytes, attach_files_to_task / detach_file_from_task move existing files between tasks. Uploading new files is not available over MCP — ask the user to upload in the app, then attach.
 
-export function createMcpServer(api: TvApi) {
+TASK LINKS: to give the user a link to a task, use the "url" field returned by get_task, create_task and update_task. Never build a task URL yourself — the web app address and the route are not derivable from task fields. If "url" is missing, say the link is unavailable instead of guessing one.`
+
+export function createMcpServer({ api, appUrl }: CreateMcpServerArgs) {
   const server = new McpServer(
     {
       name: 'taskview',
@@ -44,7 +47,7 @@ export function createMcpServer(api: TvApi) {
 
   registerGoalsTools(server, api)
   registerListsTools(server, api)
-  registerTasksTools(server, api)
+  registerTasksTools({ server, api, taskUrls: new TaskUrlBuilder({ api, appUrl }) })
   registerTagsTools(server, api)
   registerKanbanTools(server, api)
   registerCollaborationTools(server, api)
