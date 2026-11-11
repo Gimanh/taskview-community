@@ -10,10 +10,9 @@
     data-testid="main-calendar-plan-project"
   >
     <template #item-leading="{ item }">
-      <span
-        class="size-2.5 shrink-0 rounded-full"
-        :class="item.color ? '' : 'border border-accented'"
-        :style="item.color ? { backgroundColor: item.color } : undefined"
+      <ProjectMarkerIcon
+        :color="item.color"
+        :inbox="item.inbox"
       />
     </template>
   </USelectMenu>
@@ -26,6 +25,7 @@ import { useGoalsStore } from '@/stores/goals.store'
 import { useInbox } from '@/composables/useInbox'
 import { useMainCalendarPlanProject } from '@/composables/useCalendarRouteState'
 import { projectColor } from '@/helpers/color'
+import ProjectMarkerIcon from '@/components/features/projects/parts/ProjectMarkerIcon.vue'
 
 const { t } = useI18n()
 const goalsStore = useGoalsStore()
@@ -45,5 +45,6 @@ const projectItems = computed(() => goalsStore.goals
     value: goal.id,
     label: isOwnInbox(goal) ? t('projects.inbox') : goal.name,
     color: isOwnInbox(goal) ? null : projectColor(goal),
+    inbox: isOwnInbox(goal),
   })))
 </script>

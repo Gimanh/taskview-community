@@ -7,7 +7,7 @@
     <template #header>
       <div class="flex items-center justify-between w-full">
         <h3 class="text-lg font-semibold">
-          {{ title }}
+          {{ title || t('msg.addTask') }}
         </h3>
         <UButton
           icon="i-lucide-x"
@@ -42,22 +42,20 @@
             value-key="value"
             option-key="value"
             class="w-full"
+            :ui="{ base: 'ps-9' }"
             data-testid="main-add-task-project"
           >
-            <template
-              v-if="selectedGoalColor"
-              #leading
-            >
-              <span
-                class="size-2.5 rounded-full shrink-0"
-                :style="{ backgroundColor: selectedGoalColor }"
+            <template #leading>
+              <ProjectMarkerIcon
+                v-if="selectedGoal"
+                :color="selectedGoal.color"
+                :inbox="selectedGoal.inbox"
               />
             </template>
             <template #item-leading="{ item }">
-              <span
-                class="size-2.5 rounded-full shrink-0"
-                :class="item.color ? '' : 'border border-accented'"
-                :style="item.color ? { backgroundColor: item.color } : undefined"
+              <ProjectMarkerIcon
+                :color="item.color"
+                :inbox="item.inbox"
               />
             </template>
           </USelectMenu>
@@ -138,6 +136,7 @@ import { useInbox } from '@/composables/useInbox'
 import { useWeekStart } from '@/composables/useWeekStart'
 import { projectColor } from '@/helpers/color'
 import { goalHasPermission } from '@/composables/useGoalPermissions'
+import ProjectMarkerIcon from '@/components/features/projects/parts/ProjectMarkerIcon.vue'
 
 const weekStart = useWeekStart()
 
@@ -250,14 +249,14 @@ const goalOptions = computed(() => {
   const active = goalsStore.goals.filter(g => !g.archive)
   const options = active
     .filter(g => !isOwnInbox(g))
-    .map(g => ({ label: g.name, value: g.id, color: projectColor(g) }))
+    .map(g => ({ label: g.name, value: g.id, color: projectColor(g), inbox: false }))
   if (inbox.value) {
-    options.unshift({ label: t('projects.inbox'), value: inbox.value.id, color: null })
+    options.unshift({ label: t('projects.inbox'), value: inbox.value.id, color: null, inbox: true })
   }
   return options
 })
 
-const selectedGoalColor = computed(() => goalOptions.value.find(o => o.value === selectedGoalId.value)?.color ?? null)
+const selectedGoal = computed(() => goalOptions.value.find(o => o.value === selectedGoalId.value) ?? null)
 
 const canSetDeadline = computed(() =>
   goalHasPermission(goalsStore.goalMap.get(selectedGoalId.value ?? 0), 'TASK_CAN_EDIT_DEADLINE'),

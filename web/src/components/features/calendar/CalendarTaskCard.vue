@@ -81,6 +81,13 @@
       {{ task.subtasks.length }}
     </span>
 
+    <CalendarTaskCardAmount
+      v-if="amount"
+      :amount="amount"
+      :transaction-type="task.transactionType"
+      :class="{ 'mt-px': !short }"
+    />
+
     <CalendarTaskCardTimeRow
       v-if="tall && (timeRange || (canComplete && !lifted))"
       :complete="!!task.complete"
@@ -122,6 +129,7 @@ import { useCalendarCardTitleLines } from '@/composables/useCalendarCardTitleLin
 import { useCalendarTaskColor } from '@/composables/useCalendarTaskColor'
 import CalendarTaskCompleteCheckbox from './parts/CalendarTaskCompleteCheckbox.vue'
 import CalendarTaskCardTimeRow from './parts/CalendarTaskCardTimeRow.vue'
+import CalendarTaskCardAmount from './parts/CalendarTaskCardAmount.vue'
 import type { CalendarTimeRange } from '@/types/calendar.types'
 
 const props = defineProps<{
@@ -175,6 +183,8 @@ const titleLines = useCalendarCardTitleLines({
   title: useTemplateRef<HTMLElement>('title'),
   enabled: tall,
 })
+
+const amount = computed(() => Number(props.task.amount) || 0)
 
 const cardTitle = computed(() => (props.timeText ? `${props.timeText} ${props.task.description}` : props.task.description))
 

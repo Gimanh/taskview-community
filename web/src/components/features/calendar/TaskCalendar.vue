@@ -420,6 +420,8 @@ const calendarOptions = computed<CalendarOptions>(() => ({
       nowIndicator: true,
       // Tall enough for one line of the card, however short the event
       eventMinHeight: 20,
+      // The all-day row keeps the hours in view: two tasks, the rest behind "+N"
+      dayMaxEvents: 2,
     },
   },
   datesSet: onDatesSet,
