@@ -14,7 +14,7 @@
     <CalendarTaskCompleteCheckbox
       v-if="canComplete && !lifted && !tall"
       :complete="!!task.complete"
-      :class="{ 'mt-0.5': !short }"
+      :class="{ 'h-lh': !short }"
       @toggle="emit('toggleComplete', $event)"
     />
 
@@ -23,7 +23,7 @@
       size="3xs"
       :max="2"
       class="shrink-0"
-      :class="{ 'mt-px': !short }"
+      :class="{ 'mt-px': tall, 'h-lh items-center': !short && !tall }"
     >
       <UAvatar
         v-for="email in assignees"
