@@ -18,21 +18,11 @@
       @toggle="emit('toggleComplete', $event)"
     />
 
-    <UAvatarGroup
-      v-if="assignees.length"
-      size="3xs"
-      :max="2"
-      class="shrink-0"
-      :class="{ 'mt-px': tall, 'h-lh items-center': !short && !tall }"
-    >
-      <UAvatar
-        v-for="email in assignees"
-        :key="email"
-        :alt="email"
-        :title="email"
-        :text="email.slice(0, 2).toUpperCase()"
-      />
-    </UAvatarGroup>
+    <CalendarTaskCardAssignees
+      v-if="assignees.length && !showTimeRow"
+      :emails="assignees"
+      :class="{ 'h-lh items-center': !short }"
+    />
 
     <!-- One line: the whole time range always shows, the title takes what is left and truncates -->
     <span
@@ -89,12 +79,18 @@
     />
 
     <CalendarTaskCardTimeRow
-      v-if="tall && (timeRange || (canComplete && !lifted))"
+      v-if="showTimeRow"
       :complete="!!task.complete"
       :can-complete="Boolean(canComplete && !lifted)"
       :time-range="timeRange"
       @toggle="emit('toggleComplete', $event)"
-    />
+    >
+      <CalendarTaskCardAssignees
+        v-if="assignees.length"
+        :emails="assignees"
+        class="ms-auto"
+      />
+    </CalendarTaskCardTimeRow>
 
     <span
       v-if="showProject"
@@ -130,6 +126,7 @@ import { useCalendarTaskColor } from '@/composables/useCalendarTaskColor'
 import CalendarTaskCompleteCheckbox from './parts/CalendarTaskCompleteCheckbox.vue'
 import CalendarTaskCardTimeRow from './parts/CalendarTaskCardTimeRow.vue'
 import CalendarTaskCardAmount from './parts/CalendarTaskCardAmount.vue'
+import CalendarTaskCardAssignees from './parts/CalendarTaskCardAssignees.vue'
 import type { CalendarTimeRange } from '@/types/calendar.types'
 
 const props = defineProps<{
@@ -176,6 +173,7 @@ const tint = computed(() => {
 })
 
 const tall = computed(() => Boolean(props.fill && !props.short))
+const showTimeRow = computed(() => Boolean(tall.value && (props.timeRange || (props.canComplete && !props.lifted))))
 // Only where the card has room for a second line
 const showProject = computed(() => Boolean(props.projectName && !props.short && !tall.value && !props.compact))
 const titleLines = useCalendarCardTitleLines({

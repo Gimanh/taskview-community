@@ -17,6 +17,7 @@
         class="whitespace-nowrap"
       >–{{ endText }}</span>
     </span>
+    <slot />
   </span>
 </template>
 
