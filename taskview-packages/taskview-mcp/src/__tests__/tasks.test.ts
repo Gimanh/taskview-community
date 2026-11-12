@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import type { ZodType } from 'zod'
 import { ALL_TASKS_LIST_ID } from 'taskview-api'
 import { registerTasksTools } from '../tools/tasks.js'
 import { mockServer, mockApi, apiReturn, apiThrow, findTool, ts } from './setup.js'
@@ -157,6 +158,43 @@ describe('tasks tools', () => {
 
     const result = await findTool(tools, 'update_task').cb({ id: 1, description: desc })
     expect(result.content[0].text).toContain(desc)
+  })
+
+  it('create_task and update_task pass the time of day through to the API', async () => {
+    for (const [tool, method] of [['create_task', 'createTask'], ['update_task', 'updateTask']] as const) {
+      const { server, tools } = mockServer()
+      let captured: Record<string, unknown> = {}
+      const capture = (params: Record<string, unknown>) => {
+        captured = params
+        return Promise.resolve({ response: { id: 1 }, rid: `rid-${ts()}` })
+      }
+      registerTasksTools({ server, api: mockApi({ tasks: { [method]: capture } }) })
+
+      await findTool(tools, tool).cb({
+        id: 1, goalId: 1, description: `Timed ${ts()}`,
+        startDate: '2026-11-13', endDate: '2026-11-13', startTime: '13:00', endTime: '15:30',
+      })
+
+      expect(captured).toMatchObject({ startDate: '2026-11-13', endDate: '2026-11-13', startTime: '13:00', endTime: '15:30' })
+    }
+  })
+
+  it('create_task and update_task accept a time as HH:MM or HH:MM:SS and refuse anything else', () => {
+    for (const tool of ['create_task', 'update_task']) {
+      const { server, tools } = mockServer()
+      registerTasksTools({ server, api: mockApi() })
+      const schema = findTool(tools, tool).config.inputSchema as Record<string, ZodType>
+
+      expect(schema.startTime.safeParse('09:30').success).toBe(true)
+      expect(schema.endTime.safeParse('23:59:00').success).toBe(true)
+      expect(schema.endTime.safeParse(null).success).toBe(true)
+      expect(schema.startTime.safeParse('9:30').success).toBe(false)
+      expect(schema.startTime.safeParse('24:00').success).toBe(false)
+      expect(schema.startTime.safeParse('2026-11-13T13:00:00Z').success).toBe(false)
+      // A date with a time attached used to be cut down to the day without a word
+      expect(schema.endDate.safeParse('2026-11-13').success).toBe(true)
+      expect(schema.endDate.safeParse('2026-11-13T13:00:00Z').success).toBe(false)
+    }
   })
 
   it('update_task handles not found', async () => {

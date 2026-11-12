@@ -4,6 +4,25 @@ import { ok, err, toolAnnotations } from './helpers.js'
 import type { RegisterTasksToolsArgs } from './tasks.types.js'
 import type { TaskUrlSource } from './task-url.types.js'
 
+const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/
+
+// A date is a plain calendar day; the time of day is a separate field, kept in UTC
+const taskDate = (what: string) =>
+  z.string().regex(DAY_PATTERN, 'Use YYYY-MM-DD; the time of day goes in startTime / endTime').optional().nullable()
+    .describe(`${what}, YYYY-MM-DD. Null clears it. A time of day is not part of it: use startTime / endTime`)
+
+const taskTime = (what: string, dateField: string) =>
+  z.string().regex(TIME_PATTERN, 'Use HH:MM in 24-hour UTC, e.g. "14:30"').optional().nullable()
+    .describe(`${what} in UTC, HH:MM (24-hour), e.g. "14:30". Convert from the user's timezone first. Needs ${dateField}. Null clears it and makes the task all-day`)
+
+const taskSchedule = {
+  startDate: taskDate('Start date'),
+  endDate: taskDate('End/due date'),
+  startTime: taskTime('Start time of day', 'startDate'),
+  endTime: taskTime('End/due time of day', 'endDate'),
+}
+
 export function registerTasksTools({ server, api, taskUrls }: RegisterTasksToolsArgs) {
   const withUrl = async <T extends TaskUrlSource>(task: T) => (taskUrls ? taskUrls.withUrl(task) : task)
 
@@ -65,7 +84,7 @@ export function registerTasksTools({ server, api, taskUrls }: RegisterTasksTools
     {
       title: 'Create task',
       annotations: toolAnnotations.write,
-      description: 'Create a new task in a project. The result carries "url", the link to open the task in the TaskView web app',
+      description: 'Create a new task in a project, optionally with dates and times of day. The result carries "url", the link to open the task in the TaskView web app',
       inputSchema: {
         goalId: z.coerce.number().describe('Project (goal) ID'),
         description: z.string().describe('Task title/description'),
@@ -73,8 +92,7 @@ export function registerTasksTools({ server, api, taskUrls }: RegisterTasksTools
         note: z.string().optional().nullable().describe('Task note, separate from the description (the title). Stored and rendered as HTML: wrap paragraphs in <p>, lists in <ul>/<ol>; plain newlines collapse'),
         priorityId: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional()
           .describe('Priority: 1=low, 2=medium, 3=high'),
-        startDate: z.string().optional().nullable().describe('Start date (ISO format)'),
-        endDate: z.string().optional().nullable().describe('End/due date (ISO format)'),
+        ...taskSchedule,
         parentId: z.coerce.number().optional().nullable().describe('Parent task ID (for subtasks)'),
         statusId: z.coerce.number().optional().nullable().describe('Kanban column status ID'),
       },
@@ -92,7 +110,7 @@ export function registerTasksTools({ server, api, taskUrls }: RegisterTasksTools
     {
       title: 'Update task',
       annotations: toolAnnotations.write,
-      description: 'Update an existing task (description, status, priority, dates, cost, etc.). The result carries "url", the link to open the task in the TaskView web app',
+      description: 'Update an existing task (description, status, priority, dates and times of day, cost, etc.). The result carries "url", the link to open the task in the TaskView web app',
       inputSchema: {
         id: z.coerce.number().describe('Task ID to update'),
         description: z.string().optional().describe('New task description'),
@@ -101,8 +119,7 @@ export function registerTasksTools({ server, api, taskUrls }: RegisterTasksTools
         priorityId: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional()
           .describe('Priority: 1=low, 2=medium, 3=high'),
         goalListId: z.coerce.number().optional().nullable().describe('Move to a different list of the same project. Lists of other projects are rejected; moving a task between projects is done in the app'),
-        startDate: z.string().optional().nullable().describe('Start date (ISO format)'),
-        endDate: z.string().optional().nullable().describe('End/due date (ISO format)'),
+        ...taskSchedule,
         statusId: z.coerce.number().optional().nullable().describe('Kanban column status ID'),
         amount: z.coerce.string().optional().nullable()
           .describe('Cost/value of the task (decimal as string, e.g. "1500.00"). Pass null to clear.'),

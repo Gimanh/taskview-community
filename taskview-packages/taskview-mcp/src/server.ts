@@ -32,6 +32,8 @@ AGENDA: for "what do I have today", "what is coming up" or "what did I finish re
 
 TASK FIELDS: "description" is the task title (short, one line). "note" is the task body, stored as HTML - send <p>, <ul>, <ol>, <b> markup, never plain newlines. update_task replaces the note entirely, so to append read it with get_task first and send the merged HTML.
 
+TASK SCHEDULE: startDate and endDate are calendar days (YYYY-MM-DD). To place a task at a time of day, also send startTime / endTime as HH:MM in UTC - convert from the user's timezone first. A task with both dates and both times shows as a block of that length in the calendar; with endDate alone it is an all-day deadline. A deadline with a time counts as overdue once that moment passes.
+
 FILES: tasks and projects can have file attachments, identified by a uuid fileId. list_files shows them (pass taskId for one task, omit it for the whole project), get_file_download_url gives a 5-minute link to the bytes, attach_files_to_task / detach_file_from_task move existing files between tasks. Uploading new files is not available over MCP — ask the user to upload in the app, then attach.
 
 TASK LINKS: to give the user a link to a task, use the "url" field returned by get_task, create_task and update_task. Never build a task URL yourself — the web app address and the route are not derivable from task fields. If "url" is missing, say the link is unavailable instead of guessing one.`

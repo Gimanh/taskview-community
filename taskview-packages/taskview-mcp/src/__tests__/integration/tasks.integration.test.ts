@@ -171,6 +171,35 @@ describe('tasks integration', () => {
     await call(tools, 'delete_list', { id: list.id }).catch(() => {})
   })
 
+  it('sets, keeps and clears the time of day of a task', async () => {
+    const created = parse(await call(tools, 'create_task', {
+      goalId,
+      description: `Timed ${ts()}`,
+      startDate: '2026-05-04',
+      endDate: '2026-05-04',
+      startTime: '09:00',
+      endTime: '11:30',
+    }))
+    expect(created.startTime).toMatch(/^09:00/)
+    expect(created.endTime).toMatch(/^11:30/)
+
+    const moved = parse(await call(tools, 'update_task', { id: created.id, startTime: '13:00', endTime: '14:00' }))
+    expect(moved.startDate).toBe('2026-05-04')
+    expect(moved.startTime).toMatch(/^13:00/)
+    expect(moved.endTime).toMatch(/^14:00/)
+
+    const fetched = parse(await call(tools, 'get_task', { taskId: created.id }))
+    expect(fetched.startTime).toMatch(/^13:00/)
+    expect(fetched.endTime).toMatch(/^14:00/)
+
+    const allDay = parse(await call(tools, 'update_task', { id: created.id, startTime: null, endTime: null }))
+    expect(allDay.startTime).toBeNull()
+    expect(allDay.endTime).toBeNull()
+    expect(allDay.endDate).toBe('2026-05-04')
+
+    await call(tools, 'delete_task', { taskId: created.id }).catch(() => {})
+  })
+
   it('lists tasks with searchText filter', async () => {
     const unique = `searchable-${ts()}`
     const created = parse(await call(tools, 'create_task', { goalId, description: `Find me ${unique}` }))
