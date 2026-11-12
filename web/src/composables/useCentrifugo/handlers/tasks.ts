@@ -3,6 +3,8 @@ import { useBaseScreenStore } from '@/stores/base-screen.store'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useGraphStore } from '@/stores/graph.store'
 import { useKanbanStore } from '@/stores/kanban.store'
+import { useMainDashboardStore } from '@/stores/main-dashboard.store'
+import { useProjectDashboardStore } from '@/stores/project-dashboard.store'
 import { useTasksStore } from '@/stores/tasks.store'
 import type { RealtimeEventMap, RealtimeTaskRefresh } from '../types'
 
@@ -13,6 +15,8 @@ const inFlight = new Map<number, { seq: number; created: boolean }>()
 let refreshSeq = 0
 
 export function handleTasksChanged(data: RealtimeEventMap['tasks.changed']) {
+  useProjectDashboardStore().handleRemoteChange(data.goalId)
+  useMainDashboardStore().handleRemoteChange()
   for (const taskId of data.taskIds) {
     if (data.kind === 'deleted') {
       cancelRefresh(taskId)

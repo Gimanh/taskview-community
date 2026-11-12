@@ -62,6 +62,11 @@ function buildRoutes(extensions: TvWebExtension[]): RouteRecordRaw[] {
       beforeEnter: [authenticated],
       children: [
         {
+          path: ':projectId/dashboard',
+          name: 'project-dashboard',
+          component: () => import('./pages/user/dashboard.vue'),
+        },
+        {
           path: ':projectId/kanban',
           name: 'kanban',
           component: () => import('./pages/user/kanban.vue'),

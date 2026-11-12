@@ -30,11 +30,14 @@ describe('Login API', () => {
     }));
 
     beforeAll(() => {
+        // Account deletion is off unless the instance opts in
+        vi.stubEnv('ALLOW_ACCOUNT_DELETION', 'true');
         server = new App(port).listen();
     });
 
     afterAll(async () => {
         server.close();
+        vi.unstubAllEnvs();
         const db = Database.getInstance();
         // Only this file's users: auth specs run in parallel against one database
         if (registeredEmails.length) {

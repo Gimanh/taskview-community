@@ -213,13 +213,14 @@ export const TaskFieldPermissionsForEditOrCreation = {
     estimateValue: GoalPermissions.TASKS_CAN_EDIT_PRIORITY,
 };
 
+// `complete` is not listed on purpose: whether a task is done is always visible to whoever gets the task.
+// TASKS_CAN_EDIT_STATUS only decides who may change it (see the map above)
 export const TaskFieldPermissionsForWatching = {
     description: GoalPermissions.COMPONENT_CAN_WATCH_CONTENT,
     note: GoalPermissions.TASK_CAN_WATCH_NOTE,
 
     goalListId: GoalPermissions.COMPONENT_CAN_WATCH_CONTENT,
     priorityId: GoalPermissions.TASKS_CAN_WATCH_PRIORITY,
-    complete: GoalPermissions.TASKS_CAN_EDIT_STATUS,
     startDate: GoalPermissions.COMPONENT_CAN_WATCH_CONTENT,
     endDate: GoalPermissions.COMPONENT_CAN_WATCH_CONTENT,
     startTime: GoalPermissions.COMPONENT_CAN_WATCH_CONTENT,

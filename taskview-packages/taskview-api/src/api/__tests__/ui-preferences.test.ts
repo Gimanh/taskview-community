@@ -41,6 +41,15 @@ describe('UI preferences: remembered task sort', () => {
     expect(settingsOf(await api.uiPreferences.fetch())).toMatchObject({ taskSortBy: 'priority', taskSortFirstNew: 0 })
   })
 
+  it('stores the project dashboard as the view a project opens on', async () => {
+    const saved = await api.uiPreferences.update({
+      ...original,
+      [UI_SETTINGS_KEY]: { ...settingsOf(original), defaultView: 'dashboard' },
+    })
+    expect(settingsOf(saved)).toMatchObject({ defaultView: 'dashboard' })
+    expect(settingsOf(await api.uiPreferences.fetch())).toMatchObject({ defaultView: 'dashboard' })
+  })
+
   it('stores whether task cards show the task ID', async () => {
     const saved = await api.uiPreferences.update({
       ...original,

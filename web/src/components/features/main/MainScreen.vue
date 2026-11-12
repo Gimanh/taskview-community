@@ -50,6 +50,16 @@
               data-testid="main-view-calendar"
               @click="view = 'calendar'"
             />
+            <UButton
+              icon="i-lucide-layout-dashboard"
+              :color="view === 'dashboard' ? 'primary' : 'neutral'"
+              :variant="view === 'dashboard' ? 'soft' : 'ghost'"
+              square
+              :aria-label="t('contextMenu.dashboard')"
+              :aria-pressed="view === 'dashboard'"
+              data-testid="main-view-dashboard"
+              @click="view = 'dashboard'"
+            />
           </UButtonGroup>
         </template>
       </UDashboardNavbar>
@@ -66,6 +76,7 @@
     <template #body>
       <DesktopScreen v-if="view === 'widgets'" />
       <MainCalendar v-else-if="view === 'calendar'" />
+      <MainDashboard v-else-if="view === 'dashboard'" />
       <DashboardList v-else />
     </template>
   </UDashboardPanel>
@@ -82,12 +93,13 @@ import { useCollaborationStore } from '@/stores/collaboration.store'
 import DesktopScreen from './screen-main/DesktopScreen.vue'
 import DashboardList from './screen-main/DashboardList.vue'
 import MainCalendar from './screen-main/calendar/MainCalendar.vue'
+import MainDashboard from './screen-main/dashboard/MainDashboard.vue'
 import MainCalendarFilters from './screen-main/calendar/MainCalendarFilters.vue'
 import { useMainCalendarFilters } from '@/composables/useCalendarRouteState'
 
 const { t } = useI18n()
 
-const view = useLsRef<'list' | 'widgets' | 'calendar'>('main-screen-view', 'list')
+const view = useLsRef<'list' | 'widgets' | 'calendar' | 'dashboard'>('main-screen-view', 'list')
 const showCalendarFilters = ref(false)
 const calendarFilters = useMainCalendarFilters()
 

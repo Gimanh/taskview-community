@@ -9,17 +9,24 @@ export const VIEW_ROUTES: Record<DefaultView, string> = {
   graph: 'graph',
   sprints: 'sprints',
   calendar: 'calendar',
+  dashboard: 'project-dashboard',
 }
 
-// Tasks and Calendar need no permission beyond seeing the project's tasks
-const VIEW_PERMISSIONS: Record<Exclude<DefaultView, 'tasks' | 'calendar'>, (keyof GoalPermissions)[]> = {
+// Tasks, Calendar and Dashboard need no permission beyond seeing the project's tasks
+type GatedView = Exclude<DefaultView, 'tasks' | 'calendar' | 'dashboard'>
+
+const VIEW_PERMISSIONS: Record<GatedView, (keyof GoalPermissions)[]> = {
   kanban: [AllGoalPermissions.KANBAN_CAN_VIEW],
   graph: [AllGoalPermissions.GRAPH_CAN_VIEW],
   sprints: [AllGoalPermissions.SPRINT_CAN_VIEW],
 }
 
+function isGatedView(view: DefaultView): view is GatedView {
+  return view in VIEW_PERMISSIONS
+}
+
 function canOpenView(goal: GoalItem, view: DefaultView): boolean {
-  if (view === 'tasks' || view === 'calendar') return true
+  if (!isGatedView(view)) return true
   return VIEW_PERMISSIONS[view].some((perm) => !!goal.permissions[perm])
 }
 

@@ -87,6 +87,13 @@ const tools = computed<Tool[]>(() => {
       to: { name: 'user', params: { projectId: id, listId: ALL_TASKS_LIST_ID } },
       active: () => route.name === 'user',
     },
+    {
+      key: 'dashboard',
+      label: t('contextMenu.dashboard'),
+      icon: 'i-lucide-layout-dashboard',
+      to: { name: 'project-dashboard', params: { projectId: id } },
+      active: () => route.name === 'project-dashboard',
+    },
   ]
 
   if (canViewKanban.value) {

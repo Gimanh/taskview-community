@@ -60,6 +60,16 @@
   <TvContextMenu ref="contextMenu">
     <div class="p-1 flex flex-col gap-1">
       <!-- Navigation items -->
+      <!-- Dashboard -->
+      <UButton
+        :label="t('contextMenu.dashboard')"
+        icon="i-lucide-layout-dashboard"
+        variant="ghost"
+        color="neutral"
+        class="w-full justify-start"
+        :to="{ name: 'project-dashboard', params: { projectId: selectedProject?.id } }"
+        @click="contextMenu?.close()"
+      />
       <!-- Kanban -->
       <UButton
         v-if="canViewKanban"

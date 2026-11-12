@@ -185,7 +185,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { type Task } from 'taskview-api'
+import { isTaskDeadlinePassed, type Task } from 'taskview-api'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useGoalListsStore } from '@/stores/goal-lists.store'
 import { useBaseScreenStore } from '@/stores/base-screen.store'
@@ -299,17 +299,14 @@ const formattedDate = computed(() => {
 })
 
 const isOverdue = computed(() => {
-  if (!props.task.endDate || localComplete.value) return false
-  if (props.task.endTime) {
-    const match = props.task.endTime.match(/^(\d{2}):(\d{2})/)
-    if (match) {
-      const utc = new Date(`${props.task.endDate}T${match[1]}:${match[2]}:00Z`)
-      return utc < new Date()
-    }
-  }
-  const [y, m, d] = props.task.endDate.split('-').map(Number)
-  const end = new Date(y, m - 1, d, 23, 59, 59)
-  return end < new Date()
+  if (localComplete.value) return false
+  const now = new Date()
+  return isTaskDeadlinePassed({
+    endDate: props.task.endDate,
+    endTime: props.task.endTime,
+    now,
+    today: formatDate(now, 'YYYY-MM-DD'),
+  })
 })
 
 const assigneeEmails = computed(() => {

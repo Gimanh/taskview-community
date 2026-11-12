@@ -5,6 +5,9 @@ import type { GoalsStoreState } from '@/types/goals.types'
 import { useUserStore } from './user.store'
 import { useOrganizationStore } from './organization.store'
 
+// Counts the projects added, changed or removed here, so a list that was loading meanwhile is not trusted
+let localChanges = 0
+
 export const useGoalsStore = defineStore('goals', {
   state: (): GoalsStoreState => ({
     initialized: false,
@@ -48,6 +51,7 @@ export const useGoalsStore = defineStore('goals', {
       this.loading = true
       const orgStore = useOrganizationStore()
       const orgId = orgStore.currentOrg?.id
+      const changesBefore = localChanges
       const result = await $tvApi.goals.fetchGoals(orgId)
       if (orgStore.currentOrg?.id !== orgId) {
         // The organization changed while loading — this answer belongs to the previous one.
@@ -58,6 +62,11 @@ export const useGoalsStore = defineStore('goals', {
         this.loading = false
         return
       }
+      if (localChanges !== changesBefore) {
+        // The answer was made before that change and would undo it, e.g. drop a project created a moment ago
+        this.loading = false
+        return this.fetchGoals()
+      }
       this.goals = result || []
       this.loading = false
       this.initialized = true
@@ -66,6 +75,7 @@ export const useGoalsStore = defineStore('goals', {
     async addGoal(goal: GoalArgItemAdd): Promise<GoalItem | null> {
       const goalWithPermissions = await $tvApi.goals.createGoal(goal)
       if (!goalWithPermissions) return null
+      localChanges++
       this.goals.unshift(goalWithPermissions)
       return goalWithPermissions
     },
@@ -73,6 +83,7 @@ export const useGoalsStore = defineStore('goals', {
     async updateGoal(goal: GoalArgItemUpdate): Promise<boolean> {
       const goalWithPermissions = await $tvApi.goals.updateGoal(goal)
       if (!goalWithPermissions) return false
+      localChanges++
       const index = this.goals.findIndex((g) => +g.id === +goal.id)
       if (index !== -1) {
         this.goals[index] = goalWithPermissions
@@ -83,6 +94,7 @@ export const useGoalsStore = defineStore('goals', {
     async deleteGoal(goalId: GoalItem['id']): Promise<void> {
       const result = await $tvApi.goals.deleteGoal(goalId)
       if (!result) return
+      localChanges++
       const index = this.goals.findIndex((g) => +g.id === +goalId)
       if (index !== -1) {
         this.goals.splice(index, 1)

@@ -9,7 +9,7 @@ export type UiPreferencesItem = {
 
 export type FirstDayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6
 
-export type DefaultView = 'tasks' | 'kanban' | 'graph' | 'sprints' | 'calendar'
+export type DefaultView = 'tasks' | 'kanban' | 'graph' | 'sprints' | 'calendar' | 'dashboard'
 
 /** Minutes a task snaps to when dragged or resized in the calendar's hours view */
 export type CalendarDragStep = 5 | 10 | 15 | 30 | 60
