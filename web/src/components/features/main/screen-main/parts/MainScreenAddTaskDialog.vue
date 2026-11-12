@@ -7,7 +7,7 @@
     <template #header>
       <div class="flex items-center justify-between w-full">
         <h3 class="text-lg font-semibold">
-          {{ title }}
+          {{ title || t('msg.addTask') }}
         </h3>
         <UButton
           icon="i-lucide-x"
@@ -42,16 +42,34 @@
             value-key="value"
             option-key="value"
             class="w-full"
-          />
+            :ui="{ base: 'ps-9' }"
+            data-testid="main-add-task-project"
+          >
+            <template #leading>
+              <ProjectMarkerIcon
+                v-if="selectedGoal"
+                :color="selectedGoal.color"
+                :inbox="selectedGoal.inbox"
+              />
+            </template>
+            <template #item-leading="{ item }">
+              <ProjectMarkerIcon
+                :color="item.color"
+                :inbox="item.inbox"
+              />
+            </template>
+          </USelectMenu>
         </UFormField>
 
         <UFormField
           v-if="!noDates"
           :label="t('tasks.deadline')"
+          :help="canSetDeadline ? undefined : t('tasks.deadlineNoPermission')"
         >
-          <UPopover>
+          <UPopover :disabled="!canSetDeadline">
             <UButton
-              :label="formattedDeadline || t('tasks.addDueDate')"
+              :label="(canSetDeadline && formattedDeadline) || t('tasks.addDueDate')"
+              :disabled="!canSetDeadline"
               icon="i-lucide-calendar"
               color="neutral"
               variant="soft"
@@ -116,6 +134,9 @@ import { $ls, $tvApi } from '@/plugins/axios'
 import { useTaskView } from '@/composables/useTaskView'
 import { useInbox } from '@/composables/useInbox'
 import { useWeekStart } from '@/composables/useWeekStart'
+import { projectColor } from '@/helpers/color'
+import { goalHasPermission } from '@/composables/useGoalPermissions'
+import ProjectMarkerIcon from '@/components/features/projects/parts/ProjectMarkerIcon.vue'
 
 const weekStart = useWeekStart()
 
@@ -133,6 +154,8 @@ const props = withDefaults(defineProps<{
   defaultListId?: number
   /** show the deadline field but leave it empty */
   emptyDeadline?: boolean
+  /** deadline to start from, e.g. the calendar day the task is added on */
+  defaultDeadline?: Date
 }>(), {
   title: '',
   disabled: false,
@@ -142,6 +165,7 @@ const props = withDefaults(defineProps<{
   defaultGoalId: undefined,
   defaultListId: undefined,
   emptyDeadline: false,
+  defaultDeadline: undefined,
 })
 
 const emit = defineEmits<{
@@ -183,7 +207,10 @@ watch(() => props.taskName, (newVal) => {
 watch(model, async (isOpen) => {
   if (isOpen) {
     // Set default deadline based on widget type
-    if (!props.noDates && !props.emptyDeadline) {
+    if (!props.noDates && props.defaultDeadline) {
+      const day = props.defaultDeadline
+      deadline.value = new CalendarDate(day.getFullYear(), day.getMonth() + 1, day.getDate())
+    } else if (!props.noDates && !props.emptyDeadline) {
       const today = new Date()
       if (props.upcomingTask) {
         today.setDate(today.getDate() + 1)
@@ -222,12 +249,18 @@ const goalOptions = computed(() => {
   const active = goalsStore.goals.filter(g => !g.archive)
   const options = active
     .filter(g => !isOwnInbox(g))
-    .map(g => ({ label: g.name, value: g.id }))
+    .map(g => ({ label: g.name, value: g.id, color: projectColor(g), inbox: false }))
   if (inbox.value) {
-    options.unshift({ label: t('projects.inbox'), value: inbox.value.id })
+    options.unshift({ label: t('projects.inbox'), value: inbox.value.id, color: null, inbox: true })
   }
   return options
 })
+
+const selectedGoal = computed(() => goalOptions.value.find(o => o.value === selectedGoalId.value) ?? null)
+
+const canSetDeadline = computed(() =>
+  goalHasPermission(goalsStore.goalMap.get(selectedGoalId.value ?? 0), 'TASK_CAN_EDIT_DEADLINE'),
+)
 
 const formattedDeadline = computed(() => {
   if (!deadline.value) return ''
@@ -239,7 +272,7 @@ const canAdd = computed(() =>
 )
 
 async function addTask() {
-  if (!canAdd.value || !selectedGoalId.value) return
+  if (loading.value || !canAdd.value || !selectedGoalId.value) return
 
   loading.value = true
 
@@ -247,7 +280,7 @@ async function addTask() {
     // Remember the chosen project for the next time the dialog is opened.
     await $ls.setValue(LAST_SELECTED_PROJECT_KEY, selectedGoalId.value.toString())
 
-    const endDate = deadline.value
+    const endDate = deadline.value && canSetDeadline.value
       ? `${deadline.value.year}-${String(deadline.value.month).padStart(2, '0')}-${String(deadline.value.day).padStart(2, '0')}`
       : null
 

@@ -9,6 +9,8 @@
   >
     <template #header>
       <UDashboardNavbar
+        :toggle="navbarToggle"
+        v-bind="navbarAttrs"
 
         :ui="{ right: 'flex-1', root: 'px-2!' }"
       >
@@ -39,6 +41,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCurrentProjectColor } from '@/composables/useCurrentProjectColor'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TasksPanel from './TasksPanel.vue'
@@ -46,6 +49,8 @@ import TaskSearchAdd from '@/components/features/tasks/parts/TaskSearchAdd.vue'
 import { useTasksStore } from '@/stores/tasks.store'
 import { ALL_TASKS_LIST_ID } from 'taskview-api'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
+
+const { navbarToggle, navbarAttrs } = useCurrentProjectColor()
 
 const route = useRoute()
 const router = useRouter()

@@ -22,6 +22,10 @@ export class EntryUpdatePermissionChecker {
         this.permissionsFetcher = permissionsFetcher;
     }
 
+    getMessage(): string | undefined {
+        return this.message;
+    }
+
     async check(): Promise<boolean> {
         const requiredPermissions = this.getAllNeededPermissions();
 

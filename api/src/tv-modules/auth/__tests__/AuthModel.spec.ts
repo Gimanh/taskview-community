@@ -48,6 +48,7 @@ describe('AuthModel Integration Tests', () => {
             remember_token: null,
             remind_password_code: null,
             remind_password_time: null,
+            login_code_attempts: 0,
         });
     });
 
@@ -74,6 +75,7 @@ describe('AuthModel Integration Tests', () => {
             remember_token: null,
             remind_password_code: null,
             remind_password_time: null,
+            login_code_attempts: 0,
         });
     });
 
@@ -118,6 +120,7 @@ describe('AuthModel Integration Tests', () => {
             remember_token: null,
             remind_password_code: null,
             remind_password_time: null,
+            login_code_attempts: 0,
         });
     });
 
@@ -148,6 +151,7 @@ describe('AuthModel Integration Tests', () => {
             remember_token: null,
             remind_password_code: null,
             remind_password_time: null,
+            login_code_attempts: 0,
         });
     });
 

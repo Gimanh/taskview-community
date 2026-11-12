@@ -23,3 +23,9 @@ export type CalendarCardTitleLinesArgs = {
   // Only a tall event in the hours view wraps its title to the height
   enabled: Readonly<Ref<boolean>>
 }
+
+/** When a timed event starts and ends; FullCalendar leaves the end out for an event of the default length */
+export type CalendarTimeRange = {
+  start: Date
+  end: Date | null
+}

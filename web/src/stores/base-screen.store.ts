@@ -163,6 +163,11 @@ export const useBaseScreenStore = defineStore('base-screen-store', {
       return task.endDate.slice(0, 10) <= today ? 'tasksToday' : 'tasksUpcoming'
     },
 
+    insertRemoteTask(task: TaskItem) {
+      if (!this.wasCalled || task.parentId || task.complete) return
+      this.addCreatedTask(task)
+    },
+
     addCreatedTask(task: TaskItem) {
       const bucket = this.bucketForTask(task)
       if (!this[bucket].some((t) => t.id === task.id)) this[bucket].unshift(task)

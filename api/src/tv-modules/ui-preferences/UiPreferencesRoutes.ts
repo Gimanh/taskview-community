@@ -20,5 +20,6 @@ export default class UiPreferencesRoutes implements Routable {
   initRoutes() {
     this.router.get('', [IsLoggedIn], this.controller.get)
     this.router.put('', [IsLoggedIn], this.controller.update)
+    this.router.post('/recent-projects', [IsLoggedIn], this.controller.markProjectUsed)
   }
 }

@@ -30,7 +30,7 @@ vi.mock('emailjs', () => ({
     SMTPClient: vi.fn().mockImplementation(() => ({ sendAsync: vi.fn().mockResolvedValue(true) })),
 }));
 
-const port = 1826;
+const port = 1829;
 const IMPORT_MIGRATION_DIR = join(__dirname, '../../../migrations/taskview/sql/1.74.0');
 const FILES_MIGRATION_DIR = join(__dirname, '../../../migrations/taskview/sql/1.67.0');
 

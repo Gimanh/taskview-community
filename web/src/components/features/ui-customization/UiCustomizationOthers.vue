@@ -143,6 +143,7 @@ const projectItems = computed(() => [
 ])
 
 const viewItems = computed(() => [
+  { value: 'dashboard', label: t('uiCustomization.others.viewDashboard') },
   { value: 'tasks', label: t('uiCustomization.others.viewTasks') },
   { value: 'kanban', label: t('uiCustomization.others.viewKanban') },
   { value: 'graph', label: t('uiCustomization.others.viewGraph') },

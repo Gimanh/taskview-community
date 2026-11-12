@@ -50,6 +50,11 @@ export const useTasksStore = defineStore('tasks', {
       this.tasks = []
     },
 
+    removeTasksOfList(listId: number) {
+      this.tasks = this.tasks.filter((task) => task.goalListId !== listId)
+      if (this.selectedTask?.goalListId === listId) this.selectedTask = null
+    },
+
     updateSelectedTask(task: Task) {
       if (this.selectedTask && this.selectedTask.id === task.id) {
         Object.assign(this.selectedTask, task)

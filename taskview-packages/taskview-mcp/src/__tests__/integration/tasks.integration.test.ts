@@ -8,7 +8,7 @@ import { api, captureServer, call, parse, ts } from './setup.js'
 
 const { server, tools } = captureServer()
 registerGoalsTools(server, api)
-registerTasksTools(server, api)
+registerTasksTools({ server, api })
 registerListsTools(server, api)
 registerKanbanTools(server, api)
 registerCollaborationTools(server, api)

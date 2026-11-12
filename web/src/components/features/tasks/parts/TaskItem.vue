@@ -96,9 +96,21 @@
             color="neutral"
             class="bg-elevated text-muted max-w-full"
             :ui="{ base: 'rounded-md', leadingIcon: 'size-3' }"
+            :data-project-color="projectBadgeColor ?? undefined"
             variant="subtle"
             size="md"
-          />
+          >
+            <template
+              v-if="projectBadgeColor"
+              #leading
+            >
+              <UIcon
+                name="i-lucide-folder"
+                class="size-3 shrink-0"
+                :style="{ color: projectBadgeColor }"
+              />
+            </template>
+          </UBadge>
 
           <!-- List -->
           <UBadge
@@ -173,7 +185,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { type Task } from 'taskview-api'
+import { isTaskDeadlinePassed, type Task } from 'taskview-api'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useGoalListsStore } from '@/stores/goal-lists.store'
 import { useBaseScreenStore } from '@/stores/base-screen.store'
@@ -185,6 +197,7 @@ import { useTaskDetailPanel } from '@/composables/useTaskDetailPanel'
 import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
 import { useTaskActions } from '@/composables/useTaskActions'
 import TaskIdCopy from './TaskIdCopy.vue'
+import { projectColor } from '@/helpers/color'
 import TaskSubtasksProgress from './TaskSubtasksProgress.vue'
 
 const TOGGLE_DELAY = 200
@@ -263,6 +276,8 @@ const projectName = computed(() => {
   return goalsStore.goalMap.get(props.task.goalId)?.name || ''
 })
 
+const projectBadgeColor = computed(() => projectColor(goalsStore.goalMap.get(props.task.goalId)))
+
 const listName = computed(() => {
   if (!props.task.goalListId) return ''
   return goalListsStore.listMap.get(props.task.goalListId)?.name
@@ -284,17 +299,14 @@ const formattedDate = computed(() => {
 })
 
 const isOverdue = computed(() => {
-  if (!props.task.endDate || localComplete.value) return false
-  if (props.task.endTime) {
-    const match = props.task.endTime.match(/^(\d{2}):(\d{2})/)
-    if (match) {
-      const utc = new Date(`${props.task.endDate}T${match[1]}:${match[2]}:00Z`)
-      return utc < new Date()
-    }
-  }
-  const [y, m, d] = props.task.endDate.split('-').map(Number)
-  const end = new Date(y, m - 1, d, 23, 59, 59)
-  return end < new Date()
+  if (localComplete.value) return false
+  const now = new Date()
+  return isTaskDeadlinePassed({
+    endDate: props.task.endDate,
+    endTime: props.task.endTime,
+    now,
+    today: formatDate(now, 'YYYY-MM-DD'),
+  })
 })
 
 const assigneeEmails = computed(() => {

@@ -56,7 +56,7 @@ describe('TvApi', () => {
         it('should add goal with name and color', async () => {
             const addGoalResponse = await $api.goals.createGoal({
                 name: 'test goal',
-                color: 'test color',
+                color: '#1E88E5',
                 description: 'test description',
             }).catch(console.error);
 
@@ -67,7 +67,7 @@ describe('TvApi', () => {
             expect(addGoalResponse?.id).toBeDefined();
             expect(addGoalResponse?.name).toEqual('test goal');
             expect(addGoalResponse?.description).toEqual('test description');
-            expect(addGoalResponse?.color).toEqual('test color');
+            expect(addGoalResponse?.color).toEqual('#1E88E5');
         });
 
         it('should add goal with name and color and description', async () => {
@@ -129,7 +129,7 @@ describe('TvApi', () => {
                 id: addGoalResponse?.id!,
                 description: 'test description updated',
                 name: 'test goal updated name',
-                color: 'test color updated',
+                color: '#43A047',
             }).catch(console.error);
 
             if (!updateGoalResponse) {
@@ -139,7 +139,7 @@ describe('TvApi', () => {
             expect(updateGoalResponse?.id).toEqual(addGoalResponse?.id);
             expect(updateGoalResponse?.name).toEqual('test goal updated name');
             expect(updateGoalResponse?.description).toEqual('test description updated');
-            expect(updateGoalResponse?.color).toEqual('test color updated');
+            expect(updateGoalResponse?.color).toEqual('#43A047');
         });
 
         it('should update goal color', async () => {
@@ -162,6 +162,24 @@ describe('TvApi', () => {
 
             expect(updateGoalResponse?.id).toEqual(addGoalResponse?.id);
             expect(updateGoalResponse?.color).toEqual('#ff0000');
+        });
+
+        it('should remove the goal color with null', async () => {
+            const goal = await $api.goals.createGoal({ name: 'test goal for color reset', color: '#E53935' });
+            const updated = await $api.goals.updateGoal({ id: goal!.id, color: null });
+            expect(updated?.color).toEqual(null);
+        });
+
+        it('should reject a goal color that is not #rrggbb', async () => {
+            const goal = await $api.goals.createGoal({ name: 'test goal for invalid color' });
+            for (const color of ['red', '#fff', '#12345g', 'url(x)', '#1E88E5; background: red']) {
+                const updateStatus = await $api.goals.updateGoal({ id: goal!.id, color })
+                    .catch((error: AxiosError) => error.status);
+                expect(updateStatus).toEqual(400);
+                const createStatus = await $api.goals.createGoal({ name: 'test goal invalid color', color })
+                    .catch((error: AxiosError) => error.status);
+                expect(createStatus).toEqual(400);
+            }
         });
 
         it('should fail to update non-existent goal', async () => {

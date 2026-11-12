@@ -3,9 +3,21 @@ import { useRoute, useRouter, type LocationQuery } from 'vue-router'
 import { format, isValid, parseISO } from 'date-fns'
 import type { TaskItem } from '@/types/tasks.types'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
+import type { FitCalendarViewArgs } from './useCalendarRouteState.types'
 
-export const CALENDAR_VIEWS = ['month', 'week', 'hours', 'list'] as const
+export const CALENDAR_VIEWS = ['month', 'week', 'hours', 'list', 'days3', 'day'] as const
 export type CalendarView = typeof CALENDAR_VIEWS[number]
+
+// Seven columns don't fit a phone: there the week views give way to three days and a single day
+export const DESKTOP_CALENDAR_VIEWS: CalendarView[] = ['month', 'week', 'hours', 'list']
+export const MOBILE_CALENDAR_VIEWS: CalendarView[] = ['month', 'days3', 'day', 'list']
+
+/** The closest view the screen offers, so a link opened on another device still shows the same period. */
+export function fitCalendarView(args: FitCalendarViewArgs): CalendarView {
+  const { view, mobile } = args
+  if (mobile) return view === 'week' || view === 'hours' ? 'days3' : view
+  return view === 'days3' || view === 'day' ? 'hours' : view
+}
 
 // In the statuses filter, stands for tasks without a status
 export const NO_STATUS = 0
@@ -156,4 +168,40 @@ export function useCalendarFilters() {
   }
 
   return { assignees, tags, statuses, hideWeekends, isFiltered, reset, matches }
+}
+
+// The main screen calendar mixes every project, so it filters by project (?projects=3,7&weekends=hidden)
+export function useMainCalendarFilters() {
+  const { route, patchQuery } = useQueryPatch()
+  const projects = useIdsQuery()('projects')
+
+  const hideWeekends = computed<boolean>({
+    get: () => route.query.weekends === 'hidden',
+    set: (hide) => patchQuery({ weekends: hide ? 'hidden' : undefined }),
+  })
+
+  const isFiltered = computed(() => projects.value.length > 0 || hideWeekends.value)
+
+  function reset() {
+    patchQuery({ projects: undefined, weekends: undefined })
+  }
+
+  function matches(task: Pick<TaskItem, 'goalId'>): boolean {
+    return !projects.value.length || projects.value.includes(task.goalId)
+  }
+
+  return { projects, hideWeekends, isFiltered, reset, matches }
+}
+
+// The project whose undated tasks the main screen calendar hands out (?planProject=7). The panel loads
+// one project at a time: its tasks are paged and filtered with that project's permissions
+export function useMainCalendarPlanProject() {
+  const { route, patchQuery } = useQueryPatch()
+  return computed<number | null>({
+    get: () => {
+      const id = Number(route.query.planProject)
+      return Number.isInteger(id) && id > 0 ? id : null
+    },
+    set: (id) => patchQuery({ planProject: id ? String(id) : undefined }),
+  })
 }

@@ -2,6 +2,8 @@ export * from '@/tv';
 
 export * from '@/api/graph.types';
 export * from '@/api/tasks.api.types';
+export * from '@/api/task-deadline';
+export * from '@/api/task-deadline.types';
 export * from '@/api/base.types';
 export * from '@/api/permissions';
 export * from '@/api/goals.types';

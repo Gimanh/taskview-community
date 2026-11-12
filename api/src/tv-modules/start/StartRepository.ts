@@ -1,5 +1,5 @@
-import { and, eq, ilike, inArray, isNotNull, isNull } from 'drizzle-orm';
-import { GoalsSchema, GoalsListSchema, TasksSchema, TasksToTagsSchema } from 'taskview-db-schemas';
+import { and, count, desc, eq, gte, ilike, inArray, isNotNull, isNull, lt, lte, notExists, or, sql } from 'drizzle-orm';
+import { CollaborationUsersSchema, GoalsSchema, GoalsListSchema, TasksAssigneeSchema, TasksSchema, TasksToTagsSchema, type TasksSchemaTypeForSelect } from 'taskview-db-schemas';
 import type { AppUser } from '../../core/AppUser';
 import { Database } from '../../modules/db';
 import { $logger } from '../../modules/logget';
@@ -7,7 +7,27 @@ import type { TaskItemInDb } from '../../types/tasks.types';
 import { logError } from '../../utils/api';
 import { callWithCatch } from '../../utils/helpers';
 import { TaskItemForClient } from '../tasks/TaskItemForClient';
-import type { AssigneesForTaskFromDb, FetchAllListsResult, SearchTaskArgs, SearchTaskResult, StartTaskTagFromDb, UsersByProjectsFromDb } from './start.types';
+import type {
+    AssigneesForTaskFromDb,
+    FetchAllListsResult,
+    FetchDashboardAttentionArgs,
+    FetchDashboardCompletedArgs,
+    FetchDashboardCompletedRangeArgs,
+    FetchDashboardDeadlineRangeArgs,
+    FetchDashboardTasksByIdArgs,
+    FetchTasksInPeriodArgs,
+    SearchTaskArgs,
+    SearchTaskResult,
+    StartDashboardAssignee,
+    StartDashboardAttentionCandidate,
+    StartDashboardCompletedTask,
+    StartDashboardGoalCount,
+    StartDashboardOpenGroup,
+    StartDashboardTaskDescription,
+    StartDashboardWorkloadGroup,
+    StartTaskTagFromDb,
+    UsersByProjectsFromDb,
+} from './start.types';
 
 //TODO: refactor 
 export class StartRepository {
@@ -17,6 +37,237 @@ export class StartRepository {
     constructor(user: AppUser) {
         this.db = Database.getInstance();
         this.user = user;
+    }
+
+    // Same period rule as the project calendar: a task with a single date spans just that day
+    async fetchTasksInPeriod(args: FetchTasksInPeriodArgs): Promise<TasksSchemaTypeForSelect[]> {
+        if (args.goalIds.length === 0) return [];
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select()
+                .from(TasksSchema)
+                .where(
+                    and(
+                        inArray(TasksSchema.goalId, args.goalIds),
+                        isNull(TasksSchema.parentId),
+                        sql`COALESCE(${TasksSchema.endDate}, ${TasksSchema.startDate}) >= ${args.from}`,
+                        sql`COALESCE(${TasksSchema.startDate}, ${TasksSchema.endDate}) <= ${args.to}`
+                    )
+                )
+                .orderBy(TasksSchema.id)
+        );
+        return result ?? [];
+    }
+
+    async fetchActiveGoalIds(goalIds: number[]): Promise<number[]> {
+        if (goalIds.length === 0) return [];
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({ id: GoalsSchema.id })
+                .from(GoalsSchema)
+                .where(and(inArray(GoalsSchema.id, goalIds), eq(GoalsSchema.archive, 0)))
+        );
+        return (result ?? []).map((goal) => goal.id);
+    }
+
+    // Open top-level tasks counted per project, deadline and priority: the dashboard never loads the tasks themselves
+    async fetchDashboardOpenGroups(goalIds: number[]): Promise<StartDashboardOpenGroup[]> {
+        if (goalIds.length === 0) return [];
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({
+                    goalId: TasksSchema.goalId,
+                    endDate: TasksSchema.endDate,
+                    endTime: TasksSchema.endTime,
+                    priorityId: TasksSchema.priorityId,
+                    count: count(),
+                })
+                .from(TasksSchema)
+                .where(this.dashboardOpenTasks(goalIds))
+                .groupBy(TasksSchema.goalId, TasksSchema.endDate, TasksSchema.endTime, TasksSchema.priorityId)
+        );
+        return result ?? [];
+    }
+
+    async fetchDashboardAssignedGroups(goalIds: number[]): Promise<StartDashboardWorkloadGroup[]> {
+        if (goalIds.length === 0) return [];
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({
+                    goalId: TasksSchema.goalId,
+                    email: CollaborationUsersSchema.email,
+                    endDate: TasksSchema.endDate,
+                    endTime: TasksSchema.endTime,
+                    count: count(),
+                })
+                .from(TasksAssigneeSchema)
+                .innerJoin(TasksSchema, eq(TasksSchema.id, TasksAssigneeSchema.taskId))
+                .innerJoin(CollaborationUsersSchema, eq(CollaborationUsersSchema.id, TasksAssigneeSchema.collabUserId))
+                .where(this.dashboardOpenTasks(goalIds))
+                .groupBy(TasksSchema.goalId, CollaborationUsersSchema.email, TasksSchema.endDate, TasksSchema.endTime)
+        );
+        return result ?? [];
+    }
+
+    async fetchDashboardUnassignedGroups(goalIds: number[]): Promise<StartDashboardWorkloadGroup[]> {
+        if (goalIds.length === 0) return [];
+        const assigned = this.db.dbDrizzle
+            .select({ taskId: TasksAssigneeSchema.taskId })
+            .from(TasksAssigneeSchema)
+            .where(eq(TasksAssigneeSchema.taskId, TasksSchema.id));
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({
+                    goalId: TasksSchema.goalId,
+                    endDate: TasksSchema.endDate,
+                    endTime: TasksSchema.endTime,
+                    count: count(),
+                })
+                .from(TasksSchema)
+                .where(and(this.dashboardOpenTasks(goalIds), notExists(assigned)))
+                .groupBy(TasksSchema.goalId, TasksSchema.endDate, TasksSchema.endTime)
+        );
+        return (result ?? []).map((group) => ({ ...group, email: null }));
+    }
+
+    // The open tasks whose deadlines come first: the few the dashboard lists by name are picked among them
+    async fetchDashboardAttentionCandidates(args: FetchDashboardAttentionArgs): Promise<StartDashboardAttentionCandidate[]> {
+        if (args.goalIds.length === 0) return [];
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({
+                    id: TasksSchema.id,
+                    goalId: TasksSchema.goalId,
+                    endDate: TasksSchema.endDate,
+                    endTime: TasksSchema.endTime,
+                })
+                .from(TasksSchema)
+                .where(and(this.dashboardOpenTasks(args.goalIds), lte(TasksSchema.endDate, args.until)))
+                .orderBy(TasksSchema.endDate, TasksSchema.id)
+                .limit(args.limit)
+        );
+        return result ?? [];
+    }
+
+    // Every open task with a deadline in the given days, without its content: the caller keeps the ones of its column
+    async fetchDashboardOpenByDeadline(args: FetchDashboardDeadlineRangeArgs): Promise<StartDashboardAttentionCandidate[]> {
+        if (args.goalIds.length === 0) return [];
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({
+                    id: TasksSchema.id,
+                    goalId: TasksSchema.goalId,
+                    endDate: TasksSchema.endDate,
+                    endTime: TasksSchema.endTime,
+                })
+                .from(TasksSchema)
+                .where(
+                    and(
+                        this.dashboardOpenTasks(args.goalIds),
+                        lte(TasksSchema.endDate, args.until),
+                        args.from ? gte(TasksSchema.endDate, args.from) : undefined
+                    )
+                )
+                .orderBy(TasksSchema.endDate, TasksSchema.id)
+        );
+        return result ?? [];
+    }
+
+    async fetchDashboardCompletedPage(args: FetchDashboardCompletedRangeArgs): Promise<StartDashboardCompletedTask[]> {
+        if (args.goalIds.length === 0) return [];
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({ id: TasksSchema.id, goalId: TasksSchema.goalId, dateComplete: TasksSchema.dateComplete })
+                .from(TasksSchema)
+                .where(this.dashboardCompletedBetween(args))
+                .orderBy(desc(TasksSchema.dateComplete), desc(TasksSchema.id))
+                .limit(args.limit)
+                .offset(args.offset)
+        );
+        return result ?? [];
+    }
+
+    async countDashboardCompleted(args: FetchDashboardCompletedRangeArgs): Promise<number> {
+        if (args.goalIds.length === 0) return 0;
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle.select({ total: count() }).from(TasksSchema).where(this.dashboardCompletedBetween(args))
+        );
+        return result?.[0]?.total ?? 0;
+    }
+
+    async fetchDashboardDescriptions(args: FetchDashboardTasksByIdArgs): Promise<StartDashboardTaskDescription[]> {
+        if (args.goalIds.length === 0 || args.taskIds.length === 0) return [];
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({ id: TasksSchema.id, description: TasksSchema.description })
+                .from(TasksSchema)
+                .where(and(inArray(TasksSchema.id, args.taskIds), inArray(TasksSchema.goalId, args.goalIds)))
+        );
+        return result ?? [];
+    }
+
+    async fetchDashboardTaskAssignees(args: FetchDashboardTasksByIdArgs): Promise<StartDashboardAssignee[]> {
+        if (args.goalIds.length === 0 || args.taskIds.length === 0) return [];
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({ taskId: TasksAssigneeSchema.taskId, email: CollaborationUsersSchema.email })
+                .from(TasksAssigneeSchema)
+                .innerJoin(TasksSchema, eq(TasksSchema.id, TasksAssigneeSchema.taskId))
+                .innerJoin(CollaborationUsersSchema, eq(CollaborationUsersSchema.id, TasksAssigneeSchema.collabUserId))
+                .where(and(inArray(TasksSchema.id, args.taskIds), inArray(TasksSchema.goalId, args.goalIds)))
+                .orderBy(TasksAssigneeSchema.taskId, TasksAssigneeSchema.collabUserId)
+        );
+        return result ?? [];
+    }
+
+    async fetchDashboardGoalCounts(goalIds: number[]): Promise<StartDashboardGoalCount[]> {
+        if (goalIds.length === 0) return [];
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({ goalId: TasksSchema.goalId, done: count() })
+                .from(TasksSchema)
+                .where(and(...this.dashboardTopLevelTasks(goalIds), eq(TasksSchema.complete, true)))
+                .groupBy(TasksSchema.goalId)
+        );
+        return result ?? [];
+    }
+
+    async fetchDashboardCompletedDates(args: FetchDashboardCompletedArgs): Promise<Date[]> {
+        if (args.goalIds.length === 0) return [];
+        const result = await callWithCatch(() =>
+            this.db.dbDrizzle
+                .select({ dateComplete: TasksSchema.dateComplete })
+                .from(TasksSchema)
+                .where(
+                    and(
+                        ...this.dashboardTopLevelTasks(args.goalIds),
+                        eq(TasksSchema.complete, true),
+                        gte(TasksSchema.dateComplete, args.since)
+                    )
+                )
+        );
+        return (result ?? []).flatMap((row) => (row.dateComplete ? [row.dateComplete] : []));
+    }
+
+    // The caller passes only active projects it may see: see StartManager.fetchDashboard
+    private dashboardTopLevelTasks(goalIds: number[]) {
+        return [inArray(TasksSchema.goalId, goalIds), isNull(TasksSchema.parentId)];
+    }
+
+    private dashboardCompletedBetween(args: FetchDashboardCompletedRangeArgs) {
+        return and(
+            ...this.dashboardTopLevelTasks(args.goalIds),
+            eq(TasksSchema.complete, true),
+            gte(TasksSchema.dateComplete, args.from),
+            lt(TasksSchema.dateComplete, args.to)
+        );
+    }
+
+    private dashboardOpenTasks(goalIds: number[]) {
+        return and(
+            ...this.dashboardTopLevelTasks(goalIds),
+            or(isNull(TasksSchema.complete), eq(TasksSchema.complete, false))
+        );
     }
 
     async fetchListsForGoals(goalIds: number[]): Promise<FetchAllListsResult[]> {

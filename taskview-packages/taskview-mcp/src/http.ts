@@ -7,6 +7,7 @@ import { createMcpServer } from './server.js'
 import type { CorsHeadersArgs, HandleMcpRequestArgs, UnauthorizedArgs } from './http.types.js'
 
 const TASKVIEW_URL = process.env.TASKVIEW_URL
+const TASKVIEW_APP_URL = process.env.TASKVIEW_APP_URL
 const PORT = Number(process.env.MCP_HTTP_PORT || 3100)
 // Public URL of THIS server, as clients reach it — the OAuth resource
 // identifier. It may carry a path when the server is mounted under one
@@ -113,7 +114,7 @@ async function handleMcpRequest({ req, res, token }: HandleMcpRequestArgs) {
     headers: { Authorization: `Bearer ${token}` },
   })
   const api = new TvApi($axios)
-  const server = createMcpServer(api)
+  const server = createMcpServer({ api, appUrl: TASKVIEW_APP_URL })
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
     enableJsonResponse: true,

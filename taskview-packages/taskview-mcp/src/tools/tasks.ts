@@ -1,9 +1,12 @@
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { type TvApi, ALL_TASKS_LIST_ID } from 'taskview-api'
+import { ALL_TASKS_LIST_ID } from 'taskview-api'
 import { z } from 'zod'
 import { ok, err, toolAnnotations } from './helpers.js'
+import type { RegisterTasksToolsArgs } from './tasks.types.js'
+import type { TaskUrlSource } from './task-url.types.js'
 
-export function registerTasksTools(server: McpServer, api: TvApi) {
+export function registerTasksTools({ server, api, taskUrls }: RegisterTasksToolsArgs) {
+  const withUrl = async <T extends TaskUrlSource>(task: T) => (taskUrls ? taskUrls.withUrl(task) : task)
+
   server.registerTool(
     'list_tasks',
     {
@@ -43,7 +46,7 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
     {
       title: 'Get task',
       annotations: toolAnnotations.readOnly,
-      description: 'Get a single task by its ID with full details',
+      description: 'Get a single task by its ID with full details. The result carries "url", the link to open the task in the TaskView web app',
       inputSchema: {
         taskId: z.coerce.number().describe('Task ID'),
       },
@@ -52,7 +55,7 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
       try {
         const task = await api.tasks.fetchTaskById(taskId)
         if (!task) return err('Task not found')
-        return ok(task)
+        return ok(await withUrl(task))
       } catch (e) { return err(e) }
     },
   )
@@ -62,7 +65,7 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
     {
       title: 'Create task',
       annotations: toolAnnotations.write,
-      description: 'Create a new task in a project',
+      description: 'Create a new task in a project. The result carries "url", the link to open the task in the TaskView web app',
       inputSchema: {
         goalId: z.coerce.number().describe('Project (goal) ID'),
         description: z.string().describe('Task title/description'),
@@ -79,7 +82,7 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
     async (params) => {
       try {
         const task = await api.tasks.createTask(params)
-        return ok(task)
+        return ok(task ? await withUrl(task) : task)
       } catch (e) { return err(e) }
     },
   )
@@ -89,7 +92,7 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
     {
       title: 'Update task',
       annotations: toolAnnotations.write,
-      description: 'Update an existing task (description, status, priority, dates, cost, etc.)',
+      description: 'Update an existing task (description, status, priority, dates, cost, etc.). The result carries "url", the link to open the task in the TaskView web app',
       inputSchema: {
         id: z.coerce.number().describe('Task ID to update'),
         description: z.string().optional().describe('New task description'),
@@ -111,7 +114,7 @@ export function registerTasksTools(server: McpServer, api: TvApi) {
       try {
         const result = await api.tasks.updateTask(params)
         if (!result) return err('Task not found or update failed')
-        return ok(result)
+        return ok(await withUrl(result))
       } catch (e) { return err(e) }
     },
   )

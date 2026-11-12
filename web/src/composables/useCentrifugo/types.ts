@@ -47,6 +47,10 @@ export type RealtimeEventMap = {
     goalId: number
     taskIds: number[]
   }
+  'tags.changed': {
+    event: 'tags.changed'
+    goalId: number
+  }
   'tasks.changed': {
     event: 'tasks.changed'
     goalId: number

@@ -10,10 +10,12 @@
         </p>
       </div>
       <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <UiCustomizationThemePreset
+        <UiCustomizationThemeCard
           v-for="preset in THEME_PRESETS"
           :key="preset.id"
-          :preset="preset"
+          :label="t(preset.labelKey)"
+          :vars="palettePreviewVars(preset)"
+          :test-id="`theme-preset-${preset.id}`"
           :active="!customActive && preset.primary === colors.primary && preset.neutral === colors.neutral"
           @select="setColors(preset)"
         />
@@ -68,10 +70,11 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { THEME_NEUTRAL_COLORS, THEME_PRIMARY_COLORS, type ThemeNeutralColor, type ThemePrimaryColor } from 'taskview-api'
 import { useThemeColors } from '@/composables/useThemeColors'
-import UiCustomizationThemePreset from './parts/UiCustomizationThemePreset.vue'
+import UiCustomizationThemeCard from './parts/UiCustomizationThemeCard.vue'
 import UiCustomizationThemeSwatches from './parts/UiCustomizationThemeSwatches.vue'
 import UiCustomizationThemeCustom from './parts/UiCustomizationThemeCustom.vue'
 import { THEME_PRESETS } from './parts/theme-presets'
+import { palettePreviewVars } from './parts/theme-preview'
 
 const { t } = useI18n()
 const { colors, customActive, isDefault, setColors, reset } = useThemeColors()

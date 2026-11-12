@@ -33,7 +33,15 @@
             class="flex items-center justify-between w-full"
             :data-testid="`project-row-${project.name}`"
           >
-            <span>{{ project.name }}</span>
+            <span class="flex items-center gap-2 min-w-0">
+              <span
+                v-if="projectColor(project)"
+                class="size-2.5 rounded-full shrink-0"
+                :style="{ backgroundColor: projectColor(project) ?? undefined }"
+                data-testid="project-row-color"
+              />
+              <span class="truncate">{{ project.name }}</span>
+            </span>
             <UButton
               icon="i-lucide-ellipsis"
               color="neutral"
@@ -52,6 +60,16 @@
   <TvContextMenu ref="contextMenu">
     <div class="p-1 flex flex-col gap-1">
       <!-- Navigation items -->
+      <!-- Dashboard -->
+      <UButton
+        :label="t('contextMenu.dashboard')"
+        icon="i-lucide-layout-dashboard"
+        variant="ghost"
+        color="neutral"
+        class="w-full justify-start"
+        :to="{ name: 'project-dashboard', params: { projectId: selectedProject?.id } }"
+        @click="contextMenu?.close()"
+      />
       <!-- Kanban -->
       <UButton
         v-if="canViewKanban"
@@ -153,6 +171,16 @@
         data-testid="context-menu-edit"
         @click="openEditModal"
       />
+      <UButton
+        v-else
+        :label="t('projects.theme')"
+        icon="i-lucide-palette"
+        variant="ghost"
+        color="neutral"
+        class="w-full justify-start"
+        data-testid="context-menu-theme"
+        @click="openThemeModal"
+      />
 
       <!-- Archive/Restore -->
       <template v-if="canEditGoal"> 
@@ -201,6 +229,12 @@
     @save="handleSave"
   />
 
+  <ProjectThemeModal
+    v-if="selectedProject"
+    v-model:open="isThemeModalOpen"
+    :project-id="selectedProject.id"
+  />
+
   <!-- Delete Confirmation Dialog -->
   <ProjectDeleteDialog
     v-model:open="isDeleteDialogOpen"
@@ -216,8 +250,10 @@ import TvContextMenu from '@/components/features/base/TvContextMenu.vue'
 import TvGoalLikeItem from '@/components/features/base/TvGoalLikeItem.vue'
 import ProjectEditModal from '@/components/features/projects/parts/ProjectEditModal.vue'
 import ProjectDeleteDialog from '@/components/features/projects/parts/ProjectDeleteDialog.vue'
+import ProjectThemeModal from '@/components/features/projects/parts/ProjectThemeModal.vue'
 import ProjectAddInput from '@/components/features/projects/parts/ProjectAddInput.vue'
 import type { Project, ProjectSaveData } from '@/components/features/projects/types'
+import { projectColor } from '@/helpers/color'
 import { useGoalPermissionsFor } from '@/composables/useGoalPermissions'
 import { useProjectRoute } from '@/composables/useProjectRoute'
 import { useI18n } from 'vue-i18n'
@@ -269,6 +305,8 @@ const isEditModalOpen = ref(false)
 
 const isDeleteDialogOpen = ref(false)
 
+const isThemeModalOpen = ref(false)
+
 function openContextMenu(event: MouseEvent, project: Project) {
   selectedProject.value = project
   contextMenu.value?.openAt(event)
@@ -277,6 +315,11 @@ function openContextMenu(event: MouseEvent, project: Project) {
 function openEditModal() {
   contextMenu.value?.close()
   isEditModalOpen.value = true
+}
+
+function openThemeModal() {
+  contextMenu.value?.close()
+  isThemeModalOpen.value = true
 }
 
 function handleSave(data: ProjectSaveData) {

@@ -1,7 +1,10 @@
 import { $tvApi } from '@/plugins/axios'
 import { useBaseScreenStore } from '@/stores/base-screen.store'
+import { useGoalsStore } from '@/stores/goals.store'
 import { useGraphStore } from '@/stores/graph.store'
 import { useKanbanStore } from '@/stores/kanban.store'
+import { useMainDashboardStore } from '@/stores/main-dashboard.store'
+import { useProjectDashboardStore } from '@/stores/project-dashboard.store'
 import { useTasksStore } from '@/stores/tasks.store'
 import type { RealtimeEventMap, RealtimeTaskRefresh } from '../types'
 
@@ -12,6 +15,8 @@ const inFlight = new Map<number, { seq: number; created: boolean }>()
 let refreshSeq = 0
 
 export function handleTasksChanged(data: RealtimeEventMap['tasks.changed']) {
+  useProjectDashboardStore().handleRemoteChange(data.goalId)
+  useMainDashboardStore().handleRemoteChange()
   for (const taskId of data.taskIds) {
     if (data.kind === 'deleted') {
       cancelRefresh(taskId)
@@ -54,7 +59,14 @@ function isShown(request: RealtimeTaskRefresh): boolean {
   ) {
     return true
   }
-  return request.created && [Number(tasksStore.fetchRules.goalId), kanbanStore.goalId, useGraphStore().goalId].includes(request.goalId)
+  if (!request.created) return false
+  return [Number(tasksStore.fetchRules.goalId), kanbanStore.goalId, useGraphStore().goalId].includes(request.goalId)
+    || mainScreenTracksGoal(request.goalId)
+}
+
+function mainScreenTracksGoal(goalId: number): boolean {
+  const goal = useGoalsStore().goalMap.get(goalId)
+  return useBaseScreenStore().wasCalled && !!goal && !goal.archive
 }
 
 async function refreshTask(request: RealtimeTaskRefresh) {
@@ -77,7 +89,9 @@ async function refreshTask(request: RealtimeTaskRefresh) {
   const graphStore = useGraphStore()
   graphStore.syncTask(task)
   if (created) graphStore.insertTask({ task })
-  useBaseScreenStore().syncTask(task)
+  const baseScreenStore = useBaseScreenStore()
+  baseScreenStore.syncTask(task)
+  if (created && mainScreenTracksGoal(task.goalId)) baseScreenStore.insertRemoteTask(task)
 }
 
 function removeTaskEverywhere(taskId: number) {

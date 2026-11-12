@@ -10,6 +10,7 @@ import SessionStorage from './tv-modules/auth/SessionStorage';
 import { AccountDeletion } from './tv-modules/auth/AccountDeletion';
 import { InviteEmailDispatcher } from './tv-modules/collaboration/InviteEmailDispatcher';
 import { PublicApiUrl } from './modules/public-url';
+import { ProcessTimezone } from './modules/process-timezone';
 import { validateWebhooksEnvOnStartup } from './tv-modules/webhooks/webhooks.utils';
 import { validateSsoEnvOnStartup } from './tv-modules/sso/sso.utils';
 import { validateImportEnvOnStartup } from './tv-modules/import/import.utils';
@@ -23,6 +24,7 @@ export default class App {
     public port: number;
 
     constructor(port: number) {
+        ProcessTimezone.enforceOnStartup();
         LoginMethods.validateOnStartup();
         SessionStorage.validateOnStartup();
         AccountDeletion.validateOnStartup();

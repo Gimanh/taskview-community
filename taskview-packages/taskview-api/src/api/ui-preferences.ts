@@ -16,4 +16,10 @@ export default class TvUiPreferencesApi extends TvApiBase {
       this.$axios.put<AppResponse<UiPreferences>>(this.moduleUrl, prefs),
     )
   }
+
+  public async markProjectUsed(projectId: number) {
+    return this.request(
+      this.$axios.post<AppResponse<number[]>>(`${this.moduleUrl}/recent-projects`, { projectId }),
+    )
+  }
 }

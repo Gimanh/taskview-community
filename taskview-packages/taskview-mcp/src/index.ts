@@ -20,7 +20,7 @@ const $axios = axios.create({
 $axios.defaults.headers.common['Authorization'] = `Bearer ${TASKVIEW_TOKEN}`
 
 const api = new TvApi($axios)
-const server = createMcpServer(api)
+const server = createMcpServer({ api, appUrl: process.env.TASKVIEW_APP_URL })
 const transport = new StdioServerTransport()
 
 await server.connect(transport)

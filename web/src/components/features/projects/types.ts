@@ -6,4 +6,5 @@ export type ProjectSaveData = {
   name: string
   description: string
   estimateUnit: 'hours' | 'points'
+  color: string | null
 }

@@ -2,10 +2,12 @@ import { type } from 'arktype';
 import type { GoalsSchemaTypeForSelect } from 'taskview-db-schemas';
 import type { GoalPermissionsForClient } from '../../types/auth.types';
 
+const goalColorArkType = type(/^#[0-9a-fA-F]{6}$/).or('null');
+
 export const GoalsArkTypeAdd = type({
     name: 'string',
     'description?': 'string | null',
-    'color?': 'string | null',
+    'color?': goalColorArkType,
     'organizationId?': 'number',
 });
 
@@ -15,7 +17,7 @@ export const GoalsArkTypeUpdate = type({
     id: 'number',
     'name?': 'string | null',
     'description?': 'string | null',
-    'color?': 'string | null',
+    'color?': goalColorArkType,
     "estimateUnit?": "'hours' | 'points'",
     'archive?': '0 | 1',
 });

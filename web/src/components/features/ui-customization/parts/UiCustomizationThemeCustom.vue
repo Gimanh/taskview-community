@@ -9,101 +9,58 @@
           {{ t('uiCustomization.theme.custom.hint') }}
         </p>
       </div>
-      <USwitch
-        :model-value="customActive"
-        :aria-label="t('uiCustomization.theme.custom.title')"
-        data-testid="theme-custom-switch"
-        @update:model-value="setCustomActive"
-      />
+      <UButton
+        icon="i-lucide-plus"
+        color="neutral"
+        variant="soft"
+        size="sm"
+        class="shrink-0"
+        :disabled="!canSaveMore"
+        :title="canSaveMore ? undefined : t('uiCustomization.theme.custom.limit', { max: MAX_SAVED_THEMES })"
+        data-testid="theme-custom-create"
+        @click="create"
+      >
+        {{ t('uiCustomization.theme.custom.create') }}
+      </UButton>
     </div>
 
     <div
-      v-if="customActive && customTheme"
-      class="flex flex-col gap-2 rounded-2xl border border-default p-3 lg:p-4"
+      v-if="savedThemes.length > 0"
+      class="grid grid-cols-2 gap-2 sm:grid-cols-3"
     >
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <UTabs
-          v-model="mode"
-          :items="modeItems"
-          :content="false"
-          size="sm"
-          :ui="{ list: 'rounded-xl', trigger: 'rounded-lg', indicator: 'rounded-lg' }"
-        />
-        <UButton
-          icon="i-lucide-wand-sparkles"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          data-testid="theme-custom-refill"
-          @click="refillCustomTheme"
-        >
-          {{ t('uiCustomization.theme.custom.refill') }}
-        </UButton>
-      </div>
-
-      <p
-        v-if="mode !== activeMode"
-        class="text-xs text-muted"
-      >
-        {{ t(mode === 'dark' ? 'uiCustomization.theme.custom.otherModeDark' : 'uiCustomization.theme.custom.otherModeLight') }}
-      </p>
-
-      <div class="divide-y divide-default">
-        <UiCustomizationThemeColorField
-          v-for="key in CUSTOM_THEME_COLOR_KEYS"
-          :key="key"
-          :field="key"
-          :label="t(`uiCustomization.theme.custom.fields.${key}`)"
-          :hint="t(`uiCustomization.theme.custom.fields.${key}Hint`)"
-          :model-value="customTheme[mode][key]"
-          @update:model-value="(value) => update(key, value)"
-        />
-      </div>
-
-      <UAlert
-        v-if="contrast < MIN_TEXT_CONTRAST"
-        color="warning"
-        variant="soft"
-        icon="i-lucide-triangle-alert"
-        :title="t('uiCustomization.theme.custom.lowContrast', { ratio: contrast.toFixed(1) })"
-        data-testid="theme-custom-low-contrast"
+      <UiCustomizationThemeCard
+        v-for="theme in savedThemes"
+        :key="theme.id"
+        :label="savedThemeName(theme)"
+        :vars="customPreviewVars(theme)"
+        :test-id="`theme-saved-${theme.id}`"
+        :active="activeSavedTheme?.id === theme.id"
+        @select="activateSavedTheme(theme.id)"
       />
     </div>
+
+    <UiCustomizationThemeCustomEditor
+      v-if="activeSavedTheme"
+      :key="activeSavedTheme.id"
+      :theme="activeSavedTheme"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useColorMode } from '@vueuse/core'
-import { CUSTOM_THEME_COLOR_KEYS, type CustomThemeColorKey } from 'taskview-api'
+import { MAX_SAVED_THEMES } from 'taskview-api'
 import { useThemeColors } from '@/composables/useThemeColors'
-import { contrastRatio } from '@/helpers/custom-theme'
-import UiCustomizationThemeColorField from './UiCustomizationThemeColorField.vue'
-
-const MIN_TEXT_CONTRAST = 4.5
+import { useSavedThemeName } from '@/composables/useSavedThemeName'
+import UiCustomizationThemeCard from './UiCustomizationThemeCard.vue'
+import UiCustomizationThemeCustomEditor from './UiCustomizationThemeCustomEditor.vue'
+import { customPreviewVars } from './theme-preview'
 
 const { t } = useI18n()
-const { customActive, customTheme, setCustomActive, setCustomTheme, refillCustomTheme } = useThemeColors()
-const { state: colorModeState } = useColorMode()
+const { savedThemes, activeSavedTheme, canSaveMore, activateSavedTheme, createSavedTheme } = useThemeColors()
+const { savedThemeName } = useSavedThemeName()
 
-const activeMode = computed<'light' | 'dark'>(() => (colorModeState.value === 'dark' ? 'dark' : 'light'))
-const mode = ref<'light' | 'dark'>(activeMode.value)
-
-const modeItems = computed(() => [
-  { value: 'light', label: t('uiCustomization.theme.custom.light'), icon: 'i-lucide-sun' },
-  { value: 'dark', label: t('uiCustomization.theme.custom.dark'), icon: 'i-lucide-moon' },
-])
-
-const contrast = computed(() => {
-  const palette = customTheme.value?.[mode.value]
-  if (!palette) return Infinity
-  return Math.min(contrastRatio(palette.text, palette.background), contrastRatio(palette.text, palette.surface))
-})
-
-function update(key: CustomThemeColorKey, value: string) {
-  const theme = customTheme.value
-  if (!theme) return
-  setCustomTheme({ ...theme, [mode.value]: { ...theme[mode.value], [key]: value } })
+function create() {
+  createSavedTheme(t('uiCustomization.theme.custom.defaultName', { n: savedThemes.value.length + 1 }))
 }
 </script>

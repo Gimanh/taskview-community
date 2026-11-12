@@ -56,7 +56,7 @@ export const TaskArkTypeFetchTasksNewFilters = type({
 
 // A calendar day, as task dates are stored. The round trip rejects days that don't exist (2026-02-30),
 // which Postgres would otherwise turn into a 500.
-const TaskArkTypeDay = type(/^\d{4}-\d{2}-\d{2}$/).narrow((value, ctx) => {
+export const TaskArkTypeDay = type(/^\d{4}-\d{2}-\d{2}$/).narrow((value, ctx) => {
     const date = new Date(`${value}T00:00:00Z`);
     return (!Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value) || ctx.mustBe('a valid date');
 });
@@ -189,6 +189,8 @@ export type TaskAddResult =
     | { ok: true; tasks: TaskForClientNew[] }
     | { ok: false; reason: 'foreign_reference' };
 
+export const TASK_DEADLINE_FIELDS = ['startDate', 'endDate', 'startTime', 'endTime'] as const;
+
 export const TaskFieldPermissionsForEditOrCreation = {
     description: GoalPermissions.TASKS_CAN_EDIT_DESCRIPTION,
     note: GoalPermissions.TASKS_CAN_EDIT_NOTE,
@@ -211,13 +213,14 @@ export const TaskFieldPermissionsForEditOrCreation = {
     estimateValue: GoalPermissions.TASKS_CAN_EDIT_PRIORITY,
 };
 
+// `complete` is not listed on purpose: whether a task is done is always visible to whoever gets the task.
+// TASKS_CAN_EDIT_STATUS only decides who may change it (see the map above)
 export const TaskFieldPermissionsForWatching = {
     description: GoalPermissions.COMPONENT_CAN_WATCH_CONTENT,
     note: GoalPermissions.TASK_CAN_WATCH_NOTE,
 
     goalListId: GoalPermissions.COMPONENT_CAN_WATCH_CONTENT,
     priorityId: GoalPermissions.TASKS_CAN_WATCH_PRIORITY,
-    complete: GoalPermissions.TASKS_CAN_EDIT_STATUS,
     startDate: GoalPermissions.COMPONENT_CAN_WATCH_CONTENT,
     endDate: GoalPermissions.COMPONENT_CAN_WATCH_CONTENT,
     startTime: GoalPermissions.COMPONENT_CAN_WATCH_CONTENT,

@@ -90,6 +90,13 @@ export const useCalendarStore = defineStore('use-calendar-store', {
       await this.loadUnscheduledPage(false)
     },
 
+    // The panel's first page again, e.g. after a task left the calendar elsewhere than through the panel
+    async reloadUnscheduled() {
+      if (!unscheduledQuery) return
+      this.unscheduledCursor = null
+      await this.loadUnscheduledPage(false)
+    },
+
     async fetchMoreUnscheduled() {
       if (this.unscheduledLoading || !this.unscheduledHasMore) return
       await this.loadUnscheduledPage(true)
@@ -162,7 +169,7 @@ export const useCalendarStore = defineStore('use-calendar-store', {
     // Applied right away, as FullCalendar already shows the move: a second drag before the response
     // must start from these dates. Returns null when the update fails, so the caller can put the event back.
     // Works for tasks in the panel too: giving one dates moves it onto the calendar, clearing them moves it back.
-    async updateTaskDates(patch: TaskArgUpdate) {
+    async updateTask(patch: TaskArgUpdate) {
       const local = this.findTask(patch.id)
       const fields = Object.keys(patch) as (keyof TaskArgUpdate)[]
       const previous = local && Object.fromEntries(fields.map((field) => [field, local[field as keyof TaskItem]]))

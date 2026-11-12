@@ -48,6 +48,7 @@ export const useGoalListsStore = defineStore('goal-lists', {
       if (index !== -1) {
         this.lists.splice(index, 1)
       }
+      return true
     },
 
     async updateList(listData: GoalListItemArgUpdate) {

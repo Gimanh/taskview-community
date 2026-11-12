@@ -4,6 +4,8 @@
   >
     <template #header>
       <UDashboardNavbar
+        :toggle="navbarToggle"
+        v-bind="navbarAttrs"
         :title="`${projectName} - ${t('graph.title')}`"
         :ui="{title: 'shrink-0'}"
       >
@@ -54,6 +56,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCurrentProjectColor } from '@/composables/useCurrentProjectColor'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ProjectGraph from '@/components/features/graph/ProjectGraph.vue'
@@ -65,6 +68,8 @@ import { useFiltersFromQuery } from '@/composables/useFiltersFromQuery'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useProjectDataLoader } from '@/composables/useProjectDataLoader'
 import { useTaskView } from '@/composables/useTaskView'
+
+const { navbarToggle, navbarAttrs } = useCurrentProjectColor()
 
 const { t } = useI18n()
 const { projectId } = useAppRouteInfo()
