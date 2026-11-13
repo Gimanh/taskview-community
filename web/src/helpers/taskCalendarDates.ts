@@ -1,6 +1,6 @@
-import { addDays, addHours, addMinutes, format } from 'date-fns'
-import type { Task, TaskArgUpdate } from 'taskview-api'
-import type { TaskDropArgs } from './taskCalendarDates.types'
+import { addDays, addHours, addMinutes, format, isSameDay } from 'date-fns'
+import type { Task, TaskArgAdd, TaskArgUpdate } from 'taskview-api'
+import type { CalendarSpanLabelArgs, TaskDropArgs } from './taskCalendarDates.types'
 
 // Which task fields a single-day event was built from, so later writes can target the same field
 export type TaskDateShape = 'range' | 'start' | 'end'
@@ -146,6 +146,44 @@ export function droppedTaskDates({ taskId, date, allDay, minutes }: TaskDropArgs
   const start = toStoredDateTime(date)
   const end = toStoredDateTime(addMinutes(date, minutes))
   return { id: taskId, startDate: start.date, startTime: start.time, endDate: end.date, endTime: end.time }
+}
+
+// The last day a picked span covers: an all-day span ends on the day after it
+function spanLastDay(span: CalendarSpan): Date {
+  return span.allDay ? addDays(span.end, -1) : span.end
+}
+
+/**
+ * The dates a new task gets from a span picked on the calendar. Same storage as the date picker:
+ * one day is a deadline, several days are a start and an end, and times are saved in UTC.
+ */
+export function spanTaskDates(span: CalendarSpan): Pick<TaskArgAdd, 'startDate' | 'startTime' | 'endDate' | 'endTime'> {
+  if (span.allDay) {
+    const start = format(span.start, DAY_FORMAT)
+    const end = format(spanLastDay(span), DAY_FORMAT)
+    return start === end ? { endDate: end } : { startDate: start, endDate: end }
+  }
+  const start = span.start.toISOString()
+  const end = span.end.toISOString()
+  return {
+    startDate: start.slice(0, 10),
+    startTime: `${start.slice(11, 16)}:00`,
+    endDate: end.slice(0, 10),
+    endTime: `${end.slice(11, 16)}:00`,
+  }
+}
+
+/** "Thu, Oct 29", "Thu, Oct 29 – Sat, Oct 31" or "Thu, Oct 29, 10:00 – 10:30", in the given language and the local timezone. */
+export function calendarSpanLabel({ span, locale }: CalendarSpanLabelArgs): string {
+  const day = new Intl.DateTimeFormat(locale, { weekday: 'short', month: 'short', day: 'numeric' })
+  const time = new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' })
+  const last = spanLastDay(span)
+  if (span.allDay) {
+    return isSameDay(span.start, last) ? day.format(span.start) : `${day.format(span.start)} – ${day.format(last)}`
+  }
+  return isSameDay(span.start, span.end)
+    ? `${day.format(span.start)}, ${time.format(span.start)} – ${time.format(span.end)}`
+    : `${day.format(span.start)}, ${time.format(span.start)} – ${day.format(span.end)}, ${time.format(span.end)}`
 }
 
 export function clearedTaskDates(taskId: number): TaskArgUpdate {
