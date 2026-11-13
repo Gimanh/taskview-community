@@ -59,7 +59,7 @@
 
   <MainScreenAddTaskDialog
     v-model="addOpen"
-    :default-deadline="addDay ?? undefined"
+    :span="addSpan ?? undefined"
     @added="store.refresh()"
   />
 </template>
@@ -179,14 +179,14 @@ calendarStore.$onAction(({ name, after }) => {
 
 const calendarRef = useTemplateRef<InstanceType<typeof TaskCalendar>>('calendar')
 const addOpen = ref(false)
-const addDay = ref<Date | null>(null)
+const addSpan = ref<CalendarSpan | null>(null)
 
 watch(addOpen, (open) => {
   if (!open) calendarRef.value?.unselect()
 })
 
 function openAdd(span: CalendarSpan) {
-  addDay.value = span.start
+  addSpan.value = span
   addOpen.value = true
 }
 </script>

@@ -66,7 +66,22 @@
           :label="t('tasks.deadline')"
           :help="canSetDeadline ? undefined : t('tasks.deadlineNoPermission')"
         >
-          <UPopover :disabled="!canSetDeadline">
+          <p
+            v-if="span"
+            class="flex items-center gap-2 text-sm"
+            :class="canSetDeadline ? 'text-highlighted' : 'text-dimmed'"
+            data-testid="main-add-task-span"
+          >
+            <UIcon
+              name="i-lucide-calendar-clock"
+              class="size-4.5 shrink-0"
+            />
+            {{ spanLabel }}
+          </p>
+          <UPopover
+            v-else
+            :disabled="!canSetDeadline"
+          >
             <UButton
               :label="(canSetDeadline && formattedDeadline) || t('tasks.addDueDate')"
               :disabled="!canSetDeadline"
@@ -124,6 +139,7 @@
 import { computed, ref, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { CalendarDate } from '@internationalized/date'
+import type { TaskArgAdd } from 'taskview-api'
 import { useGoalsStore } from '@/stores/goals.store'
 import { useBaseScreenStore } from '@/stores/base-screen.store'
 import { useTasksStore } from '@/stores/tasks.store'
@@ -135,6 +151,7 @@ import { useTaskView } from '@/composables/useTaskView'
 import { useInbox } from '@/composables/useInbox'
 import { useWeekStart } from '@/composables/useWeekStart'
 import { projectColor } from '@/helpers/color'
+import { calendarSpanLabel, spanTaskDates, type CalendarSpan } from '@/helpers/taskCalendarDates'
 import { goalHasPermission } from '@/composables/useGoalPermissions'
 import ProjectMarkerIcon from '@/components/features/projects/parts/ProjectMarkerIcon.vue'
 
@@ -156,6 +173,8 @@ const props = withDefaults(defineProps<{
   emptyDeadline?: boolean
   /** deadline to start from, e.g. the calendar day the task is added on */
   defaultDeadline?: Date
+  /** days or a time range picked on the calendar: the task gets exactly these dates and times */
+  span?: CalendarSpan
 }>(), {
   title: '',
   disabled: false,
@@ -166,6 +185,7 @@ const props = withDefaults(defineProps<{
   defaultListId: undefined,
   emptyDeadline: false,
   defaultDeadline: undefined,
+  span: undefined,
 })
 
 const emit = defineEmits<{
@@ -175,7 +195,7 @@ const emit = defineEmits<{
 
 const model = defineModel<boolean>({ default: false })
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const goalsStore = useGoalsStore()
 const baseScreenStore = useBaseScreenStore()
 const tasksStore = useTasksStore()
@@ -267,6 +287,18 @@ const formattedDeadline = computed(() => {
   return `${deadline.value.day}.${String(deadline.value.month).padStart(2, '0')}.${deadline.value.year}`
 })
 
+const spanLabel = computed(() => (props.span ? calendarSpanLabel({ span: props.span, locale: locale.value }) : ''))
+
+// A picked span wins over the deadline field; without the permission the task gets no dates at all
+const taskDates = computed<Pick<TaskArgAdd, 'startDate' | 'startTime' | 'endDate' | 'endTime'>>(() => {
+  if (!canSetDeadline.value) return { endDate: null }
+  if (props.span) return spanTaskDates(props.span)
+  const day = deadline.value
+  return {
+    endDate: day ? `${day.year}-${String(day.month).padStart(2, '0')}-${String(day.day).padStart(2, '0')}` : null,
+  }
+})
+
 const canAdd = computed(() =>
   taskDescription.value.trim() && selectedGoalId.value !== undefined,
 )
@@ -280,10 +312,6 @@ async function addTask() {
     // Remember the chosen project for the next time the dialog is opened.
     await $ls.setValue(LAST_SELECTED_PROJECT_KEY, selectedGoalId.value.toString())
 
-    const endDate = deadline.value && canSetDeadline.value
-      ? `${deadline.value.year}-${String(deadline.value.month).padStart(2, '0')}-${String(deadline.value.day).padStart(2, '0')}`
-      : null
-
     // A task for the project whose graph is on screen is placed in the visible part of it
     const nodeGraphPosition = selectedGoalId.value === graphStore.goalId ? graphViewportCenter() : null
 
@@ -291,7 +319,7 @@ async function addTask() {
       description: taskDescription.value.trim(),
       goalId: selectedGoalId.value,
       goalListId: selectedGoalId.value === props.defaultGoalId ? props.defaultListId ?? null : null,
-      endDate,
+      ...taskDates.value,
       ...(nodeGraphPosition && { nodeGraphPosition }),
     })
 
