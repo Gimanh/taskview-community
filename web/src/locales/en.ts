@@ -1588,7 +1588,7 @@ export default {
       intro: 'We look at how fast tasks are being closed and assume the pace stays the same.',
       pace: 'Tasks closed in the last {weeks} weeks: {closed}. That is {rate} per week.',
       remaining: 'Tasks still open: {open}.',
-      result: '{open} ÷ {rate} ≈ {weeksLeft} weeks from today, which is around {date}.',
+      result: '{open} ÷ {rate} ≈ {weeksLeft} week from today, which is around {date}. | {open} ÷ {rate} ≈ {weeksLeft} weeks from today, which is around {date}.',
       noPace: 'No tasks were closed in the last {weeks} weeks, so there is no pace to build a forecast on. It will appear once a task is closed.',
       allDone: 'Nothing is open, so there is nothing to forecast.',
       caveat: 'This is a rough estimate. It does not know how big the tasks are or when they are due, and it assumes no new tasks are added. Subtasks are not counted.',

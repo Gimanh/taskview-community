@@ -67,7 +67,6 @@ const { isMobile } = useTaskView()
 const isOpen = ref(false)
 
 const rateFormat = computed(() => new Intl.NumberFormat(locale.value, { maximumFractionDigits: 2 }))
-const weeksFormat = computed(() => new Intl.NumberFormat(locale.value, { maximumFractionDigits: 1 }))
 const dateFormat = computed(() => new Intl.DateTimeFormat(locale.value, { day: 'numeric', month: 'long', year: 'numeric' }))
 
 const texts = computed(() => (props.variant === 'pace'
@@ -98,15 +97,17 @@ const steps = computed(() => {
   const { weeks, closed } = props.model.paceWindow
   const open = props.model.totals.open
   const rate = rateFormat.value.format(forecast.weeklyRate)
+  // Whole weeks, like the forecast line this explains: "2.3 weeks" reads oddly
+  const weeksLeft = Math.max(Math.round(forecast.weeksLeft), 1)
   return [
     t('projectDashboard.forecastHelp.pace', { weeks, closed, rate }),
     t('projectDashboard.forecastHelp.remaining', { open }),
     t('projectDashboard.forecastHelp.result', {
       open,
       rate,
-      weeksLeft: weeksFormat.value.format(forecast.weeksLeft),
+      weeksLeft,
       date: dateFormat.value.format(forecast.date),
-    }),
+    }, weeksLeft),
   ]
 })
 

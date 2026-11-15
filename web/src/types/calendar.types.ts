@@ -22,6 +22,8 @@ export type CalendarCardTitleLinesArgs = {
   title: Readonly<Ref<HTMLElement | null>>
   // Only a tall event in the hours view wraps its title to the height
   enabled: Readonly<Ref<boolean>>
+  // Height kept free under the title for what the card shows below it
+  reserve?: Readonly<Ref<number>>
 }
 
 /** When a timed event starts and ends; FullCalendar leaves the end out for an event of the default length */

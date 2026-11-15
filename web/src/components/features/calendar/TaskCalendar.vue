@@ -69,9 +69,9 @@
               <CalendarTaskCard
                 v-if="arg.event.extendedProps.task"
                 :task="arg.event.extendedProps.task"
-                :time-text="arg.event.allDay ? undefined : arg.timeText"
                 :time-range="arg.event.allDay || !arg.event.start ? undefined : { start: arg.event.start, end: arg.event.end }"
                 :compact="arg.view.type !== FC_VIEWS.week && arg.view.type !== FC_VIEWS.list"
+                :stacked="arg.view.type === FC_VIEWS.week"
                 :resizable="arg.isEndResizable"
                 :lifted="arg.isMirror"
                 :fill="isTimeGrid(arg.view.type) && !arg.event.allDay"

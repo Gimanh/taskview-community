@@ -13,7 +13,7 @@ export function useCalendarCardTitleLines(args: CalendarCardTitleLinesArgs): Ref
     if (!args.enabled.value || !card || !title || !height.value) return undefined
     const lineHeight = parseFloat(getComputedStyle(title).lineHeight)
     const paddingTop = parseFloat(getComputedStyle(card).paddingTop)
-    const room = paddingTop + height.value - title.offsetTop
+    const room = paddingTop + height.value - title.offsetTop - (args.reserve?.value ?? 0)
     return Math.max(1, Math.floor(room / lineHeight))
   })
 }

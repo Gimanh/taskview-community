@@ -74,9 +74,12 @@ const dateFormat = computed(() => {
     ? { weekday: 'short', day: 'numeric', month: 'short' }
     : { day: 'numeric', month: 'short', year: 'numeric' })
 })
-const rateFormat = computed(() => new Intl.NumberFormat(locale.value, { maximumFractionDigits: 1 }))
+const wholeFormat = computed(() => new Intl.NumberFormat(locale.value, { maximumFractionDigits: 0 }))
+const fractionFormat = computed(() => new Intl.NumberFormat(locale.value, { maximumFractionDigits: 1 }))
 
-const weeklyRate = (closed: number) => rateFormat.value.format(closed / props.model.paceWindow.weeks)
+// Whole tasks: "3.5 a week" reads oddly. Under one a week the fraction stays, or the pace would show as zero
+const formatRate = (rate: number) => (rate >= 1 ? wholeFormat.value : fractionFormat.value).format(rate)
+const weeklyRate = (closed: number) => formatRate(closed / props.model.paceWindow.weeks)
 
 const paceHeadline = computed(() => {
   const { weeks, closed } = props.model.paceWindow
@@ -88,7 +91,8 @@ const paceHeadline = computed(() => {
 const paceNote = computed(() => {
   const { weeks, closed } = props.model.paceWindow
   const previous = props.model.previousPaceClosed ?? closed
-  if (previous === closed) return t('projectDashboard.hero.paceSame', { weeks })
+  // The same once rounded counts as the same: "4 a week, up from 4 a week" says nothing
+  if (weeklyRate(previous) === weeklyRate(closed)) return t('projectDashboard.hero.paceSame', { weeks })
   return t(previous < closed ? 'projectDashboard.hero.paceUp' : 'projectDashboard.hero.paceDown', {
     rate: weeklyRate(previous),
     weeks,
@@ -107,7 +111,7 @@ const note = computed(() => {
   const forecast = props.model.forecast
   if (forecast) {
     return t('projectDashboard.hero.pace', {
-      rate: rateFormat.value.format(forecast.weeklyRate),
+      rate: formatRate(forecast.weeklyRate),
       weeks: Math.max(Math.round(forecast.weeksLeft), 1),
     })
   }

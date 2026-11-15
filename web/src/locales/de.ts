@@ -1574,7 +1574,7 @@ export default {
       intro: 'Wir schauen, wie schnell Aufgaben abgeschlossen werden, und nehmen an, dass das Tempo gleich bleibt.',
       pace: 'In den letzten {weeks} Wochen abgeschlossene Aufgaben: {closed}. Das sind {rate} pro Woche.',
       remaining: 'Noch offene Aufgaben: {open}.',
-      result: '{open} ÷ {rate} ≈ {weeksLeft} Wochen ab heute, also etwa am {date}.',
+      result: '{open} ÷ {rate} ≈ {weeksLeft} Woche ab heute, also etwa am {date}. | {open} ÷ {rate} ≈ {weeksLeft} Wochen ab heute, also etwa am {date}.',
       noPace: 'In den letzten {weeks} Wochen wurde keine Aufgabe abgeschlossen, daher gibt es kein Tempo für eine Prognose. Sie erscheint, sobald eine Aufgabe abgeschlossen wird.',
       allDone: 'Es ist nichts offen, also gibt es nichts zu prognostizieren.',
       caveat: 'Das ist eine grobe Schätzung. Sie kennt weder den Umfang der Aufgaben noch ihre Fristen und geht davon aus, dass keine neuen Aufgaben hinzukommen. Unteraufgaben werden nicht gezählt.',
