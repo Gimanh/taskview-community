@@ -20,7 +20,7 @@
     >
       <CalendarTaskCard
         :task="event.extendedProps.task"
-        :time-text="timeText(event)"
+        :time-range="timeRange(event)"
         :can-complete="canComplete?.(event.extendedProps.task)"
         v-bind="cardProps?.(event.extendedProps.task)"
         @toggle-complete="emit('toggleComplete', { task: event.extendedProps.task, complete: $event })"
@@ -54,6 +54,7 @@ import { useI18n } from 'vue-i18n'
 import CalendarTaskCard from '../CalendarTaskCard.vue'
 import type { TaskCalendarEvent } from '@/helpers/taskCalendarDates'
 import type { TaskItem } from '@/types/tasks.types'
+import type { CalendarTimeRange } from '@/types/calendar.types'
 import type { TaskCompleteArgs } from '../TaskCalendar.types'
 
 const props = defineProps<{
@@ -75,10 +76,8 @@ const { t, locale } = useI18n()
 
 const dayTitle = computed(() => new Intl.DateTimeFormat(locale.value, { weekday: 'long', day: 'numeric', month: 'long' }).format(props.day))
 
-function timeText(event: TaskCalendarEvent): string | undefined {
+function timeRange(event: TaskCalendarEvent): CalendarTimeRange | undefined {
   if (event.allDay) return undefined
-  const time = new Intl.DateTimeFormat(locale.value, { hour: 'numeric', minute: '2-digit' })
-  const start = time.format(new Date(event.start))
-  return event.end ? `${start} – ${time.format(new Date(event.end))}` : start
+  return { start: new Date(event.start), end: event.end ? new Date(event.end) : null }
 }
 </script>

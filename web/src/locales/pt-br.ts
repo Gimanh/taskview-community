@@ -1585,7 +1585,7 @@ export default {
       intro: 'Observamos a velocidade com que as tarefas são concluídas e supomos que o ritmo continue o mesmo.',
       pace: 'Tarefas concluídas nas últimas {weeks} semanas: {closed}. Isso dá {rate} por semana.',
       remaining: 'Tarefas ainda abertas: {open}.',
-      result: '{open} ÷ {rate} ≈ {weeksLeft} semanas a partir de hoje, ou seja, por volta de {date}.',
+      result: '{open} ÷ {rate} ≈ {weeksLeft} semana a partir de hoje, ou seja, por volta de {date}. | {open} ÷ {rate} ≈ {weeksLeft} semanas a partir de hoje, ou seja, por volta de {date}.',
       noPace: 'Nenhuma tarefa foi concluída nas últimas {weeks} semanas, então não há ritmo para calcular. A previsão aparece quando uma tarefa for concluída.',
       allDone: 'Não há nada aberto, então não há o que prever.',
       caveat: 'É uma estimativa aproximada. Ela não conhece o tamanho das tarefas nem os prazos e supõe que nenhuma tarefa nova será adicionada. Subtarefas não são contadas.',

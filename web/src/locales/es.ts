@@ -1574,7 +1574,7 @@ export default {
       intro: 'Miramos a qué ritmo se cierran las tareas y suponemos que ese ritmo se mantiene.',
       pace: 'Tareas cerradas en las últimas {weeks} semanas: {closed}. Eso es {rate} por semana.',
       remaining: 'Tareas aún abiertas: {open}.',
-      result: '{open} ÷ {rate} ≈ {weeksLeft} semanas desde hoy, es decir, hacia el {date}.',
+      result: '{open} ÷ {rate} ≈ {weeksLeft} semana desde hoy, es decir, hacia el {date}. | {open} ÷ {rate} ≈ {weeksLeft} semanas desde hoy, es decir, hacia el {date}.',
       noPace: 'No se cerró ninguna tarea en las últimas {weeks} semanas, así que no hay ritmo sobre el que calcular. El pronóstico aparecerá cuando se cierre una tarea.',
       allDone: 'No hay nada abierto, así que no hay nada que pronosticar.',
       caveat: 'Es una estimación aproximada. No conoce el tamaño de las tareas ni sus plazos, y supone que no se añaden tareas nuevas. Las subtareas no se cuentan.',
