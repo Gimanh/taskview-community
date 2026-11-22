@@ -3,10 +3,10 @@ import { type } from 'arktype';
 import type { Request, Response } from 'express';
 import type { Readable } from 'node:stream';
 import { logError } from '../../utils/api';
+import { FileContentPolicy } from './FileContentPolicy';
 import {
     FILE_LIST_DEFAULT_LIMIT,
     FILE_LIST_MAX_LIMIT,
-    FileArkTypeContentQuery,
     FileArkTypeDownloadUrl,
     FileArkTypeFileIdParam,
     FileArkTypeGoalIdParam,
@@ -155,19 +155,17 @@ export default class FilesController {
     content = async (req: Request, res: Response) => {
         const params = FileArkTypeTokenParam(req.params);
         if (params instanceof type.errors) return res.status(400).send(params.summary);
-        const query = FileArkTypeContentQuery(req.query);
-        if (query instanceof type.errors) return res.status(400).send(query.summary);
-
         const result = await req.appUser.filesManager.openContent(params.token);
         if (!result.ok) return res.status(codeToStatus[result.code]).send(result.message ?? result.code);
 
         const { file, stream, sizeBytes, inline } = result.data;
-        const disposition = inline || query.inline === '1' ? 'inline' : 'attachment';
-        res.setHeader('Content-Type', file.mimeType);
+        const delivery = FileContentPolicy.delivery({ mimeType: file.mimeType, inline });
+        res.setHeader('Content-Type', delivery.contentType);
         res.setHeader('Content-Length', String(sizeBytes));
-        res.setHeader('Content-Disposition', this.contentDisposition(disposition, file.name));
+        res.setHeader('Content-Disposition', this.contentDisposition(delivery.disposition, file.name));
         res.setHeader('Cache-Control', 'private, max-age=0, no-store');
         res.setHeader('X-Content-Type-Options', 'nosniff');
+        if (delivery.sandboxed) res.setHeader('Content-Security-Policy', this.sandboxedPolicy(res));
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
 
         stream.on('error', (err) => {
@@ -177,6 +175,12 @@ export default class FilesController {
         });
         stream.pipe(res);
     };
+
+    // Added to the policy the application already sends, so the file keeps every limit of an ordinary response
+    private sandboxedPolicy(res: Response): string {
+        const current = res.getHeader('Content-Security-Policy');
+        return typeof current === 'string' && current !== '' ? `${current}; sandbox` : 'sandbox';
+    }
 
     private contentDisposition(kind: 'inline' | 'attachment', name: string): string {
         const ascii = name.replace(/[^\x20-\x7e]/g, '_').replace(/["\\]/g, '_');

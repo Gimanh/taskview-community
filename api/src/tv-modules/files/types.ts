@@ -28,7 +28,6 @@ export const FileArkTypeUploadQuery = type({ 'taskId?': toNumber });
 export const FileArkTypeLink = type({ fileIds: 'string.uuid[] > 0' });
 export const FileArkTypeRename = type({ name: 'string > 0' }); // length is normalized in the manager, the extension is re-added there
 export const FileArkTypeDownloadUrl = type({ 'inline?': 'boolean' });
-export const FileArkTypeContentQuery = type({ 'inline?': 'string' });
 
 export type FileKindFilter = 'image' | 'document' | 'all';
 
@@ -151,6 +150,14 @@ export type FileContent = {
     stream: Readable;
     sizeBytes: number;
     inline: boolean;
+};
+
+export type FileContentDeliveryArgs = { mimeType: string; inline: boolean };
+
+export type FileContentDelivery = {
+    contentType: string;
+    disposition: 'inline' | 'attachment';
+    sandboxed: boolean;
 };
 
 export type FileErrorCode =

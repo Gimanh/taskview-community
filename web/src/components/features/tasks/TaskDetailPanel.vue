@@ -47,6 +47,8 @@
         />
       </div>
 
+      <ExtensionOutlet name="task-detail-sections" />
+
       <div class="grid grid-cols-1 @lg:grid-cols-2 gap-4">
         <template
           v-for="fieldId in orderedFieldIds"
@@ -177,6 +179,7 @@ import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { useTasksStore } from '@/stores/tasks.store'
+import ExtensionOutlet from '@/components/ExtensionOutlet.vue'
 import NoteEditor from '@/components/features/tasks/parts/NoteEditor.vue'
 import TvPriority from '@/components/features/base/TvPriority.vue'
 import TaskTagsManager from '@/components/features/tasks/parts/tags/TaskTagsManager.vue'

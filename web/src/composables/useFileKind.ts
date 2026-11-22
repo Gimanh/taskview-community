@@ -9,14 +9,14 @@ const ICONS: Record<FileKind, string> = {
   other: 'i-lucide-file',
 }
 
-const TEXT_TYPES = new Set(['application/json', 'application/xml', 'application/javascript'])
+const TEXT_TYPES = new Set(['text/plain', 'text/csv', 'text/markdown', 'application/json'])
 
 export function fileKindOf(mimeType: string): FileKind {
   if (mimeType.startsWith('image/')) return 'image'
   if (mimeType === 'application/pdf') return 'pdf'
   if (mimeType.startsWith('video/')) return 'video'
   if (mimeType.startsWith('audio/')) return 'audio'
-  if (mimeType.startsWith('text/') || TEXT_TYPES.has(mimeType)) return 'text'
+  if (TEXT_TYPES.has(mimeType)) return 'text'
   return 'other'
 }
 

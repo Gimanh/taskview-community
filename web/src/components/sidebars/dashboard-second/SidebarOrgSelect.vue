@@ -79,6 +79,7 @@
         :ui="{ base: 'rounded-lg' }"
         @click="openDetail('sso')"
       />
+      <ExtensionOutlet name="org-sidebar-actions" />
     </div>
 
     <OrgCreateModal
@@ -104,6 +105,7 @@ import { useOrgSwitcher } from '@/composables/useOrgSwitcher'
 import { useOrgPermissions } from '@/composables/useOrgPermissions'
 import OrgCreateModal from '@/components/features/organizations/parts/OrgCreateModal.vue'
 import OrgDetailModal from '@/components/features/organizations/parts/OrgDetailModal.vue'
+import ExtensionOutlet from '@/components/ExtensionOutlet.vue'
 
 const { t } = useI18n()
 const orgStore = useOrganizationStore()

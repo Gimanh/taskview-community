@@ -325,6 +325,62 @@ describe('Files module', () => {
             expect(inlineContent.headers['content-disposition']).toMatch(/^inline/);
         });
 
+        it('never lets a browser run an uploaded file on the server address', async () => {
+            const page = '<html><body><script>alert(document.domain)</script></body></html>';
+            const vector = '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>';
+            const html = await upload({ goalId, taskId, name: 'page.html', content: page, mime: 'text/html' });
+            const script = await upload({ goalId, taskId, name: 'run.js', content: 'alert(1)', mime: 'application/javascript' });
+            const svg = await upload({ goalId, taskId, name: 'logo.svg', content: vector, mime: 'image/svg+xml' });
+            const picture = await upload({ goalId, taskId, name: 'shot.png', content: 'png bytes', mime: 'image/png' });
+            const archive = await upload({ goalId, taskId, name: 'pack.zip', content: 'zip bytes', mime: 'application/zip' });
+            const pdf = await upload({ goalId, taskId, name: 'doc.pdf', content: '%PDF-1.4', mime: 'application/pdf' });
+            const table = await upload({ goalId, taskId, name: 'table.csv', content: 'a,b', mime: 'text/csv' });
+            const source = await upload({ goalId, taskId, name: 'tool.py', content: 'print(1)', mime: 'text/x-python' });
+            const open = async (fileId: string, inline: boolean, suffix = '') => {
+                const link = await api.post(`/module/files/file/${fileId}/download-url`, { inline }, asUser());
+                expect(link.status).toBe(200);
+                return api.get(`${link.data.response.url}${suffix}`, { responseType: 'arraybuffer' });
+            };
+            const headers = (response: Awaited<ReturnType<typeof open>>) => [
+                String(response.headers['content-type']),
+                String(response.headers['content-disposition']).split(';')[0],
+                /(^|;)\s*sandbox\s*(;|$)/.test(String(response.headers['content-security-policy'] ?? '')),
+            ];
+
+            const shownPage = await open(html.data.response.id, true);
+            expect(headers(shownPage)).toEqual(['text/html', 'attachment', true]);
+            expect(Buffer.from(shownPage.data).toString()).toBe(page);
+            expect(shownPage.headers['x-content-type-options']).toBe('nosniff');
+            expect(headers(await open(script.data.response.id, true))).toEqual(['application/javascript', 'attachment', true]);
+            expect(headers(await open(svg.data.response.id, true))).toEqual(['image/svg+xml', 'attachment', true]);
+            expect(headers(await open(archive.data.response.id, true))).toEqual(['application/zip', 'attachment', true]);
+            expect(headers(await open(source.data.response.id, true))).toEqual(['text/x-python', 'attachment', true]);
+            expect(headers(await open(table.data.response.id, true))).toEqual(['text/plain; charset=utf-8', 'inline', true]);
+
+            expect(headers(await open(picture.data.response.id, true))).toEqual(['image/png', 'inline', true]);
+            expect(headers(await open(pdf.data.response.id, true))).toEqual(['application/pdf', 'inline', false]);
+
+            expect(headers(await open(html.data.response.id, false))).toEqual(['text/html', 'attachment', true]);
+            expect(headers(await open(html.data.response.id, false, '?inline=1'))).toEqual(['text/html', 'attachment', true]);
+            expect(headers(await open(picture.data.response.id, false, '?inline=1'))).toEqual(['image/png', 'attachment', true]);
+        });
+
+        it('serves a page disguised as a picture as a picture, so the browser has nothing to run', async () => {
+            const page = '<html><body><script>alert(document.domain)</script></body></html>';
+            const disguised = await upload({ goalId, taskId, name: 'photo.png', content: page, mime: 'image/png' });
+            expect(disguised.status).toBe(200);
+
+            for (const inline of [true, false]) {
+                const link = await api.post(`/module/files/file/${disguised.data.response.id}/download-url`, { inline }, asUser());
+                const served = await api.get(link.data.response.url, { responseType: 'arraybuffer' });
+                expect(served.headers['content-type']).toBe('image/png');
+                expect(served.headers['x-content-type-options']).toBe('nosniff');
+                expect(String(served.headers['content-security-policy'])).toMatch(/(^|;)\s*sandbox\s*(;|$)/);
+                expect(String(served.headers['content-disposition']).split(';')[0]).toBe(inline ? 'inline' : 'attachment');
+                expect(Buffer.from(served.data).toString()).toBe(page);
+            }
+        });
+
         it('rejects forged and expired content tokens', async () => {
             expect((await api.get('/module/files/content/not-a-token')).status).toBe(403);
             const expired = new FileDownloadTokens().sign({ fileId: taskFile.id, inline: false, exp: 1 });

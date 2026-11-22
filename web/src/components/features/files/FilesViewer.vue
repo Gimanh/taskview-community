@@ -92,6 +92,7 @@
               v-else-if="kind === 'pdf' || kind === 'text'"
               :src="src"
               :title="current.name"
+              :sandbox="kind === 'text' ? '' : undefined"
               class="w-full h-full bg-white rounded-lg"
             />
             <div
