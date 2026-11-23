@@ -1296,6 +1296,7 @@ export default {
       description: 'Escolha quais notificações deseja receber e como.',
       push: 'Push',
       websocket: 'In-app',
+      email: 'E-mail',
       types: {
         deadline: 'Prazos',
         deadlineDescription: 'Quando o prazo da tarefa é atingido',

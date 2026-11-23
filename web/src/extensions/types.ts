@@ -19,6 +19,15 @@ export type WorkspaceLink = {
 /** Called once in the sidebar's setup, so it may use composables and stores. */
 export type WorkspaceLinksProvider = () => Ref<WorkspaceLink[]>
 
+export type NotificationSettingType = {
+  type: string
+  label: string
+  description: string
+}
+
+/** Called once in the notification settings' setup, so it may use composables and stores. */
+export type NotificationSettingTypesProvider = () => Ref<NotificationSettingType[]>
+
 export type TvWebExtension = {
   name: string
   routes?: RouteRecordRaw[]
@@ -29,6 +38,8 @@ export type TvWebExtension = {
   userMenuItems?: UserMenuItemsProvider
   /** Extra workspace links of the sidebar, shown after the built-in ones */
   workspaceLinks?: WorkspaceLinksProvider
+  /** Extra notification types the user may switch on and off, shown after the built-in ones */
+  notificationSettingTypes?: NotificationSettingTypesProvider
   /** Shows the workspace links of the sidebar as a row of icon buttons instead of labelled rows */
   compactWorkspaceLinks?: boolean
 }

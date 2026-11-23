@@ -1285,6 +1285,7 @@ export default {
       description: 'Wählen Sie aus, welche Benachrichtigungen Sie erhalten möchten und auf welche Weise.',
       push: 'Push',
       websocket: 'In-App',
+      email: 'E-Mail',
       types: {
         deadline: 'Fristen',
         deadlineDescription: 'Wenn eine Aufgabenfrist erreicht wird',

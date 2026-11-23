@@ -1,6 +1,7 @@
 import {
     NotificationChannel,
     NotificationType,
+    type NotificationTypeName,
     type TypeSettings,
     type TypeSettingsMap,
     type DeadlineTypeSettings,
@@ -10,12 +11,13 @@ import {
 
 const ALL_CHANNELS: NotificationChannel[] = [
     NotificationChannel.PUSH,
-    NotificationChannel.WEBSOCKET
+    NotificationChannel.WEBSOCKET,
+    NotificationChannel.EMAIL,
 ];
 
 /**
  * Manages user notification preferences.
- * Opt-out model: undefined = enabled.
+ * Opt-out model: undefined = enabled. Email is the exception — it is sent only after the user switched it on.
  *
  * Priority:
  *   1. projects[goalId][type] — highest
@@ -29,15 +31,13 @@ export class UserPreferences {
         this.data = (json && typeof json === 'object' ? json : {}) as SettingsJson;
     }
 
-    getEnabledChannels(type: NotificationType, goalId?: number): NotificationChannel[] {
+    getEnabledChannels(type: NotificationTypeName, goalId?: number): NotificationChannel[] {
         const resolved = this.resolveTypeSettings(type, goalId);
-        if (!resolved?.channels) return ALL_CHANNELS;
-        return ALL_CHANNELS.filter((ch) => resolved.channels![ch] !== false);
+        return ALL_CHANNELS.filter((channel) => this.channelOn(resolved, channel));
     }
 
     isChannelEnabled(type: NotificationType, channel: NotificationChannel, goalId?: number): boolean {
-        const resolved = this.resolveTypeSettings(type, goalId);
-        return resolved?.channels?.[channel] !== false;
+        return this.channelOn(this.resolveTypeSettings(type, goalId), channel);
     }
 
     getDeadlineIntervals(goalId?: number): DeadlineIntervals | undefined {
@@ -99,12 +99,12 @@ export class UserPreferences {
         return this.data;
     }
 
-    private resolveTypeSettings(type: NotificationType, goalId?: number): TypeSettings | undefined {
-        const globalSettings = this.data.global?.[type];
+    private resolveTypeSettings(type: NotificationTypeName, goalId?: number): TypeSettings | undefined {
+        const globalSettings = this.settingsOf(this.data.global, type);
 
         if (goalId === undefined) return globalSettings;
 
-        const projectSettings = this.data.projects?.[String(goalId)]?.[type];
+        const projectSettings = this.settingsOf(this.data.projects?.[String(goalId)], type);
         if (!projectSettings) return globalSettings;
         if (!globalSettings) return projectSettings;
 
@@ -120,5 +120,14 @@ export class UserPreferences {
                 : {}
             ),
         };
+    }
+
+    private channelOn(settings: TypeSettings | undefined, channel: NotificationChannel): boolean {
+        const choice = settings?.channels?.[channel];
+        return channel === NotificationChannel.EMAIL ? choice === true : choice !== false;
+    }
+
+    private settingsOf(scope: SettingsJson['global'], type: NotificationTypeName): TypeSettings | undefined {
+        return (scope as Record<string, TypeSettings | undefined> | undefined)?.[type];
     }
 }

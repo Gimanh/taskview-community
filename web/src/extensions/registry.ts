@@ -1,14 +1,16 @@
 import type { Component } from 'vue'
-import type { TvWebExtension, UserMenuItemsProvider, WorkspaceLinksProvider } from './types'
+import type { NotificationSettingTypesProvider, TvWebExtension, UserMenuItemsProvider, WorkspaceLinksProvider } from './types'
 
 const outletComponents = new Map<string, Component[]>()
 const userMenuItemProviders: UserMenuItemsProvider[] = []
 const workspaceLinkProviders: WorkspaceLinksProvider[] = []
+const notificationSettingTypeProviders: NotificationSettingTypesProvider[] = []
 let compactWorkspaceLinks = false
 
 export function registerExtensionOutlets(extension: TvWebExtension) {
   if (extension.userMenuItems) userMenuItemProviders.push(extension.userMenuItems)
   if (extension.workspaceLinks) workspaceLinkProviders.push(extension.workspaceLinks)
+  if (extension.notificationSettingTypes) notificationSettingTypeProviders.push(extension.notificationSettingTypes)
   if (extension.compactWorkspaceLinks) compactWorkspaceLinks = true
   if (!extension.outlets) return
   for (const [name, components] of Object.entries(extension.outlets)) {
@@ -31,4 +33,8 @@ export function isWorkspaceLinksCompact(): boolean {
 
 export function getWorkspaceLinkProviders(): WorkspaceLinksProvider[] {
   return workspaceLinkProviders
+}
+
+export function getNotificationSettingTypeProviders(): NotificationSettingTypesProvider[] {
+  return notificationSettingTypeProviders
 }

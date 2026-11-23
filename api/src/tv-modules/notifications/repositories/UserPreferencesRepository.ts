@@ -3,7 +3,7 @@ import { NotificationPreferencesSchema } from 'taskview-db-schemas';
 import { Database } from '../../../modules/db';
 import { callWithCatch } from '../../../utils/helpers';
 import { UserPreferences } from '../UserPreferences';
-import type { NotificationChannel, NotificationType } from '../types';
+import type { NotificationChannel, NotificationTypeName } from '../types';
 
 export class UserPreferencesRepository {
     private readonly db: Database;
@@ -35,7 +35,7 @@ export class UserPreferencesRepository {
         return !!result;
     }
 
-    async getEnabledChannels(userId: number, type: NotificationType, goalId?: number): Promise<NotificationChannel[]> {
+    async getEnabledChannels(userId: number, type: NotificationTypeName, goalId?: number): Promise<NotificationChannel[]> {
         const prefs = await this.load(userId);
         return prefs.getEnabledChannels(type, goalId);
     }

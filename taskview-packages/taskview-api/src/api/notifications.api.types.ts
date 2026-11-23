@@ -51,4 +51,5 @@ export interface NotificationPreferencesSettings {
 
 export type NotificationResponsePreferences = {
     settings: NotificationPreferencesSettings;
+    emailAvailable?: boolean;
 };

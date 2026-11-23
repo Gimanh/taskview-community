@@ -1299,6 +1299,7 @@ export default {
       description: 'Choose which notifications you want to receive and how.',
       push: 'Push',
       websocket: 'In-app',
+      email: 'Email',
       types: {
         deadline: 'Deadlines',
         deadlineDescription: 'When a task deadline is reached',

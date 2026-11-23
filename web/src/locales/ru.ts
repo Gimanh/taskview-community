@@ -1187,6 +1187,20 @@ export default {
     empty: 'Нет уведомлений',
     markAllRead: 'Прочитать все',
     loadMore: 'Загрузить ещё',
+    settings: {
+      title: 'Настройки уведомлений',
+      description: 'Выберите, какие уведомления получать и каким способом.',
+      push: 'Push',
+      websocket: 'В приложении',
+      email: 'Email',
+      types: {
+        deadline: 'Сроки',
+        deadlineDescription: 'Когда наступает срок задачи',
+        assign: 'Назначения',
+        assignDescription: 'Когда вас назначают на задачу',
+      },
+      saved: 'Настройки сохранены',
+    },
   },
   permissionGroups: {
     1: 'Уровень приложения',

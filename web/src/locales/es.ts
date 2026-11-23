@@ -1285,6 +1285,7 @@ export default {
       description: 'Elige qué notificaciones quieres recibir y cómo.',
       push: 'Push',
       websocket: 'En la app',
+      email: 'Correo',
       types: {
         deadline: 'Fechas límite',
         deadlineDescription: 'Cuando se alcanza la fecha límite de una tarea',

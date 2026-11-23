@@ -1,5 +1,6 @@
 import { and, eq, desc, lt, sql, inArray } from 'drizzle-orm';
-import { NotificationsSchema, TasksSchema, GoalsSchema, type NotificationsSchemaTypeForSelect } from 'taskview-db-schemas';
+import { NotificationsSchema, TasksSchema, GoalsSchema, OrganizationsSchema, UsersSchema, type NotificationsSchemaTypeForSelect } from 'taskview-db-schemas';
+import type { NotificationEmailRecord } from '../types';
 import { Database } from '../../../modules/db';
 import { callWithCatch } from '../../../utils/helpers';
 
@@ -62,6 +63,28 @@ export class NotificationsRepository {
                 .limit(limit)
         );
         return result || [];
+    }
+
+    async fetchForEmail(notificationId: number): Promise<NotificationEmailRecord | null> {
+        const rows = await this.db.dbDrizzle.select({
+            title: NotificationsSchema.title,
+            body: NotificationsSchema.body,
+            taskId: NotificationsSchema.taskId,
+            email: UsersSchema.email,
+        })
+            .from(NotificationsSchema)
+            .innerJoin(UsersSchema, eq(UsersSchema.id, NotificationsSchema.userId))
+            .where(eq(NotificationsSchema.id, notificationId))
+            .limit(1);
+        return rows[0] ?? null;
+    }
+
+    async organizationSlug(organizationId: number): Promise<string | null> {
+        const rows = await this.db.dbDrizzle.select({ slug: OrganizationsSchema.slug })
+            .from(OrganizationsSchema)
+            .where(eq(OrganizationsSchema.id, organizationId))
+            .limit(1);
+        return rows[0]?.slug ?? null;
     }
 
     async markRead(notificationId: number, userId: number): Promise<boolean> {
