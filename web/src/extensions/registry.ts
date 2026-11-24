@@ -1,16 +1,18 @@
 import type { Component } from 'vue'
-import type { NotificationSettingTypesProvider, TvWebExtension, UserMenuItemsProvider, WorkspaceLinksProvider } from './types'
+import type { NotificationSettingTypesProvider, TaskDetailFieldsProvider, TvWebExtension, UserMenuItemsProvider, WorkspaceLinksProvider } from './types'
 
 const outletComponents = new Map<string, Component[]>()
 const userMenuItemProviders: UserMenuItemsProvider[] = []
 const workspaceLinkProviders: WorkspaceLinksProvider[] = []
 const notificationSettingTypeProviders: NotificationSettingTypesProvider[] = []
+const taskDetailFieldProviders: TaskDetailFieldsProvider[] = []
 let compactWorkspaceLinks = false
 
 export function registerExtensionOutlets(extension: TvWebExtension) {
   if (extension.userMenuItems) userMenuItemProviders.push(extension.userMenuItems)
   if (extension.workspaceLinks) workspaceLinkProviders.push(extension.workspaceLinks)
   if (extension.notificationSettingTypes) notificationSettingTypeProviders.push(extension.notificationSettingTypes)
+  if (extension.taskDetailFields) taskDetailFieldProviders.push(extension.taskDetailFields)
   if (extension.compactWorkspaceLinks) compactWorkspaceLinks = true
   if (!extension.outlets) return
   for (const [name, components] of Object.entries(extension.outlets)) {
@@ -37,4 +39,8 @@ export function getWorkspaceLinkProviders(): WorkspaceLinksProvider[] {
 
 export function getNotificationSettingTypeProviders(): NotificationSettingTypesProvider[] {
   return notificationSettingTypeProviders
+}
+
+export function getTaskDetailFieldProviders(): TaskDetailFieldsProvider[] {
+  return taskDetailFieldProviders
 }

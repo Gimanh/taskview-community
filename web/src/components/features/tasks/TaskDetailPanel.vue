@@ -47,8 +47,6 @@
         />
       </div>
 
-      <ExtensionOutlet name="task-detail-sections" />
-
       <div class="grid grid-cols-1 @lg:grid-cols-2 gap-4">
         <template
           v-for="fieldId in orderedFieldIds"
@@ -157,6 +155,11 @@
             :task-id="task.id"
             :class="colClass(fieldId)"
           />
+          <component
+            :is="extensionComponents.get(fieldId)"
+            v-else-if="extensionComponents.has(fieldId)"
+            :class="colClass(fieldId)"
+          />
         </template>
       </div>
       <br />
@@ -179,7 +182,6 @@ import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { useTasksStore } from '@/stores/tasks.store'
-import ExtensionOutlet from '@/components/ExtensionOutlet.vue'
 import NoteEditor from '@/components/features/tasks/parts/NoteEditor.vue'
 import TvPriority from '@/components/features/base/TvPriority.vue'
 import TaskTagsManager from '@/components/features/tasks/parts/tags/TaskTagsManager.vue'
@@ -204,6 +206,7 @@ import type { ListValue } from '@/composables/useGoalListOptions'
 import type { StatusValue } from '@/composables/useKanbanStatusOptions'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useUiPreferences } from '@/composables/useUiPreferences'
+import { useTaskDetailExtensionFields } from '@/composables/useTaskDetailExtensionFields'
 import { tasksSection } from '@/uiCustomization/sections/tasks'
 import { useTaskShortcuts } from '@/shortcuts/useTaskShortcuts'
 import { useShortcutsEnabled } from '@/shortcuts/useShortcutsEnabled'
@@ -222,6 +225,8 @@ const {
 } = useGoalPermissions()
 
 const { catalogue: taskFieldsCatalogue } = tasksSection.useSection()
+const extensionFields = useTaskDetailExtensionFields()
+const extensionComponents = computed(() => new Map(extensionFields.value.map(f => [f.id, f.component])))
 
 const { resolved: resolvedTaskFields } = useUiPreferences(
   tasksSection.id,

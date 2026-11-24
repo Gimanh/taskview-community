@@ -28,6 +28,16 @@ export type NotificationSettingType = {
 /** Called once in the notification settings' setup, so it may use composables and stores. */
 export type NotificationSettingTypesProvider = () => Ref<NotificationSettingType[]>
 
+export type TaskDetailFieldExtension = {
+  id: string
+  label: string
+  width: 'narrow' | 'wide'
+  component: Component
+}
+
+/** Called in the setup of the task panel and of the customization screen, so it may use composables and stores. */
+export type TaskDetailFieldsProvider = () => Ref<TaskDetailFieldExtension[]>
+
 export type TvWebExtension = {
   name: string
   routes?: RouteRecordRaw[]
@@ -40,6 +50,8 @@ export type TvWebExtension = {
   workspaceLinks?: WorkspaceLinksProvider
   /** Extra notification types the user may switch on and off, shown after the built-in ones */
   notificationSettingTypes?: NotificationSettingTypesProvider
+  /** Extra blocks of the task panel: the user orders, hides and resizes them together with the built-in fields */
+  taskDetailFields?: TaskDetailFieldsProvider
   /** Shows the workspace links of the sidebar as a row of icon buttons instead of labelled rows */
   compactWorkspaceLinks?: boolean
 }
