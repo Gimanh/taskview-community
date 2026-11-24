@@ -592,6 +592,8 @@ export default {
     note: 'Notiz',
     addNote: 'Notiz hinzufügen...',
     noteFullscreen: 'Vollbild',
+    noteCodeLanguage: 'Code-Sprache',
+    noteCodePlainText: 'Nur Text',
     noteExitFullscreen: 'Vollbild beenden',
     noteExpand: 'Aufklappen',
     noteCollapse: 'Zuklappen',

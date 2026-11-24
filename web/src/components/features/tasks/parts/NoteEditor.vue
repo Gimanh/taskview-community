@@ -17,6 +17,7 @@
           :content-type="contentType"
           :placeholder="placeholder"
           :extensions="extensions"
+          :starter-kit="starterKit"
           :editable="canEditTaskNote"
           :class="isFullscreen ? 'flex flex-col flex-1 min-h-0' : 'min-h-32'"
           :ui="{ content: contentClass }"
@@ -64,6 +65,7 @@ import TextAlign from '@tiptap/extension-text-align'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useNoteEditorToolbar } from '@/composables/useNoteEditorToolbar'
 import { useNoteEditorCollapse } from '@/composables/useNoteEditorCollapse'
+import { NoteCodeBlock } from '@/editor/NoteCodeBlock'
 import NoteEditorFooter from '@/components/features/tasks/parts/NoteEditorFooter.vue'
 
 const { t } = useI18n()
@@ -77,7 +79,10 @@ const extensions = [
   TextAlign.configure({
     types: ['heading', 'paragraph'],
   }),
+  NoteCodeBlock,
 ]
+
+const starterKit = { codeBlock: false } as const
 
 const props = defineProps<{
   content: string

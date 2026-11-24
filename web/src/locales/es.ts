@@ -592,6 +592,8 @@ export default {
     note: 'Nota',
     addNote: 'Añade una nota...',
     noteFullscreen: 'Pantalla completa',
+    noteCodeLanguage: 'Lenguaje del código',
+    noteCodePlainText: 'Texto sin formato',
     noteExitFullscreen: 'Salir de pantalla completa',
     noteExpand: 'Expandir',
     noteCollapse: 'Contraer',

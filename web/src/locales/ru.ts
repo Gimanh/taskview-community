@@ -572,6 +572,8 @@ export default {
     note: 'Заметка',
     addNote: 'Добавить заметку...',
     noteFullscreen: 'На весь экран',
+    noteCodeLanguage: 'Язык кода',
+    noteCodePlainText: 'Простой текст',
     noteExitFullscreen: 'Выйти из полноэкранного режима',
     noteExpand: 'Развернуть',
     noteCollapse: 'Свернуть',

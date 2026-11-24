@@ -606,6 +606,8 @@ export default {
     note: 'Note',
     addNote: 'Add a note...',
     noteFullscreen: 'Full screen',
+    noteCodeLanguage: 'Code language',
+    noteCodePlainText: 'Plain text',
     noteExitFullscreen: 'Exit full screen',
     noteExpand: 'Expand',
     noteCollapse: 'Collapse',

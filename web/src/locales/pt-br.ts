@@ -605,6 +605,8 @@ export default {
     note: 'Observação',
     addNote: 'Adicione uma observação...',
     noteFullscreen: 'Tela cheia',
+    noteCodeLanguage: 'Linguagem do código',
+    noteCodePlainText: 'Texto simples',
     noteExitFullscreen: 'Sair da tela cheia',
     noteExpand: 'Expandir',
     noteCollapse: 'Recolher',
