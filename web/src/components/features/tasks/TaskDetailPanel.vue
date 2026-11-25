@@ -69,6 +69,8 @@
           <NoteEditor
             v-else-if="fieldId === 'note'"
             :key="task.id"
+            :task-id="task.id"
+            :goal-id="task.goalId"
             :content="task.note || ''"
             :content-type="task.sourceUrl ? 'markdown' : 'html'"
             :placeholder="t('tasks.addNote')"

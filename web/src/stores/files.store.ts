@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { TvFile, TvFileLinkArgs, TvFileRenameArgs, TvFileUnlinkArgs } from 'taskview-api'
+import type { TvFile, TvFileDownloadUrlArgs, TvFileLinkArgs, TvFileRenameArgs, TvFileUnlinkArgs } from 'taskview-api'
 import { $tvApi } from '@/plugins/axios'
 import { logError } from '@/helpers/Helper'
 import type {
@@ -8,6 +8,8 @@ import type {
   FilesRemoteChangeArgs,
   FilesStoreState,
   FilesUploadArgs,
+  FilesUploadOneArgs,
+  FilesUploadOutcome,
 } from '@/types/files.types'
 
 const PAGE_SIZE = 50
@@ -100,7 +102,7 @@ export const useFilesStore = defineStore('files', {
         .then((results) => results.filter((r): r is TvFile => r !== null))
     },
 
-    async uploadOne(args: { goalId: number; taskId: number | null; file: File }): Promise<TvFile | null> {
+    async uploadOne(args: FilesUploadOneArgs): Promise<TvFile | null> {
       const item: FileUploadItem = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         goalId: args.goalId,
@@ -114,15 +116,9 @@ export const useFilesStore = defineStore('files', {
         controller: new AbortController(),
       }
 
-      // The server enforces the limit too; checking here spares sending bytes that would be rejected anyway.
-      const limit = this.storage.maxFileSizeBytes
-      if (limit !== null && args.file.size > limit) {
-        this.uploads.push({ ...item, status: 'error', errorKey: FILE_TOO_LARGE_ERROR_KEY })
-        return null
-      }
-      const remaining = this.quotaRemaining(args.goalId)
-      if (remaining !== null && args.file.size > remaining) {
-        this.uploads.push({ ...item, status: 'error', errorKey: FILE_QUOTA_EXCEEDED_ERROR_KEY })
+      const rejection = this.rejectionKeyFor(args)
+      if (rejection) {
+        this.uploads.push({ ...item, status: 'error', errorKey: rejection })
         return null
       }
 
@@ -156,6 +152,30 @@ export const useFilesStore = defineStore('files', {
         current.errorKey = this.errorKeyFor(err)
         return null
       }
+    },
+
+    // Upload whose caller shows progress and errors itself, so it stays out of the task's upload list
+    async uploadQuietly(args: FilesUploadOneArgs): Promise<FilesUploadOutcome> {
+      const rejection = this.rejectionKeyFor(args)
+      if (rejection) return { file: null, errorKey: rejection }
+      try {
+        const file = await $tvApi.files.upload({ goalId: args.goalId, taskId: args.taskId, file: args.file, fileName: args.file.name })
+        this.applyUploaded(file)
+        if (this.quotaByGoal[args.goalId]) void this.fetchQuota(args.goalId)
+        return { file, errorKey: null }
+      } catch (err) {
+        logError(err)
+        return { file: null, errorKey: this.errorKeyFor(err) }
+      }
+    },
+
+    // The server enforces the limits too; checking here spares sending bytes that would be rejected anyway.
+    rejectionKeyFor(args: FilesUploadOneArgs): string | null {
+      const limit = this.storage.maxFileSizeBytes
+      if (limit !== null && args.file.size > limit) return FILE_TOO_LARGE_ERROR_KEY
+      const remaining = this.quotaRemaining(args.goalId)
+      if (remaining !== null && args.file.size > remaining) return FILE_QUOTA_EXCEEDED_ERROR_KEY
+      return null
     },
 
     retryUpload(uploadId: string): Promise<TvFile | null> {
@@ -213,7 +233,12 @@ export const useFilesStore = defineStore('files', {
       return true
     },
 
-    async downloadUrl(args: { fileId: string; inline: boolean }): Promise<string | null> {
+    async fetchOne(fileId: string): Promise<TvFile | null> {
+      const file = await $tvApi.files.getById(fileId).catch(logError)
+      return file ?? null
+    },
+
+    async downloadUrl(args: TvFileDownloadUrlArgs): Promise<string | null> {
       const result = await $tvApi.files.downloadUrl(args).catch(logError)
       return result?.url ?? null
     },
@@ -250,6 +275,7 @@ export const useFilesStore = defineStore('files', {
       if (status === 507) return FILE_QUOTA_EXCEEDED_ERROR_KEY
       if (status === 403) return 'files.errors.forbidden'
       if (status === 404) return 'files.errors.notFound'
+      if (status === 503) return 'files.storageDisabled'
       return 'files.errors.uploadFailed'
     },
   },

@@ -1,4 +1,4 @@
-import type { TvFile } from 'taskview-api'
+import type { TvFile, TvFileDownloadUrlArgs } from 'taskview-api'
 import $api from '@/helpers/axios'
 import { useFilesStore } from '@/stores/files.store'
 
@@ -10,13 +10,15 @@ export function useFileDownload() {
     return new URL(relative, base.endsWith('/') ? base : `${base}/`).toString()
   }
 
-  const urlFor = async (file: TvFile, inline: boolean): Promise<string | null> => {
-    const url = await filesStore.downloadUrl({ fileId: file.id, inline })
+  const urlForId = async (args: TvFileDownloadUrlArgs): Promise<string | null> => {
+    const url = await filesStore.downloadUrl(args)
     return url ? toAbsolute(url) : null
   }
 
-  const download = async (file: TvFile): Promise<void> => {
-    const url = await urlFor(file, false)
+  const urlFor = (file: TvFile, inline: boolean): Promise<string | null> => urlForId({ fileId: file.id, inline })
+
+  const download = async (file: Pick<TvFile, 'id' | 'name'>): Promise<void> => {
+    const url = await urlForId({ fileId: file.id, inline: false })
     if (!url) return
     const anchor = document.createElement('a')
     anchor.href = url
@@ -32,5 +34,5 @@ export function useFileDownload() {
     if (url) window.open(url, '_blank', 'noopener')
   }
 
-  return { urlFor, download, openInNewTab }
+  return { urlFor, urlForId, download, openInNewTab }
 }

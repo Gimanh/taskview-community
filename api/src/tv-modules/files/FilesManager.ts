@@ -241,18 +241,19 @@ export class FilesManager {
     async issueDownloadUrl(args: FileIssueDownloadUrlArgs): Promise<FileResult<FileDownloadUrl>> {
         const file = await this.repository.getById(args.fileId);
         if (!file) return fail('not_found');
-        if (!this.storages.has(file.storageProvider)) return fail('storage_not_configured', FILE_STORAGE_NOT_CONFIGURED_MESSAGE);
+        if (!this.canServe(file)) return fail('storage_not_configured', FILE_STORAGE_NOT_CONFIGURED_MESSAGE);
         const exp = Math.floor(Date.now() / 1000) + FILE_DOWNLOAD_TOKEN_TTL_SECONDS;
         const token = new FileDownloadTokens().sign({ fileId: file.id, inline: args.inline, exp });
         return ok({ url: `/module/files/content/${token}`, expiresAt: new Date(exp * 1000).toISOString() });
     }
 
     async openContent(token: string): Promise<FileResult<FileContent>> {
+        if (!FileDownloadTokens.usable(process.env.ENCRYPTION_KEY)) return fail('storage_not_configured', FILE_STORAGE_NOT_CONFIGURED_MESSAGE);
         const payload = new FileDownloadTokens().verify(token);
         if (!payload) return fail('forbidden', 'invalid or expired token');
         const file = await this.repository.getById(payload.fileId);
         if (!file) return fail('not_found');
-        if (!this.storages.has(file.storageProvider)) return fail('storage_not_configured', FILE_STORAGE_NOT_CONFIGURED_MESSAGE);
+        if (!this.canServe(file)) return fail('storage_not_configured', FILE_STORAGE_NOT_CONFIGURED_MESSAGE);
         try {
             const { stream, sizeBytes } = await this.storages.get(file.storageProvider).get(file.storageKey);
             return ok({ file, stream, sizeBytes: sizeBytes || file.sizeBytes, inline: payload.inline });
@@ -260,6 +261,10 @@ export class FilesManager {
             $logger.error(err, `[FilesManager] storage get failed for ${file.storageKey}`);
             return fail('storage_error');
         }
+    }
+
+    private canServe(file: FilesSchemaTypeForSelect): boolean {
+        return FileDownloadTokens.usable(process.env.ENCRYPTION_KEY) && this.storages.has(file.storageProvider);
     }
 
     private emitChanged(goalId: number, taskIds: number[]) {

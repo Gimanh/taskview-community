@@ -2,10 +2,15 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { FileDownloadTokenPayload } from './types';
 
 export class FileDownloadTokens {
+    private static readonly MIN_SECRET_LENGTH = 32;
     private readonly secret: Buffer;
 
+    static usable(secret: string | undefined): secret is string {
+        return !!secret && secret.length >= FileDownloadTokens.MIN_SECRET_LENGTH;
+    }
+
     constructor(secret: string | undefined = process.env.ENCRYPTION_KEY) {
-        if (!secret || secret.length < 32) {
+        if (!FileDownloadTokens.usable(secret)) {
             throw new Error('ENCRYPTION_KEY must be set to sign file download tokens');
         }
         this.secret = Buffer.from(secret, 'utf8');

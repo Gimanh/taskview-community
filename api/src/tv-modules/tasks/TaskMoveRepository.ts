@@ -1,9 +1,11 @@
-import { and, count, countDistinct, eq, inArray, isNotNull, isNull, min, not, or, type SQL } from 'drizzle-orm';
+import { and, count, countDistinct, eq, inArray, isNotNull, isNull, ilike, min, not, notInArray, or, sum, type SQL } from 'drizzle-orm';
 import {
     FileToTaskSchema,
+    FilesSchema,
     GoalsSchema,
     GraphRelationsSchema,
     IntegrationTaskMapSchema,
+    OrganizationsSchema,
     RecurrenceRulesSchema,
     SprintTaskOutcomesSchema,
     TasksAssigneeSchema,
@@ -13,16 +15,24 @@ import {
     TimeEntriesSchema,
 } from 'taskview-db-schemas';
 import { Database } from '../../modules/db';
+import { TaskNoteFileRefs } from './TaskNoteFileRefs';
 import { TasksRepository } from './TasksRepository';
 import type {
     TaskCopyExecuteArgs,
     TaskCopyResult,
+    TaskMoveAttachCopiesArgs,
     TaskMoveContext,
     TaskMoveContextArgs,
     TaskMoveCountArgs,
     TaskMoveExecuteArgs,
+    TaskMoveFileCopies,
+    TaskMoveFileCopy,
     TaskMoveRemovals,
     TaskMoveTimeEntryCountArgs,
+    TaskNote,
+    TaskNoteFile,
+    TaskNoteFilesInGoalArgs,
+    TaskNoteSharedFilesArgs,
 } from './task-move.types';
 
 type Transaction = Parameters<Parameters<Database['dbDrizzle']['transaction']>[0]>[0];
@@ -82,7 +92,7 @@ export class TaskMoveRepository {
         return {
             tags: await total(db.select({ value: count() }).from(TasksToTagsSchema).where(inArray(TasksToTagsSchema.taskId, ids))),
             assignees: await total(db.select({ value: count() }).from(TasksAssigneeSchema).where(inArray(TasksAssigneeSchema.taskId, ids))),
-            fileLinks: await total(db.select({ value: count() }).from(FileToTaskSchema).where(inArray(FileToTaskSchema.taskId, ids))),
+            fileLinks: await total(db.select({ value: count() }).from(FileToTaskSchema).where(this.removedFileLinks(args))),
             dependencies: await total(db.select({ value: count() }).from(GraphRelationsSchema).where(this.crossingEdges(ids))),
             sprintOutcomes: await total(
                 db.select({ value: count() }).from(SprintTaskOutcomesSchema).where(inArray(SprintTaskOutcomesSchema.taskId, ids))
@@ -92,6 +102,48 @@ export class TaskMoveRepository {
             ),
             recurrence: recurrenceTasks.size,
         };
+    }
+
+    async fetchNotes(taskIds: number[]): Promise<TaskNote[]> {
+        if (taskIds.length === 0) return [];
+        return this.db.dbDrizzle.select({ id: TasksSchema.id, note: TasksSchema.note }).from(TasksSchema).where(inArray(TasksSchema.id, taskIds));
+    }
+
+    async fetchFilesInGoal(args: TaskNoteFilesInGoalArgs): Promise<TaskNoteFile[]> {
+        if (args.fileIds.length === 0) return [];
+        return this.db.dbDrizzle
+            .select({ id: FilesSchema.id, sizeBytes: FilesSchema.sizeBytes, storageProvider: FilesSchema.storageProvider })
+            .from(FilesSchema)
+            .where(and(inArray(FilesSchema.id, args.fileIds), eq(FilesSchema.goalId, args.goalId)))
+            .orderBy(FilesSchema.createdAt, FilesSchema.id);
+    }
+
+    // Files that tasks staying in the source project also use: attached to them or shown in their notes
+    async findSharedFileIds(args: TaskNoteSharedFilesArgs): Promise<Set<string>> {
+        const shared = new Set<string>();
+        if (args.fileIds.length === 0) return shared;
+
+        const links = await this.db.dbDrizzle
+            .select({ fileId: FileToTaskSchema.fileId })
+            .from(FileToTaskSchema)
+            .where(and(inArray(FileToTaskSchema.fileId, args.fileIds), notInArray(FileToTaskSchema.taskId, args.taskIds)));
+        for (const link of links) shared.add(link.fileId);
+
+        const notes = await this.db.dbDrizzle
+            .select({ note: TasksSchema.note })
+            .from(TasksSchema)
+            .where(
+                and(
+                    eq(TasksSchema.goalId, args.goalId),
+                    notInArray(TasksSchema.id, args.taskIds),
+                    or(...args.fileIds.map((fileId) => ilike(TasksSchema.note, `%${fileId}%`)))
+                )
+            );
+        const wanted = new Set(args.fileIds);
+        for (const { note } of notes) {
+            for (const fileId of TaskNoteFileRefs.extract(note)) if (wanted.has(fileId)) shared.add(fileId);
+        }
+        return shared;
     }
 
     async countTimeEntries(args: TaskMoveTimeEntryCountArgs): Promise<number> {
@@ -109,12 +161,19 @@ export class TaskMoveRepository {
         const ids = plan.taskIds;
 
         return this.db.dbDrizzle.transaction(async (tx) => {
-            const [locked] = await tx.select({ id: TasksSchema.id }).from(TasksSchema).where(eq(TasksSchema.id, plan.rootTaskId)).for('update');
-            if (!locked) return null;
+            const [locked] = await tx
+                .select({ goalId: TasksSchema.goalId })
+                .from(TasksSchema)
+                .where(eq(TasksSchema.id, plan.rootTaskId))
+                .for('update');
+            // A repeated request planned before the first one finished finds the task already gone from the source project
+            if (!locked || locked.goalId !== plan.sourceGoalId) return null;
+            await this.lockBacklog(tx, plan.targetGoalId);
 
             await tx.delete(TasksToTagsSchema).where(inArray(TasksToTagsSchema.taskId, ids));
             await tx.delete(TasksAssigneeSchema).where(inArray(TasksAssigneeSchema.taskId, ids));
-            await tx.delete(FileToTaskSchema).where(inArray(FileToTaskSchema.taskId, ids));
+            await tx.delete(FileToTaskSchema).where(this.removedFileLinks({ taskIds: ids, keptFileIds: plan.noteFiles.moveIds }));
+            await this.moveNoteFiles(tx, args);
             await tx.delete(SprintTaskOutcomesSchema).where(inArray(SprintTaskOutcomesSchema.taskId, ids));
             await tx.delete(IntegrationTaskMapSchema).where(inArray(IntegrationTaskMapSchema.taskId, ids));
             await tx.delete(GraphRelationsSchema).where(this.crossingEdges(ids));
@@ -157,6 +216,8 @@ export class TaskMoveRepository {
                 .set({ goalId: plan.targetGoalId })
                 .where(and(inArray(GraphRelationsSchema.fromTaskId, ids), inArray(GraphRelationsSchema.toTaskId, ids)));
 
+            await this.attachFileCopies(tx, { fileCopies: args.fileCopies, taskIds: ids });
+
             const [root] = await tx.select().from(TasksSchema).where(eq(TasksSchema.id, plan.rootTaskId));
             return root ?? null;
         });
@@ -171,6 +232,7 @@ export class TaskMoveRepository {
             const newIds = new Map<number, number>();
             const created: TasksSchemaTypeForSelect[] = [];
 
+            await this.lockBacklog(tx, plan.targetGoalId);
             let order = await this.nextBacklogOrder(tx, plan.targetGoalId);
             for (const id of plan.taskIds) {
                 const source = byId.get(id);
@@ -214,14 +276,96 @@ export class TaskMoveRepository {
                 await tx.insert(GraphRelationsSchema).values({ fromTaskId, toTaskId, goalId: plan.targetGoalId, nodeMetadata: edge.nodeMetadata });
             }
 
-            return { rootTaskId: newIds.get(plan.rootTaskId) as number, tasks: created };
+            const createdIds = created.map((task) => task.id);
+            const rewritten = await this.attachFileCopies(tx, { fileCopies: args.fileCopies, taskIds: createdIds });
+            const tasks = rewritten ? await this.reload(tx, createdIds) : created;
+
+            return { rootTaskId: newIds.get(plan.rootTaskId) as number, tasks };
         });
+    }
+
+    private removedFileLinks(args: TaskMoveCountArgs): SQL {
+        const ofTasks = inArray(FileToTaskSchema.taskId, args.taskIds);
+        if (args.keptFileIds.length === 0) return ofTasks;
+        return and(ofTasks, notInArray(FileToTaskSchema.fileId, args.keptFileIds)) as SQL;
+    }
+
+    private async moveNoteFiles(tx: Transaction, args: TaskMoveExecuteArgs): Promise<void> {
+        const { plan } = args;
+        if (plan.noteFiles.moveIds.length === 0) return;
+        // A link added after the plan was made would otherwise tie the moved file to a task of the old project
+        await tx
+            .delete(FileToTaskSchema)
+            .where(and(inArray(FileToTaskSchema.fileId, plan.noteFiles.moveIds), notInArray(FileToTaskSchema.taskId, plan.taskIds)));
+        await tx
+            .update(FilesSchema)
+            .set({ goalId: plan.targetGoalId, editedAt: new Date() })
+            .where(and(inArray(FilesSchema.id, plan.noteFiles.moveIds), eq(FilesSchema.goalId, plan.sourceGoalId)));
+    }
+
+    // Saves the copies, attaches each to the tasks showing it and points their notes at the copy; true when a note changed
+    private async attachFileCopies(tx: Transaction, args: TaskMoveAttachCopiesArgs): Promise<boolean> {
+        const copies = await this.copiesWithinQuota(tx, args.fileCopies);
+        if (copies.length === 0) return false;
+        await tx.insert(FilesSchema).values(copies.map((copy) => copy.row));
+
+        const replacements = new Map(copies.map((copy) => [copy.sourceId, copy.row.id as string]));
+        const tasks = await tx.select({ id: TasksSchema.id, note: TasksSchema.note }).from(TasksSchema).where(inArray(TasksSchema.id, args.taskIds));
+        let changed = false;
+        for (const task of tasks) {
+            if (!task.note) continue;
+            const used = TaskNoteFileRefs.extract(task.note).filter((fileId) => replacements.has(fileId));
+            if (used.length === 0) continue;
+            await tx
+                .update(TasksSchema)
+                .set({ note: TaskNoteFileRefs.replace({ note: task.note, replacements }) })
+                .where(eq(TasksSchema.id, task.id));
+            await tx.insert(FileToTaskSchema).values(
+                used.map((fileId) => ({
+                    fileId: replacements.get(fileId) as string,
+                    taskId: task.id,
+                    linkedById: args.fileCopies.linkedById,
+                    linkedByEmail: args.fileCopies.linkedByEmail,
+                }))
+            );
+            changed = true;
+        }
+        return changed;
+    }
+
+    private async copiesWithinQuota(tx: Transaction, fileCopies: TaskMoveFileCopies): Promise<TaskMoveFileCopy[]> {
+        const { quota } = fileCopies;
+        if (fileCopies.items.length === 0 || quota === null) return fileCopies.items;
+
+        await tx.select({ id: OrganizationsSchema.id }).from(OrganizationsSchema).where(eq(OrganizationsSchema.id, quota.organizationId)).for('update');
+        const [usage] = await tx
+            .select({ total: sum(FilesSchema.sizeBytes) })
+            .from(FilesSchema)
+            .innerJoin(GoalsSchema, eq(GoalsSchema.id, FilesSchema.goalId))
+            .where(eq(GoalsSchema.organizationId, quota.organizationId));
+        let usedBytes = Number(usage?.total ?? 0);
+        return fileCopies.items.filter((copy) => {
+            if (usedBytes + copy.row.sizeBytes > quota.quotaBytes) return false;
+            usedBytes += copy.row.sizeBytes;
+            return true;
+        });
+    }
+
+    private async reload(tx: Transaction, taskIds: number[]): Promise<TasksSchemaTypeForSelect[]> {
+        const rows = await tx.select().from(TasksSchema).where(inArray(TasksSchema.id, taskIds));
+        const byId = new Map(rows.map((row) => [row.id, row]));
+        return taskIds.map((id) => byId.get(id)).filter((row): row is TasksSchemaTypeForSelect => row !== undefined);
     }
 
     private crossingEdges(ids: number[]): SQL {
         const fromInside = inArray(GraphRelationsSchema.fromTaskId, ids);
         const toInside = inArray(GraphRelationsSchema.toTaskId, ids);
         return or(and(fromInside, not(toInside)), and(toInside, not(fromInside))) as SQL;
+    }
+
+    // Two moves into one project would otherwise read the same free position and collide on the unique order
+    private async lockBacklog(tx: Transaction, goalId: number): Promise<void> {
+        await tx.select({ id: GoalsSchema.id }).from(GoalsSchema).where(eq(GoalsSchema.id, goalId)).for('update');
     }
 
     private async nextBacklogOrder(tx: Transaction, goalId: number): Promise<number> {

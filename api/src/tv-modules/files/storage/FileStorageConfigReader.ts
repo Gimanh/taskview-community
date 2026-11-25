@@ -1,4 +1,5 @@
 import type { FileStorageProvider } from 'taskview-db-schemas';
+import { FileDownloadTokens } from '../FileDownloadTokens';
 import type { FileQuotaMode } from '../types';
 import type {
     FileQuotaConfig,
@@ -62,6 +63,10 @@ export class FileStorageConfigReader {
         }
         if (active === 's3' && !args.providers.s3) {
             return { active: null, inactiveReason: `FILE_STORAGE_PROVIDER=s3 requires ${args.s3Missing.join(', ')}` };
+        }
+
+        if (!FileDownloadTokens.usable(args.env.ENCRYPTION_KEY)) {
+            return { active: null, inactiveReason: 'File storage requires ENCRYPTION_KEY (at least 32 characters) to sign download links' };
         }
         return { active, inactiveReason: null };
     }

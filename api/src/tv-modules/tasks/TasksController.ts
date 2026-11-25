@@ -358,7 +358,11 @@ export class TasksController {
         const args = TaskArkTypeMove(req.body);
         if (args instanceof type.errors) return res.status(400).send(args.summary);
 
-        const outcome = await req.appUser.tasksManager.moveToProject(args);
+        const outcome = await req.appUser.tasksManager.moveToProject(args).catch((err) => {
+            $logger.error(err, '[TasksController] move to project failed');
+            return null;
+        });
+        if (!outcome) return res.status(500).send('move_failed');
         if (outcome.ok) return res.tvJson(outcome.data);
         return res.status(TASK_MOVE_REASON_STATUS[outcome.reason]).send(outcome.reason);
     };

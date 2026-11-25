@@ -144,6 +144,12 @@ export type TaskMoveRemovals = {
     recurrence: number;
 };
 
+export type TaskMoveNoteFiles = {
+    moved: number;
+    copied: number;
+    left: number;
+};
+
 export type TaskMoveLeftBehind = {
     subtasks: number;
     timeEntries: number;
@@ -157,6 +163,7 @@ export type TaskResponseMovePreview = {
     timeEntries: number;
     removals: TaskMoveRemovals | null;
     leftBehind: TaskMoveLeftBehind | null;
+    noteFiles: TaskMoveNoteFiles | null;
 };
 
 export type TaskResponseMoveToProject = {

@@ -4,6 +4,7 @@ import { GoalPermissionsChecker } from '../../../core/GoalPermissionsChecker';
 import { GoalPermissions, type GoalPermissionType } from '../../../types/auth.types';
 import { TaskMovePlanner } from '../TaskMovePlanner';
 import type { TaskMoveRepository } from '../TaskMoveRepository';
+import type { TaskNoteFilesPlanner } from '../TaskNoteFilesPlanner';
 import type { TaskMoveContext, TaskMoveRemovals, TaskMoveTimeEntryCountArgs } from '../task-move.types';
 
 const USER_ID = 7;
@@ -49,8 +50,10 @@ function planner(setup: FakeSetup = {}) {
                 .reduce((sum, [, n]) => sum + n, 0),
     } as unknown as TaskMoveRepository;
     const checkers: Record<number, GoalPermissionType[]> = { [SOURCE]: setup.source ?? ALL_SOURCE, [TARGET]: setup.target ?? ALL_TARGET };
+    const noteFiles = { plan: async () => ({ moveIds: [], copyIds: [], leftIds: [] }) } as unknown as TaskNoteFilesPlanner;
     return new TaskMovePlanner({
         repository,
+        noteFiles,
         userId: USER_ID,
         checkerForGoal: async (goalId) =>
             new GoalPermissionsChecker((checkers[goalId] ?? []).map((permissionName, i) => ({ permissionName, permissionId: i }))),
@@ -76,6 +79,7 @@ describe('TaskMovePlanner', () => {
                 removals: REMOVALS,
                 leftBehind: { subtasks: 0, timeEntries: 0 },
                 movedTimeEntries: 7,
+                noteFiles: { moveIds: [], copyIds: [], leftIds: [] },
             },
         });
     });
@@ -130,6 +134,7 @@ describe('TaskMovePlanner', () => {
             timeEntries: 2,
             removals: REMOVALS,
             leftBehind: { subtasks: 2, timeEntries: 5 },
+            noteFiles: { moved: 0, copied: 0, left: 0 },
         });
         expect(p.toPreview({ ok: false, reason: 'same_project' })).toEqual({
             allowed: false,
@@ -139,6 +144,7 @@ describe('TaskMovePlanner', () => {
             timeEntries: 0,
             removals: null,
             leftBehind: null,
+            noteFiles: null,
         });
     });
 });

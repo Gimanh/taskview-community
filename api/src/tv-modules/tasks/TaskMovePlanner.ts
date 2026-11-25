@@ -1,6 +1,7 @@
 import { GoalPermissions } from '../../types/auth.types';
 import type { GoalPermissionsChecker } from '../../core/GoalPermissionsChecker';
 import type { TaskMoveRepository } from './TaskMoveRepository';
+import type { TaskNoteFilesPlanner } from './TaskNoteFilesPlanner';
 import type {
     TaskArgMove,
     TaskMoveDecision,
@@ -11,11 +12,13 @@ import type {
 
 export class TaskMovePlanner {
     private readonly repository: TaskMoveRepository;
+    private readonly noteFiles: TaskNoteFilesPlanner;
     private readonly userId: number;
     private readonly checkerForGoal: (goalId: number) => Promise<GoalPermissionsChecker>;
 
     constructor(args: TaskMovePlannerArgs) {
         this.repository = args.repository;
+        this.noteFiles = args.noteFiles;
         this.userId = args.userId;
         this.checkerForGoal = args.checkerForGoal;
     }
@@ -51,6 +54,8 @@ export class TaskMovePlanner {
         const movedTimeEntries = mode === 'move' ? await this.repository.countTimeEntries(counted) : 0;
         const allTimeEntries = mode === 'move' ? await this.repository.countTimeEntries({ taskIds, userIds: null }) : 0;
 
+        const noteFiles = await this.noteFiles.plan({ mode, taskIds, sourceGoalId: task.goalId, targetGoalId: target.id, source, destination });
+
         return {
             ok: true,
             plan: {
@@ -62,16 +67,18 @@ export class TaskMovePlanner {
                 taskIds,
                 leftBehindSubtaskIds,
                 timeEntryUserIds,
-                removals: await this.repository.countRemovals({ taskIds }),
+                // A copied file is replaced by its copy on the task, so its link is not reported as lost either
+                removals: await this.repository.countRemovals({ taskIds, keptFileIds: [...noteFiles.moveIds, ...noteFiles.copyIds] }),
                 leftBehind: { subtasks: leftBehindSubtaskIds.length, timeEntries: allTimeEntries - movedTimeEntries },
                 movedTimeEntries,
+                noteFiles,
             },
         };
     }
 
     toPreview(decision: TaskMoveDecision): TaskMovePreviewDto {
         if (!decision.ok) {
-            return { allowed: false, reason: decision.reason, mode: null, tasks: 0, timeEntries: 0, removals: null, leftBehind: null };
+            return { allowed: false, reason: decision.reason, mode: null, tasks: 0, timeEntries: 0, removals: null, leftBehind: null, noteFiles: null };
         }
         const { plan } = decision;
         return {
@@ -82,6 +89,7 @@ export class TaskMovePlanner {
             timeEntries: plan.movedTimeEntries,
             removals: plan.removals,
             leftBehind: plan.leftBehind,
+            noteFiles: { moved: plan.noteFiles.moveIds.length, copied: plan.noteFiles.copyIds.length, left: plan.noteFiles.leftIds.length },
         };
     }
 

@@ -169,6 +169,7 @@ describe('Moving a task to another project', () => {
             timeEntries: 1,
             removals: { tags: 1, assignees: 1, fileLinks: 1, dependencies: 1, sprintOutcomes: 1, integrationLinks: 1, recurrence: 1 },
             leftBehind: { subtasks: 0, timeEntries: 0 },
+            noteFiles: { moved: 0, copied: 0, left: 0 },
         });
 
         const moved = await move({ taskId: tree.root, targetGoalId: goalB });
