@@ -4,6 +4,7 @@ import { CentrifugoClient } from '../../core/CentrifugoClient';
 import { DeviceTokensRepository } from './repositories/DeviceTokensRepository';
 import { UserPreferencesRepository } from './repositories/UserPreferencesRepository';
 import { UserPreferences } from './UserPreferences';
+import { EmailProvider } from './providers/EmailProvider';
 
 const NotificationArkTypeMarkRead = type({
     notificationId: 'number',
@@ -67,7 +68,7 @@ export class NotificationsController {
 
         const repo = new UserPreferencesRepository();
         const prefs = await repo.load(userId);
-        return res.tvJson({ settings: prefs.toJSON() });
+        return res.tvJson({ settings: prefs.toJSON(), emailAvailable: EmailProvider.available() });
     };
 
     savePreferences = async (req: Request, res: Response) => {

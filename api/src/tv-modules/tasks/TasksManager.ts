@@ -25,8 +25,13 @@ import type {
     UpdateTaskNoteArg,
 } from '../../types/tasks.types';
 import { TaskItemForClient } from './TaskItemForClient';
+import { FileDuplicator } from '../files/FileDuplicator';
+import { FileQuotaResolver } from '../files/FileQuotaResolver';
+import { FileStorageFactory } from '../files/storage/FileStorageFactory';
 import { TaskMovePlanner } from './TaskMovePlanner';
 import { TaskMoveRepository } from './TaskMoveRepository';
+import { TaskNoteFileCopier } from './TaskNoteFileCopier';
+import { TaskNoteFilesPlanner } from './TaskNoteFilesPlanner';
 import { TasksRepository } from './TasksRepository';
 import type { TaskArgMove, TaskMoveOutcome, TaskMovePreviewDto } from './task-move.types';
 import { FilesRepository } from '../files/FilesRepository';
@@ -486,22 +491,39 @@ export class TasksManager {
         const { plan } = decision;
         const initiatorId = this.user.getUserData()?.id as number;
         const repository = new TaskMoveRepository();
+        const copier = new TaskNoteFileCopier({ filesRepository: new FilesRepository(), duplicator: new FileDuplicator(), quotas: this.fileQuotas() });
+        const fileCopies = await copier.prepare({ plan, uploaderId: initiatorId, uploaderEmail: this.user.getUserData()?.email as string });
 
-        if (plan.mode === 'copy') {
-            const copy = await repository.executeCopy({ plan, creatorId: initiatorId });
-            for (const task of copy.tasks) eventBus.emit('task.created', { task, initiatorId });
-            return { ok: true, data: { mode: 'copy', taskId: copy.rootTaskId, goalId: plan.targetGoalId } };
+        try {
+            if (plan.mode === 'copy') {
+                const copy = await repository.executeCopy({ plan, creatorId: initiatorId, fileCopies });
+                for (const task of copy.tasks) eventBus.emit('task.created', { task, initiatorId });
+                if (fileCopies.items.length > 0) {
+                    eventBus.emit('files.changed', { goalId: plan.targetGoalId, taskIds: copy.tasks.map((t) => t.id), initiatorId });
+                }
+                return { ok: true, data: { mode: 'copy', taskId: copy.rootTaskId, goalId: plan.targetGoalId } };
+            }
+
+            const task = await repository.executeMove({ plan, fileCopies });
+            if (!task) return { ok: false, reason: 'not_found' };
+            eventBus.emit('task.moved', { task, taskIds: plan.taskIds, fromGoalId: plan.sourceGoalId, toGoalId: plan.targetGoalId, initiatorId });
+            for (const goalId of [plan.sourceGoalId, plan.targetGoalId]) eventBus.emit('files.changed', { goalId, taskIds: plan.taskIds, initiatorId });
+            return { ok: true, data: { mode: 'move', taskId: task.id, goalId: plan.targetGoalId } };
+        } finally {
+            await copier.discardUnsaved(fileCopies).catch((err) => $logger.error(err, '[TasksManager] note file copies cleanup failed'));
         }
+    }
 
-        const task = await repository.executeMove({ plan });
-        if (!task) return { ok: false, reason: 'not_found' };
-        eventBus.emit('task.moved', { task, taskIds: plan.taskIds, fromGoalId: plan.sourceGoalId, toGoalId: plan.targetGoalId, initiatorId });
-        return { ok: true, data: { mode: 'move', taskId: task.id, goalId: plan.targetGoalId } };
+    private fileQuotas(): FileQuotaResolver {
+        const { mode, defaultOrganizationQuotaBytes } = FileStorageFactory.getInstance().quota;
+        return new FileQuotaResolver({ repository: new FilesRepository(), mode, defaultOrganizationQuotaBytes });
     }
 
     private movePlanner(): TaskMovePlanner {
+        const repository = new TaskMoveRepository();
         return new TaskMovePlanner({
-            repository: new TaskMoveRepository(),
+            repository,
+            noteFiles: new TaskNoteFilesPlanner({ repository, quotas: this.fileQuotas(), storages: FileStorageFactory.getInstance() }),
             userId: this.user.getUserData()?.id as number,
             checkerForGoal: (goalId) => this.user.permissionsFetcher.getCheckerForGoal(goalId),
         });

@@ -209,3 +209,10 @@ export type FileResult<T> = { ok: true; data: T } | { ok: false; code: FileError
 export type FileListCursor = {
     id: string;
 };
+
+export type FileDuplicateArgs = {
+    file: FilesSchemaTypeForSelect;
+    targetGoalId: number;
+    uploaderId: number;
+    uploaderEmail: string;
+};

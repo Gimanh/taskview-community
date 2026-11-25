@@ -6,6 +6,9 @@ export enum NotificationType {
     STATUS_CHANGE = 'status_change',
 }
 
+/** A built-in type, or a type of its own that an extension sends through the same service */
+export type NotificationTypeName = NotificationType | (string & {});
+
 export enum NotificationChannel {
     PUSH = 'push',
     WEBSOCKET = 'websocket',
@@ -127,3 +130,29 @@ export interface DeadlineRecipient {
     userId: number;
     email: string;
 }
+export type NotificationEmailJobData = {
+    notificationId: number;
+    goalId: number;
+    goalListId: number | null;
+    organizationId: number | null;
+};
+
+export type NotificationEmailRecord = {
+    title: string;
+    body: string | null;
+    taskId: number | null;
+    email: string;
+};
+
+export type NotificationEmailLinkArgs = {
+    organizationId: number | null;
+    goalId: number;
+    goalListId: number | null;
+    taskId: number | null;
+};
+
+export type NotificationEmailContent = {
+    title: string;
+    body: string | null;
+    link: string | null;
+};

@@ -1,7 +1,13 @@
 import { type } from 'arktype';
-import type { TasksSchemaTypeForSelect } from 'taskview-db-schemas';
+import type { FilesSchemaTypeForSelect, TasksSchemaTypeForSelect } from 'taskview-db-schemas';
 import type { GoalPermissionsChecker } from '../../core/GoalPermissionsChecker';
+import type { FileDuplicator } from '../files/FileDuplicator';
+import type { FileQuotaResolver } from '../files/FileQuotaResolver';
+import type { FilesRepository } from '../files/FilesRepository';
+import type { FileStorageFactory } from '../files/storage/FileStorageFactory';
+import type { FileInsertArgs } from '../files/types';
 import type { TaskMoveRepository } from './TaskMoveRepository';
+import type { TaskNoteFilesPlanner } from './TaskNoteFilesPlanner';
 
 const NumberFromString = type('string | number').pipe((v) => Number(v));
 
@@ -40,6 +46,22 @@ export type TaskMoveLeftBehind = {
     timeEntries: number;
 };
 
+// Files shown as images inside the notes of the tasks that go to the target project
+export type TaskMoveNoteFilesPlan = {
+    // Used by these tasks only: the file itself changes project
+    moveIds: string[];
+    // Used elsewhere too, or the task is copied: the target project gets its own copy
+    copyIds: string[];
+    // Cannot be taken (permissions, quota, storage): stays in the source project
+    leftIds: string[];
+};
+
+export type TaskMoveNoteFiles = {
+    moved: number;
+    copied: number;
+    left: number;
+};
+
 export type TaskMovePlan = {
     mode: TaskMoveMode;
     rootTaskId: number;
@@ -55,6 +77,7 @@ export type TaskMovePlan = {
     removals: TaskMoveRemovals;
     leftBehind: TaskMoveLeftBehind;
     movedTimeEntries: number;
+    noteFiles: TaskMoveNoteFilesPlan;
 };
 
 export type TaskMoveDecision = { ok: true; plan: TaskMovePlan } | { ok: false; reason: TaskMoveBlockReason };
@@ -67,6 +90,7 @@ export type TaskMovePreviewDto = {
     timeEntries: number;
     removals: TaskMoveRemovals | null;
     leftBehind: TaskMoveLeftBehind | null;
+    noteFiles: TaskMoveNoteFiles | null;
 };
 
 export type TaskMoveResultDto = {
@@ -90,6 +114,8 @@ export type TaskMoveContextArgs = {
 
 export type TaskMoveCountArgs = {
     taskIds: number[];
+    // Links to these files stay, because the files move together with the tasks
+    keptFileIds: string[];
 };
 
 export type TaskMoveTimeEntryCountArgs = {
@@ -99,11 +125,13 @@ export type TaskMoveTimeEntryCountArgs = {
 
 export type TaskMoveExecuteArgs = {
     plan: TaskMovePlan;
+    fileCopies: TaskMoveFileCopies;
 };
 
 export type TaskCopyExecuteArgs = {
     plan: TaskMovePlan;
     creatorId: number;
+    fileCopies: TaskMoveFileCopies;
 };
 
 export type TaskCopyResult = {
@@ -113,6 +141,81 @@ export type TaskCopyResult = {
 
 export type TaskMovePlannerArgs = {
     repository: TaskMoveRepository;
+    noteFiles: TaskNoteFilesPlanner;
     userId: number;
     checkerForGoal: (goalId: number) => Promise<GoalPermissionsChecker>;
 };
+
+export type TaskNoteFilesPlannerArgs = {
+    repository: TaskMoveRepository;
+    quotas: FileQuotaResolver;
+    storages: FileStorageFactory;
+};
+
+export type TaskNoteFilesPlanArgs = {
+    mode: TaskMoveMode;
+    taskIds: number[];
+    sourceGoalId: number;
+    targetGoalId: number;
+    source: GoalPermissionsChecker;
+    destination: GoalPermissionsChecker;
+};
+
+export type TaskNoteFilesInGoalArgs = {
+    fileIds: string[];
+    goalId: number;
+};
+
+export type TaskNoteSharedFilesArgs = {
+    fileIds: string[];
+    taskIds: number[];
+    goalId: number;
+};
+
+export type TaskNote = {
+    id: number;
+    note: string | null;
+};
+
+export type TaskNoteFileReplaceArgs = {
+    note: string;
+    // Source file id -> id of its copy
+    replacements: Map<string, string>;
+};
+
+export type TaskMoveFileCopy = {
+    sourceId: string;
+    row: FileInsertArgs;
+};
+
+export type TaskMoveFileQuota = {
+    organizationId: number;
+    quotaBytes: number;
+};
+
+export type TaskMoveFileCopies = {
+    items: TaskMoveFileCopy[];
+    quota: TaskMoveFileQuota | null;
+    linkedById: number;
+    linkedByEmail: string;
+};
+
+export type TaskMoveAttachCopiesArgs = {
+    fileCopies: TaskMoveFileCopies;
+    // Tasks already in the target project whose notes still point at the source files
+    taskIds: number[];
+};
+
+export type TaskNoteFileCopierArgs = {
+    filesRepository: FilesRepository;
+    duplicator: FileDuplicator;
+    quotas: FileQuotaResolver;
+};
+
+export type TaskNoteFileCopierPrepareArgs = {
+    plan: TaskMovePlan;
+    uploaderId: number;
+    uploaderEmail: string;
+};
+
+export type TaskNoteFile = Pick<FilesSchemaTypeForSelect, 'id' | 'sizeBytes' | 'storageProvider'>;

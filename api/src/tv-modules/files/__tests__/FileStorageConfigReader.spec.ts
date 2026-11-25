@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { FileStorageConfigReader } from '../storage/FileStorageConfigReader';
 
+const ENCRYPTION_KEY = 'k'.repeat(32);
+
 const s3Env = {
     FILE_STORAGE_S3_BUCKET: 'b',
     FILE_STORAGE_S3_REGION: 'r',
@@ -23,7 +25,7 @@ describe('FileStorageConfigReader', () => {
     });
 
     it('activates local only with an explicit directory', () => {
-        const withDir = FileStorageConfigReader.fromEnv({ FILE_STORAGE_PROVIDER: 'local', FILE_STORAGE_LOCAL_DIR: './data/files' });
+        const withDir = FileStorageConfigReader.fromEnv({ FILE_STORAGE_PROVIDER: 'local', FILE_STORAGE_LOCAL_DIR: './data/files', ENCRYPTION_KEY });
         expect(withDir.active).toBe('local');
         expect(withDir.inactiveReason).toBeNull();
 
@@ -40,12 +42,23 @@ describe('FileStorageConfigReader', () => {
             FILE_STORAGE_S3_ENDPOINT: 'http://s3.internal:8333',
             FILE_STORAGE_S3_FORCE_PATH_STYLE: 'true',
             FILE_MAX_SIZE_MB: '5',
+            ENCRYPTION_KEY,
             ...s3Env,
         });
         expect(config.active).toBe('s3');
         expect(config.maxFileSizeBytes).toBe(5 * 1024 * 1024);
         expect(config.providers.local).toEqual({ type: 'local', rootDir: '/var/files' });
         expect(config.providers.s3).toMatchObject({ type: 's3', bucket: 'b', endpoint: 'http://s3.internal:8333', forcePathStyle: true });
+    });
+
+    it.each([
+        ['is not set', undefined],
+        ['is shorter than 32 characters', 'k'.repeat(31)],
+    ])('is inactive when the key that signs download links %s', (_label, key) => {
+        const config = FileStorageConfigReader.fromEnv({ FILE_STORAGE_PROVIDER: 'local', FILE_STORAGE_LOCAL_DIR: './data/files', ENCRYPTION_KEY: key });
+        expect(config.active).toBeNull();
+        expect(config.inactiveReason).toContain('ENCRYPTION_KEY');
+        expect(config.providers.local).toEqual({ type: 'local', rootDir: './data/files' });
     });
 
     it('does not configure local when s3 is active and no local dir is given', () => {

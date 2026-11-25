@@ -46,6 +46,17 @@ export type FilesUploadArgs = {
   files: File[]
 }
 
+export type FilesUploadOneArgs = {
+  goalId: number
+  taskId: number | null
+  file: File
+}
+
+export type FilesUploadOutcome = {
+  file: TvFile | null
+  errorKey: string | null
+}
+
 export type FilesFetchForGoalArgs = {
   goalId: number
   search?: string

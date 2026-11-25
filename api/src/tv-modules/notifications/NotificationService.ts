@@ -3,9 +3,10 @@ import type { NotificationMeta, NotificationProvider } from './NotificationProvi
 import type { NotificationMessage } from './types';
 import { NotificationsRepository } from './repositories/NotificationsRepository';
 import { UserPreferencesRepository } from './repositories/UserPreferencesRepository';
-import { NotificationChannel, type NotificationType } from './types';
+import { NotificationChannel, type NotificationTypeName } from './types';
 import { CentrifugoProvider } from './providers/CentrifugoProvider';
 import { FCMProvider } from './providers/FCMProvider';
+import { EmailProvider } from './providers/EmailProvider';
 
 export class NotificationService {
     private readonly providers: Map<NotificationChannel, NotificationProvider>;
@@ -19,6 +20,7 @@ export class NotificationService {
         const providerList: NotificationProvider[] = [
             new CentrifugoProvider(),
             new FCMProvider(),
+            new EmailProvider(),
         ];
 
         this.providers = new Map();
@@ -29,7 +31,7 @@ export class NotificationService {
 
     async notify(
         userId: number,
-        type: NotificationType,
+        type: NotificationTypeName,
         message: NotificationMessage,
         meta: NotificationMeta,
         taskId: number | null = null,
@@ -64,7 +66,7 @@ export class NotificationService {
 
     async notifyMany(
         userIds: number[],
-        type: NotificationType,
+        type: NotificationTypeName,
         message: NotificationMessage,
         meta: NotificationMeta,
         taskId: number | null = null,

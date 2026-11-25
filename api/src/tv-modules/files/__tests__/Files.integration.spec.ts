@@ -161,6 +161,40 @@ describe('Files module', () => {
         expect((await api.delete(`/module/files/file/${fileId}`, asUser())).status).toBe(200);
     });
 
+    it('answers 503 instead of leaving requests unanswered when the key that signs download links is missing', async () => {
+        useProvider('local');
+        const uploaded = await upload({ goalId, name: 'unsigned.txt', content: 'unsigned' });
+        expect(uploaded.status).toBe(200);
+        const fileId = uploaded.data.response.id;
+        const issued = await api.post(`/module/files/file/${fileId}/download-url`, {}, asUser());
+        expect(issued.status).toBe(200);
+        const contentUrl: string = issued.data.response.url;
+
+        const savedKey = process.env.ENCRYPTION_KEY;
+        delete process.env.ENCRYPTION_KEY;
+        FileStorageFactory.resetInstance();
+        try {
+            const status = await api.get('/module/files/status', asUser());
+            expect(status.data.response.enabled).toBe(false);
+
+            const rejected = await upload({ goalId, name: 'never-signed.txt', content: 'never' });
+            expect(rejected.status).toBe(503);
+
+            const link = await api.post(`/module/files/file/${fileId}/download-url`, {}, asUser());
+            expect(link.status).toBe(503);
+            expect(link.data).toContain('not configured');
+
+            const content = await api.get(contentUrl);
+            expect(content.status).toBe(503);
+        } finally {
+            process.env.ENCRYPTION_KEY = savedKey;
+            FileStorageFactory.resetInstance();
+        }
+
+        expect((await api.get(contentUrl)).status).toBe(200);
+        expect((await api.delete(`/module/files/file/${fileId}`, asUser())).status).toBe(200);
+    });
+
     it('seeds the files permission group with localized descriptions', async () => {
         const result = await Database.getInstance().query<{ name: string; description_locales: Record<string, string> }>(
             'SELECT name, description_locales FROM tv_auth.permissions WHERE permission_group = 7 ORDER BY name'

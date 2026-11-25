@@ -10,6 +10,7 @@ import { NotificationMessages } from './NotificationMessages';
 import { NotificationsRepository } from './repositories/NotificationsRepository';
 import { DeviceTokensRepository } from './repositories/DeviceTokensRepository';
 import { DeadlineScheduler } from './schedulers/DeadlineScheduler';
+import { NotificationEmailWorker } from './schedulers/NotificationEmailWorker';
 import { RecurrenceRepository } from '../recurrence/RecurrenceRepository';
 import { NotificationType } from './types';
 import { parseUtcTime } from './utils';
@@ -20,6 +21,7 @@ const NOTIFICATIONS_RETENTION_DAYS = 1;
 
 export class NotificationDispatcher implements Dispatcher {
     private readonly deadlineScheduler = new DeadlineScheduler();
+    private readonly emailWorker = new NotificationEmailWorker();
     private readonly notificationsRepo = new NotificationsRepository();
     private readonly deviceTokensRepo = new DeviceTokensRepository();
 
@@ -35,6 +37,7 @@ export class NotificationDispatcher implements Dispatcher {
     async registerWorkers(): Promise<void> {
         await this.cleanupWorker();
         await this.deadlineScheduler.registerWorker();
+        await this.emailWorker.registerWorker();
     }
 
     private async cleanupWorker(): Promise<void> {

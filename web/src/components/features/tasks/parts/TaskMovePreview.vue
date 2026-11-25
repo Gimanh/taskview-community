@@ -72,6 +72,9 @@ const moving = computed(() => {
   const subtasks = props.preview.tasks - 1
   if (subtasks > 0) items.push(t('tasks.move.movingSubtasks', { count: subtasks }))
   if (props.preview.timeEntries > 0) items.push(t('tasks.move.movingTime', { count: props.preview.timeEntries }))
+  const files = props.preview.noteFiles
+  if (files && files.moved > 0) items.push(t('tasks.move.movingNoteFiles', { count: files.moved }))
+  if (files && files.copied > 0) items.push(t('tasks.move.copyingNoteFiles', { count: files.copied }))
   return items
 })
 
@@ -86,6 +89,8 @@ const leftBehind = computed(() => {
   const behind = props.preview.leftBehind
   if (behind && behind.subtasks > 0) items.push(t('tasks.move.leftBehindSubtasks', { count: behind.subtasks }))
   if (behind && behind.timeEntries > 0) items.push(t('tasks.move.leftBehindTime', { count: behind.timeEntries }))
+  const files = props.preview.noteFiles
+  if (files && files.left > 0) items.push(t('tasks.move.leftBehindNoteFiles', { count: files.left }))
   return items
 })
 </script>

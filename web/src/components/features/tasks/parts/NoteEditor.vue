@@ -17,6 +17,7 @@
           :content-type="contentType"
           :placeholder="placeholder"
           :extensions="extensions"
+          :starter-kit="starterKit"
           :editable="canEditTaskNote"
           :class="isFullscreen ? 'flex flex-col flex-1 min-h-0' : 'min-h-32'"
           :ui="{ content: contentClass }"
@@ -64,6 +65,9 @@ import TextAlign from '@tiptap/extension-text-align'
 import { useGoalPermissions } from '@/composables/useGoalPermissions'
 import { useNoteEditorToolbar } from '@/composables/useNoteEditorToolbar'
 import { useNoteEditorCollapse } from '@/composables/useNoteEditorCollapse'
+import { useNoteImageUpload } from '@/composables/useNoteImageUpload'
+import { NoteCodeBlock } from '@/editor/NoteCodeBlock'
+import { NoteImage } from '@/editor/NoteImage'
 import NoteEditorFooter from '@/components/features/tasks/parts/NoteEditorFooter.vue'
 
 const { t } = useI18n()
@@ -73,18 +77,28 @@ const {
   canViewTaskNote,
 } = useGoalPermissions()
 
-const extensions = [
-  TextAlign.configure({
-    types: ['heading', 'paragraph'],
-  }),
-]
+const starterKit = { codeBlock: false } as const
 
 const props = defineProps<{
   content: string
+  taskId: number
+  goalId: number
   contentType?: 'html' | 'markdown'
   placeholder?: string
   debounce?: number
 }>()
+
+const extensions = [
+  TextAlign.configure({
+    types: ['heading', 'paragraph'],
+  }),
+  NoteCodeBlock,
+  NoteImage.configure({
+    taskId: props.taskId,
+    uploader: useNoteImageUpload({ goalId: props.goalId, taskId: props.taskId }),
+    uploadingLabel: t('tasks.noteImageUploading'),
+  }),
+]
 
 const emit = defineEmits<{
   save: [value: string]
@@ -98,7 +112,14 @@ const debouncedSave = useDebounceFn((value: string) => {
   emit('save', value)
 }, props.debounce ?? 500)
 
+// The editor appends an empty paragraph after a trailing image or code block as soon as it mounts: that is not an edit
+const withoutTrailingBlank = (value: string) => value.replace(/(<p><\/p>\s*)+$/, '').trim()
+let edited = false
+
 function handleUpdate(value: string) {
+  if (!canEditTaskNote.value) return
+  if (!edited && withoutTrailingBlank(value) === withoutTrailingBlank(props.content)) return
+  edited = true
   debouncedSave(value)
 }
 
@@ -168,5 +189,10 @@ watch(isTeleported, (teleported) => {
   float: left;
   height: 0;
   pointer-events: none;
+}
+
+.note-editor :deep(.tiptap .is-empty:has(.note-image-uploading)::before),
+.note-editor :deep(.tiptap p.is-editor-empty:first-child:has(.note-image-uploading)::before) {
+  content: none;
 }
 </style>

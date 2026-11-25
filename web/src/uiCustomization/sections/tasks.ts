@@ -1,5 +1,6 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useTaskDetailExtensionFields } from '@/composables/useTaskDetailExtensionFields'
 import type { UiCustomizationListTabDef } from '../types'
 import { TASK_DETAIL_FIELDS } from './tasks.types'
 
@@ -11,14 +12,17 @@ export const tasksSection: UiCustomizationListTabDef = {
   labelKey: 'uiCustomization.sections.tasks',
   useSection() {
     const { t } = useI18n()
+    const extensionFields = useTaskDetailExtensionFields()
+    // Extension blocks come first for a user who never arranged the panel
     return {
-      catalogue: computed(() =>
-        TASK_DETAIL_FIELDS.map(f => ({
+      catalogue: computed(() => [
+        ...extensionFields.value.map(f => ({ id: f.id, label: f.label, width: f.width })),
+        ...TASK_DETAIL_FIELDS.map(f => ({
           id: f.id,
           label: t(`uiCustomization.taskFields.${f.id}`),
           width: f.width,
         })),
-      ),
+      ]),
     }
   },
 }
