@@ -48,6 +48,7 @@
         <UButton
           :label="t('collaboration.members.assignRoles')"
           data-testid="collab-member-assign-roles"
+          data-tour="collab-member-assign"
           icon="i-lucide-user-cog"
           variant="ghost"
           color="neutral"

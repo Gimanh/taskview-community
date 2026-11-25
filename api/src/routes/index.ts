@@ -22,6 +22,7 @@ import ScimRoutes from '../tv-modules/scim/ScimRoutes';
 import AnalyticsRoutes from '../tv-modules/analytics/AnalyticsRoutes';
 import TimeTrackingRoutes from '../tv-modules/time-tracking/TimeTrackingRoutes';
 import UiPreferencesRoutes from '../tv-modules/ui-preferences/UiPreferencesRoutes';
+import OnboardingRoutes from '../tv-modules/onboarding/OnboardingRoutes';
 import SprintsRoutes from '../tv-modules/sprints/SprintsRoutes';
 import RecurrenceRoutes from '../tv-modules/recurrence/RecurrenceRoutes';
 import BillingRoutes from '../tv-modules/billing/BillingRoutes';
@@ -56,6 +57,7 @@ const routes: Record<string, RoutableConstructor> = {
     '/module/analytics': AnalyticsRoutes,
     '/module/time-tracking': TimeTrackingRoutes,
     '/module/ui-preferences': UiPreferencesRoutes,
+    '/module/onboarding': OnboardingRoutes,
     '/module/sprints': SprintsRoutes,
     '/module/recurrence': RecurrenceRoutes,
     '/module/billing': BillingRoutes,

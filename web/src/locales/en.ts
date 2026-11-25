@@ -2238,4 +2238,208 @@ export default {
       },
     },
   },
+  onboarding: {
+    offer: {
+      title: 'Welcome to TaskView',
+      description: 'A short tour takes you from an empty workspace to a working project.',
+      points: {
+        project: 'Create a project and your first task',
+        team: 'Invite a teammate and decide what they may do',
+        views: 'See the same tasks as a board, a calendar and a graph',
+      },
+      hint: 'A few minutes. You do everything yourself, and any step can be skipped.',
+      start: 'Take the tour',
+      decline: 'Thanks, no need',
+    },
+    exit: {
+      title: 'Close the tour?',
+      description: 'Offer it again the next time you open TaskView? Every tour stays available in Settings → Guided tours.',
+      back: 'Back to the tour',
+      later: 'Offer next time',
+      never: 'Don\'t offer again',
+    },
+    controls: {
+      next: 'Next',
+      back: 'Back',
+      skip: 'Skip step',
+      finish: 'Finish',
+      exit: 'Close the tour',
+      waiting: 'Waiting for you to do it…',
+      done: 'Done!',
+      progress: 'Tour progress',
+    },
+    topics: {
+      title: 'Guided tours',
+      description: 'Pick a topic and the tour walks you through it right in the app. Take any of them as often as you like.',
+    },
+    topic: {
+      firstRun: {
+        title: 'Quick start',
+        description: 'From a new project to assigned tasks and views',
+      },
+      projects: {
+        title: 'Projects',
+        description: 'Create a project and add the first task to it',
+      },
+      tasks: {
+        title: 'Tasks',
+        description: 'Everything a task can hold, block by block',
+      },
+      collaboration: {
+        title: 'Team and roles',
+        description: 'Invite people and set what each role may do',
+      },
+      views: {
+        title: 'Kanban, calendar, graph',
+        description: 'Three more ways to look at the same tasks',
+      },
+      timeReports: {
+        title: 'Time reports',
+        description: 'Log time on a task and see it in the report',
+      },
+    },
+    steps: {
+      projectCreate: {
+        title: 'Create a project',
+        body: 'A project keeps the tasks, people and settings of one piece of work together. Type a name here and press Enter.',
+      },
+      taskCreate: {
+        title: 'Add a task',
+        body: 'Type what needs to be done and press Enter. The details can wait.',
+      },
+      collabOpen: {
+        title: 'Open Collaboration',
+        body: 'The people of the project are managed here. Open it, or press Next and it opens for you.',
+      },
+      collabInvite: {
+        title: 'Invite a teammate',
+        body: 'Enter their email and press Enter. They get access to the project, so use a real colleague\'s address. Nobody to invite yet? Skip this step.',
+      },
+      collabMemberMenu: {
+        title: 'Open the member menu',
+        body: 'Press ⋯ next to the person and choose "Assign Roles".',
+      },
+      collabMemberRoles: {
+        title: 'Give them a role',
+        body: 'Tick the roles for this person and press Save. A role decides what they can see and do in the project.',
+      },
+      collabRolesTab: {
+        title: 'Roles and permissions',
+        body: 'Open the Roles tab to see the roles of this project.',
+      },
+      collabRolePermissions: {
+        title: 'Set what a role may do',
+        body: 'Press ⋯ next to a role and choose "Assign Permissions", then tick what the role is allowed to do. You can add roles of your own in the field above.',
+      },
+      taskOpen: {
+        title: 'Open a task',
+        body: 'Click a task to open its details.',
+      },
+      taskTitle: {
+        title: 'Name and completion',
+        body: 'Click the name to change it. The checkbox marks the task as done.',
+      },
+      taskFieldSubtasks: {
+        body: 'Break the task into smaller steps. Each subtask has a checkbox of its own.',
+      },
+      taskFieldNote: {
+        body: 'A longer description with formatting: headings, lists, code, links and images.',
+      },
+      taskFieldFiles: {
+        body: 'Files of the task: choose one from the project, upload it, drag it here or paste it from the clipboard.',
+      },
+      taskFieldStatus: {
+        body: 'The Kanban column the task is in. Change it here or by moving the card on the board.',
+      },
+      taskFieldPriority: {
+        body: 'How urgent the task is. The task list can be sorted by priority.',
+      },
+      taskFieldAssignees: {
+        body: 'Who is responsible for the task. Several people can be chosen.',
+      },
+      taskFieldList: {
+        body: 'A list groups tasks inside the project. Move the task to another list here.',
+      },
+      taskFieldSprint: {
+        body: 'The sprint the task is planned for.',
+      },
+      taskFieldEstimate: {
+        body: 'The size of the task in story points.',
+      },
+      taskFieldTags: {
+        body: 'Labels to group tasks and filter by. A new tag can be created right here.',
+      },
+      taskFieldDeadline: {
+        body: 'The start and end dates, with a time if needed. A task can also repeat on a schedule.',
+      },
+      taskFieldDependencies: {
+        body: 'The tasks that come before this one and the tasks that follow it.',
+      },
+      taskFieldAmount: {
+        body: 'Money that belongs to the task: an income or an expense.',
+      },
+      taskFieldTimeTracking: {
+        body: 'Start the timer or add time by hand. Logged time shows up in Time reports.',
+      },
+      taskFieldHistory: {
+        body: 'Every change made to the task. An earlier state can be restored from here.',
+      },
+      taskAssign: {
+        title: 'Assign the task',
+        body: 'Choose who is responsible for it: yourself or someone you invited. The assignee is shown on the task card.',
+      },
+      viewKanban: {
+        title: 'Open Kanban',
+        body: 'The same tasks as columns by status. Open it, or press Next.',
+      },
+      viewKanbanLook: {
+        title: 'Kanban',
+        body: 'Drag a task from one column to another to change its status.',
+      },
+      viewCalendar: {
+        title: 'Open Calendar',
+        body: 'Tasks laid out by day. Open it, or press Next.',
+      },
+      viewCalendarLook: {
+        title: 'Calendar',
+        body: 'A task shows up here once it has a date, so you can see what is planned for each day.',
+      },
+      viewGraph: {
+        title: 'Open Graph',
+        body: 'Tasks and the links between them. Open it, or press Next.',
+      },
+      viewGraphLook: {
+        title: 'Graph',
+        body: 'Connect tasks to show which one comes first. It helps to plan the order of work.',
+      },
+      timeReportsOpen: {
+        title: 'Open Time reports',
+        body: 'Time logged on tasks is collected here. Open it, or press Next.',
+      },
+      timeReportsFilters: {
+        title: 'Choose what to look at',
+        body: 'Set the period and narrow the report down with the filters.',
+      },
+      timeReportsTotals: {
+        title: 'Totals',
+        body: 'The summary for what you have chosen.',
+      },
+      timeReportsViews: {
+        title: 'Same time, different angle',
+        body: 'Switch the tabs to group the time by task, by person or by day.',
+      },
+      timeTask: {
+        title: 'Pick a task',
+        body: 'Time is logged on a task. Add a new task here or open any task from the list.',
+      },
+      timeLog: {
+        title: 'Log some time',
+        body: 'Start the timer and stop it when you are done, or add an entry by hand.',
+      },
+      allSet: {
+        title: 'You\'re all set',
+        body: 'Every tour is available in Settings → Guided tours whenever you need it.',
+      },
+    },
+  },
 }

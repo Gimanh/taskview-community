@@ -20,6 +20,7 @@ import TvSsoApi from "./api/sso";
 import TvAnalyticsApi from "./api/analytics";
 import TvTimeTrackingApi from "./api/time-tracking";
 import TvUiPreferencesApi from "./api/ui-preferences";
+import TvOnboardingApi from "./api/onboarding";
 import TvSprintApi from "./api/sprints";
 import TvRecurrenceApi from "./api/recurrence";
 import TvBillingApi from "./api/billing";
@@ -69,6 +70,8 @@ export class TvApi {
     public timeTracking: TvTimeTrackingApi;
 
     public uiPreferences: TvUiPreferencesApi;
+
+    public onboarding: TvOnboardingApi;
 
     public sprints: TvSprintApi;
 
@@ -121,6 +124,8 @@ export class TvApi {
         this.timeTracking = new TvTimeTrackingApi(this.$axios);
 
         this.uiPreferences = new TvUiPreferencesApi(this.$axios);
+
+        this.onboarding = new TvOnboardingApi(this.$axios);
 
         this.sprints = new TvSprintApi(this.$axios);
 

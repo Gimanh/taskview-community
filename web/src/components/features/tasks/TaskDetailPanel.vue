@@ -6,7 +6,10 @@
   >
     <template v-if="task">
       <!-- Title & Checkbox -->
-      <div class="flex items-start gap-3 shadow-sm rounded-2xl dark:bg-tv-ui-bg-elevated">
+      <div
+        class="flex items-start gap-3 shadow-sm rounded-2xl dark:bg-tv-ui-bg-elevated"
+        data-tour="task-title"
+      >
         <div class="flex-1">
           <UTextarea
             v-model="titleValue"
@@ -246,8 +249,10 @@ const fieldWidthById = computed(() => {
   return map
 })
 
+// The second class marks the block for the guided tour: several of the blocks are popovers without an element to carry an attribute
 function colClass(id: string): string {
-  return fieldWidthById.value.get(id) === 'wide' ? '@lg:col-span-2' : 'w-full'
+  const width = fieldWidthById.value.get(id) === 'wide' ? '@lg:col-span-2' : 'w-full'
+  return `${width} tv-tour-task-field-${id}`
 }
 const panelRef = ref<HTMLElement | null>(null)
 const task = computed(() => tasksStore.selectedTask ?? null)

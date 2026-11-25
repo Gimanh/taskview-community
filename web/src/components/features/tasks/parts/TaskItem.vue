@@ -2,6 +2,7 @@
   <div
     class="group flex flex-col gap-3 p-3.5 rounded-2xl hover:bg-elevated bg-accented/20 transition-colors cursor-pointer"
     :data-testid="`task-item-${task.id}`"
+    data-tour="task-item"
     @click="handleOpenTask"
     @contextmenu="handleContextMenu"
   >

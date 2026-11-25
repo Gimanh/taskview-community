@@ -18,6 +18,7 @@
     </UDashboardGroup>
 
     <TvMobileBottomNav />
+    <OnboardingHost />
   </template>
 </template>
 
@@ -36,6 +37,7 @@ import DashboardSidebarSecond from '@/components/sidebars/DashboardSidebarSecond
 import TvMobileBottomNav from '@/components/features/base/TvMobileBottomNav.vue'
 import SearchAll from '@/components/features/main/screen-main/parts/SearchAll.vue'
 import AppShortcuts from '@/components/features/shortcuts/AppShortcuts.vue'
+import OnboardingHost from '@/components/features/onboarding/OnboardingHost.vue'
 import { useCentrifugo } from '@/composables/useCentrifugo'
 import { usePushNotifications } from '@/composables/usePushNotifications'
 import { useWidgetSnapshot } from '@/composables/useWidgetSnapshot'
@@ -45,6 +47,7 @@ import { useOrganizationStore } from '@/stores/organization.store'
 import { useOrgSwitcher } from '@/composables/useOrgSwitcher'
 import { useTimeTrackingStore } from '@/stores/time-tracking.store'
 import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
+import { useOnboardingStore } from '@/stores/onboarding.store'
 import { useRecentProjects } from '@/composables/useRecentProjects'
 
 const { connect: connectCentrifugo } = useCentrifugo()
@@ -56,6 +59,7 @@ const goalsStore = useGoalsStore()
 const orgStore = useOrganizationStore()
 const timeTrackingStore = useTimeTrackingStore()
 const uiPrefsStore = useUiPreferencesStore()
+const onboardingStore = useOnboardingStore()
 const { markProjectUsed } = useRecentProjects()
 
 useWidgetSnapshot()
@@ -147,6 +151,7 @@ onMounted(async () => {
   }
 
   await goalsStore.fetchGoals()
+  onboardingStore.fetch()
   timeTrackingStore.fetchActive()
   if (!uiPrefsStore.loaded) uiPrefsStore.fetch()
 

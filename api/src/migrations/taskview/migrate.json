@@ -910,5 +910,18 @@
         "description": [
             "New table tasks.import_jobs: one row per import run from an external system (Trello first). Source credentials are stored encrypted only while the run is being prepared or executed and are wiped when it finishes."
         ]
+    },
+    "70": {
+        "version": "1.75.0",
+        "name": "Onboarding tours",
+        "releaseDate": "20261125",
+        "scripts": [
+            "/1.75.0/0.create-user-onboarding.sql",
+            "/1.75.0/1.backfill-user-onboarding.sql"
+        ],
+        "description": [
+            "New table tv_auth.user_onboarding: one row per user who finished or declined the first-run tour. A user without a row is offered the tour on the next start of the app.",
+            "Accounts that already own a project or are members of one are marked as declined, so only accounts without any project get the offer. Everyone can start any tour from Settings."
+        ]
     }
 }

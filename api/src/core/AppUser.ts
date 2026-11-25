@@ -15,6 +15,7 @@ import { AnalyticsManager } from '../tv-modules/analytics/AnalyticsManager';
 import { TasksManager } from '../tv-modules/tasks/TasksManager';
 import { TimeTrackingManager } from '../tv-modules/time-tracking/TimeTrackingManager';
 import { UiPreferencesManager } from '../tv-modules/ui-preferences/UiPreferencesManager';
+import { OnboardingManager } from '../tv-modules/onboarding/OnboardingManager';
 import { SprintsManager } from '../tv-modules/sprints/SprintsManager';
 import { RecurrenceManager } from '../tv-modules/recurrence/RecurrenceManager';
 import { FilesManager } from '../tv-modules/files/FilesManager';
@@ -48,6 +49,7 @@ export class AppUser {
     public readonly analyticsManager: AnalyticsManager;
     public readonly timeTrackingManager: TimeTrackingManager;
     public readonly uiPreferencesManager: UiPreferencesManager;
+    public readonly onboardingManager: OnboardingManager;
     public readonly sprintsManager: SprintsManager;
     public readonly recurrenceManager: RecurrenceManager;
     public readonly filesManager: FilesManager;
@@ -74,6 +76,7 @@ export class AppUser {
         this.analyticsManager = new AnalyticsManager(this);
         this.timeTrackingManager = new TimeTrackingManager(this);
         this.uiPreferencesManager = new UiPreferencesManager(this);
+        this.onboardingManager = new OnboardingManager(this);
         this.sprintsManager = new SprintsManager(this);
         this.recurrenceManager = new RecurrenceManager(this);
         this.filesManager = new FilesManager(this);

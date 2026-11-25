@@ -1,5 +1,8 @@
 <template>
-  <div class="space-y-4">
+  <div
+    class="space-y-4"
+    data-tour="collab-roles"
+  >
     <h3 class="text-lg font-semibold">
       {{ t('collaboration.roles.title') }}
     </h3>
@@ -48,6 +51,7 @@
         <UButton
           :label="t('collaboration.roles.assignPermissions')"
           data-testid="collab-role-assign-permissions"
+          data-tour="collab-role-permissions"
           icon="i-lucide-shield-check"
           variant="ghost"
           color="neutral"

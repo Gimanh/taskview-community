@@ -31,7 +31,7 @@
         :items="memberItems"
         value-key="value"
         class="w-full sm:w-72"
-        @update:model-value="(value) => assign({ externalId: person.externalId, memberId: value })"
+        @update:model-value="(value: number) => assign({ externalId: person.externalId, memberId: value })"
       />
     </div>
   </div>

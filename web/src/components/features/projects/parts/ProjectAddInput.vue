@@ -6,7 +6,7 @@
       variant="soft"
       class="w-full"
       data-testid="project-add-input"
-     
+      data-tour="project-add"
       @keydown.enter="addProject"
     >
       <template #trailing>

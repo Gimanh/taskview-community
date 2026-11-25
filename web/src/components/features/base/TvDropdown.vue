@@ -14,6 +14,7 @@
       :icon="activatorIcon || (multiple ? placeholderIcon : current?.icon) || placeholderIcon"
       :trailing-icon="open ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
       :ui="activatorUi((multiple ? undefined : current?.iconClass) ?? 'text-muted')"
+      v-bind="activatorAttrs"
     >
       <span
         class="flex-1 text-left truncate min-w-0"
@@ -60,6 +61,7 @@ const {
   placeholderIcon = '',
   activatorIcon = '',
   multiple = false,
+  activatorAttrs = undefined,
 } = defineProps<{
   items: TvDropdownOption<V>[]
   withActivator?: boolean
@@ -69,6 +71,8 @@ const {
   /** Fixed activator icon — overrides the selected option's icon. */
   activatorIcon?: string
   multiple?: boolean
+  /** Extra attributes of the activator button: the popover root renders no element of its own to carry them */
+  activatorAttrs?: Record<string, string>
 }>()
 
 const { activatorUi } = useNuxtUiTaskItemStyles()

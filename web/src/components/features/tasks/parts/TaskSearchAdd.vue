@@ -8,6 +8,7 @@
         variant="soft"
         class="w-full"
         data-testid="task-search-add-input"
+        data-tour="task-add"
         :ui="{
           base: 'bg-tv-ui-bg-elevated',
         }"

@@ -2,6 +2,7 @@ import type { Component, Ref } from 'vue'
 import type { DropdownMenuItem } from '@nuxt/ui'
 import type { RouteLocationRaw, RouteRecordRaw } from 'vue-router'
 import type { Locale } from '@/locales'
+import type { OnboardingTopicsProvider } from '@/components/features/onboarding/types'
 
 export type TvWebExtensionMessages = Partial<Record<Locale, Record<string, unknown>>>
 
@@ -52,6 +53,8 @@ export type TvWebExtension = {
   notificationSettingTypes?: NotificationSettingTypesProvider
   /** Extra blocks of the task panel: the user orders, hides and resizes them together with the built-in fields */
   taskDetailFields?: TaskDetailFieldsProvider
+  /** Extra guided tours, listed after the built-in ones in Settings → Guided tours */
+  onboardingTopics?: OnboardingTopicsProvider
   /** Shows the workspace links of the sidebar as a row of icon buttons instead of labelled rows */
   compactWorkspaceLinks?: boolean
 }

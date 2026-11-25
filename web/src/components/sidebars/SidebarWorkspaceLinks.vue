@@ -19,6 +19,7 @@
         :aria-label="link.label"
         :to="link.to"
         :data-testid="`sidebar-workspace-link-${link.key}`"
+        :data-tour="`workspace-link-${link.key}`"
       />
     </UTooltip>
   </div>
@@ -31,7 +32,10 @@
       :active="link.active"
       :data-testid="`sidebar-workspace-link-${link.key}`"
     >
-      <div class="flex items-center gap-2 w-full">
+      <div
+        class="flex items-center gap-2 w-full"
+        :data-tour="`workspace-link-${link.key}`"
+      >
         <UIcon
           :name="link.icon"
           class="size-4 shrink-0"

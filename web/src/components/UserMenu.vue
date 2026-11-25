@@ -52,6 +52,7 @@ import { useRouter } from 'vue-router'
 import { useLogout } from '@/composables/useLogout'
 import { useUserStore } from '@/stores/user.store'
 import { useOrganizationStore } from '@/stores/organization.store'
+import { useOnboardingStore } from '@/stores/onboarding.store'
 import { useOrgSwitcher } from '@/composables/useOrgSwitcher'
 import avatarImg from '@/assets/images/avatar-1.jpeg'
 import ExtensionOutlet from '@/components/ExtensionOutlet.vue'
@@ -67,6 +68,7 @@ const router = useRouter()
 const toast = useToast()
 const userStore = useUserStore()
 const orgStore = useOrganizationStore()
+const onboardingStore = useOnboardingStore()
 const { switchOrg } = useOrgSwitcher()
 
 async function handleLogout() {
@@ -122,6 +124,11 @@ const items = computed<DropdownMenuItem[][]>(() => [
       onSelect() {
         router.push({ name: 'settings' })
       },
+    },
+    {
+      label: t('onboarding.topics.title'),
+      icon: 'i-lucide-graduation-cap',
+      onSelect: onboardingStore.openTopics,
     },
     {
       label: t('userMenu.appearance'),

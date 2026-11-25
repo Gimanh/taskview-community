@@ -3,11 +3,12 @@
     <TimeReportsFilters
       :available-projects="availableProjects"
       :can-filter-by-user="canFilterByUser"
+      data-tour="time-reports-filters"
     />
 
-    <TimeReportsKpis />
+    <TimeReportsKpis data-tour="time-reports-kpis" />
 
-    <TimeReportsViewTabs />
+    <TimeReportsViewTabs data-tour="time-reports-tabs" />
 
     <TimeReportsEntriesList />
   </div>

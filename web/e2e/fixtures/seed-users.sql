@@ -24,3 +24,11 @@ FROM tv_auth.organizations o
 JOIN tv_auth.users u ON u.id = o.owner_id
 WHERE o.is_personal = 1 AND u.email IN ('inbox-owner@e2e.test', 'inbox-colleague@e2e.test')
   AND NOT EXISTS (SELECT 1 FROM tasks.goals g WHERE g.organization_id = o.id AND g.is_inbox);
+
+-- The suites drive the app as these accounts: the first-run tour must not be offered to them.
+-- onboarding.spec.ts creates accounts of its own for the offer.
+INSERT INTO tv_auth.user_onboarding (user_id, status)
+SELECT u.id, 'dismissed'
+FROM tv_auth.users u
+WHERE u.login IN ('user', 'inbox_owner', 'inbox_colleague')
+ON CONFLICT (user_id) DO NOTHING;

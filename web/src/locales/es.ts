@@ -2224,4 +2224,208 @@ export default {
       },
     },
   },
+  onboarding: {
+    offer: {
+      title: 'Bienvenido a TaskView',
+      description: 'Un recorrido breve te lleva de un espacio vacío a un proyecto en marcha.',
+      points: {
+        project: 'Crear un proyecto y la primera tarea',
+        team: 'Invitar a un compañero y decidir qué puede hacer',
+        views: 'Ver las mismas tareas como tablero, calendario y gráfico',
+      },
+      hint: 'Unos minutos. Lo haces todo tú y puedes omitir cualquier paso.',
+      start: 'Hacer el recorrido',
+      decline: 'Gracias, no hace falta',
+    },
+    exit: {
+      title: '¿Cerrar el recorrido?',
+      description: '¿Ofrecerlo de nuevo la próxima vez que abras TaskView? Todos los recorridos siguen disponibles en Configuración → Recorridos guiados.',
+      back: 'Volver al recorrido',
+      later: 'Ofrecer más tarde',
+      never: 'No ofrecer más',
+    },
+    controls: {
+      next: 'Siguiente',
+      back: 'Atrás',
+      skip: 'Omitir paso',
+      finish: 'Finalizar',
+      exit: 'Cerrar el recorrido',
+      waiting: 'Esperando a que lo hagas…',
+      done: '¡Hecho!',
+      progress: 'Progreso del recorrido',
+    },
+    topics: {
+      title: 'Recorridos guiados',
+      description: 'Elige un tema y el recorrido te lo muestra dentro de la aplicación. Puedes repetir cualquiera cuantas veces quieras.',
+    },
+    topic: {
+      firstRun: {
+        title: 'Inicio rápido',
+        description: 'De un proyecto nuevo a tareas asignadas y vistas',
+      },
+      projects: {
+        title: 'Proyectos',
+        description: 'Crear un proyecto y añadirle la primera tarea',
+      },
+      tasks: {
+        title: 'Tareas',
+        description: 'Todo lo que contiene una tarea, bloque a bloque',
+      },
+      collaboration: {
+        title: 'Equipo y roles',
+        description: 'Invitar a personas y definir qué puede hacer cada rol',
+      },
+      views: {
+        title: 'Kanban, calendario, gráfico',
+        description: 'Tres formas más de ver las mismas tareas',
+      },
+      timeReports: {
+        title: 'Informes de tiempo',
+        description: 'Registrar tiempo en una tarea y verlo en el informe',
+      },
+    },
+    steps: {
+      projectCreate: {
+        title: 'Crea un proyecto',
+        body: 'Un proyecto reúne las tareas, las personas y los ajustes de un trabajo. Escribe aquí un nombre y pulsa Enter.',
+      },
+      taskCreate: {
+        title: 'Añade una tarea',
+        body: 'Escribe lo que hay que hacer y pulsa Enter. Los detalles pueden esperar.',
+      },
+      collabOpen: {
+        title: 'Abre «Colaboración»',
+        body: 'Aquí se gestionan las personas del proyecto. Ábrela o pulsa «Siguiente» y se abrirá sola.',
+      },
+      collabInvite: {
+        title: 'Invita a un compañero',
+        body: 'Escribe su correo y pulsa Enter. La persona obtiene acceso al proyecto, así que usa la dirección de un compañero real. ¿Aún no hay a quién invitar? Omite este paso.',
+      },
+      collabMemberMenu: {
+        title: 'Abre el menú del miembro',
+        body: 'Pulsa ⋯ junto a la persona y elige «Asignar roles».',
+      },
+      collabMemberRoles: {
+        title: 'Dale un rol',
+        body: 'Marca los roles de esta persona y pulsa «Guardar». El rol decide qué puede ver y hacer en el proyecto.',
+      },
+      collabRolesTab: {
+        title: 'Roles y permisos',
+        body: 'Abre la pestaña «Roles» para ver los roles de este proyecto.',
+      },
+      collabRolePermissions: {
+        title: 'Define qué puede hacer un rol',
+        body: 'Pulsa ⋯ junto a un rol, elige «Asignar permisos» y marca lo que el rol tiene permitido. Puedes añadir tus propios roles en el campo de arriba.',
+      },
+      taskOpen: {
+        title: 'Abre una tarea',
+        body: 'Haz clic en una tarea para abrir sus detalles.',
+      },
+      taskTitle: {
+        title: 'Nombre y finalización',
+        body: 'Haz clic en el nombre para cambiarlo. La casilla marca la tarea como hecha.',
+      },
+      taskFieldSubtasks: {
+        body: 'Divide la tarea en pasos más pequeños. Cada subtarea tiene su propia casilla.',
+      },
+      taskFieldNote: {
+        body: 'Una descripción más larga con formato: títulos, listas, código, enlaces e imágenes.',
+      },
+      taskFieldFiles: {
+        body: 'Archivos de la tarea: elige uno del proyecto, súbelo, arrástralo aquí o pégalo desde el portapapeles.',
+      },
+      taskFieldStatus: {
+        body: 'La columna de Kanban en la que está la tarea. Cámbiala aquí o moviendo la tarjeta en el tablero.',
+      },
+      taskFieldPriority: {
+        body: 'Lo urgente que es la tarea. La lista de tareas se puede ordenar por prioridad.',
+      },
+      taskFieldAssignees: {
+        body: 'Quién es responsable de la tarea. Se pueden elegir varias personas.',
+      },
+      taskFieldList: {
+        body: 'Una lista agrupa tareas dentro del proyecto. Mueve aquí la tarea a otra lista.',
+      },
+      taskFieldSprint: {
+        body: 'El sprint para el que está planificada la tarea.',
+      },
+      taskFieldEstimate: {
+        body: 'El tamaño de la tarea en puntos de historia.',
+      },
+      taskFieldTags: {
+        body: 'Etiquetas para agrupar tareas y filtrarlas. Puedes crear una etiqueta nueva aquí mismo.',
+      },
+      taskFieldDeadline: {
+        body: 'Las fechas de inicio y fin, con hora si hace falta. Una tarea también puede repetirse periódicamente.',
+      },
+      taskFieldDependencies: {
+        body: 'Las tareas que van antes de esta y las que la siguen.',
+      },
+      taskFieldAmount: {
+        body: 'Dinero ligado a la tarea: un ingreso o un gasto.',
+      },
+      taskFieldTimeTracking: {
+        body: 'Inicia el temporizador o añade tiempo a mano. El tiempo registrado aparece en los informes de tiempo.',
+      },
+      taskFieldHistory: {
+        body: 'Cada cambio hecho en la tarea. Desde aquí se puede restaurar un estado anterior.',
+      },
+      taskAssign: {
+        title: 'Asigna la tarea',
+        body: 'Elige quién es responsable: tú o alguien a quien hayas invitado. La persona asignada aparece en la tarjeta de la tarea.',
+      },
+      viewKanban: {
+        title: 'Abre Kanban',
+        body: 'Las mismas tareas en columnas por estado. Ábrelo o pulsa «Siguiente».',
+      },
+      viewKanbanLook: {
+        title: 'Kanban',
+        body: 'Arrastra una tarea de una columna a otra para cambiar su estado.',
+      },
+      viewCalendar: {
+        title: 'Abre el Calendario',
+        body: 'Las tareas repartidas por días. Ábrelo o pulsa «Siguiente».',
+      },
+      viewCalendarLook: {
+        title: 'Calendario',
+        body: 'Una tarea aparece aquí cuando tiene fecha, así ves lo que hay previsto para cada día.',
+      },
+      viewGraph: {
+        title: 'Abre el Gráfico',
+        body: 'Las tareas y los vínculos entre ellas. Ábrelo o pulsa «Siguiente».',
+      },
+      viewGraphLook: {
+        title: 'Gráfico',
+        body: 'Conecta tareas para mostrar cuál va primero. Ayuda a planificar el orden del trabajo.',
+      },
+      timeReportsOpen: {
+        title: 'Abre «Informes de tiempo»',
+        body: 'Aquí se reúne el tiempo registrado en las tareas. Ábrelos o pulsa «Siguiente».',
+      },
+      timeReportsFilters: {
+        title: 'Elige qué ver',
+        body: 'Define el periodo y acota el informe con los filtros.',
+      },
+      timeReportsTotals: {
+        title: 'Totales',
+        body: 'El resumen de lo que has elegido.',
+      },
+      timeReportsViews: {
+        title: 'El mismo tiempo desde otro ángulo',
+        body: 'Cambia de pestaña para agrupar el tiempo por tarea, por persona o por día.',
+      },
+      timeTask: {
+        title: 'Elige una tarea',
+        body: 'El tiempo se registra en una tarea. Añade aquí una tarea nueva o abre cualquiera de la lista.',
+      },
+      timeLog: {
+        title: 'Registra tiempo',
+        body: 'Inicia el temporizador y detenlo cuando termines, o añade un registro a mano.',
+      },
+      allSet: {
+        title: 'Todo listo',
+        body: 'Todos los recorridos están disponibles en Configuración → Recorridos guiados cuando los necesites.',
+      },
+    },
+  },
 }
