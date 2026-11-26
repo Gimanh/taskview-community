@@ -21,7 +21,10 @@ import {
     type AuthTokenPayload,
     AuthTokenPayloadSchema,
     type IssueTokensArgs,
+    type CreateUserSessionArgs,
+    type OpenedSession,
     type OpenSessionArgs,
+    type SendSessionArgs,
     type RefreshTokenPayload,
     type ValidateTokenArgs,
 } from '../../types/auth.types';
@@ -376,7 +379,7 @@ export default class AuthController {
         });
     }
 
-    private async openSession(args: OpenSessionArgs) {
+    private async createSession(args: CreateUserSessionArgs): Promise<OpenedSession | null> {
         const refreshJti = randomUUID();
         const csrfToken = randomBytes(32).toString('base64url');
         const sessionId = await args.req.appUser.authManager.sessionStorage.createSession({
@@ -386,15 +389,27 @@ export default class AuthController {
             refreshJti,
             csrfToken,
         });
-        if (!sessionId) {
-            return args.res.status(500).end();
-        }
+        if (!sessionId) return null;
+        return { sessionId, refreshJti, csrfToken };
+    }
 
-        const tokens = this.getTokens({ payload: { id: sessionId, userData: args.userData }, refreshJti });
+    private async sendSession(args: SendSessionArgs) {
+        const tokens = this.getTokens({
+            payload: { id: args.session.sessionId, userData: args.userData },
+            refreshJti: args.session.refreshJti,
+        });
 
         await this.setRefreshToken(args.res, tokens.refresh);
 
-        return args.res.json({ ...tokens, csrf: csrfToken });
+        return args.res.json({ ...tokens, csrf: args.session.csrfToken });
+    }
+
+    private async openSession(args: OpenSessionArgs) {
+        const session = await this.createSession({ req: args.req, userData: args.userData });
+        if (!session) {
+            return args.res.status(500).end();
+        }
+        return this.sendSession({ res: args.res, userData: args.userData, session });
     }
 
     loginByCode = async (req: Request, res: Response) => {
@@ -439,26 +454,39 @@ export default class AuthController {
             return res.status(400).send({ message: 'Code expired, get new code' });
         }
 
+        const banned = !!userData.block && !userData.confirm_email_code;
+
+        // The session is opened before the code is spent, so a failure here leaves the code usable
+        const session = banned ? null : await this.createSession({ req, userData });
+        if (!banned && !session) {
+            return res.status(500).end();
+        }
+
+        const sessionStorage = req.appUser.authManager.sessionStorage;
+
         // Invalidate code immediately to prevent replay attacks
         const consumed = await req.appUser.authManager.repository.consumeLoginCode({
             userId: userData.id,
             rememberToken: attempt.rememberToken,
         });
         if (!consumed) {
+            if (session) await sessionStorage.deleteSession(session.sessionId, userData.id);
             return res.status(400).send({ message: 'Invalid code' });
         }
 
+        if (!session) {
+            return res.status(403).send({ message: 'account_blocked' });
+        }
+
         if (userData.block) {
-            if (!userData.confirm_email_code) {
-                return res.status(403).send({ message: 'account_blocked' });
-            }
             const confirmed = await req.appUser.authManager.repository.markEmailConfirmed(userData.email);
             if (!confirmed) {
+                await sessionStorage.deleteSession(session.sessionId, userData.id);
                 return res.status(500).end();
             }
         }
 
-        return this.openSession({ req, res, userData });
+        return this.sendSession({ res, userData, session });
     };
 
     login = async (req: Request, res: Response) => {

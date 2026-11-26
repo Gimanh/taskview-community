@@ -63,6 +63,23 @@ export type OpenSessionArgs = {
     userData: UserDbRecord;
 };
 
+export type CreateUserSessionArgs = {
+    req: Request;
+    userData: UserDbRecord;
+};
+
+export type OpenedSession = {
+    sessionId: number;
+    refreshJti: string;
+    csrfToken: string;
+};
+
+export type SendSessionArgs = {
+    res: Response;
+    userData: UserDbRecord;
+    session: OpenedSession;
+};
+
 export type CreateSessionArgs = {
     userId: number;
     ip: string | undefined;

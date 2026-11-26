@@ -1,9 +1,12 @@
 import { randomBytes } from 'crypto'
 import { resolveTxt } from 'node:dns/promises'
+import type { CustomFetch } from 'openid-client'
 import type { SsoConfigsSchemaTypeForSelect } from 'taskview-db-schemas'
 import { decryptField } from '../../utils/crypto'
 import { OutboundUrlError } from '../../utils/OutboundUrlError'
+import { outboundFetch } from '../../utils/outbound-fetch'
 import { resolveOutboundUrl } from '../../utils/outbound-url'
+import type { OutboundFetchInit } from '../../utils/outbound-url.types'
 import { generateString } from '../../utils/helpers'
 import type { CheckSsoDomainProofArgs, SsoDomainVerificationMethod } from './types'
 
@@ -106,9 +109,10 @@ export async function checkSsoDomainHttpFile(args: CheckSsoDomainProofArgs): Pro
     if (urlError) continue
 
     try {
-      const response = await fetch(url, {
-        redirect: 'error',
-        signal: AbortSignal.timeout(5000),
+      const response = await outboundFetch({
+        url,
+        allowPrivate: isPrivateSsoUrlsAllowed(),
+        init: { redirect: 'error', signal: AbortSignal.timeout(5000) },
       })
       if (!response.ok) continue
       if (tokenMatchesProof(await response.text(), args.token)) return true
@@ -167,4 +171,15 @@ export async function checkSsoFetchUrl(url: string): Promise<string | null> {
     if (err instanceof OutboundUrlError) return `URL ${err.message}`
     throw err
   }
+}
+
+// Every request openid-client makes for an OIDC provider (discovery, token, JWKS, userinfo). The issuer is entered by
+// an org admin and the other endpoints come from its discovery document, so all of them pass the outbound guard.
+export const oidcOutboundFetch: CustomFetch = async (url, options) => {
+  const response = await outboundFetch({
+    url,
+    allowPrivate: isPrivateSsoUrlsAllowed(),
+    init: options as OutboundFetchInit,
+  })
+  return response as unknown as Response
 }

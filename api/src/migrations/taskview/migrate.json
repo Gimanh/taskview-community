@@ -938,5 +938,16 @@
             "New table tv_auth.login_attempts: failed password sign-ins are counted per account and per address, and further attempts are refused for up to 15 minutes once the limit is reached (LOGIN_ATTEMPT_LIMIT, 10 by default, 0 turns the limit off).",
             "tv_auth.user_tokens gets csrf_token_hash: every session has a CSRF token, handed to the client at sign-in. A session refresh that relies on the cookie alone must carry it in the X-CSRF-Token header."
         ]
+    },
+    "72": {
+        "version": "1.77.0",
+        "name": "Session CSRF token column",
+        "releaseDate": "20261126",
+        "scripts": [
+            "/1.77.0/0.alter-user-tokens-csrf-token.sql"
+        ],
+        "description": [
+            "Adds tv_auth.user_tokens.csrf_token_hash again for installations that applied 1.76.0 before the column was part of it. Where the column already exists nothing changes."
+        ]
     }
 }

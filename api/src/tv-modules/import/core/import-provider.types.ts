@@ -1,3 +1,4 @@
+import type { LookupFunction } from 'net';
 import type { Readable } from 'stream';
 
 export type ImportCredentials = Record<string, string>;
@@ -175,6 +176,7 @@ export type ImportHttpClientConfig = {
     headers: Record<string, string>;
     minRequestIntervalMs: number;
     maxRedirects?: number;
+    lookup?: LookupFunction;
 };
 
 export type ImportHttpRequestArgs = {
