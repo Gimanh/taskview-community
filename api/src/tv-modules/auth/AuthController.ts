@@ -1,5 +1,5 @@
 import { compare, hashSync } from 'bcryptjs';
-import { randomInt, randomUUID } from 'crypto';
+import { randomBytes, randomInt, randomUUID } from 'crypto';
 import type { Request, Response } from 'express';
 import jwt, { type Algorithm, decode } from 'jsonwebtoken';
 import { z } from 'zod';
@@ -36,6 +36,7 @@ import type { ExternalAuthUser } from './strategies/external-auth.types';
 import { OrganizationRepository } from '../organizations/OrganizationRepository';
 import { GoalsRepository } from '../goals/GoalsRepository';
 
+const CSRF_HEADER = 'X-CSRF-Token';
 const LOGIN_CODE_TTL_MS = 5 * 60 * 1000;
 const LOGIN_CODE_MAX_ATTEMPTS = 5;
 const PASSWORD_CHANGE_CODE_TTL_S = 15 * 60;
@@ -377,11 +378,13 @@ export default class AuthController {
 
     private async openSession(args: OpenSessionArgs) {
         const refreshJti = randomUUID();
+        const csrfToken = randomBytes(32).toString('base64url');
         const sessionId = await args.req.appUser.authManager.sessionStorage.createSession({
             userId: args.userData.id,
             ip: args.req.ip,
             userAgent: args.req.headers['user-agent'],
             refreshJti,
+            csrfToken,
         });
         if (!sessionId) {
             return args.res.status(500).end();
@@ -391,7 +394,7 @@ export default class AuthController {
 
         await this.setRefreshToken(args.res, tokens.refresh);
 
-        return args.res.json(tokens);
+        return args.res.json({ ...tokens, csrf: csrfToken });
     }
 
     loginByCode = async (req: Request, res: Response) => {
@@ -748,6 +751,19 @@ export default class AuthController {
         }
 
         const sessionStorage = req.appUser.authManager.sessionStorage;
+
+        const provenByBody = bodyPayload?.id === payload.id;
+        if (!provenByBody) {
+            const csrf = await sessionStorage.verifyCsrfToken({ sessionId: payload.id, csrfToken: req.get(CSRF_HEADER) });
+            if (csrf === 'inactive') {
+                this.clearRefreshToken(res);
+                return res.status(401).end();
+            }
+            if (csrf === 'invalid') {
+                return res.status(403).send({ message: 'csrf_token_invalid' });
+            }
+        }
+
         const rotation = await sessionStorage.rotateRefreshToken({
             sessionId: payload.id,
             presentedJti: payload.jti,
@@ -771,7 +787,7 @@ export default class AuthController {
 
         await this.setRefreshToken(res, newTokens.refresh);
 
-        if (bodyPayload?.id === payload.id) return res.json(newTokens);
+        if (provenByBody) return res.json(newTokens);
         const { refresh: _refresh, ...withoutRefresh } = newTokens;
         return res.json(withoutRefresh);
     };

@@ -96,6 +96,7 @@ type LoginState = typeof LoginSchema.infer
 type LoginResponse = {
   access: string
   refresh: string
+  csrf?: string
 }
 
 const state = reactive<LoginState>({
@@ -113,6 +114,7 @@ async function onSubmit() {
     if (result.data.access) {
       $ls.setToken(result.data.access)
       $ls.setRefreshToken(result.data.refresh)
+      $ls.setCsrfToken(result.data.csrf)
       await $ls.updateUserStoreByToken()
 
       toast.add({

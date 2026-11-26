@@ -6,6 +6,7 @@ import { useUserStore } from '@/stores/user.store'
 
 export const ACCESS_TOKEN_KEY = 'access'
 export const REFRESH_TOKEN_KEY = 'refresh'
+export const CSRF_TOKEN_KEY = 'csrf'
 
 export default class LocalStorage {
   protected namespace: string = ''
@@ -63,6 +64,14 @@ export default class LocalStorage {
     this.setValue(REFRESH_TOKEN_KEY, refreshToken)
   }
 
+  setCsrfToken(csrfToken: string | undefined): void {
+    if (csrfToken) this.setValue(CSRF_TOKEN_KEY, csrfToken)
+  }
+
+  async getCsrfToken(): Promise<string | null> {
+    return await this.getValue(CSRF_TOKEN_KEY)
+  }
+
   async getToken(): Promise<string | null> {
     const token = await this.getValue(ACCESS_TOKEN_KEY)
     if (token && token.split('.').length === 3) {
@@ -84,6 +93,7 @@ export default class LocalStorage {
 
   async invalidateTokens() {
     await this.removeKey(REFRESH_TOKEN_KEY)
+    await this.removeKey(CSRF_TOKEN_KEY)
     await this.removeKey(ACCESS_TOKEN_KEY)
     delete this.axios.defaults.headers.common.Authorization
     this.isLoggedIn = false

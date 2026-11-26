@@ -1,7 +1,15 @@
+import { createHash } from 'crypto'
 import { and, eq, gt, ne, sql } from 'drizzle-orm'
 import { UserTokensSchema } from 'taskview-db-schemas'
 import { Database } from '../../modules/db'
-import type { CreateSessionArgs, RefreshRotationResult, RotateRefreshTokenArgs } from '../../types/auth.types'
+import type {
+  CreateSessionArgs,
+  CsrfTokenCheck,
+  RefreshRotationResult,
+  RotateRefreshTokenArgs,
+  VerifyCsrfTokenArgs,
+} from '../../types/auth.types'
+import { safeEqual } from '../../utils/crypto'
 import { callWithCatch, parseDeviceName, parsePositiveInt } from '../../utils/helpers'
 
 const DEFAULT_SESSION_MAX_AGE_DAYS = 90
@@ -41,9 +49,28 @@ export default class SessionStorage {
         userAgent: args.userAgent || null,
         lastUsedAt: new Date(),
         refreshJti: args.refreshJti,
+        csrfTokenHash: this.hashCsrfToken(args.csrfToken),
       }).returning({ id: UserTokensSchema.id })
     )
     return result?.[0]?.id ?? false
+  }
+
+  private hashCsrfToken(csrfToken: string): string {
+    return createHash('sha256').update(csrfToken).digest('hex')
+  }
+
+  /**
+   * Compares the presented CSRF token with the one the session was opened with.
+   * Throws when the database fails, so a failure is not answered as a wrong token.
+   */
+  async verifyCsrfToken(args: VerifyCsrfTokenArgs): Promise<CsrfTokenCheck> {
+    const [session] = await this.db.dbDrizzle
+      .select({ csrfTokenHash: UserTokensSchema.csrfTokenHash })
+      .from(UserTokensSchema)
+      .where(and(eq(UserTokensSchema.id, args.sessionId), this.notExpired()))
+    if (!session) return 'inactive'
+    if (!session.csrfTokenHash || !args.csrfToken) return 'invalid'
+    return safeEqual(this.hashCsrfToken(args.csrfToken), session.csrfTokenHash) ? 'valid' : 'invalid'
   }
 
   /**

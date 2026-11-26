@@ -8,9 +8,10 @@ const REFRESH_COOKIE = 'taskview-refresh'
 
 // The refresh cookie set by the API lands in the browser's cookie jar,
 // exactly where a sign-in through the app leaves it
-async function signIn(context: BrowserContext) {
+async function signIn(context: BrowserContext): Promise<string> {
   const response = await context.request.post(LOGIN_URL, { form: TEST_USER })
   expect(response.status()).toBe(200)
+  return (await response.json()).csrf
 }
 
 // A foreign page must not be able to renew the session of a signed-in user
@@ -60,14 +61,19 @@ test.describe('Refresh token and foreign sites', () => {
     expect(foreignSite.collected).toEqual(['collector-is-alive'])
   })
 
-  test('the app itself still renews the session from the cookie', async ({ page }) => {
+  test('the app itself still renews the session from the cookie', async ({ page, context }) => {
+    const csrf = await signIn(context)
     await page.goto('/')
 
-    const renewed = await page.evaluate(async (url) => {
-      const response = await fetch(url, { method: 'POST', credentials: 'include' })
+    const renewed = await page.evaluate(async ({ url, csrfToken }) => {
+      const response = await fetch(url, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'X-CSRF-Token': csrfToken },
+      })
       const body = await response.json()
       return { status: response.status, hasAccess: Boolean(body.access), hasRefresh: 'refresh' in body }
-    }, REFRESH_URL)
+    }, { url: REFRESH_URL, csrfToken: csrf })
 
     expect(renewed).toEqual({ status: 200, hasAccess: true, hasRefresh: false })
   })

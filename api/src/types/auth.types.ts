@@ -68,7 +68,15 @@ export type CreateSessionArgs = {
     ip: string | undefined;
     userAgent: string | undefined;
     refreshJti: string;
+    csrfToken: string;
 };
+
+export type VerifyCsrfTokenArgs = {
+    sessionId: number;
+    csrfToken: string | undefined;
+};
+
+export type CsrfTokenCheck = 'valid' | 'invalid' | 'inactive';
 
 export type RotateRefreshTokenArgs = {
     sessionId: number;

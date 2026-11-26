@@ -598,6 +598,7 @@ describe('Login API', () => {
     describe('refresh token hardening (GHSA-p7h5-m7pj-2vq3)', () => {
         const login = () =>
             axios.post(`${url}/module/auth/login`, { login: 'test@mail.dest', password: 'user1!#Q' });
+        const csrfOf = (session: { data: { csrf: string } }) => ({ 'X-CSRF-Token': session.data.csrf });
         const refreshCookieFrom = (setCookie: string[] | undefined) => {
             const cookie = (setCookie ?? []).find((c) => /refresh/i.test(c.split('=')[0]));
             expect(cookie).toBeTruthy();
@@ -636,9 +637,10 @@ describe('Login API', () => {
         });
 
         it('does not emit Access-Control-Allow-Origin when the Origin header is absent', async () => {
-            const cookie = refreshCookieFrom((await login()).headers['set-cookie']).split(';')[0];
+            const session = await login();
+            const cookie = refreshCookieFrom(session.headers['set-cookie']).split(';')[0];
 
-            const response = await axios.post(`${url}/module/auth/refresh/token`, {}, { headers: { Cookie: cookie } });
+            const response = await axios.post(`${url}/module/auth/refresh/token`, {}, { headers: { Cookie: cookie, ...csrfOf(session) } });
 
             expect(response.headers['access-control-allow-origin']).toBeUndefined();
         });
@@ -661,9 +663,10 @@ describe('Login API', () => {
         });
 
         it('does not return the refresh token in the body when refreshing by cookie only', async () => {
-            const cookie = refreshCookieFrom((await login()).headers['set-cookie']).split(';')[0];
+            const session = await login();
+            const cookie = refreshCookieFrom(session.headers['set-cookie']).split(';')[0];
 
-            const response = await axios.post(`${url}/module/auth/refresh/token`, {}, { headers: { Cookie: cookie } });
+            const response = await axios.post(`${url}/module/auth/refresh/token`, {}, { headers: { Cookie: cookie, ...csrfOf(session) } });
 
             expect(response.status).toBe(200);
             expect(response.data.access).toBeTruthy();
@@ -687,12 +690,13 @@ describe('Login API', () => {
         });
 
         it('does not return the refresh token when the body carries an invalid token next to a valid cookie', async () => {
-            const cookie = refreshCookieFrom((await login()).headers['set-cookie']).split(';')[0];
+            const session = await login();
+            const cookie = refreshCookieFrom(session.headers['set-cookie']).split(';')[0];
 
             const response = await axios.post(
                 `${url}/module/auth/refresh/token`,
                 { refreshToken: 'not-a-token' },
-                { headers: { Cookie: cookie } },
+                { headers: { Cookie: cookie, ...csrfOf(session) } },
             );
 
             expect(response.status).toBe(200);
@@ -708,7 +712,7 @@ describe('Login API', () => {
             const response = await axios.post(
                 `${url}/module/auth/refresh/token`,
                 { refreshToken: second.data.refresh },
-                { headers: { Cookie: cookie } },
+                { headers: { Cookie: cookie, ...csrfOf(first) } },
             );
 
             expect(response.status).toBe(200);
@@ -726,6 +730,113 @@ describe('Login API', () => {
 
             expect(response.status).toBe(200);
             expect(response.data.refresh).toBeTruthy();
+        });
+
+        it('hands out a CSRF token of its own with every sign-in', async () => {
+            const first = await login();
+            const second = await login();
+
+            expect(first.data.csrf).toMatch(/^[\w-]{43}$/);
+            expect(second.data.csrf).toMatch(/^[\w-]{43}$/);
+            expect(first.data.csrf).not.toBe(second.data.csrf);
+        });
+
+        it('does not keep the CSRF token itself in the database', async () => {
+            const session = await login();
+            const sessionId = (decode(session.data.refresh) as UserJwtPayload).id;
+
+            const row = await Database.getInstance().query(
+                'select csrf_token_hash from tv_auth.user_tokens where id = $1',
+                [sessionId],
+            );
+
+            expect(row.rows[0].csrf_token_hash).toMatch(/^[0-9a-f]{64}$/);
+            expect(row.rows[0].csrf_token_hash).not.toBe(session.data.csrf);
+        });
+
+        it('refuses a refresh by cookie alone without the CSRF token and leaves the refresh token unused', async () => {
+            const session = await login();
+            const cookie = refreshCookieFrom(session.headers['set-cookie']).split(';')[0];
+
+            const refused = await axios.post(`${url}/module/auth/refresh/token`, {}, {
+                headers: { Cookie: cookie },
+                validateStatus: () => true,
+            });
+
+            expect(refused.status).toBe(403);
+            expect(refused.data).toEqual({ message: 'csrf_token_invalid' });
+            expect(refused.headers['set-cookie']).toBeUndefined();
+
+            const allowed = await axios.post(`${url}/module/auth/refresh/token`, {}, { headers: { Cookie: cookie, ...csrfOf(session) } });
+            expect(allowed.status).toBe(200);
+            expect(allowed.data.access).toBeTruthy();
+        });
+
+        it('refuses a refresh by cookie alone with a CSRF token that is not the one of this session', async () => {
+            const session = await login();
+            const other = await login();
+            const cookie = refreshCookieFrom(session.headers['set-cookie']).split(';')[0];
+            const wrongTokens = [
+                'XMLHttpRequest',
+                `${session.data.csrf}x`,
+                session.data.csrf.slice(0, -1),
+                other.data.csrf,
+            ];
+
+            for (const token of wrongTokens) {
+                const response = await axios.post(`${url}/module/auth/refresh/token`, {}, {
+                    headers: { Cookie: cookie, 'X-CSRF-Token': token },
+                    validateStatus: () => true,
+                });
+                expect(response.status, `token ${token}`).toBe(403);
+                expect(response.data).not.toHaveProperty('access');
+                expect(response.headers['set-cookie']).toBeUndefined();
+            }
+
+            const allowed = await axios.post(`${url}/module/auth/refresh/token`, {}, { headers: { Cookie: cookie, ...csrfOf(session) } });
+            expect(allowed.status).toBe(200);
+        });
+
+        it('keeps accepting the CSRF token of the session after its refresh token was rotated', async () => {
+            const session = await login();
+            const cookie = refreshCookieFrom(session.headers['set-cookie']).split(';')[0];
+
+            const first = await axios.post(`${url}/module/auth/refresh/token`, {}, { headers: { Cookie: cookie, ...csrfOf(session) } });
+            const rotatedCookie = refreshCookieFrom(first.headers['set-cookie']).split(';')[0];
+            const second = await axios.post(`${url}/module/auth/refresh/token`, {}, { headers: { Cookie: rotatedCookie, ...csrfOf(session) } });
+
+            expect(first.data).not.toHaveProperty('csrf');
+            expect(second.status).toBe(200);
+        });
+
+        it('asks for the CSRF token when the body token is not a token of the cookie session', async () => {
+            const first = await login();
+            const second = await login();
+            const cookie = refreshCookieFrom(first.headers['set-cookie']).split(';')[0];
+
+            for (const refreshToken of ['not-a-token', second.data.refresh]) {
+                const response = await axios.post(
+                    `${url}/module/auth/refresh/token`,
+                    { refreshToken },
+                    { headers: { Cookie: cookie }, validateStatus: () => true },
+                );
+                expect(response.status).toBe(403);
+            }
+        });
+
+        it('needs no CSRF token from a client that sends its own refresh token in the body', async () => {
+            const loginResponse = await login();
+            const cookie = refreshCookieFrom(loginResponse.headers['set-cookie']).split(';')[0];
+
+            const withCookie = await axios.post(
+                `${url}/module/auth/refresh/token`,
+                { refreshToken: loginResponse.data.refresh },
+                { headers: { Cookie: cookie } },
+            );
+            const bodyOnly = await axios.post(`${url}/module/auth/refresh/token`, { refreshToken: withCookie.data.refresh });
+
+            expect(withCookie.status).toBe(200);
+            expect(bodyOnly.status).toBe(200);
         });
 
         it('rejects a refresh call with neither a body token nor a cookie', async () => {

@@ -25,6 +25,7 @@ type LoginTokens = {
 type LoginResponse = {
   access: string
   refresh: string
+  csrf?: string
 }
 
 const { t } = useI18n()
@@ -37,6 +38,7 @@ async function loginByCode(code: string, email: string) {
   if (result?.data.access) {
     $ls.setToken(result.data.access)
     $ls.setRefreshToken(result.data.refresh)
+    $ls.setCsrfToken(result.data.csrf)
     await $ls.updateUserStoreByToken()
     await redirectToUser(router)
   }
