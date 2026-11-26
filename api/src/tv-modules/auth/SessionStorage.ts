@@ -1,9 +1,12 @@
 import { and, eq, gt, ne, sql } from 'drizzle-orm'
 import { UserTokensSchema } from 'taskview-db-schemas'
 import { Database } from '../../modules/db'
+import type { CreateSessionArgs, RefreshRotationResult, RotateRefreshTokenArgs } from '../../types/auth.types'
 import { callWithCatch, parseDeviceName, parsePositiveInt } from '../../utils/helpers'
 
 const DEFAULT_SESSION_MAX_AGE_DAYS = 90
+// Two tabs or a retried request may present the same refresh token almost at once
+const REFRESH_REPEAT_GRACE_SECONDS = 30
 
 export default class SessionStorage {
   private readonly db: Database
@@ -28,18 +31,57 @@ export default class SessionStorage {
     this.db = Database.getInstance()
   }
 
-  async createSession(userId: number, ip: string | undefined, userAgent: string | undefined): Promise<number | false> {
-    const deviceName = parseDeviceName(userAgent)
+  async createSession(args: CreateSessionArgs): Promise<number | false> {
+    const deviceName = parseDeviceName(args.userAgent)
     const result = await callWithCatch(() =>
       this.db.dbDrizzle.insert(UserTokensSchema).values({
-        userId,
-        userIp: ip || null,
+        userId: args.userId,
+        userIp: args.ip || null,
         deviceName,
-        userAgent: userAgent || null,
+        userAgent: args.userAgent || null,
         lastUsedAt: new Date(),
+        refreshJti: args.refreshJti,
       }).returning({ id: UserTokensSchema.id })
     )
     return result?.[0]?.id ?? false
+  }
+
+  /**
+   * Swaps the session's refresh token id for the next one, provided the presented id is
+   * the current one. The swap is one conditional UPDATE, so of two parallel requests with
+   * the same token exactly one rotates and the other is answered as a repeat.
+   * Throws when the database fails: the caller must not mistake that for a leaked token.
+   */
+  async rotateRefreshToken(args: RotateRefreshTokenArgs): Promise<RefreshRotationResult> {
+    const rotated = await this.db.dbDrizzle.update(UserTokensSchema)
+      .set({
+        prevRefreshJti: sql`${UserTokensSchema.refreshJti}`,
+        refreshJti: args.nextJti,
+        refreshRotatedAt: sql`now()`,
+        lastUsedAt: new Date(),
+      })
+      .where(and(
+        eq(UserTokensSchema.id, args.sessionId),
+        eq(UserTokensSchema.refreshJti, args.presentedJti),
+        this.notExpired(),
+      ))
+      .returning({ id: UserTokensSchema.id })
+    if (rotated.length > 0) return { status: 'rotated', refreshJti: args.nextJti }
+
+    const [session] = await this.db.dbDrizzle
+      .select({
+        refreshJti: UserTokensSchema.refreshJti,
+        prevRefreshJti: UserTokensSchema.prevRefreshJti,
+        rotatedJustNow: sql<boolean>`coalesce(${UserTokensSchema.refreshRotatedAt} > now() - make_interval(secs => ${REFRESH_REPEAT_GRACE_SECONDS}), false)`,
+      })
+      .from(UserTokensSchema)
+      .where(and(eq(UserTokensSchema.id, args.sessionId), this.notExpired()))
+    if (!session) return { status: 'inactive' }
+
+    if (session.refreshJti && session.prevRefreshJti === args.presentedJti && session.rotatedJustNow) {
+      return { status: 'repeated', refreshJti: session.refreshJti }
+    }
+    return { status: 'reused' }
   }
 
   async isSessionActive(sessionId: number): Promise<boolean> {

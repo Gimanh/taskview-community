@@ -1,7 +1,9 @@
 import axios from 'axios';
 import type http from 'http';
-import { decode } from 'jsonwebtoken';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { type Algorithm, decode, sign } from 'jsonwebtoken';
+import { hashSync } from 'bcryptjs';
+import { createHash } from 'crypto';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../../App';
 import { Database } from '../../../modules/db';
 import type { UserJwtPayload } from '../../../types/auth.types';
@@ -729,6 +731,228 @@ describe('Login API', () => {
         it('rejects a refresh call with neither a body token nor a cookie', async () => {
             const response = await axios.post(`${url}/module/auth/refresh/token`, {}, { validateStatus: () => true });
             expect(response.status).toBe(400);
+        });
+    });
+
+    describe('refresh token rotation', () => {
+        const signIn = async () =>
+            (await axios.post(`${url}/module/auth/login`, { login: 'test@mail.dest', password: 'user1!#Q' })).data;
+        const refreshWith = (refreshToken: string) =>
+            axios.post(`${url}/module/auth/refresh/token`, { refreshToken }, { validateStatus: () => true });
+        const sessionsStatus = async (access: string) =>
+            (await axios.get(`${url}/module/sessions`, {
+                headers: { Authorization: `Bearer ${access}` },
+                validateStatus: () => true,
+            })).status;
+        const claims = (token: string) => decode(token) as UserJwtPayload & { jti?: string };
+
+        it('gives every refresh token its own id and replaces it on each refresh', async () => {
+            const session = await signIn();
+            const first = await refreshWith(session.refresh);
+            const second = await refreshWith(first.data.refresh);
+
+            expect(first.status).toBe(200);
+            expect(second.status).toBe(200);
+            const ids = [session.refresh, first.data.refresh, second.data.refresh].map((token) => claims(token).jti);
+            expect(ids.every(Boolean)).toBe(true);
+            expect(new Set(ids).size).toBe(3);
+            expect(claims(second.data.refresh).id).toBe(claims(session.refresh).id);
+            expect(await sessionsStatus(second.data.access)).toBe(200);
+        });
+
+        it('answers the token replaced a moment ago with the current one instead of ending the session', async () => {
+            const session = await signIn();
+            const rotated = await refreshWith(session.refresh);
+
+            const repeated = await refreshWith(session.refresh);
+
+            expect(repeated.status).toBe(200);
+            expect(claims(repeated.data.refresh).jti).toBe(claims(rotated.data.refresh).jti);
+            expect((await refreshWith(rotated.data.refresh)).status).toBe(200);
+        });
+
+        it('lets two parallel refreshes with the same token end up on the same token', async () => {
+            const session = await signIn();
+
+            const [a, b] = await Promise.all([refreshWith(session.refresh), refreshWith(session.refresh)]);
+
+            expect(a.status).toBe(200);
+            expect(b.status).toBe(200);
+            expect(claims(a.data.refresh).jti).toBe(claims(b.data.refresh).jti);
+            expect(claims(a.data.refresh).jti).not.toBe(claims(session.refresh).jti);
+        });
+
+        it('ends the session for everyone when a token from two rotations back shows up', async () => {
+            const session = await signIn();
+            const first = await refreshWith(session.refresh);
+            const second = await refreshWith(first.data.refresh);
+            expect(await sessionsStatus(second.data.access)).toBe(200);
+
+            const stale = await refreshWith(session.refresh);
+
+            expect(stale.status).toBe(401);
+            expect(stale.data).not.toHaveProperty('access');
+            expect((stale.headers['set-cookie'] ?? []).join(';')).toMatch(/taskview-refresh=;/);
+            expect((await refreshWith(second.data.refresh)).status).toBe(401);
+            expect(await sessionsStatus(second.data.access)).toBe(401);
+        });
+
+        it('ends the session when the replaced token comes back after the short repeat window', async () => {
+            const session = await signIn();
+            const rotated = await refreshWith(session.refresh);
+            await Database.getInstance().query(
+                `update tv_auth.user_tokens set refresh_rotated_at = now() - interval '5 minutes' where id = $1`,
+                [claims(session.refresh).id],
+            );
+
+            const late = await refreshWith(session.refresh);
+
+            expect(late.status).toBe(401);
+            expect((await refreshWith(rotated.data.refresh)).status).toBe(401);
+            expect(await sessionsStatus(rotated.data.access)).toBe(401);
+        });
+
+        it('leaves other sessions of the same user alone when one of them is ended for reuse', async () => {
+            const leaked = await signIn();
+            const other = await signIn();
+            const first = await refreshWith(leaked.refresh);
+            await refreshWith(first.data.refresh);
+
+            expect((await refreshWith(leaked.refresh)).status).toBe(401);
+
+            expect(await sessionsStatus(other.access)).toBe(200);
+            expect((await refreshWith(other.refresh)).status).toBe(200);
+        });
+
+        it('does not accept a refresh token without an id', async () => {
+            const session = await signIn();
+            const { id, userData } = claims(session.refresh);
+            const withoutId = sign({ id, userData, typ: 'refresh' }, process.env.JWT_SIGN as string, {
+                algorithm: process.env.JWT_ALG as Algorithm,
+                expiresIn: '1m',
+            });
+
+            const response = await refreshWith(withoutId);
+
+            expect(response.status).toBe(400);
+            expect(response.data).not.toHaveProperty('access');
+            expect(await sessionsStatus(session.access)).toBe(200);
+        });
+
+        it('does not rotate on a token whose session is gone', async () => {
+            const session = await signIn();
+            await Database.getInstance().query('delete from tv_auth.user_tokens where id = $1', [claims(session.refresh).id]);
+
+            expect((await refreshWith(session.refresh)).status).toBe(401);
+        });
+    });
+
+    describe('sign-in attempt limit', () => {
+        const PASSWORD = 'right-Pa55word';
+        // Rows counting this file's own address; LoginAttempts.spec.ts runs in parallel with made-up addresses
+        const OWN_ADDRESS_ROWS = `key like 'ip:%' and key not like 'ip:test-address-%'`;
+        const tryLogin = (login: string, password: string) =>
+            axios.post(`${url}/module/auth/login`, { login, password }, { validateStatus: () => true });
+        const ownAccount = async () => {
+            const login = `limit${Date.now()}${Math.floor(Math.random() * 1e6)}`;
+            const email = `${login}@mail.dest`;
+            await new AuthModel().registerUserInDb({
+                login,
+                email,
+                password: hashSync(PASSWORD, 4),
+                confirmEmailCode: '',
+                block: 0,
+            });
+            registeredEmails.push(email);
+            return email;
+        };
+
+        beforeEach(async () => {
+            vi.stubEnv('LOGIN_ATTEMPT_LIMIT', '3');
+            // Every request of this file comes from the same address: start each test with a clean count for it
+            await Database.getInstance().query(`delete from tv_auth.login_attempts where ${OWN_ADDRESS_ROWS}`);
+        });
+
+        afterEach(() => {
+            vi.stubEnv('LOGIN_ATTEMPT_LIMIT', '');
+        });
+
+        it('pauses sign-in after the allowed number of wrong passwords, even for the right one', async () => {
+            const email = await ownAccount();
+
+            for (let i = 0; i < 3; i++) {
+                expect((await tryLogin(email, 'wrong')).status).toBe(400);
+            }
+            const paused = await tryLogin(email, PASSWORD);
+
+            expect(paused.status).toBe(429);
+            expect(paused.data).toEqual({ message: 'too_many_attempts' });
+            expect(Number(paused.headers['retry-after'])).toBeGreaterThan(0);
+            expect(Number(paused.headers['retry-after'])).toBeLessThanOrEqual(15 * 60);
+            expect(paused.data).not.toHaveProperty('access');
+            expect(paused.headers['set-cookie']).toBeUndefined();
+        });
+
+        it('counts an unknown login the same way as a wrong password', async () => {
+            const unknown = `nobody${Date.now()}@mail.dest`;
+
+            for (let i = 0; i < 3; i++) {
+                expect((await tryLogin(unknown, 'wrong')).status).toBe(400);
+            }
+
+            expect((await tryLogin(unknown, 'wrong')).status).toBe(429);
+        });
+
+        it('does not pause other accounts when one of them is paused', async () => {
+            const paused = await ownAccount();
+            const other = await ownAccount();
+            for (let i = 0; i < 3; i++) await tryLogin(paused, 'wrong');
+            expect((await tryLogin(paused, PASSWORD)).status).toBe(429);
+
+            expect((await tryLogin(other, PASSWORD)).status).toBe(200);
+        });
+
+        it('starts counting anew after a successful sign-in', async () => {
+            const email = await ownAccount();
+            await tryLogin(email, 'wrong');
+            await tryLogin(email, 'wrong');
+            expect((await tryLogin(email, PASSWORD)).status).toBe(200);
+
+            await tryLogin(email, 'wrong');
+            await tryLogin(email, 'wrong');
+
+            expect((await tryLogin(email, PASSWORD)).status).toBe(200);
+        });
+
+        it('lets the account in again once the window has passed', async () => {
+            const email = await ownAccount();
+            for (let i = 0; i < 3; i++) await tryLogin(email, 'wrong');
+            expect((await tryLogin(email, PASSWORD)).status).toBe(429);
+
+            // The paused row is keyed by a hash of the account and the address the server saw
+            const db = Database.getInstance();
+            const addresses = await db.query<{ key: string }>(`select key from tv_auth.login_attempts where ${OWN_ADDRESS_ROWS}`);
+            const pausedKeys = addresses.rows.map(
+                (row) => `pair:${createHash('sha256').update(`${email}|${row.key.slice('ip:'.length)}`).digest('hex')}`,
+            );
+            const expired = await db.query(
+                `update tv_auth.login_attempts set window_started_at = now() - interval '16 minutes' where key = any($1::text[])`,
+                [pausedKeys],
+            );
+            expect(expired.rowCount).toBe(1);
+
+            expect((await tryLogin(email, PASSWORD)).status).toBe(200);
+        });
+
+        it('does not limit anything when the limit is set to 0', async () => {
+            vi.stubEnv('LOGIN_ATTEMPT_LIMIT', '0');
+            const email = await ownAccount();
+
+            for (let i = 0; i < 6; i++) {
+                expect((await tryLogin(email, 'wrong')).status).toBe(400);
+            }
+
+            expect((await tryLogin(email, PASSWORD)).status).toBe(200);
         });
     });
 });

@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { Database } from '../../../modules/db';
 import type { RegisterUserInDb } from '../../../types/auth.types';
@@ -26,7 +27,12 @@ describe('SessionStorage Integration Tests', () => {
         };
         userId = (await authModel.registerUserInDb(userData)) as number;
         createdUserIds.push(userId);
-        sessionId = (await sessionStorage.createSession(userId, '127.0.0.1', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120')) as number;
+        sessionId = (await sessionStorage.createSession({
+            userId,
+            ip: '127.0.0.1',
+            userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120',
+            refreshJti: randomUUID(),
+        })) as number;
     });
 
     afterAll(async () => {

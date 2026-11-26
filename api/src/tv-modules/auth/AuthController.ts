@@ -1,5 +1,5 @@
 import { compare, hashSync } from 'bcryptjs';
-import { randomInt } from 'crypto';
+import { randomInt, randomUUID } from 'crypto';
 import type { Request, Response } from 'express';
 import jwt, { type Algorithm, decode } from 'jsonwebtoken';
 import { z } from 'zod';
@@ -18,7 +18,11 @@ import {
     type UserDbRecord,
     type UserJwtPayload,
     UserJwtPayloadSchema,
+    type AuthTokenPayload,
     AuthTokenPayloadSchema,
+    type IssueTokensArgs,
+    type OpenSessionArgs,
+    type RefreshTokenPayload,
     type ValidateTokenArgs,
 } from '../../types/auth.types';
 import { safeEqual } from '../../utils/crypto';
@@ -66,8 +70,8 @@ export default class AuthController {
         });
     }
 
-    getTokens(userPayload: UserJwtPayload) {
-        const cleanPayload = UserJwtPayloadSchema.safeParse(userPayload);
+    getTokens(args: IssueTokensArgs) {
+        const cleanPayload = UserJwtPayloadSchema.safeParse(args.payload);
         if (!cleanPayload.success) {
             $logger.error('Can not parse JWT payload');
         }
@@ -83,6 +87,7 @@ export default class AuthController {
         const refresh = jwt.sign({ ...cleanPayload.data!, typ: 'refresh' }, process.env.JWT_SIGN as string, {
             algorithm: this.jwtAlg,
             expiresIn: this.jwtRefreshExp,
+            jwtid: args.refreshJti,
         });
 
         return {
@@ -93,7 +98,17 @@ export default class AuthController {
         };
     }
 
-    static validateTokens(args: ValidateTokenArgs): Promise<UserJwtPayload | undefined> {
+    static async validateTokens(args: ValidateTokenArgs): Promise<UserJwtPayload | undefined> {
+        const payload = await AuthController.verifySessionToken(args);
+        return payload ? { id: payload.id, userData: payload.userData } : undefined;
+    }
+
+    static async validateRefreshToken(token: string): Promise<RefreshTokenPayload | undefined> {
+        const payload = await AuthController.verifySessionToken({ token, type: 'refresh' });
+        return payload?.jti ? { id: payload.id, userData: payload.userData, jti: payload.jti } : undefined;
+    }
+
+    private static verifySessionToken(args: ValidateTokenArgs): Promise<AuthTokenPayload | undefined> {
         return new Promise((resolve) => {
             jwt.verify(
                 args.token,
@@ -114,7 +129,7 @@ export default class AuthController {
                         resolve(undefined);
                         return;
                     }
-                    resolve({ id: parsed.data.id, userData: parsed.data.userData });
+                    resolve(parsed.data);
                 }
             );
         });
@@ -360,6 +375,25 @@ export default class AuthController {
         });
     }
 
+    private async openSession(args: OpenSessionArgs) {
+        const refreshJti = randomUUID();
+        const sessionId = await args.req.appUser.authManager.sessionStorage.createSession({
+            userId: args.userData.id,
+            ip: args.req.ip,
+            userAgent: args.req.headers['user-agent'],
+            refreshJti,
+        });
+        if (!sessionId) {
+            return args.res.status(500).end();
+        }
+
+        const tokens = this.getTokens({ payload: { id: sessionId, userData: args.userData }, refreshJti });
+
+        await this.setRefreshToken(args.res, tokens.refresh);
+
+        return args.res.json(tokens);
+    }
+
     loginByCode = async (req: Request, res: Response) => {
         const schema = z.object({
             email: z.string().trim().email().toLowerCase(),
@@ -421,23 +455,7 @@ export default class AuthController {
             }
         }
 
-        const sessionId = await req.appUser.authManager.sessionStorage.createSession(
-            userData.id,
-            req.ip,
-            req.headers['user-agent']
-        );
-        if (!sessionId) {
-            return res.status(500).end();
-        }
-
-        const tokens = this.getTokens({
-            id: sessionId,
-            userData,
-        } as const);
-
-        await this.setRefreshToken(res, tokens.refresh);
-
-        return res.json(tokens);
+        return this.openSession({ req, res, userData });
     };
 
     login = async (req: Request, res: Response) => {
@@ -449,9 +467,19 @@ export default class AuthController {
 
         login = login.toLowerCase();
 
+        const loginAttempts = req.appUser.authManager.loginAttempts;
+        const attempt = { login, ip: req.ip };
+        const waitSeconds = await loginAttempts.secondsUntilAllowed(attempt);
+        if (waitSeconds > 0) {
+            res.set('Retry-After', String(waitSeconds));
+            return res.status(429).send({ message: 'too_many_attempts' });
+        }
+
         const userData = await req.appUser.authManager.repository.getUserByLogin(login, isEmail(login));
 
+        // An unknown login counts like a wrong password, so the limit does not tell them apart
         if (!userData) {
+            await loginAttempts.registerFailure(attempt);
             return res.status(400).end();
         }
 
@@ -461,25 +489,11 @@ export default class AuthController {
 
         const valid = await this.comparePasswords(password, userData.password);
         if (valid) {
-            const sessionId = await req.appUser.authManager.sessionStorage.createSession(
-                userData.id,
-                req.ip,
-                req.headers['user-agent']
-            );
-            if (!sessionId) {
-                return res.status(500).end();
-            }
-
-            const tokens = this.getTokens({
-                id: sessionId,
-                userData,
-            } as const);
-
-            await this.setRefreshToken(res, tokens.refresh);
-
-            return res.json(tokens);
+            await loginAttempts.clearAfterSuccess(attempt);
+            return this.openSession({ req, res, userData });
         }
 
+        await loginAttempts.registerFailure(attempt);
         return res.status(400).end();
     };
 
@@ -720,8 +734,8 @@ export default class AuthController {
             return res.status(400).send({ message: 'Invalid refresh token' });
         }
 
-        const cookiePayload = cookieToken ? await AuthController.validateTokens({ token: cookieToken, type: 'refresh' }) : undefined;
-        const bodyPayload = bodyToken ? await AuthController.validateTokens({ token: bodyToken, type: 'refresh' }) : undefined;
+        const cookiePayload = cookieToken ? await AuthController.validateRefreshToken(cookieToken) : undefined;
+        const bodyPayload = bodyToken ? await AuthController.validateRefreshToken(bodyToken) : undefined;
         const payload = cookiePayload ?? bodyPayload;
         $logger.info(
             `Refresh token source: ${cookiePayload ? 'cookie' : bodyPayload ? 'body' : 'none valid'}` +
@@ -733,15 +747,27 @@ export default class AuthController {
             return res.status(400).end();
         }
 
-        const isActive = await req.appUser.authManager.sessionStorage.isSessionActive(payload.id);
-        if (!isActive) {
+        const sessionStorage = req.appUser.authManager.sessionStorage;
+        const rotation = await sessionStorage.rotateRefreshToken({
+            sessionId: payload.id,
+            presentedJti: payload.jti,
+            nextJti: randomUUID(),
+        });
+
+        if (rotation.status === 'reused') {
+            $logger.warn(`Refresh token reuse: session ${payload.id} of user ${payload.userData.id} ended`);
+            await sessionStorage.deleteSession(payload.id, payload.userData.id);
+        }
+
+        if (rotation.status === 'reused' || rotation.status === 'inactive') {
             this.clearRefreshToken(res);
             return res.status(401).end();
         }
 
-        const newTokens = this.getTokens(payload);
-
-        await req.appUser.authManager.sessionStorage.updateLastUsed(payload.id);
+        const newTokens = this.getTokens({
+            payload: { id: payload.id, userData: payload.userData },
+            refreshJti: rotation.refreshJti,
+        });
 
         await this.setRefreshToken(res, newTokens.refresh);
 

@@ -1,3 +1,4 @@
+import type { Request, Response } from 'express';
 import { z } from 'zod';
 import type { GoalPermissionsFetcher } from '../core/GoalPermissionsFetcher';
 
@@ -28,7 +29,10 @@ export type AuthTokenType = 'access' | 'refresh';
 // A signed session token as it comes in: the session payload plus the token type
 export const AuthTokenPayloadSchema = UserJwtPayloadSchema.extend({
     typ: z.enum(['access', 'refresh']),
+    jti: z.string().optional(),
 });
+
+export type AuthTokenPayload = z.infer<typeof AuthTokenPayloadSchema>;
 
 export type ValidateTokenArgs = {
     token: string;
@@ -44,6 +48,45 @@ export const RegisterUserInDbSchema = z.object({
 });
 
 export type UserJwtPayload = z.infer<typeof UserJwtPayloadSchema>; //{ id: number; userData: Pick<UserDbRecord, 'id' | 'login' | 'email'> };
+
+// A verified refresh token: the session payload plus the id the session expects to see next
+export type RefreshTokenPayload = UserJwtPayload & { jti: string };
+
+export type IssueTokensArgs = {
+    payload: UserJwtPayload;
+    refreshJti: string;
+};
+
+export type OpenSessionArgs = {
+    req: Request;
+    res: Response;
+    userData: UserDbRecord;
+};
+
+export type CreateSessionArgs = {
+    userId: number;
+    ip: string | undefined;
+    userAgent: string | undefined;
+    refreshJti: string;
+};
+
+export type RotateRefreshTokenArgs = {
+    sessionId: number;
+    presentedJti: string;
+    nextJti: string;
+};
+
+/**
+ * rotated  - the current token was presented and is replaced by nextJti
+ * repeated - the token replaced a moment ago was presented again (parallel tabs, a retry): refreshJti is the current one
+ * reused   - an older token of the session was presented: it has leaked
+ * inactive - the session does not exist or has expired
+ */
+export type RefreshRotationResult =
+    | { status: 'rotated'; refreshJti: string }
+    | { status: 'repeated'; refreshJti: string }
+    | { status: 'reused' }
+    | { status: 'inactive' };
 
 export type RegisterUserInDb = z.infer<typeof RegisterUserInDbSchema>;
 
@@ -292,3 +335,13 @@ export type FetchPermissionsForGoalsParams = {
 };
 
 export type GoalPermissionItemsWithGoalFromDb = (GoalPermissionItemsFromDb[number] & { goalId: number })[];
+
+export type LoginAttemptArgs = {
+    login: string;
+    ip: string | undefined;
+};
+
+export type LoginAttemptSubject = {
+    key: string;
+    limit: number;
+};
