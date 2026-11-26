@@ -617,6 +617,30 @@ describe('Login API', () => {
             expect(post.headers['access-control-allow-origin']).toBeUndefined();
         });
 
+        it('does not serve tokens to a "null" origin request that carries a valid refresh cookie (issue #154)', async () => {
+            const cookie = refreshCookieFrom((await login()).headers['set-cookie']).split(';')[0];
+
+            const response = await axios.post(`${url}/module/auth/refresh/token`, {}, {
+                headers: { Origin: 'null', Cookie: cookie },
+                validateStatus: () => true,
+            });
+
+            expect(response.status).not.toBe(200);
+            expect(response.headers['access-control-allow-origin']).toBeUndefined();
+            expect(response.headers['access-control-allow-credentials']).toBeUndefined();
+            expect(response.headers['set-cookie']).toBeUndefined();
+            expect(response.data).not.toHaveProperty('access');
+            expect(response.data).not.toHaveProperty('refresh');
+        });
+
+        it('does not emit Access-Control-Allow-Origin when the Origin header is absent', async () => {
+            const cookie = refreshCookieFrom((await login()).headers['set-cookie']).split(';')[0];
+
+            const response = await axios.post(`${url}/module/auth/refresh/token`, {}, { headers: { Cookie: cookie } });
+
+            expect(response.headers['access-control-allow-origin']).toBeUndefined();
+        });
+
         it('still grants CORS access to an allowed origin', async () => {
             const preflight = await axios.options(`${url}/module/auth/refresh/token`, {
                 headers: { Origin: 'https://app.taskview.tech', 'Access-Control-Request-Method': 'POST' },
