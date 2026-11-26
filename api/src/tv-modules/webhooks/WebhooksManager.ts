@@ -1,9 +1,10 @@
 import { randomBytes, createHmac } from 'crypto';
 import { encrypt, decrypt } from '../../utils/crypto';
 import { $logger } from '../../modules/logget';
+import { OutboundUrlError } from '../../utils/OutboundUrlError';
+import { outboundFetch } from '../../utils/outbound-fetch';
 import { WebhooksRepository } from './WebhooksRepository';
-import { WebhookUrlError } from './WebhookUrlError';
-import { resolveWebhookUrl } from './webhooks.utils';
+import { isPrivateWebhookUrlsAllowed, resolveWebhookUrl } from './webhooks.utils';
 import type { WebhookArgCreate, WebhookArgUpdate } from './types';
 import type { WebhooksSchemaTypeForSelect } from 'taskview-db-schemas';
 
@@ -80,31 +81,31 @@ export class WebhooksManager {
     }
 
     async deliver(url: string, secret: string, payload: object): Promise<{ success: boolean; responseCode?: number }> {
-        try {
-            await resolveWebhookUrl(url);
-        } catch (err) {
-            const reason = err instanceof WebhookUrlError ? err.message : String(err);
-            $logger.warn(`[Webhooks] Delivery to ${url} blocked: ${reason}`);
-            return { success: false };
-        }
-
         const body = JSON.stringify(payload);
         const signature = createHmac('sha256', secret).update(body).digest('hex');
 
         try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Webhook-Signature': `sha256=${signature}`,
+            const response = await outboundFetch({
+                url,
+                allowPrivate: isPrivateWebhookUrlsAllowed(),
+                init: {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Webhook-Signature': `sha256=${signature}`,
+                    },
+                    body,
+                    redirect: 'manual',
+                    signal: AbortSignal.timeout(10000),
                 },
-                body,
-                redirect: 'manual',
-                signal: AbortSignal.timeout(10000),
             });
 
             return { success: response.ok, responseCode: response.status };
         } catch (err) {
+            if (err instanceof OutboundUrlError) {
+                $logger.warn(`[Webhooks] Delivery to ${url} blocked: Webhook URL ${err.message}`);
+                return { success: false };
+            }
             $logger.error(err, `[Webhooks] Delivery failed to ${url}`);
             return { success: false };
         }

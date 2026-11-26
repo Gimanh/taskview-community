@@ -81,6 +81,7 @@ const api = {
           originalRequest._retry = true
           isRefreshing = true
           const refreshToken = await $ls.getRefreshToken()
+          const csrfToken = await $ls.getCsrfToken()
           console.log('We get refresh token')
           if (refreshToken) {
             return new Promise((resolve, reject) => {
@@ -91,6 +92,7 @@ const api = {
                 }>(
                   '/module/auth/refresh/token',
                   qs.stringify({ refreshToken }),
+                  { headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {} },
                 )
                 .then((data) => {
                   console.log('We got refresh data tokens', data)

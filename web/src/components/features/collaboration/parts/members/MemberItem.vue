@@ -46,6 +46,7 @@
         variant="ghost"
         size="xs"
         data-testid="collab-member-menu-trigger"
+        data-tour="collab-member-menu"
         @click.stop="$emit('menu', $event)"
       />
     </div>

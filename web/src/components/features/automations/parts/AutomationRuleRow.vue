@@ -50,7 +50,7 @@
         :disabled="!canManage || toggling"
         :aria-label="t('automations.enabled')"
         data-testid="automation-rule-toggle"
-        @update:model-value="(value) => emit('toggle', value)"
+        @update:model-value="(value: boolean) => emit('toggle', value)"
       />
       <UDropdownMenu
         v-if="canManage"

@@ -6,6 +6,14 @@ import { WebhooksManager } from '../WebhooksManager';
 import { WebhooksRepository } from '../WebhooksRepository';
 import { parseWebhookUrl, validateWebhooksEnvOnStartup } from '../webhooks.utils';
 
+const undiciFetch = vi.hoisted(() => ({ mock: vi.fn(), actual: null as typeof import('undici').fetch | null }));
+
+vi.mock('undici', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('undici')>();
+    undiciFetch.actual = actual.fetch;
+    return { ...actual, fetch: undiciFetch.mock };
+});
+
 vi.mock('../../../modules/db', () => ({
     Database: {
         getInstance: vi.fn(() => ({ dbDrizzle: {} })),
@@ -40,12 +48,13 @@ describe('Webhooks SSRF protection (GHSA-pm9j-4pmg-mp5x)', () => {
 
     beforeEach(() => {
         receivedRequests = [];
+        undiciFetch.mock.mockReset();
+        undiciFetch.mock.mockImplementation(undiciFetch.actual!);
     });
 
     afterEach(() => {
         delete process.env.WEBHOOKS_ALLOW_PRIVATE_URLS;
         vi.restoreAllMocks();
-        vi.unstubAllGlobals();
     });
 
     describe('deliver()', () => {
@@ -68,46 +77,53 @@ describe('Webhooks SSRF protection (GHSA-pm9j-4pmg-mp5x)', () => {
         });
 
         it('does not POST to the cloud metadata endpoint', async () => {
-            const fetchSpy = vi.fn().mockResolvedValue(new Response('{"AccessKeyId":"AKIA..."}', { status: 200 }));
-            vi.stubGlobal('fetch', fetchSpy);
             const manager = new WebhooksManager();
 
             const result = await manager.deliver('http://169.254.169.254/latest/meta-data/iam/security-credentials/', secret, payload);
 
-            expect(fetchSpy).not.toHaveBeenCalled();
+            expect(undiciFetch.mock).not.toHaveBeenCalled();
             expect(result.success).toBe(false);
         });
 
         it('does not POST to a private network address', async () => {
-            const fetchSpy = vi.fn().mockResolvedValue(new Response('ok', { status: 200 }));
-            vi.stubGlobal('fetch', fetchSpy);
             const manager = new WebhooksManager();
 
             const result = await manager.deliver('http://10.0.0.5:8080/', secret, payload);
 
-            expect(fetchSpy).not.toHaveBeenCalled();
+            expect(undiciFetch.mock).not.toHaveBeenCalled();
             expect(result.success).toBe(false);
         });
 
         it('does not follow a redirect from a public host to a loopback address', async () => {
             const publicOrigin = 'http://webhook.example.test';
             const internalUrl = `http://127.0.0.1:${port}/internal-admin`;
-            const realFetch = globalThis.fetch;
             // Simulates a public host answering 302 -> loopback: with redirect: 'manual' the
             // caller sees the 302, with the default 'follow' the runtime lands on the loopback.
-            vi.stubGlobal('fetch', async (input: string | URL | Request, init?: RequestInit) => {
-                const url = input instanceof Request ? input.url : String(input);
-                if (!url.startsWith(publicOrigin)) return realFetch(input, init);
+            undiciFetch.mock.mockImplementationOnce(async (_input: unknown, init?: RequestInit) => {
                 if (init?.redirect === 'manual') {
                     return new Response(null, { status: 302, headers: { Location: internalUrl } });
                 }
-                return realFetch(internalUrl, init);
+                return fetch(internalUrl, { method: 'POST' });
             });
             const manager = new WebhooksManager();
 
             await manager.deliver(`${publicOrigin}/hook`, secret, payload);
 
+            expect(undiciFetch.mock).toHaveBeenCalledTimes(1);
             expect(receivedRequests).toEqual([]);
+        });
+
+        // cve-14: the URL check and the connection used to resolve the name separately, so a DNS answer that
+        // changed in between (rebinding) sent the POST to an address the check never saw.
+        it('does not POST when the name resolves to a loopback address at connection time', async () => {
+            const lookupSpy = vi.spyOn(dns, 'lookup').mockResolvedValue([{ address: '127.0.0.1', family: 4 }] as never);
+            const manager = new WebhooksManager();
+
+            const result = await manager.deliver(`http://rebind.example.test:${port}/internal-admin`, secret, payload);
+
+            expect(lookupSpy).toHaveBeenCalledTimes(1);
+            expect(receivedRequests).toEqual([]);
+            expect(result).toEqual({ success: false });
         });
     });
 
@@ -159,29 +175,25 @@ describe('Webhooks SSRF protection (GHSA-pm9j-4pmg-mp5x)', () => {
 
     describe('public destinations still work', () => {
         it('delivers to a hostname that resolves to a public address', async () => {
-            vi.spyOn(dns, 'lookup').mockResolvedValue([{ address: '93.184.216.34', family: 4 }] as any);
-            const fetchSpy = vi.fn().mockResolvedValue(new Response('ok', { status: 200 }));
-            vi.stubGlobal('fetch', fetchSpy);
+            undiciFetch.mock.mockResolvedValueOnce(new Response('ok', { status: 200 }));
             const manager = new WebhooksManager();
 
             const result = await manager.deliver('https://webhook.example.test/hook', secret, payload);
 
-            expect(fetchSpy).toHaveBeenCalledTimes(1);
-            expect(fetchSpy.mock.calls[0][0]).toBe('https://webhook.example.test/hook');
-            expect(fetchSpy.mock.calls[0][1]).toMatchObject({ method: 'POST', redirect: 'manual' });
+            expect(undiciFetch.mock).toHaveBeenCalledTimes(1);
+            expect(String(undiciFetch.mock.mock.calls[0][0])).toBe('https://webhook.example.test/hook');
+            expect(undiciFetch.mock.mock.calls[0][1]).toMatchObject({ method: 'POST', redirect: 'manual' });
+            expect(undiciFetch.mock.mock.calls[0][1].dispatcher).toBeDefined();
             expect(result).toEqual({ success: true, responseCode: 200 });
         });
 
         it('fails delivery when the hostname does not resolve', async () => {
             vi.spyOn(dns, 'lookup').mockRejectedValue(new Error('ENOTFOUND'));
-            const fetchSpy = vi.fn();
-            vi.stubGlobal('fetch', fetchSpy);
             const manager = new WebhooksManager();
 
             const result = await manager.deliver('https://nope.example.test/hook', secret, payload);
 
-            expect(fetchSpy).not.toHaveBeenCalled();
-            expect(result.success).toBe(false);
+            expect(result).toEqual({ success: false });
         });
 
         it('accepts a public URL on create', async () => {

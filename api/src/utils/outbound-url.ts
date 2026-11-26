@@ -1,7 +1,7 @@
-import { promises as dns } from 'dns';
-import { BlockList, isIP } from 'net';
+import { promises as dns, type LookupAddress, type LookupOptions } from 'dns';
+import { BlockList, isIP, type LookupFunction } from 'net';
 import { OutboundUrlError } from './OutboundUrlError';
-import type { OutboundUrlArgs } from './outbound-url.types';
+import type { OutboundUrlArgs, PublicLookupArgs } from './outbound-url.types';
 
 // Guards every URL the server fetches on a user's behalf (webhooks, SSO metadata, SSO domain proof) against SSRF:
 // loopback, private, link-local, cloud-metadata and other non-public ranges are refused, both as literal addresses
@@ -91,9 +91,15 @@ export async function resolveOutboundUrl(args: OutboundUrlArgs): Promise<URL> {
     const host = stripBrackets(parsed.hostname);
     if (isIP(host) !== 0) return parsed;
 
-    let addresses: Array<{ address: string }>;
+    await lookupPublicAddresses({ hostname: host });
+
+    return parsed;
+}
+
+async function lookupPublicAddresses(args: PublicLookupArgs): Promise<LookupAddress[]> {
+    let addresses: LookupAddress[];
     try {
-        addresses = await dns.lookup(host, { all: true });
+        addresses = await dns.lookup(args.hostname, { family: args.family, hints: args.hints, all: true });
     } catch {
         throw new OutboundUrlError('unresolvable', 'host could not be resolved');
     }
@@ -106,5 +112,24 @@ export async function resolveOutboundUrl(args: OutboundUrlArgs): Promise<URL> {
         throw new OutboundUrlError('private', 'must point to a public address');
     }
 
-    return parsed;
+    return addresses;
+}
+
+// The socket-level half of the guard. resolveOutboundUrl alone is a check-then-use gap: the HTTP client resolves the
+// name again, so a DNS answer that flips between the two lookups (rebinding) lands on a private address. Given to the
+// client as its `lookup`, this makes the addresses that were checked the only ones the socket may dial.
+export const guardedLookup: LookupFunction = (hostname, options, callback) => {
+    lookupPublicAddresses({ hostname, family: familyOf(options.family), hints: options.hints }).then(
+        (addresses) => {
+            if (options.all) callback(null, addresses);
+            else callback(null, addresses[0].address, addresses[0].family);
+        },
+        (err: NodeJS.ErrnoException) => callback(err, '', 0),
+    );
+};
+
+function familyOf(family: LookupOptions['family']): number | undefined {
+    if (family === 'IPv4') return 4;
+    if (family === 'IPv6') return 6;
+    return family;
 }

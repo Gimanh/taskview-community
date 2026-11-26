@@ -2224,4 +2224,208 @@ export default {
       },
     },
   },
+  onboarding: {
+    offer: {
+      title: 'Willkommen bei TaskView',
+      description: 'Eine kurze Tour führt vom leeren Arbeitsbereich zum fertigen Projekt.',
+      points: {
+        project: 'Ein Projekt und die erste Aufgabe anlegen',
+        team: 'Jemanden einladen und festlegen, was er darf',
+        views: 'Dieselben Aufgaben als Board, Kalender und Graph sehen',
+      },
+      hint: 'Ein paar Minuten. Sie machen alles selbst, jeder Schritt lässt sich überspringen.',
+      start: 'Tour starten',
+      decline: 'Danke, nicht nötig',
+    },
+    exit: {
+      title: 'Tour schließen?',
+      description: 'Beim nächsten Start von TaskView erneut anbieten? Jede Tour bleibt unter Einstellungen → Touren verfügbar.',
+      back: 'Zurück zur Tour',
+      later: 'Später anbieten',
+      never: 'Nicht mehr anbieten',
+    },
+    controls: {
+      next: 'Weiter',
+      back: 'Zurück',
+      skip: 'Schritt überspringen',
+      finish: 'Fertig',
+      exit: 'Tour schließen',
+      waiting: 'Warte auf Ihre Aktion…',
+      done: 'Erledigt!',
+      progress: 'Fortschritt der Tour',
+    },
+    topics: {
+      title: 'Touren',
+      description: 'Wählen Sie ein Thema – die Tour zeigt es direkt in der App. Jede Tour lässt sich beliebig oft wiederholen.',
+    },
+    topic: {
+      firstRun: {
+        title: 'Schnellstart',
+        description: 'Vom neuen Projekt bis zu zugewiesenen Aufgaben und Ansichten',
+      },
+      projects: {
+        title: 'Projekte',
+        description: 'Ein Projekt anlegen und die erste Aufgabe hinzufügen',
+      },
+      tasks: {
+        title: 'Aufgaben',
+        description: 'Alles, was eine Aufgabe enthält, Block für Block',
+      },
+      collaboration: {
+        title: 'Team und Rollen',
+        description: 'Personen einladen und festlegen, was jede Rolle darf',
+      },
+      views: {
+        title: 'Kanban, Kalender, Graph',
+        description: 'Drei weitere Blicke auf dieselben Aufgaben',
+      },
+      timeReports: {
+        title: 'Zeitberichte',
+        description: 'Zeit in einer Aufgabe erfassen und im Bericht sehen',
+      },
+    },
+    steps: {
+      projectCreate: {
+        title: 'Projekt anlegen',
+        body: 'Ein Projekt hält Aufgaben, Personen und Einstellungen einer Arbeit zusammen. Geben Sie hier einen Namen ein und drücken Sie Enter.',
+      },
+      taskCreate: {
+        title: 'Aufgabe hinzufügen',
+        body: 'Schreiben Sie, was zu tun ist, und drücken Sie Enter. Die Details können warten.',
+      },
+      collabOpen: {
+        title: '„Zusammenarbeit“ öffnen',
+        body: 'Hier werden die Mitglieder des Projekts verwaltet. Öffnen Sie den Bereich oder drücken Sie „Weiter“ – er öffnet sich von selbst.',
+      },
+      collabInvite: {
+        title: 'Jemanden einladen',
+        body: 'E-Mail eingeben und Enter drücken. Die Person erhält Zugriff auf das Projekt, verwenden Sie also die Adresse eines echten Kollegen. Noch niemand zum Einladen? Überspringen Sie den Schritt.',
+      },
+      collabMemberMenu: {
+        title: 'Menü des Mitglieds öffnen',
+        body: 'Drücken Sie ⋯ neben der Person und wählen Sie „Rollen zuweisen“.',
+      },
+      collabMemberRoles: {
+        title: 'Rolle vergeben',
+        body: 'Markieren Sie die Rollen für diese Person und drücken Sie „Speichern“. Eine Rolle bestimmt, was sie im Projekt sieht und tun darf.',
+      },
+      collabRolesTab: {
+        title: 'Rollen und Berechtigungen',
+        body: 'Öffnen Sie den Tab „Rollen“, um die Rollen dieses Projekts zu sehen.',
+      },
+      collabRolePermissions: {
+        title: 'Festlegen, was eine Rolle darf',
+        body: 'Drücken Sie ⋯ neben einer Rolle, wählen Sie „Berechtigungen zuweisen“ und markieren Sie, was der Rolle erlaubt ist. Eigene Rollen fügen Sie im Feld darüber hinzu.',
+      },
+      taskOpen: {
+        title: 'Aufgabe öffnen',
+        body: 'Klicken Sie auf eine Aufgabe, um ihre Details zu öffnen.',
+      },
+      taskTitle: {
+        title: 'Name und Erledigung',
+        body: 'Klicken Sie auf den Namen, um ihn zu ändern. Das Kästchen markiert die Aufgabe als erledigt.',
+      },
+      taskFieldSubtasks: {
+        body: 'Teilen Sie die Aufgabe in kleinere Schritte. Jede Unteraufgabe hat ihr eigenes Kästchen.',
+      },
+      taskFieldNote: {
+        body: 'Eine ausführliche Beschreibung mit Formatierung: Überschriften, Listen, Code, Links und Bilder.',
+      },
+      taskFieldFiles: {
+        body: 'Dateien der Aufgabe: aus dem Projekt wählen, hochladen, hierher ziehen oder aus der Zwischenablage einfügen.',
+      },
+      taskFieldStatus: {
+        body: 'Die Kanban-Spalte, in der die Aufgabe steht. Ändern Sie sie hier oder durch Verschieben der Karte auf dem Board.',
+      },
+      taskFieldPriority: {
+        body: 'Wie dringend die Aufgabe ist. Die Aufgabenliste lässt sich nach Priorität sortieren.',
+      },
+      taskFieldAssignees: {
+        body: 'Wer für die Aufgabe verantwortlich ist. Es können mehrere Personen gewählt werden.',
+      },
+      taskFieldList: {
+        body: 'Eine Liste gruppiert Aufgaben im Projekt. Hier verschieben Sie die Aufgabe in eine andere Liste.',
+      },
+      taskFieldSprint: {
+        body: 'Der Sprint, für den die Aufgabe geplant ist.',
+      },
+      taskFieldEstimate: {
+        body: 'Die Größe der Aufgabe in Story Points.',
+      },
+      taskFieldTags: {
+        body: 'Etiketten zum Gruppieren und Filtern von Aufgaben. Ein neues Tag lässt sich gleich hier anlegen.',
+      },
+      taskFieldDeadline: {
+        body: 'Start- und Enddatum, bei Bedarf mit Uhrzeit. Eine Aufgabe kann sich auch regelmäßig wiederholen.',
+      },
+      taskFieldDependencies: {
+        body: 'Die Aufgaben, die vor dieser kommen, und die Aufgaben, die auf sie folgen.',
+      },
+      taskFieldAmount: {
+        body: 'Geld, das zur Aufgabe gehört: eine Einnahme oder eine Ausgabe.',
+      },
+      taskFieldTimeTracking: {
+        body: 'Starten Sie den Timer oder tragen Sie Zeit von Hand ein. Erfasste Zeit erscheint in den Zeitberichten.',
+      },
+      taskFieldHistory: {
+        body: 'Jede Änderung an der Aufgabe. Ein früherer Stand lässt sich von hier wiederherstellen.',
+      },
+      taskAssign: {
+        title: 'Aufgabe zuweisen',
+        body: 'Wählen Sie, wer verantwortlich ist: Sie selbst oder eine eingeladene Person. Die zugewiesene Person steht auf der Aufgabenkarte.',
+      },
+      viewKanban: {
+        title: 'Kanban öffnen',
+        body: 'Dieselben Aufgaben als Spalten nach Status. Öffnen Sie es oder drücken Sie „Weiter“.',
+      },
+      viewKanbanLook: {
+        title: 'Kanban',
+        body: 'Ziehen Sie eine Aufgabe von einer Spalte in eine andere, um ihren Status zu ändern.',
+      },
+      viewCalendar: {
+        title: 'Kalender öffnen',
+        body: 'Aufgaben nach Tagen angeordnet. Öffnen Sie ihn oder drücken Sie „Weiter“.',
+      },
+      viewCalendarLook: {
+        title: 'Kalender',
+        body: 'Eine Aufgabe erscheint hier, sobald sie ein Datum hat. So sehen Sie, was für jeden Tag geplant ist.',
+      },
+      viewGraph: {
+        title: 'Graph öffnen',
+        body: 'Aufgaben und ihre Verbindungen. Öffnen Sie ihn oder drücken Sie „Weiter“.',
+      },
+      viewGraphLook: {
+        title: 'Graph',
+        body: 'Verbinden Sie Aufgaben, um zu zeigen, welche zuerst kommt. So lässt sich die Reihenfolge der Arbeit planen.',
+      },
+      timeReportsOpen: {
+        title: '„Zeitberichte“ öffnen',
+        body: 'Hier wird die in Aufgaben erfasste Zeit gesammelt. Öffnen Sie den Bereich oder drücken Sie „Weiter“.',
+      },
+      timeReportsFilters: {
+        title: 'Auswählen, was Sie sehen möchten',
+        body: 'Legen Sie den Zeitraum fest und grenzen Sie den Bericht mit den Filtern ein.',
+      },
+      timeReportsTotals: {
+        title: 'Summen',
+        body: 'Die Zusammenfassung für Ihre Auswahl.',
+      },
+      timeReportsViews: {
+        title: 'Dieselbe Zeit, anderer Blickwinkel',
+        body: 'Wechseln Sie die Tabs, um die Zeit nach Aufgabe, Person oder Tag zu gruppieren.',
+      },
+      timeTask: {
+        title: 'Aufgabe wählen',
+        body: 'Zeit wird in einer Aufgabe erfasst. Fügen Sie hier eine neue Aufgabe hinzu oder öffnen Sie eine aus der Liste.',
+      },
+      timeLog: {
+        title: 'Zeit erfassen',
+        body: 'Starten Sie den Timer und stoppen Sie ihn, wenn Sie fertig sind, oder tragen Sie die Zeit von Hand ein.',
+      },
+      allSet: {
+        title: 'Alles bereit',
+        body: 'Jede Tour ist jederzeit unter Einstellungen → Touren verfügbar.',
+      },
+    },
+  },
 }

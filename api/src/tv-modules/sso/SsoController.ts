@@ -14,7 +14,8 @@ import { ScimRepository } from '../scim/ScimRepository'
 import { createSsoProvider } from './providers/provider-factory'
 import { SsoRepository } from './SsoRepository'
 import { parseSamlMetadata } from './saml-metadata-parser'
-import { checkSsoFetchUrl, generateLoginCode, isSsoDomainVerified, stripSecrets } from './sso.utils'
+import { outboundFetch } from '../../utils/outbound-fetch'
+import { checkSsoFetchUrl, generateLoginCode, isPrivateSsoUrlsAllowed, isSsoDomainVerified, stripSecrets } from './sso.utils'
 import {
   ScimGroupProjectArkType,
   SsoConfigArkTypeCreate,
@@ -365,7 +366,11 @@ export class SsoController {
     if (urlError) return res.status(400).tvJson({ message: urlError })
 
     try {
-      const response = await fetch(metadataUrl, { redirect: 'error' })
+      const response = await outboundFetch({
+        url: metadataUrl,
+        allowPrivate: isPrivateSsoUrlsAllowed(),
+        init: { redirect: 'error', signal: AbortSignal.timeout(10000) },
+      })
       if (!response.ok) {
         return res.status(400).tvJson({ message: `Failed to fetch metadata: ${response.status}` })
       }

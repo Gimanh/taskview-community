@@ -3,6 +3,7 @@
     v-if="canViewTimeTracking || canLogTime"
     class="flex flex-col gap-3 rounded-2xl bg-accented/20 p-3.5"
     data-testid="time-tracking-section"
+    data-tour="task-time-tracking"
   >
     <div class="flex items-center justify-between gap-2">
       <div class="flex items-center gap-2">

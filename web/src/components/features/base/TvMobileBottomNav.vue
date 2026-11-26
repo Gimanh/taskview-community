@@ -10,6 +10,7 @@
         :variant="item.active() ? 'soft' : 'ghost'"
         block
         class="flex-1 min-w-0"
+        :data-tour="`nav-${item.key}`"
         :ui="{
           base: 'flex-col gap-1 py-1.5 rounded-xl',
           leadingIcon: 'size-5',

@@ -8,6 +8,10 @@ export const UserTokensSchema = pgSchema('tv_auth').table('user_tokens', {
   userAgent: text('user_agent'),
   timeCreation: timestamp('time_creation').defaultNow(),
   lastUsedAt: timestamp('last_used_at'),
+  refreshJti: varchar('refresh_jti', { length: 36 }),
+  prevRefreshJti: varchar('prev_refresh_jti', { length: 36 }),
+  refreshRotatedAt: timestamp('refresh_rotated_at'),
+  csrfTokenHash: varchar('csrf_token_hash', { length: 64 }),
 })
 
 export type UserTokensSchemaSelect = typeof UserTokensSchema.$inferSelect

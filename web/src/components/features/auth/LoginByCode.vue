@@ -117,6 +117,7 @@ const activeSchema = computed(() => showCodeField.value ? CodeSchema : EmailSche
 type LoginResponse = {
   access: string
   refresh: string
+  csrf?: string
 }
 
 const state = reactive({
@@ -144,6 +145,7 @@ async function handleSubmit() {
       if (result.data.access) {
         $ls.setToken(result.data.access)
         $ls.setRefreshToken(result.data.refresh)
+        $ls.setCsrfToken(result.data.csrf)
         await $ls.updateUserStoreByToken()
 
         toast.add({

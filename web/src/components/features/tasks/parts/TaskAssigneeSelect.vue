@@ -7,6 +7,7 @@
     :placeholder="t('tasks.selectAssignees')"
     placeholder-icon="i-lucide-at-sign"
     activator-icon="i-lucide-at-sign"
+    :activator-attrs="{ 'data-tour': 'task-assignee' }"
     multiple
     @update:model-value="updateAssignees"
   />

@@ -29,6 +29,7 @@
           class="justify-start"
           :ui="{ base: 'rounded-xl' }"
           :to="tool.to"
+          :data-tour="`tool-${tool.key}`"
         />
       </div>
     </template>

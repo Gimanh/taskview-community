@@ -6,10 +6,13 @@ export type GraphDirection = 'LR' | 'TB';
 // Which side of an existing task a new one goes: before it (a predecessor) or after it (a successor)
 export type GraphPlacementSide = 'before' | 'after';
 
+// Without domAttributes: motion-v types its attributes with a class, which Pinia's state unwrapping cannot keep
+export type GraphNode = Omit<Node, 'domAttributes'>;
+
 export type GraphStore = {
-    nodes: Node[];
+    nodes: GraphNode[];
     edges: Edge[];
-    allNodes: Node[];
+    allNodes: GraphNode[];
     allEdges: Edge[];
     goalId: number | null;
     direction: GraphDirection;

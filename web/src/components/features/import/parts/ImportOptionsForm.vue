@@ -14,7 +14,7 @@
           :items="selectItems(field)"
           class="w-full sm:w-80"
           :data-testid="`import-option-${field.key}`"
-          @update:model-value="(value) => update({ key: field.key, value: String(value) })"
+          @update:model-value="(value: string) => update({ key: field.key, value })"
         />
       </UFormField>
       <USwitch
@@ -23,7 +23,7 @@
         :label="label(field.key)"
         :description="description(field.key)"
         :data-testid="`import-option-${field.key}`"
-        @update:model-value="(value) => update({ key: field.key, value })"
+        @update:model-value="(value: boolean) => update({ key: field.key, value })"
       />
     </template>
   </div>

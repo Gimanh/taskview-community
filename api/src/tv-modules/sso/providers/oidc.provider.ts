@@ -3,6 +3,7 @@ import * as client from 'openid-client'
 import type { Request, Response } from 'express'
 import type { SsoConfigsSchemaTypeForSelect } from 'taskview-db-schemas'
 import { PublicApiUrl } from '../../../modules/public-url'
+import { oidcOutboundFetch } from '../sso.utils'
 import type { SsoProvider, SsoAuthResult } from './sso-provider.interface'
 
 export class OidcProvider implements SsoProvider {
@@ -23,7 +24,10 @@ export class OidcProvider implements SsoProvider {
         this.config.oidcClientId!,
         this.config.oidcClientSecret!,
         undefined,
-        isDev ? { execute: [client.allowInsecureRequests] } : undefined,
+        {
+          [client.customFetch]: oidcOutboundFetch,
+          execute: isDev ? [client.allowInsecureRequests] : undefined,
+        },
       )
     }
     return this.oidcConfig

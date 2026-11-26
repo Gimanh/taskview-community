@@ -1,4 +1,6 @@
 import axios, { type AxiosInstance, isAxiosError } from 'axios';
+import { Agent as HttpAgent } from 'http';
+import { Agent as HttpsAgent } from 'https';
 import type { Readable } from 'stream';
 import { delay } from '../../../utils/helpers';
 import { $logger } from '../../../modules/logget';
@@ -20,6 +22,9 @@ export class ImportHttpClient {
             baseURL: config.baseUrl,
             timeout: 30_000,
             maxRedirects: config.maxRedirects ?? 5,
+            httpAgent: config.lookup && new HttpAgent({ lookup: config.lookup }),
+            httpsAgent: config.lookup && new HttpsAgent({ lookup: config.lookup }),
+            proxy: config.lookup ? false : undefined,
             headers: { Accept: 'application/json', ...config.headers },
         });
     }

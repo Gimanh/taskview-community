@@ -6,6 +6,7 @@ import type { SidebarView, TaskDetailDisplayMode } from '@/types/global-app.type
 import { useAppStore } from '@/stores/app.store'
 import { useUserStore } from '@/stores/user.store'
 import { useOrganizationStore } from '@/stores/organization.store'
+import { useOnboardingStore } from '@/stores/onboarding.store'
 import { useOrgSwitcher } from '@/composables/useOrgSwitcher'
 import { saveLocale } from '@/plugins/i18n'
 import { useTaskView } from '@/composables/useTaskView'
@@ -27,6 +28,7 @@ export function useSettingsHub() {
   const appStore = useAppStore()
   const userStore = useUserStore()
   const orgStore = useOrganizationStore()
+  const onboardingStore = useOnboardingStore()
   const { switchOrg } = useOrgSwitcher()
   const { isDesktop } = useTaskView()
   const shortcutsHelp = useShortcutsHelp()
@@ -139,6 +141,7 @@ export function useSettingsHub() {
       key: 'about',
       title: t('settings.about'),
       items: [
+        { kind: 'action', key: 'onboarding', icon: 'i-lucide-graduation-cap', color: 'emerald', title: t('onboarding.topics.title'), onSelect: onboardingStore.openTopics },
         { kind: 'nav', key: 'site', icon: 'i-lucide-globe', color: 'zinc', title: t('userMenu.site'), href: 'https://taskview.tech/' },
         { kind: 'nav', key: 'docs', icon: 'i-lucide-book-open', color: 'zinc', title: t('userMenu.documentation'), href: 'https://taskview.tech/docs/' },
         { kind: 'nav', key: 'github', icon: 'simple-icons:github', color: 'zinc', title: t('userMenu.github'), href: 'https://github.com/Gimanh/taskview-community' },

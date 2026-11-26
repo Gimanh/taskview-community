@@ -19,7 +19,10 @@
           </div>
         </div>
 
-        <UFormField :label="t('collaboration.members.selectRoles')">
+        <UFormField
+          :label="t('collaboration.members.selectRoles')"
+          data-tour="collab-member-roles"
+        >
           <div class="space-y-2">
             <label
               v-for="role in roles"

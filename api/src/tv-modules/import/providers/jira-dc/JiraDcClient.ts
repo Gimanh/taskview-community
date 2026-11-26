@@ -1,6 +1,6 @@
 import type { Readable } from 'stream';
 import { OutboundUrlError } from '../../../../utils/OutboundUrlError';
-import { resolveOutboundUrl } from '../../../../utils/outbound-url';
+import { guardedLookup, resolveOutboundUrl } from '../../../../utils/outbound-url';
 import { ImportHttpClient } from '../../core/ImportHttpClient';
 import { ImportProviderError } from '../../core/ImportProviderError';
 import type { ImportHttpRequestArgs } from '../../core/import-provider.types';
@@ -26,7 +26,8 @@ const COMMENT_PAGE_SIZE = 100;
 const MAX_PAGES = 1000;
 const MIN_REQUEST_INTERVAL_MS = 100;
 
-// The base URL is user-supplied, so every request first passes the shared SSRF guard and redirects are never followed
+// The base URL is user-supplied: the shared SSRF guard checks it up front for a clear error and again inside every
+// connection (guardedLookup), and redirects are never followed
 export class JiraDcClient {
     private readonly http: ImportHttpClient;
     private readonly siteUrl: string;
@@ -40,6 +41,7 @@ export class JiraDcClient {
             headers: { Authorization: `Bearer ${credentials.token}` },
             minRequestIntervalMs: MIN_REQUEST_INTERVAL_MS,
             maxRedirects: 0,
+            lookup: isPrivateImportUrlsAllowed() ? undefined : guardedLookup,
         });
     }
 

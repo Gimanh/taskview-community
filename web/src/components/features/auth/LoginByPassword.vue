@@ -96,6 +96,7 @@ type LoginState = typeof LoginSchema.infer
 type LoginResponse = {
   access: string
   refresh: string
+  csrf?: string
 }
 
 const state = reactive<LoginState>({
@@ -113,6 +114,7 @@ async function onSubmit() {
     if (result.data.access) {
       $ls.setToken(result.data.access)
       $ls.setRefreshToken(result.data.refresh)
+      $ls.setCsrfToken(result.data.csrf)
       await $ls.updateUserStoreByToken()
 
       toast.add({
@@ -126,20 +128,13 @@ async function onSubmit() {
       await redirectToUser(router)
     }
   } catch (error: unknown) {
-    const axiosError = error as { response?: { status?: number } }
-    if (axiosError.response?.status === 403) {
-      toast.add({
-        title: t('auth.error'),
-        description: t('auth.invalidCredentials'),
-        color: 'error',
-      })
-    } else {
-      toast.add({
-        title: t('auth.error'),
-        description: t('auth.loginFailed'),
-        color: 'error',
-      })
-    }
+    const status = (error as { response?: { status?: number } }).response?.status
+    const description = status === 429
+      ? t('auth.tooManyAttempts')
+      : status === 403
+        ? t('auth.invalidCredentials')
+        : t('auth.loginFailed')
+    toast.add({ title: t('auth.error'), description, color: 'error' })
   } finally {
     isLoading.value = false
   }

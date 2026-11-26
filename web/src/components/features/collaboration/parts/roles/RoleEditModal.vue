@@ -18,7 +18,10 @@
     </template>
     <template #body>
       <div class="space-y-4">
-        <div class="flex items-center gap-2 p-3 bg-elevated rounded-lg">
+        <div
+          class="flex items-center gap-2 p-3 bg-elevated rounded-lg"
+          data-tour="collab-permissions"
+        >
           <UIcon
             name="i-lucide-shield"
             class="size-5"

@@ -1,5 +1,5 @@
 import { compare, hashSync } from 'bcryptjs';
-import { randomInt } from 'crypto';
+import { randomBytes, randomInt, randomUUID } from 'crypto';
 import type { Request, Response } from 'express';
 import jwt, { type Algorithm, decode } from 'jsonwebtoken';
 import { z } from 'zod';
@@ -18,7 +18,14 @@ import {
     type UserDbRecord,
     type UserJwtPayload,
     UserJwtPayloadSchema,
+    type AuthTokenPayload,
     AuthTokenPayloadSchema,
+    type IssueTokensArgs,
+    type CreateUserSessionArgs,
+    type OpenedSession,
+    type OpenSessionArgs,
+    type SendSessionArgs,
+    type RefreshTokenPayload,
     type ValidateTokenArgs,
 } from '../../types/auth.types';
 import { safeEqual } from '../../utils/crypto';
@@ -32,6 +39,7 @@ import type { ExternalAuthUser } from './strategies/external-auth.types';
 import { OrganizationRepository } from '../organizations/OrganizationRepository';
 import { GoalsRepository } from '../goals/GoalsRepository';
 
+const CSRF_HEADER = 'X-CSRF-Token';
 const LOGIN_CODE_TTL_MS = 5 * 60 * 1000;
 const LOGIN_CODE_MAX_ATTEMPTS = 5;
 const PASSWORD_CHANGE_CODE_TTL_S = 15 * 60;
@@ -66,8 +74,8 @@ export default class AuthController {
         });
     }
 
-    getTokens(userPayload: UserJwtPayload) {
-        const cleanPayload = UserJwtPayloadSchema.safeParse(userPayload);
+    getTokens(args: IssueTokensArgs) {
+        const cleanPayload = UserJwtPayloadSchema.safeParse(args.payload);
         if (!cleanPayload.success) {
             $logger.error('Can not parse JWT payload');
         }
@@ -83,6 +91,7 @@ export default class AuthController {
         const refresh = jwt.sign({ ...cleanPayload.data!, typ: 'refresh' }, process.env.JWT_SIGN as string, {
             algorithm: this.jwtAlg,
             expiresIn: this.jwtRefreshExp,
+            jwtid: args.refreshJti,
         });
 
         return {
@@ -93,7 +102,17 @@ export default class AuthController {
         };
     }
 
-    static validateTokens(args: ValidateTokenArgs): Promise<UserJwtPayload | undefined> {
+    static async validateTokens(args: ValidateTokenArgs): Promise<UserJwtPayload | undefined> {
+        const payload = await AuthController.verifySessionToken(args);
+        return payload ? { id: payload.id, userData: payload.userData } : undefined;
+    }
+
+    static async validateRefreshToken(token: string): Promise<RefreshTokenPayload | undefined> {
+        const payload = await AuthController.verifySessionToken({ token, type: 'refresh' });
+        return payload?.jti ? { id: payload.id, userData: payload.userData, jti: payload.jti } : undefined;
+    }
+
+    private static verifySessionToken(args: ValidateTokenArgs): Promise<AuthTokenPayload | undefined> {
         return new Promise((resolve) => {
             jwt.verify(
                 args.token,
@@ -114,7 +133,7 @@ export default class AuthController {
                         resolve(undefined);
                         return;
                     }
-                    resolve({ id: parsed.data.id, userData: parsed.data.userData });
+                    resolve(parsed.data);
                 }
             );
         });
@@ -360,6 +379,39 @@ export default class AuthController {
         });
     }
 
+    private async createSession(args: CreateUserSessionArgs): Promise<OpenedSession | null> {
+        const refreshJti = randomUUID();
+        const csrfToken = randomBytes(32).toString('base64url');
+        const sessionId = await args.req.appUser.authManager.sessionStorage.createSession({
+            userId: args.userData.id,
+            ip: args.req.ip,
+            userAgent: args.req.headers['user-agent'],
+            refreshJti,
+            csrfToken,
+        });
+        if (!sessionId) return null;
+        return { sessionId, refreshJti, csrfToken };
+    }
+
+    private async sendSession(args: SendSessionArgs) {
+        const tokens = this.getTokens({
+            payload: { id: args.session.sessionId, userData: args.userData },
+            refreshJti: args.session.refreshJti,
+        });
+
+        await this.setRefreshToken(args.res, tokens.refresh);
+
+        return args.res.json({ ...tokens, csrf: args.session.csrfToken });
+    }
+
+    private async openSession(args: OpenSessionArgs) {
+        const session = await this.createSession({ req: args.req, userData: args.userData });
+        if (!session) {
+            return args.res.status(500).end();
+        }
+        return this.sendSession({ res: args.res, userData: args.userData, session });
+    }
+
     loginByCode = async (req: Request, res: Response) => {
         const schema = z.object({
             email: z.string().trim().email().toLowerCase(),
@@ -402,42 +454,39 @@ export default class AuthController {
             return res.status(400).send({ message: 'Code expired, get new code' });
         }
 
+        const banned = !!userData.block && !userData.confirm_email_code;
+
+        // The session is opened before the code is spent, so a failure here leaves the code usable
+        const session = banned ? null : await this.createSession({ req, userData });
+        if (!banned && !session) {
+            return res.status(500).end();
+        }
+
+        const sessionStorage = req.appUser.authManager.sessionStorage;
+
         // Invalidate code immediately to prevent replay attacks
         const consumed = await req.appUser.authManager.repository.consumeLoginCode({
             userId: userData.id,
             rememberToken: attempt.rememberToken,
         });
         if (!consumed) {
+            if (session) await sessionStorage.deleteSession(session.sessionId, userData.id);
             return res.status(400).send({ message: 'Invalid code' });
         }
 
+        if (!session) {
+            return res.status(403).send({ message: 'account_blocked' });
+        }
+
         if (userData.block) {
-            if (!userData.confirm_email_code) {
-                return res.status(403).send({ message: 'account_blocked' });
-            }
             const confirmed = await req.appUser.authManager.repository.markEmailConfirmed(userData.email);
             if (!confirmed) {
+                await sessionStorage.deleteSession(session.sessionId, userData.id);
                 return res.status(500).end();
             }
         }
 
-        const sessionId = await req.appUser.authManager.sessionStorage.createSession(
-            userData.id,
-            req.ip,
-            req.headers['user-agent']
-        );
-        if (!sessionId) {
-            return res.status(500).end();
-        }
-
-        const tokens = this.getTokens({
-            id: sessionId,
-            userData,
-        } as const);
-
-        await this.setRefreshToken(res, tokens.refresh);
-
-        return res.json(tokens);
+        return this.sendSession({ res, userData, session });
     };
 
     login = async (req: Request, res: Response) => {
@@ -449,9 +498,19 @@ export default class AuthController {
 
         login = login.toLowerCase();
 
+        const loginAttempts = req.appUser.authManager.loginAttempts;
+        const attempt = { login, ip: req.ip };
+        const waitSeconds = await loginAttempts.secondsUntilAllowed(attempt);
+        if (waitSeconds > 0) {
+            res.set('Retry-After', String(waitSeconds));
+            return res.status(429).send({ message: 'too_many_attempts' });
+        }
+
         const userData = await req.appUser.authManager.repository.getUserByLogin(login, isEmail(login));
 
+        // An unknown login counts like a wrong password, so the limit does not tell them apart
         if (!userData) {
+            await loginAttempts.registerFailure(attempt);
             return res.status(400).end();
         }
 
@@ -461,25 +520,11 @@ export default class AuthController {
 
         const valid = await this.comparePasswords(password, userData.password);
         if (valid) {
-            const sessionId = await req.appUser.authManager.sessionStorage.createSession(
-                userData.id,
-                req.ip,
-                req.headers['user-agent']
-            );
-            if (!sessionId) {
-                return res.status(500).end();
-            }
-
-            const tokens = this.getTokens({
-                id: sessionId,
-                userData,
-            } as const);
-
-            await this.setRefreshToken(res, tokens.refresh);
-
-            return res.json(tokens);
+            await loginAttempts.clearAfterSuccess(attempt);
+            return this.openSession({ req, res, userData });
         }
 
+        await loginAttempts.registerFailure(attempt);
         return res.status(400).end();
     };
 
@@ -720,8 +765,8 @@ export default class AuthController {
             return res.status(400).send({ message: 'Invalid refresh token' });
         }
 
-        const cookiePayload = cookieToken ? await AuthController.validateTokens({ token: cookieToken, type: 'refresh' }) : undefined;
-        const bodyPayload = bodyToken ? await AuthController.validateTokens({ token: bodyToken, type: 'refresh' }) : undefined;
+        const cookiePayload = cookieToken ? await AuthController.validateRefreshToken(cookieToken) : undefined;
+        const bodyPayload = bodyToken ? await AuthController.validateRefreshToken(bodyToken) : undefined;
         const payload = cookiePayload ?? bodyPayload;
         $logger.info(
             `Refresh token source: ${cookiePayload ? 'cookie' : bodyPayload ? 'body' : 'none valid'}` +
@@ -733,19 +778,44 @@ export default class AuthController {
             return res.status(400).end();
         }
 
-        const isActive = await req.appUser.authManager.sessionStorage.isSessionActive(payload.id);
-        if (!isActive) {
+        const sessionStorage = req.appUser.authManager.sessionStorage;
+
+        const provenByBody = bodyPayload?.id === payload.id;
+        if (!provenByBody) {
+            const csrf = await sessionStorage.verifyCsrfToken({ sessionId: payload.id, csrfToken: req.get(CSRF_HEADER) });
+            if (csrf === 'inactive') {
+                this.clearRefreshToken(res);
+                return res.status(401).end();
+            }
+            if (csrf === 'invalid') {
+                return res.status(403).send({ message: 'csrf_token_invalid' });
+            }
+        }
+
+        const rotation = await sessionStorage.rotateRefreshToken({
+            sessionId: payload.id,
+            presentedJti: payload.jti,
+            nextJti: randomUUID(),
+        });
+
+        if (rotation.status === 'reused') {
+            $logger.warn(`Refresh token reuse: session ${payload.id} of user ${payload.userData.id} ended`);
+            await sessionStorage.deleteSession(payload.id, payload.userData.id);
+        }
+
+        if (rotation.status === 'reused' || rotation.status === 'inactive') {
             this.clearRefreshToken(res);
             return res.status(401).end();
         }
 
-        const newTokens = this.getTokens(payload);
-
-        await req.appUser.authManager.sessionStorage.updateLastUsed(payload.id);
+        const newTokens = this.getTokens({
+            payload: { id: payload.id, userData: payload.userData },
+            refreshJti: rotation.refreshJti,
+        });
 
         await this.setRefreshToken(res, newTokens.refresh);
 
-        if (bodyPayload?.id === payload.id) return res.json(newTokens);
+        if (provenByBody) return res.json(newTokens);
         const { refresh: _refresh, ...withoutRefresh } = newTokens;
         return res.json(withoutRefresh);
     };

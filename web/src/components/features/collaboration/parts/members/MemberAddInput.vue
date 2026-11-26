@@ -4,6 +4,7 @@
     type="email"
     :placeholder="t('collaboration.members.emailPlaceholder')"
     data-testid="collab-member-email-input"
+    data-tour="collab-invite"
     size="xl"
     variant="soft"
     class="w-full"

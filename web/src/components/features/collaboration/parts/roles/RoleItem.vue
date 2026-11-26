@@ -22,6 +22,7 @@
       variant="ghost"
       size="xs"
       data-testid="collab-role-menu-trigger"
+      data-tour="collab-role-menu"
       @click.stop="$emit('menu', $event)"
     />
   </div>

@@ -44,3 +44,5 @@ export * from './schemas/files.schema';
 export * from './schemas/file-to-task.schema';
 export * from './schemas/automation-rules.schema';
 export * from './schemas/import-jobs.schema';
+export * from './schemas/user-onboarding.schema';
+export * from './schemas/login-attempts.schema';
