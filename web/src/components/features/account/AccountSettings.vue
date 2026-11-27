@@ -81,6 +81,7 @@ import DeleteAccountCodeModal from './parts/DeleteAccountCodeModal.vue'
 import NotificationSettings from './parts/NotificationSettings.vue'
 import PasswordSettings from './parts/PasswordSettings.vue'
 import DefaultUserCredentials from './parts/DefaultUserCredentials.vue'
+import { DEFAULT_USER_EMAIL } from '@/composables/useDefaultCredentialsReminder'
 import SessionsPanel from '@/components/features/sessions/SessionsPanel.vue'
 import ApiTokensPanel from '@/components/features/api-tokens/ApiTokensPanel.vue'
 import ConnectedAppsPanel from '@/components/features/oauth/ConnectedAppsPanel.vue'
@@ -101,7 +102,7 @@ onMounted(async () => {
 })
 
 // Seeded default user on self-hosted installs (migration 0.0.0); backend enforces the same check
-const isDefaultUser = computed(() => userStore.email.toLowerCase() === 'test@mail.dest')
+const isDefaultUser = computed(() => userStore.email.toLowerCase() === DEFAULT_USER_EMAIL)
 
 function onCodeSendError() {
   toast.add({

@@ -8,7 +8,7 @@ const $axios = axios.create({ baseURL: BASE_URL });
 async function login(): Promise<{ access: string; refresh: string }> {
     const { data } = await $axios.post('/module/auth/login', {
         login: 'test@mail.dest',
-        password: 'user1!#Q',
+        password: 'your-password',
     });
     return data;
 }

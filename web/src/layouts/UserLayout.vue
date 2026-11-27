@@ -49,6 +49,7 @@ import { useTimeTrackingStore } from '@/stores/time-tracking.store'
 import { useUiPreferencesStore } from '@/stores/uiPreferences.store'
 import { useOnboardingStore } from '@/stores/onboarding.store'
 import { useRecentProjects } from '@/composables/useRecentProjects'
+import { useDefaultCredentialsReminder } from '@/composables/useDefaultCredentialsReminder'
 
 const { connect: connectCentrifugo } = useCentrifugo()
 const { init: initPush } = usePushNotifications()
@@ -64,6 +65,7 @@ const { markProjectUsed } = useRecentProjects()
 
 useWidgetSnapshot()
 useWidgetDeepLink()
+useDefaultCredentialsReminder()
 
 watch(
   () => timeTrackingStore.lastError,

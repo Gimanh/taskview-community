@@ -41,9 +41,3 @@ VALUES ((select id from tv_auth.roles where name = 'app_user'),
 INSERT INTO tv_auth.group_to_roles (group_id, role_id)
 VALUES ((select id from tv_auth.groups where name = 'app_users'),
         (select id from tv_auth.roles where name = 'app_user'));
-
-INSERT INTO tv_auth.users (login, email, password, block, confirm_email_code, remind_password_code, remember_token)
-VALUES ('user', 'test@mail.dest', '$2y$10$q8SLauZ0Syz9aEFdiq0i8.jIlafLj5T0ujXYD7RmRzyNkZ2hR7uhO', 0,
-        '40390b741a906a45119390922eaaff1d', null, null);
-
-
