@@ -28,6 +28,9 @@ services:
         condition: service_healthy
     env_file:
       - ../../dockers-check/.env.taskview
+    environment:
+      # E2E only: the first account keeps the password the fixtures sign in with
+      INITIAL_USER_PASSWORD: "user1!#Q"
 
   api:
     image: gimanhead/taskview-se-api-server:latest

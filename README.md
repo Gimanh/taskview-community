@@ -228,6 +228,8 @@ For deployment instructions, environment variables, HTTPS configuration, updates
 
 > Production deployments should use persistent volumes, HTTPS, regular database backups, and securely generated secrets.
 
+> **First account.** A new installation creates the account `user` with the password you set in `INITIAL_USER_PASSWORD`; there is no built-in password. Installations created before this variable existed may still have the account `user` / `test@mail.dest` with the old public password `user1!#Q` — see [how to check and disable it](https://taskview.tech/docs/getting-started/installation#check-an-older-installation-for-the-preinstalled-password).
+
 ## Repository structure
 
 TaskView is maintained as a monorepo. Product packages share a single version.

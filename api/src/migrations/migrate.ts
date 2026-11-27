@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 import fs from 'fs/promises';
 import { join, resolve } from 'path';
+import { InitialUser } from './InitialUser';
 
 config();
 
@@ -185,8 +186,20 @@ async function migrate() {
             await disconnectOthers();
 
             if (process.argv.includes('--create')) {
+                const initialPassword = InitialUser.checkPassword(process.env[InitialUser.ENV_NAME]);
+                if (initialPassword.status === 'invalid') {
+                    throw new Error(initialPassword.reason);
+                }
+
                 console.log('\x1b[32m%s\x1b[0m', 'Start creating DB structure');
                 await execScripts(createDbData.scripts);
+
+                if (initialPassword.status === 'ok') {
+                    await InitialUser.create({ client, password: initialPassword.password });
+                    console.log('\x1b[32m%s\x1b[0m', `Initial account "${InitialUser.LOGIN}" created`);
+                } else {
+                    console.warn(`${InitialUser.ENV_NAME} is not set: no initial account was created`);
+                }
                 console.log('\x1b[32m%s\x1b[0m', 'End creating DB structure');
             }
             await client.query('COMMIT');
